@@ -1,120 +1,2542 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
 
-<!-- AdSense -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4903714438406652"
-     crossorigin="anonymous"></script>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-<title>shoによるツールサイト</title>
+  <meta
+    name="description"
+    content="仙台を中心に活動するGuns N' Rosesトリビュートバンド、Guns N' Losesの公式サイト。ライブ情報、ライブ映像、出演依頼など。"
+  >
 
-<style>
-body{
-  font-family:sans-serif;
-  background:#111;
-  color:#fff;
-  margin:0;
-  padding:20px;
-  line-height:1.7;
-}
-.container{
-  max-width:800px;
-  margin:auto;
-}
-h1,h2{
-  color:#ffdf6b;
-}
-a{
-  color:#ffdf6b;
-  text-decoration:none;
-}
-.box{
-  background:rgba(255,255,255,0.05);
-  border:1px solid #6b4a12;
-  border-radius:10px;
-  padding:15px;
-  margin:20px 0;
-}
-footer{
-  margin-top:40px;
-  font-size:14px;
-  color:#ccc;
-}
-</style>
+  <meta name="theme-color" content="#080808">
+
+  <title>Guns N' Loses | Official Website</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    /* =========================================================
+       基本設定
+    ========================================================= */
+
+    :root {
+      --bg: #080808;
+      --bg-soft: #101010;
+      --card: #151515;
+      --card-hover: #1d1d1d;
+
+      --text: #ffffff;
+      --text-soft: #c7c7c7;
+      --text-muted: #8f8f8f;
+
+      --red: #d1122f;
+      --red-dark: #8f0d20;
+      --line: rgba(255, 255, 255, 0.12);
+
+      --youtube: #ff0033;
+      --tiktok: #f4f4f4;
+      --instagram: #d62976;
+      --facebook: #1877f2;
+      --x: #f2f2f2;
+      --line-green: #06c755;
+
+      --max-width: 1160px;
+      --radius: 10px;
+
+      --font-rock: "Bebas Neue", sans-serif;
+      --font-jp: "Noto Sans JP", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(
+          circle at 20% 10%,
+          rgba(209, 18, 47, 0.09),
+          transparent 32%
+        ),
+        var(--bg);
+
+      font-family: var(--font-jp);
+      line-height: 1.8;
+      overflow-x: hidden;
+    }
+
+    body.menu-open {
+      overflow: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    ::selection {
+      color: #ffffff;
+      background: var(--red);
+    }
+
+    .container {
+      width: min(calc(100% - 40px), var(--max-width));
+      margin-inline: auto;
+    }
+
+    .section {
+      padding: 105px 0;
+      position: relative;
+    }
+
+    .section-dark {
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.018),
+          rgba(255, 255, 255, 0)
+        );
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+
+      margin: 0 0 14px;
+      color: var(--red);
+
+      font-family: var(--font-rock);
+      font-size: 1.15rem;
+      letter-spacing: 0.14em;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 3px;
+      background: var(--red);
+    }
+
+    .section-title {
+      margin: 0;
+
+      font-family: var(--font-rock);
+      font-size: clamp(3rem, 8vw, 5.7rem);
+      font-weight: 400;
+      line-height: 0.95;
+      letter-spacing: 0.035em;
+    }
+
+    .section-title-ja {
+      margin: 14px 0 0;
+      color: var(--text-soft);
+
+      font-size: 0.93rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+    }
+
+    .section-heading {
+      margin-bottom: 42px;
+    }
+
+    .red-text {
+      color: var(--red);
+    }
+
+    /* =========================================================
+       固定ヘッダー
+    ========================================================= */
+
+    .site-header {
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      left: 0;
+      width: 100%;
+
+      border-bottom: 1px solid transparent;
+      transition:
+        background 0.3s ease,
+        border-color 0.3s ease,
+        backdrop-filter 0.3s ease;
+    }
+
+    .site-header.scrolled {
+      background: rgba(5, 5, 5, 0.86);
+      border-color: var(--line);
+      backdrop-filter: blur(16px);
+    }
+
+    .header-inner {
+      min-height: 78px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+    }
+
+    .site-logo {
+      position: relative;
+      z-index: 1002;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-mark {
+      width: 12px;
+      height: 32px;
+
+      background: var(--red);
+      transform: skewX(-12deg);
+      box-shadow: 8px 0 0 rgba(209, 18, 47, 0.38);
+    }
+
+    .logo-text {
+      font-family: var(--font-rock);
+      font-size: 1.85rem;
+      line-height: 1;
+      letter-spacing: 0.06em;
+    }
+
+    .desktop-nav {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .desktop-nav a {
+      position: relative;
+      padding: 10px 0;
+
+      color: #dedede;
+      font-family: var(--font-rock);
+      font-size: 1.05rem;
+      letter-spacing: 0.1em;
+
+      transition: color 0.2s ease;
+    }
+
+    .desktop-nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 5px;
+
+      width: 0;
+      height: 2px;
+      background: var(--red);
+
+      transition: width 0.25s ease;
+    }
+
+    .desktop-nav a:hover {
+      color: #ffffff;
+    }
+
+    .desktop-nav a:hover::after {
+      width: 100%;
+    }
+
+    .menu-button {
+      position: relative;
+      z-index: 1002;
+
+      display: none;
+      width: 44px;
+      height: 44px;
+
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .menu-button span {
+      position: absolute;
+      left: 8px;
+
+      width: 28px;
+      height: 2px;
+      background: #ffffff;
+
+      transition:
+        transform 0.3s ease,
+        top 0.3s ease,
+        opacity 0.3s ease;
+    }
+
+    .menu-button span:nth-child(1) {
+      top: 13px;
+    }
+
+    .menu-button span:nth-child(2) {
+      top: 21px;
+    }
+
+    .menu-button span:nth-child(3) {
+      top: 29px;
+    }
+
+    .menu-button.active span:nth-child(1) {
+      top: 21px;
+      transform: rotate(45deg);
+    }
+
+    .menu-button.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-button.active span:nth-child(3) {
+      top: 21px;
+      transform: rotate(-45deg);
+    }
+
+    .mobile-menu {
+      position: fixed;
+      z-index: 1001;
+      inset: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 90px 30px 40px;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(209, 18, 47, 0.12),
+          transparent 40%
+        ),
+        rgba(5, 5, 5, 0.98);
+
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-12px);
+
+      transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease,
+        transform 0.3s ease;
+    }
+
+    .mobile-menu.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .mobile-menu nav {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .mobile-menu a {
+      font-family: var(--font-rock);
+      font-size: clamp(2.4rem, 10vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: 0.08em;
+    }
+
+    /* =========================================================
+       ヒーロー
+    ========================================================= */
+
+    .hero {
+      position: relative;
+      min-height: 100svh;
+
+      display: flex;
+      align-items: flex-end;
+
+      isolation: isolate;
+      overflow: hidden;
+      background: #080808;
+    }
+
+    .hero-background {
+      position: absolute;
+      z-index: -4;
+      inset: 0;
+
+      background-color: #0b0b0b;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+
+      transform: scale(1.04);
+      animation: heroZoom 18s ease-out forwards;
+    }
+
+    @keyframes heroZoom {
+      from {
+        transform: scale(1.04);
+      }
+
+      to {
+        transform: scale(1.12);
+      }
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      z-index: -3;
+      inset: 0;
+
+      background:
+        linear-gradient(
+          90deg,
+          rgba(0, 0, 0, 0.82) 0%,
+          rgba(0, 0, 0, 0.36) 52%,
+          rgba(0, 0, 0, 0.16) 100%
+        );
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      z-index: -2;
+      inset: 0;
+
+      background:
+        linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.28) 0%,
+          rgba(0, 0, 0, 0.03) 35%,
+          rgba(0, 0, 0, 0.92) 100%
+        );
+    }
+
+    .hero-noise {
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+
+      opacity: 0.15;
+      pointer-events: none;
+
+      background-image:
+        repeating-linear-gradient(
+          0deg,
+          rgba(255, 255, 255, 0.018) 0,
+          rgba(255, 255, 255, 0.018) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+    }
+
+    .hero-content {
+      width: 100%;
+      padding: 150px 0 82px;
+    }
+
+    .hero-kicker {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      margin: 0 0 18px;
+      color: #ededed;
+
+      font-family: var(--font-rock);
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      letter-spacing: 0.17em;
+    }
+
+    .hero-kicker::before {
+      content: "";
+      width: 44px;
+      height: 4px;
+      background: var(--red);
+    }
+
+    .hero-title {
+      max-width: 1000px;
+      margin: 0;
+
+      font-family: var(--font-rock);
+      font-size: clamp(5rem, 15vw, 11.5rem);
+      font-weight: 400;
+      line-height: 0.78;
+      letter-spacing: 0.025em;
+      text-transform: uppercase;
+
+      text-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+    }
+
+    .hero-title span {
+      display: block;
+    }
+
+    .hero-title .title-second {
+      color: transparent;
+      -webkit-text-stroke: 2px #ffffff;
+      text-stroke: 2px #ffffff;
+    }
+
+    .hero-description {
+      max-width: 580px;
+      margin: 30px 0 0;
+      color: #e0e0e0;
+
+      font-size: clamp(0.92rem, 2vw, 1.05rem);
+      font-weight: 500;
+      letter-spacing: 0.09em;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+
+      margin-top: 34px;
+    }
+
+    .primary-button,
+    .secondary-button {
+      min-height: 56px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+
+      padding: 14px 26px;
+      border: 1px solid transparent;
+
+      font-family: var(--font-rock);
+      font-size: 1.15rem;
+      letter-spacing: 0.12em;
+
+      transition:
+        transform 0.25s ease,
+        background 0.25s ease,
+        border-color 0.25s ease;
+    }
+
+    .primary-button {
+      background: var(--red);
+      box-shadow: 0 12px 34px rgba(209, 18, 47, 0.25);
+    }
+
+    .secondary-button {
+      border-color: rgba(255, 255, 255, 0.5);
+      background: rgba(0, 0, 0, 0.26);
+      backdrop-filter: blur(8px);
+    }
+
+    .primary-button:hover,
+    .secondary-button:hover {
+      transform: translateY(-3px);
+    }
+
+    .primary-button:hover {
+      background: #e51a3a;
+    }
+
+    .secondary-button:hover {
+      border-color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .button-arrow {
+      display: inline-block;
+      transition: transform 0.25s ease;
+    }
+
+    a:hover .button-arrow {
+      transform: translateX(5px);
+    }
+
+    .hero-bottom {
+      position: absolute;
+      right: 30px;
+      bottom: 34px;
+
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      color: #c8c8c8;
+
+      font-family: var(--font-rock);
+      font-size: 0.95rem;
+      letter-spacing: 0.18em;
+      writing-mode: vertical-rl;
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 48px;
+
+      background:
+        linear-gradient(
+          180deg,
+          #ffffff,
+          transparent
+        );
+
+      animation: scrollPulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes scrollPulse {
+      0%,
+      100% {
+        opacity: 0.35;
+        transform: scaleY(0.8);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scaleY(1);
+      }
+    }
+
+    /* =========================================================
+       SNS
+    ========================================================= */
+
+    .social-layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .social-card {
+      position: relative;
+      overflow: hidden;
+
+      min-height: 150px;
+
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 22px;
+
+      padding: 28px;
+
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.055),
+          rgba(255, 255, 255, 0.012)
+        );
+
+      transition:
+        transform 0.25s ease,
+        border-color 0.25s ease,
+        background 0.25s ease;
+    }
+
+    .social-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+
+      width: 100%;
+      height: 4px;
+      background: var(--social-color, var(--red));
+
+      transform: scaleX(0.24);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .social-card::after {
+      content: "";
+      position: absolute;
+      top: -60%;
+      right: -18%;
+
+      width: 220px;
+      height: 220px;
+
+      border-radius: 50%;
+      background: var(--social-color, var(--red));
+      opacity: 0.055;
+      filter: blur(2px);
+
+      transition:
+        opacity 0.25s ease,
+        transform 0.4s ease;
+    }
+
+    .social-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 255, 255, 0.28);
+      background: var(--card-hover);
+    }
+
+    .social-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .social-card:hover::after {
+      opacity: 0.1;
+      transform: scale(1.12);
+    }
+
+    .social-card.youtube {
+      grid-column: 1 / -1;
+      min-height: 190px;
+      --social-color: var(--youtube);
+    }
+
+    .social-card.tiktok {
+      --social-color: var(--tiktok);
+    }
+
+    .social-card.instagram {
+      --social-color: var(--instagram);
+    }
+
+    .social-card.facebook {
+      --social-color: var(--facebook);
+    }
+
+    .social-card.x {
+      --social-color: var(--x);
+    }
+
+    .social-name {
+      position: relative;
+      z-index: 1;
+
+      margin: 0;
+
+      font-family: var(--font-rock);
+      font-size: clamp(2.15rem, 6vw, 4.2rem);
+      font-weight: 400;
+      line-height: 0.95;
+      letter-spacing: 0.04em;
+    }
+
+    .social-description {
+      position: relative;
+      z-index: 1;
+
+      margin: 12px 0 0;
+      color: var(--text-soft);
+      font-size: 0.88rem;
+    }
+
+    .social-arrow {
+      position: relative;
+      z-index: 1;
+
+      flex: 0 0 auto;
+      width: 46px;
+      height: 46px;
+
+      display: grid;
+      place-items: center;
+
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+
+      font-size: 1.25rem;
+
+      transition:
+        transform 0.25s ease,
+        background 0.25s ease;
+    }
+
+    .social-card:hover .social-arrow {
+      transform: translateX(4px);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* =========================================================
+       次回ライブ
+    ========================================================= */
+
+    .live-card {
+      position: relative;
+      overflow: hidden;
+
+      display: grid;
+      grid-template-columns: 0.8fr 1.8fr auto;
+      align-items: stretch;
+
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(
+          120deg,
+          #161616 0%,
+          #101010 65%,
+          rgba(209, 18, 47, 0.1) 100%
+        );
+    }
+
+    .live-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+
+      width: 7px;
+      height: 100%;
+      background: var(--red);
+    }
+
+    .live-date-box {
+      min-height: 280px;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      padding: 32px;
+
+      border-right: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .live-month {
+      color: var(--red);
+
+      font-family: var(--font-rock);
+      font-size: 1.8rem;
+      letter-spacing: 0.1em;
+    }
+
+    .live-day {
+      font-family: var(--font-rock);
+      font-size: clamp(5rem, 11vw, 8.5rem);
+      line-height: 0.8;
+    }
+
+    .live-year {
+      margin-top: 12px;
+      color: var(--text-muted);
+
+      font-family: var(--font-rock);
+      font-size: 1.2rem;
+      letter-spacing: 0.18em;
+    }
+
+    .live-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      padding: 42px;
+    }
+
+    .live-label {
+      margin: 0 0 12px;
+      color: var(--red);
+
+      font-family: var(--font-rock);
+      font-size: 1.2rem;
+      letter-spacing: 0.12em;
+    }
+
+    .live-title {
+      margin: 0;
+
+      font-family: var(--font-rock);
+      font-size: clamp(2.3rem, 6vw, 4.8rem);
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: 0.035em;
+    }
+
+    .live-venue {
+      margin: 18px 0 0;
+
+      color: #f2f2f2;
+      font-size: 1.03rem;
+      font-weight: 700;
+    }
+
+    .live-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 22px;
+
+      margin: 12px 0 0;
+      color: var(--text-soft);
+      font-size: 0.92rem;
+    }
+
+    .live-action {
+      min-width: 180px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 32px;
+
+      border-left: 1px solid var(--line);
+
+      font-family: var(--font-rock);
+      font-size: 1.25rem;
+      letter-spacing: 0.1em;
+
+      transition:
+        background 0.25s ease,
+        color 0.25s ease;
+    }
+
+    .live-card:hover .live-action {
+      background: var(--red);
+      color: #ffffff;
+    }
+
+    /* =========================================================
+       YouTube埋め込み
+    ========================================================= */
+
+    .video-shell {
+      position: relative;
+      overflow: hidden;
+
+      padding: 10px;
+      border: 1px solid var(--line);
+      background: #111111;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+    }
+
+    .video-frame {
+      position: relative;
+      overflow: hidden;
+
+      aspect-ratio: 16 / 9;
+      background: #000000;
+    }
+
+    .video-frame iframe {
+      position: absolute;
+      inset: 0;
+
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .video-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+
+      padding: 18px 8px 8px;
+    }
+
+    .video-note p {
+      margin: 0;
+      color: var(--text-soft);
+      font-size: 0.88rem;
+    }
+
+    .text-link {
+      flex: 0 0 auto;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+
+      color: #ffffff;
+      font-family: var(--font-rock);
+      font-size: 1.12rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* =========================================================
+       共通コンテンツカード
+    ========================================================= */
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      position: relative;
+      overflow: hidden;
+
+      min-height: 360px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      padding: 34px;
+
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.047),
+          rgba(255, 255, 255, 0.012)
+        );
+
+      transition:
+        transform 0.25s ease,
+        border-color 0.25s ease,
+        background 0.25s ease;
+    }
+
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      top: -100px;
+      right: -100px;
+
+      width: 240px;
+      height: 240px;
+
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+
+      transition:
+        transform 0.5s ease,
+        border-color 0.3s ease;
+    }
+
+    .feature-card::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+
+      width: 100%;
+      height: 5px;
+      background: var(--red);
+
+      transform: scaleX(0.18);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255, 255, 255, 0.3);
+      background: var(--card-hover);
+    }
+
+    .feature-card:hover::before {
+      transform: scale(1.15);
+      border-color: rgba(209, 18, 47, 0.32);
+    }
+
+    .feature-card:hover::after {
+      transform: scaleX(1);
+    }
+
+    .feature-number {
+      color: var(--red);
+
+      font-family: var(--font-rock);
+      font-size: 1.2rem;
+      letter-spacing: 0.15em;
+    }
+
+    .feature-title {
+      position: relative;
+      z-index: 1;
+
+      margin: 0 0 15px;
+
+      font-family: var(--font-rock);
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 400;
+      line-height: 0.95;
+      letter-spacing: 0.04em;
+    }
+
+    .feature-description {
+      position: relative;
+      z-index: 1;
+
+      margin: 0;
+      color: var(--text-soft);
+      font-size: 0.9rem;
+    }
+
+    .feature-list {
+      position: relative;
+      z-index: 1;
+
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+
+      color: #e4e4e4;
+      font-size: 0.88rem;
+    }
+
+    .feature-list li::before {
+      content: "—";
+      margin-right: 8px;
+      color: var(--red);
+    }
+
+    .feature-bottom {
+      position: relative;
+      z-index: 1;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+
+      margin-top: 38px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+
+      font-family: var(--font-rock);
+      font-size: 1.12rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* =========================================================
+       Support Us
+    ========================================================= */
+
+    .support-panel {
+      position: relative;
+      overflow: hidden;
+
+      display: grid;
+      grid-template-columns: 1.55fr 0.8fr;
+      align-items: center;
+      gap: 42px;
+
+      padding: clamp(35px, 7vw, 74px);
+
+      border: 1px solid rgba(209, 18, 47, 0.42);
+      background:
+        linear-gradient(
+          120deg,
+          rgba(209, 18, 47, 0.18),
+          rgba(15, 15, 15, 0.92) 55%,
+          rgba(255, 255, 255, 0.02)
+        );
+    }
+
+    .support-panel::before {
+      content: "SUPPORT";
+      position: absolute;
+      right: -20px;
+      bottom: -60px;
+
+      color: rgba(255, 255, 255, 0.025);
+
+      font-family: var(--font-rock);
+      font-size: clamp(8rem, 22vw, 18rem);
+      line-height: 1;
+      letter-spacing: 0.03em;
+
+      pointer-events: none;
+    }
+
+    .support-title {
+      position: relative;
+      z-index: 1;
+
+      margin: 0;
+
+      font-family: var(--font-rock);
+      font-size: clamp(3.5rem, 9vw, 7rem);
+      font-weight: 400;
+      line-height: 0.9;
+      letter-spacing: 0.035em;
+    }
+
+    .support-copy {
+      position: relative;
+      z-index: 1;
+
+      max-width: 670px;
+      margin: 24px 0 0;
+
+      color: #d4d4d4;
+      font-size: 0.96rem;
+    }
+
+    .support-small {
+      position: relative;
+      z-index: 1;
+
+      margin: 18px 0 0;
+      color: var(--text-muted);
+      font-size: 0.79rem;
+    }
+
+    .support-price-box {
+      position: relative;
+      z-index: 1;
+
+      padding: 32px;
+
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .support-price-label {
+      margin: 0;
+      color: var(--text-soft);
+
+      font-family: var(--font-rock);
+      font-size: 1.15rem;
+      letter-spacing: 0.14em;
+    }
+
+    .support-price {
+      margin: 6px 0 26px;
+
+      font-family: var(--font-rock);
+      font-size: clamp(3.5rem, 9vw, 6.7rem);
+      line-height: 0.9;
+    }
+
+    .support-price span {
+      margin-left: 5px;
+      color: var(--text-soft);
+      font-family: var(--font-jp);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    /* =========================================================
+       Contact
+    ========================================================= */
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+    }
+
+    .contact-copy-box,
+    .contact-action-box {
+      min-height: 340px;
+      padding: clamp(30px, 6vw, 58px);
+
+      border: 1px solid var(--line);
+      background: var(--card);
+    }
+
+    .contact-copy-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .contact-title {
+      margin: 0;
+
+      font-family: var(--font-rock);
+      font-size: clamp(3.4rem, 8vw, 6.5rem);
+      font-weight: 400;
+      line-height: 0.9;
+      letter-spacing: 0.04em;
+    }
+
+    .contact-description {
+      max-width: 590px;
+      margin: 28px 0 0;
+      color: var(--text-soft);
+    }
+
+    .contact-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+
+      margin-top: 32px;
+    }
+
+    .contact-tag {
+      padding: 7px 12px;
+
+      border: 1px solid var(--line);
+      color: #d8d8d8;
+
+      font-size: 0.78rem;
+    }
+
+    .contact-action-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .line-button {
+      min-height: 74px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+
+      padding: 20px 24px;
+      background: var(--line-green);
+      color: #ffffff;
+
+      font-weight: 800;
+
+      transition:
+        transform 0.25s ease,
+        filter 0.25s ease;
+    }
+
+    .line-button:hover {
+      transform: translateY(-4px);
+      filter: brightness(1.08);
+    }
+
+    .line-button strong {
+      display: block;
+      font-size: 1.02rem;
+    }
+
+    .line-button small {
+      display: block;
+      margin-top: 3px;
+
+      font-size: 0.72rem;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+
+    .contact-caution {
+      margin: 17px 0 0;
+      color: var(--text-muted);
+      font-size: 0.76rem;
+    }
+
+    /* =========================================================
+       フッター
+    ========================================================= */
+
+    .site-footer {
+      padding: 62px 0 30px;
+      border-top: 1px solid var(--line);
+      background: #050505;
+    }
+
+    .footer-top {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 30px;
+
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .footer-logo {
+      margin: 0;
+
+      font-family: var(--font-rock);
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 400;
+      line-height: 0.82;
+      letter-spacing: 0.04em;
+    }
+
+    .footer-subtitle {
+      margin: 17px 0 0;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+    }
+
+    .footer-socials {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 9px 18px;
+    }
+
+    .footer-socials a {
+      color: #d5d5d5;
+
+      font-family: var(--font-rock);
+      font-size: 1.05rem;
+      letter-spacing: 0.09em;
+
+      transition: color 0.2s ease;
+    }
+
+    .footer-socials a:hover {
+      color: var(--red);
+    }
+
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+
+      padding-top: 28px;
+      color: #777777;
+      font-size: 0.7rem;
+    }
+
+    .back-to-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      color: #bcbcbc;
+
+      font-family: var(--font-rock);
+      font-size: 0.95rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* =========================================================
+       スクロール表示アニメーション
+    ========================================================= */
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+
+      transition:
+        opacity 0.75s ease,
+        transform 0.75s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 {
+      transition-delay: 0.08s;
+    }
+
+    .reveal-delay-2 {
+      transition-delay: 0.16s;
+    }
+
+    .reveal-delay-3 {
+      transition-delay: 0.24s;
+    }
+
+    /* =========================================================
+       タブレット
+    ========================================================= */
+
+    @media (max-width: 900px) {
+      .desktop-nav {
+        display: none;
+      }
+
+      .menu-button {
+        display: block;
+      }
+
+      .hero-title {
+        font-size: clamp(4.8rem, 18vw, 8.5rem);
+      }
+
+      .live-card {
+        grid-template-columns: 0.8fr 1.5fr;
+      }
+
+      .live-action {
+        grid-column: 1 / -1;
+
+        min-height: 70px;
+        border-top: 1px solid var(--line);
+        border-left: 0;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-card {
+        min-height: 300px;
+      }
+
+      .support-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .support-price-box {
+        padding: 30px 0 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        border-left: 0;
+      }
+
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-top {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .footer-socials {
+        justify-content: flex-start;
+      }
+    }
+
+    /* =========================================================
+       スマホ
+    ========================================================= */
+
+    @media (max-width: 640px) {
+      .container {
+        width: min(calc(100% - 28px), var(--max-width));
+      }
+
+      .section {
+        padding: 78px 0;
+      }
+
+      .header-inner {
+        min-height: 66px;
+      }
+
+      .logo-text {
+        font-size: 1.55rem;
+      }
+
+      .logo-mark {
+        width: 9px;
+        height: 26px;
+      }
+
+      .hero {
+        min-height: 92svh;
+      }
+
+      .hero-content {
+        padding: 130px 0 76px;
+      }
+
+      .hero::before {
+        background:
+          linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0.7),
+            rgba(0, 0, 0, 0.22)
+          );
+      }
+
+      .hero-title {
+        font-size: clamp(4.2rem, 22vw, 7rem);
+        line-height: 0.8;
+      }
+
+      .hero-title .title-second {
+        -webkit-text-stroke: 1px #ffffff;
+        text-stroke: 1px #ffffff;
+      }
+
+      .hero-kicker {
+        font-size: 0.92rem;
+      }
+
+      .hero-description {
+        max-width: 330px;
+        margin-top: 24px;
+        font-size: 0.83rem;
+        line-height: 1.75;
+      }
+
+      .hero-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .primary-button,
+      .secondary-button {
+        width: 100%;
+      }
+
+      .hero-bottom {
+        display: none;
+      }
+
+      .section-heading {
+        margin-bottom: 30px;
+      }
+
+      .section-title {
+        font-size: clamp(3.1rem, 17vw, 4.8rem);
+      }
+
+      .social-layout {
+        gap: 10px;
+      }
+
+      .social-card {
+        min-height: 132px;
+        padding: 20px;
+      }
+
+      .social-card.youtube {
+        min-height: 155px;
+      }
+
+      .social-name {
+        font-size: clamp(1.75rem, 9vw, 2.8rem);
+      }
+
+      .social-description {
+        font-size: 0.7rem;
+        line-height: 1.55;
+      }
+
+      .social-arrow {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+
+      .live-card {
+        grid-template-columns: 1fr;
+      }
+
+      .live-date-box {
+        min-height: auto;
+
+        align-items: flex-start;
+        padding: 30px;
+
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+
+      .live-date-inline {
+        display: flex;
+        align-items: flex-end;
+        gap: 14px;
+      }
+
+      .live-day {
+        font-size: 5.8rem;
+      }
+
+      .live-info {
+        padding: 32px 28px;
+      }
+
+      .live-action {
+        grid-column: auto;
+        min-height: 66px;
+      }
+
+      .video-shell {
+        padding: 6px;
+      }
+
+      .video-note {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .feature-card {
+        min-height: 320px;
+        padding: 28px;
+      }
+
+      .support-panel {
+        gap: 25px;
+      }
+
+      .support-copy br {
+        display: none;
+      }
+
+      .contact-copy-box,
+      .contact-action-box {
+        min-height: auto;
+      }
+
+      .footer-bottom {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    /* =========================================================
+       動きを減らす設定への対応
+    ========================================================= */
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
 </head>
 
 <body>
-<div class="container">
 
-<h1>shoによるツールサイト</h1>
+  <!-- =======================================================
+       ヘッダー
+  ======================================================== -->
 
-<p>
-本サイトでは、スマスロ「ミリオンゴッド ～神々の軌跡～」の出目チェックや設定推測に役立つツールを公開しています。
-</p>
+  <header class="site-header" id="siteHeader">
+    <div class="container header-inner">
 
-<div class="box">
-<h2>出目チェッカー</h2>
-<p>
-入力された履歴をもとに、初当たり確率や設定推測を簡易的に行うツールです。  
-遊技の参考情報としてご利用ください。
-</p>
-<p>
-<a href="https://sho-support.github.io/god-checker/">▶ 出目チェッカーを開く</a>
-</p>
-</div>
-<div class="box">
-     <h2>サイト内コンテンツ</h2>
+      <a class="site-logo" href="#top" aria-label="トップへ戻る">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span class="logo-text">GUNS N' LOSES</span>
+      </a>
 
-<ul>
-<li><a href="https://sho-support.github.io/god-checker/beginner.html">初心者向け用語解説</a></li>
-<li><a href="https://sho-support.github.io/god-checker/basic.html">基本情報・天井・小役確率</a></li>
-<li><a href="https://sho-support.github.io/god-checker/reach.html">出目一覧・リーチ目まとめ</a></li>
-<li><a href="https://sho-support.github.io/god-checker/gaia.html">ガイアモード・ステージまとめ</a></li>
-<li><a href="https://sho-support.github.io/god-checker/simulator.html">同時抽選シミュレーター</a></li>
-<li><a href="https://sho-support.github.io/god-checker/effects.html">演出法則まとめ</a></li>
-<li><a href="https://sho-support.github.io/god-checker/setting.html">初当たり確率からの設定推測</a></li>
-</ul>
-</div>
-<div class="box">
-<h2>注意事項</h2>
-<p>
-本ツールは非公式のファンツールであり、特定の企業・メーカーとは一切関係ありません。  
-掲載している情報は正確性を保証するものではなく、参考情報としてご利用ください。
-</p>
-</div>
+      <nav class="desktop-nav" aria-label="メインナビゲーション">
+        <a href="#follow">Follow</a>
+        <a href="#live">Live</a>
+        <a href="#video">Video</a>
+        <a href="#about">About</a>
+        <a href="#support">Support</a>
+        <a href="#contact">Contact</a>
+      </nav>
 
-<div class="box">
-<h2>お問い合わせ</h2>
-<p>
-ご質問・ご要望は以下よりお願いいたします。
-</p>
-LINE：<a href="https://lin.ee/rKOlEfF" target="_blank">公式LINEはこちら</a>
-</p>
+      <button
+        class="menu-button"
+        id="menuButton"
+        type="button"
+        aria-label="メニューを開く"
+        aria-expanded="false"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
 
-<p>
-当サイトは今後も機能改善や新ツールの追加を予定しています。  
-ご意見・ご要望はお気軽にお送りください。
-</p>
-</div>
+    </div>
+  </header>
 
-<div class="box">
-<h2>ポリシー</h2>
-<p>
-<a href="https://sho-support.github.io/god-checker/privacy.html">
-プライバシーポリシー・免責事項はこちら
-</a>
-</p>
-</div>
+  <div class="mobile-menu" id="mobileMenu">
+    <nav aria-label="スマートフォン用メニュー">
+      <a href="#follow">Follow</a>
+      <a href="#live">Live</a>
+      <a href="#video">Video</a>
+      <a href="#about">About</a>
+      <a href="#support">Support</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
 
-<footer>
-<p>
-運営者：sho-support（個人運営）<br>
-本サイトは広告配信サービス（Google AdSense）を利用しています。
-</p>
-</footer>
+  <main>
 
-</div>
+    <!-- =====================================================
+         ヒーロー
+    ====================================================== -->
+
+    <section class="hero" id="top">
+
+      <div
+        class="hero-background"
+        id="heroBackground"
+        aria-hidden="true"
+      ></div>
+
+      <div class="hero-noise" aria-hidden="true"></div>
+
+      <div class="container hero-content">
+
+        <p class="hero-kicker">
+          SENDAI, JAPAN
+        </p>
+
+        <h1 class="hero-title">
+          <span>GUNS N'</span>
+          <span class="title-second">LOSES</span>
+        </h1>
+
+        <p class="hero-description">
+          仙台を中心に活動する<br>
+          GUNS N' ROSES TRIBUTE BAND
+        </p>
+
+        <div class="hero-actions">
+
+          <!-- ▼ YouTubeのURLへ変更 -->
+          <a
+            class="primary-button"
+            href="https://www.youtube.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            WATCH LIVE VIDEOS
+            <span class="button-arrow">→</span>
+          </a>
+
+          <a class="secondary-button" href="#live">
+            NEXT LIVE
+            <span class="button-arrow">↓</span>
+          </a>
+
+        </div>
+
+      </div>
+
+      <div class="hero-bottom" aria-hidden="true">
+        <span>SCROLL</span>
+        <span class="scroll-line"></span>
+      </div>
+
+    </section>
+
+    <!-- =====================================================
+         SNS
+    ====================================================== -->
+
+    <section class="section" id="follow">
+      <div class="container">
+
+        <div class="section-heading reveal">
+          <p class="eyebrow">OFFICIAL SOCIAL MEDIA</p>
+          <h2 class="section-title">
+            FOLLOW <span class="red-text">US</span>
+          </h2>
+          <p class="section-title-ja">
+            ライブ映像・写真・出演情報を発信しています
+          </p>
+        </div>
+
+        <div class="social-layout">
+
+          <!-- ▼ YouTubeのURLへ変更 -->
+          <a
+            class="social-card youtube reveal"
+            href="https://www.youtube.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div>
+              <h3 class="social-name">YOUTUBE</h3>
+              <p class="social-description">
+                フルライブ・演奏動画・Shorts
+              </p>
+            </div>
+
+            <span class="social-arrow">→</span>
+          </a>
+
+          <!-- ▼ TikTokのURLへ変更 -->
+          <a
+            class="social-card tiktok reveal reveal-delay-1"
+            href="https://www.tiktok.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div>
+              <h3 class="social-name">TIKTOK</h3>
+              <p class="social-description">
+                ライブクリップ・ショート動画
+              </p>
+            </div>
+
+            <span class="social-arrow">→</span>
+          </a>
+
+          <!-- ▼ InstagramのURLへ変更 -->
+          <a
+            class="social-card instagram reveal reveal-delay-2"
+            href="https://www.instagram.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div>
+              <h3 class="social-name">INSTAGRAM</h3>
+              <p class="social-description">
+                ライブ写真・オフショット
+              </p>
+            </div>
+
+            <span class="social-arrow">→</span>
+          </a>
+
+          <!-- ▼ FacebookのURLへ変更 -->
+          <a
+            class="social-card facebook reveal reveal-delay-1"
+            href="https://www.facebook.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div>
+              <h3 class="social-name">FACEBOOK</h3>
+              <p class="social-description">
+                ライブ情報・活動のお知らせ
+              </p>
+            </div>
+
+            <span class="social-arrow">→</span>
+          </a>
+
+          <!-- ▼ XのURLへ変更 -->
+          <a
+            class="social-card x reveal reveal-delay-2"
+            href="https://x.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div>
+              <h3 class="social-name">X</h3>
+              <p class="social-description">
+                最新情報・動画公開のお知らせ
+              </p>
+            </div>
+
+            <span class="social-arrow">→</span>
+          </a>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================
+         次回ライブ
+         ※日程が決まったら、この部分を書き換える
+    ====================================================== -->
+
+    <section class="section section-dark" id="live">
+      <div class="container">
+
+        <div class="section-heading reveal">
+          <p class="eyebrow">UPCOMING SHOW</p>
+          <h2 class="section-title">
+            NEXT <span class="red-text">LIVE</span>
+          </h2>
+          <p class="section-title-ja">
+            次回の出演情報
+          </p>
+        </div>
+
+        <a
+          class="live-card reveal"
+          href="live.html"
+          aria-label="次回ライブの詳細を見る"
+        >
+
+          <div class="live-date-box">
+
+            <div class="live-date-inline">
+              <!-- ▼ 月 -->
+              <span class="live-month">COMING</span>
+
+              <!-- ▼ 日付 -->
+              <span class="live-day">SOON</span>
+            </div>
+
+            <!-- ▼ 年 -->
+            <span class="live-year">2026</span>
+
+          </div>
+
+          <div class="live-info">
+
+            <p class="live-label">
+              NEXT SHOW
+            </p>
+
+            <!-- ▼ ライブタイトル -->
+            <h3 class="live-title">
+              LIVE INFORMATION
+            </h3>
+
+            <!-- ▼ 会場 -->
+            <p class="live-venue">
+              次回ライブは現在調整中です
+            </p>
+
+            <div class="live-meta">
+              <span>詳細が決まり次第お知らせします</span>
+            </div>
+
+          </div>
+
+          <div class="live-action">
+            VIEW DETAILS
+            <span class="button-arrow">→</span>
+          </div>
+
+        </a>
+
+      </div>
+    </section>
+
+    <!-- =====================================================
+         最新YouTube動画
+    ====================================================== -->
+
+    <section class="section" id="video">
+      <div class="container">
+
+        <div class="section-heading reveal">
+          <p class="eyebrow">WATCH OUR PERFORMANCE</p>
+          <h2 class="section-title">
+            LATEST <span class="red-text">VIDEO</span>
+          </h2>
+          <p class="section-title-ja">
+            最新のライブ映像
+          </p>
+        </div>
+
+        <div class="video-shell reveal">
+
+          <div class="video-frame">
+
+            <!--
+              ▼ YouTube動画を変更する場所
+
+              通常のURL：
+              https://www.youtube.com/watch?v=ABCDEFGHIJK
+
+              ↓ iframeには、最後の動画IDだけ入れる
+              https://www.youtube.com/embed/ABCDEFGHIJK
+            -->
+
+            <iframe
+              src="https://www.youtube.com/embed/VIDEO_ID"
+              title="Guns N' Loses 最新ライブ映像"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
+
+          </div>
+
+          <div class="video-note">
+
+            <p>
+              Guns N' Losesのライブ映像をYouTubeで公開しています。
+            </p>
+
+            <!-- ▼ YouTubeチャンネルのURLへ変更 -->
+            <a
+              class="text-link"
+              href="https://www.youtube.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              VIEW CHANNEL
+              <span class="button-arrow">→</span>
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================
+         About / Band Support
+    ====================================================== -->
+
+    <section class="section section-dark" id="about">
+      <div class="container">
+
+        <div class="section-heading reveal">
+          <p class="eyebrow">WHO WE ARE</p>
+          <h2 class="section-title">
+            MORE ABOUT <span class="red-text">US</span>
+          </h2>
+        </div>
+
+        <div class="feature-grid">
+
+          <a
+            class="feature-card reveal"
+            href="about.html"
+          >
+            <span class="feature-number">01 / ABOUT</span>
+
+            <div>
+              <h3 class="feature-title">
+                ABOUT<br>THE BAND
+              </h3>
+
+              <p class="feature-description">
+                Guns N' Losesは、仙台を中心に活動する
+                Guns N' Rosesトリビュートバンドです。
+              </p>
+            </div>
+
+            <div class="feature-bottom">
+              READ MORE
+              <span class="button-arrow">→</span>
+            </div>
+          </a>
+
+          <a
+            class="feature-card reveal reveal-delay-1"
+            href="support.html"
+          >
+            <span class="feature-number">02 / BAND SUPPORT</span>
+
+            <div>
+              <h3 class="feature-title">
+                BAND<br>SUPPORT
+              </h3>
+
+              <p class="feature-description">
+                バンド活動で得た経験を活かし、
+                音楽活動に必要な制作をサポートします。
+              </p>
+
+              <ul class="feature-list">
+                <li>ライブ撮影</li>
+                <li>ライブ動画編集</li>
+                <li>バンドホームページ制作</li>
+              </ul>
+            </div>
+
+            <div class="feature-bottom">
+              VIEW SERVICE
+              <span class="button-arrow">→</span>
+            </div>
+          </a>
+
+          <a
+            class="feature-card reveal reveal-delay-2"
+            href="#contact"
+          >
+            <span class="feature-number">03 / BOOKING</span>
+
+            <div>
+              <h3 class="feature-title">
+                LIVE<br>BOOKING
+              </h3>
+
+              <p class="feature-description">
+                ライブイベントへの出演依頼や、
+                バンドに関するお問い合わせはこちら。
+              </p>
+            </div>
+
+            <div class="feature-bottom">
+              CONTACT US
+              <span class="button-arrow">→</span>
+            </div>
+          </a>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================
+         月額応援
+    ====================================================== -->
+
+    <section class="section" id="support">
+      <div class="container">
+
+        <div class="support-panel reveal">
+
+          <div>
+            <p class="eyebrow">KEEP THE BAND MOVING</p>
+
+            <h2 class="support-title">
+              SUPPORT<br>
+              GUNS N' LOSES
+            </h2>
+
+            <p class="support-copy">
+              Guns N' Losesの活動を応援してくださる方向けの
+              サポータープランです。<br>
+              いただいた応援は、ライブ活動や動画制作など、
+              バンドを続けていくための活動費として大切に活用します。
+            </p>
+
+            <p class="support-small">
+              お礼として、舞台裏や練習風景、オフショットなどを
+              不定期でお届けする予定です。
+            </p>
+          </div>
+
+          <div class="support-price-box">
+
+            <p class="support-price-label">
+              MONTHLY SUPPORT
+            </p>
+
+            <p class="support-price">
+              ¥500<span>/ 月</span>
+            </p>
+
+            <!--
+              ▼ 支援ページを作った後、
+              support-us.html または支援サービスのURLに変更
+            -->
+            <a
+              class="primary-button"
+              href="support-us.html"
+            >
+              SUPPORT US
+              <span class="button-arrow">→</span>
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================
+         Contact
+    ====================================================== -->
+
+    <section class="section section-dark" id="contact">
+      <div class="container">
+
+        <div class="contact-grid">
+
+          <div class="contact-copy-box reveal">
+
+            <div>
+              <p class="eyebrow">GET IN TOUCH</p>
+
+              <h2 class="contact-title">
+                CONTACT
+              </h2>
+
+              <p class="contact-description">
+                ライブ出演依頼、ライブ撮影、動画編集、
+                ホームページ制作などのご相談は、
+                LINEからお問い合わせください。
+              </p>
+            </div>
+
+            <div class="contact-tags">
+              <span class="contact-tag">出演依頼</span>
+              <span class="contact-tag">ライブ撮影</span>
+              <span class="contact-tag">動画編集</span>
+              <span class="contact-tag">ホームページ制作</span>
+              <span class="contact-tag">その他のご相談</span>
+            </div>
+
+          </div>
+
+          <div class="contact-action-box reveal reveal-delay-1">
+
+            <!-- ▼ LINE公式アカウントのURLへ変更 -->
+            <a
+              class="line-button"
+              href="https://line.me/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span>
+                <strong>LINEで問い合わせる</strong>
+                <small>出演依頼・制作相談はこちら</small>
+              </span>
+
+              <span class="button-arrow">→</span>
+            </a>
+
+            <p class="contact-caution">
+              内容を確認後、できるだけ早くご返信します。
+              営業目的のみのご連絡には返信できない場合があります。
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =======================================================
+       フッター
+  ======================================================== -->
+
+  <footer class="site-footer">
+    <div class="container">
+
+      <div class="footer-top">
+
+        <div>
+          <p class="footer-logo">
+            GUNS N'<br>
+            <span class="red-text">LOSES</span>
+          </p>
+
+          <p class="footer-subtitle">
+            GUNS N' ROSES TRIBUTE BAND / SENDAI, JAPAN
+          </p>
+        </div>
+
+        <div class="footer-socials">
+
+          <!-- ▼ 各URLを変更 -->
+          <a
+            href="https://www.youtube.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            YOUTUBE
+          </a>
+
+          <a
+            href="https://www.tiktok.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            TIKTOK
+          </a>
+
+          <a
+            href="https://www.instagram.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            INSTAGRAM
+          </a>
+
+          <a
+            href="https://www.facebook.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            FACEBOOK
+          </a>
+
+          <a
+            href="https://x.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            X
+          </a>
+
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+
+        <span>
+          © <span id="currentYear"></span> Guns N' Loses.
+          All Rights Reserved.
+        </span>
+
+        <a class="back-to-top" href="#top">
+          BACK TO TOP ↑
+        </a>
+
+      </div>
+
+    </div>
+  </footer>
+
+  <script>
+    /* =========================================================
+       ヒーロー画像を5枚からランダム表示
+    ========================================================= */
+
+    const heroImages = [
+      "images/hero-01.jpg",
+      "images/hero-02.jpg",
+      "images/hero-03.jpg",
+      "images/hero-04.jpg",
+      "images/hero-05.jpg"
+    ];
+
+    const heroBackground = document.getElementById("heroBackground");
+
+    const randomHeroImage =
+      heroImages[Math.floor(Math.random() * heroImages.length)];
+
+    /*
+      画像が存在する場合だけ設定します。
+      画像がない場合は黒い背景のまま表示されます。
+    */
+
+    const preloadHero = new Image();
+
+    preloadHero.onload = function () {
+      heroBackground.style.backgroundImage =
+        `url("${randomHeroImage}")`;
+    };
+
+    preloadHero.onerror = function () {
+      heroBackground.style.backgroundImage =
+        `
+          radial-gradient(
+            circle at 65% 30%,
+            rgba(209, 18, 47, 0.22),
+            transparent 35%
+          ),
+          linear-gradient(
+            135deg,
+            #151515,
+            #050505
+          )
+        `;
+    };
+
+    preloadHero.src = randomHeroImage;
+
+    /* =========================================================
+       ヘッダー背景
+    ========================================================= */
+
+    const siteHeader = document.getElementById("siteHeader");
+
+    function updateHeader() {
+      if (window.scrollY > 30) {
+        siteHeader.classList.add("scrolled");
+      } else {
+        siteHeader.classList.remove("scrolled");
+      }
+    }
+
+    window.addEventListener("scroll", updateHeader);
+    updateHeader();
+
+    /* =========================================================
+       スマホメニュー
+    ========================================================= */
+
+    const menuButton = document.getElementById("menuButton");
+    const mobileMenu = document.getElementById("mobileMenu");
+    const mobileLinks = mobileMenu.querySelectorAll("a");
+
+    function closeMobileMenu() {
+      menuButton.classList.remove("active");
+      mobileMenu.classList.remove("active");
+      document.body.classList.remove("menu-open");
+
+      menuButton.setAttribute("aria-expanded", "false");
+      menuButton.setAttribute("aria-label", "メニューを開く");
+    }
+
+    menuButton.addEventListener("click", function () {
+      const isOpen = mobileMenu.classList.toggle("active");
+
+      menuButton.classList.toggle("active", isOpen);
+      document.body.classList.toggle("menu-open", isOpen);
+
+      menuButton.setAttribute(
+        "aria-expanded",
+        isOpen ? "true" : "false"
+      );
+
+      menuButton.setAttribute(
+        "aria-label",
+        isOpen ? "メニューを閉じる" : "メニューを開く"
+      );
+    });
+
+    mobileLinks.forEach(function (link) {
+      link.addEventListener("click", closeMobileMenu);
+    });
+
+    window.addEventListener("resize", function () {
+      if (window.innerWidth > 900) {
+        closeMobileMenu();
+      }
+    });
+
+    /* =========================================================
+       スクロール表示アニメーション
+    ========================================================= */
+
+    const revealElements = document.querySelectorAll(".reveal");
+
+    if ("IntersectionObserver" in window) {
+      const revealObserver = new IntersectionObserver(
+        function (entries, observer) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          threshold: 0.12,
+          rootMargin: "0px 0px -40px 0px"
+        }
+      );
+
+      revealElements.forEach(function (element) {
+        revealObserver.observe(element);
+      });
+    } else {
+      revealElements.forEach(function (element) {
+        element.classList.add("visible");
+      });
+    }
+
+    /* =========================================================
+       フッターの年を自動更新
+    ========================================================= */
+
+    document.getElementById("currentYear").textContent =
+      new Date().getFullYear();
+  </script>
+
 </body>
 </html>
