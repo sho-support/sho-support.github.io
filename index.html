@@ -312,13 +312,13 @@
       font-weight:800;
       letter-spacing:.08em
     }
-    .card-about{--card-accent:#d8dde5}
+    .card-about{--card-accent:#3b82f6}
     .card-service{--card-accent:#d51635}
     .card-booking{--card-accent:#f08a35}
     .card:hover{
       box-shadow:0 18px 50px rgba(0,0,0,.35);
     }
-    .card-about:hover{box-shadow:0 18px 50px rgba(216,221,229,.10)}
+    .card-about:hover{box-shadow:0 18px 50px rgba(59,130,246,.18)}
     .card-service:hover{box-shadow:0 18px 50px rgba(213,22,53,.16)}
     .card-booking:hover{box-shadow:0 18px 50px rgba(240,138,53,.15)}
     .num{color:var(--red);font:1.12rem var(--rock);letter-spacing:.16em}
@@ -335,7 +335,7 @@
     }
     .gallery-preview-card{
       position:relative;
-      min-height:460px;
+      height:clamp(250px,31vh,330px);
       overflow:hidden;
       border:1px solid var(--line);
       background:#111
@@ -345,52 +345,51 @@
       height:100%;
       object-fit:cover;
       display:block;
-      filter:saturate(.92) contrast(1.04);
+      filter:saturate(.94) contrast(1.04);
       transition:transform .5s ease,filter .4s ease
     }
     .gallery-preview-card:after{
       content:"";
       position:absolute;
       inset:0;
-      background:linear-gradient(180deg,transparent 52%,rgba(0,0,0,.82));
+      background:linear-gradient(180deg,transparent 58%,rgba(0,0,0,.72));
       pointer-events:none
     }
     .gallery-preview-card:hover img{
-      transform:scale(1.045);
-      filter:saturate(1.05) contrast(1.07)
+      transform:scale(1.04);
+      filter:saturate(1.06) contrast(1.07)
     }
     .gallery-preview-caption{
       position:absolute;
       z-index:2;
-      left:22px;
-      right:22px;
-      bottom:18px;
+      left:18px;
+      right:18px;
+      bottom:14px;
       display:flex;
-      justify-content:space-between;
       align-items:flex-end;
-      gap:20px
+      justify-content:space-between;
+      gap:16px
     }
     .gallery-preview-caption strong{
       display:block;
-      font:clamp(1.8rem,4vw,3rem)/1 var(--rock);
+      font:clamp(1.55rem,3vw,2.4rem)/1 var(--rock);
       letter-spacing:.06em
     }
     .gallery-preview-caption span{
       display:block;
-      margin-top:5px;
+      margin-top:3px;
       color:var(--soft);
-      font-size:.76rem
+      font-size:.72rem
     }
     .gallery-preview-arrow{
-      font:2rem var(--rock);
-      color:var(--red)
+      color:var(--red)!important;
+      font:1.8rem var(--rock)!important
     }
     .gallery-more{
-      margin-top:18px;
+      margin-top:14px;
       display:flex;
       justify-content:flex-end
     }
-
 
     /* Support */
     .support-box{
@@ -442,6 +441,28 @@
     .reveal{opacity:0;transform:translateY(26px);transition:.75s}
     .reveal.visible{opacity:1;transform:none}
 
+
+    @media(min-width:901px){
+      .section{
+        min-height:calc(100svh - 72px);
+        padding:72px 0 34px;
+        display:flex;
+        align-items:center
+      }
+      .section > .container{width:min(calc(100% - 38px),var(--max))}
+      .heading{margin-bottom:30px}
+      #follow .social-grid{gap:11px}
+      #follow .social{min-height:92px;padding:17px 20px}
+      #follow .social.youtube{min-height:108px}
+      #live .date-box{min-height:250px}
+      #live .live-info{padding:34px}
+      #video .video-shell{width:min(82%,980px)}
+      #about .card{min-height:315px;padding:28px}
+      #support .support-box{padding:48px 58px}
+      #contact .contact-pane{min-height:285px}
+      #gallery .heading{margin-bottom:24px}
+    }
+
     @media(max-width:900px){
       .nav{display:none}.menu-btn{display:block}
       .cards{grid-template-columns:1fr}
@@ -477,7 +498,7 @@
       .footer-bottom{flex-direction:column;align-items:flex-start}
 
       .gallery-preview{grid-template-columns:1fr}
-      .gallery-preview-card{min-height:420px}
+      .gallery-preview-card{height:300px;min-height:0}
       .live-details-grid{grid-template-columns:1fr}
       .live-details-panel{padding:22px}
 
@@ -716,39 +737,32 @@
       <div class="heading reveal">
         <p class="eyebrow">LIVE MOMENTS</p>
         <h2 class="title">LIVE <span class="red">GALLERY</span></h2>
-        <p class="sub">ライブ写真をもっと見る</p>
+        <p class="sub">アクセスするたびに、ライブ写真をランダムで2枚表示します。</p>
       </div>
 
       <div class="gallery-preview">
-        <a class="gallery-preview-card reveal" href="gallery.html">
-          <img src="images/hero-09.webp" alt="ライブ中のボーカルとギタリスト" loading="lazy">
+        <a class="gallery-preview-card reveal" href="gallery.html" aria-label="ライブギャラリーを見る">
+          <img id="galleryPreview1" src="images/hero-01.webp" alt="Guns N' Loses ライブ写真" loading="lazy">
           <div class="gallery-preview-caption">
-            <div>
-              <strong>VOCAL &amp; GUITAR</strong>
-              <span>LIVE HOUSE</span>
-            </div>
+            <div><strong>LIVE MOMENT</strong><span>GUNS N' LOSES</span></div>
             <span class="gallery-preview-arrow">→</span>
           </div>
         </a>
 
-        <a class="gallery-preview-card reveal" href="gallery.html">
-          <img src="images/hero-01.webp" alt="野外ライブで演奏するGuns N' Loses" loading="lazy">
+        <a class="gallery-preview-card reveal" href="gallery.html" aria-label="ライブギャラリーを見る">
+          <img id="galleryPreview2" src="images/hero-02.webp" alt="Guns N' Loses ライブ写真" loading="lazy">
           <div class="gallery-preview-caption">
-            <div>
-              <strong>OUTDOOR LIVE</strong>
-              <span>MATSUSHIMA</span>
-            </div>
+            <div><strong>LIVE MOMENT</strong><span>GUNS N' LOSES</span></div>
             <span class="gallery-preview-arrow">→</span>
           </div>
         </a>
       </div>
 
       <div class="gallery-more reveal">
-        <a class="btn btn-ghost" href="gallery.html">写真をもっと見る →</a>
+        <a class="btn btn-ghost" href="gallery.html">もっと写真を見る →</a>
       </div>
     </div>
   </section>
-
 
   <section class="section" id="support">
     <div class="container">
@@ -903,6 +917,21 @@
     reveals.forEach(el => el.classList.add("visible"));
   }
 
+
+
+  const galleryImages = [
+    "images/hero-01.webp","images/hero-02.webp","images/hero-03.webp",
+    "images/hero-04.webp","images/hero-05.webp","images/hero-06.webp",
+    "images/hero-07.webp","images/hero-08.webp","images/hero-09.webp",
+    "images/hero-10.webp"
+  ];
+  const shuffledGalleryImages = [...galleryImages].sort(() => Math.random() - 0.5);
+  const galleryPreview1 = document.getElementById("galleryPreview1");
+  const galleryPreview2 = document.getElementById("galleryPreview2");
+  if(galleryPreview1 && galleryPreview2){
+    galleryPreview1.src = shuffledGalleryImages[0];
+    galleryPreview2.src = shuffledGalleryImages[1];
+  }
 
   const liveToggle = document.getElementById("liveToggle");
   const liveDetails = document.getElementById("liveDetails");
