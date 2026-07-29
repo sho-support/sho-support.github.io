@@ -201,6 +201,17 @@
       font-size:.84rem
     }
 
+    .personal-cta{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:30px;
+      padding:34px;
+      border:1px solid var(--line);
+      background:linear-gradient(135deg,#111,#080808)
+    }
+    .personal-cta h2{margin:8px 0;font:2.4rem var(--rock);letter-spacing:.04em}
+    .personal-cta p:last-child{margin:0;color:var(--soft)}
     footer{padding:34px 0;border-top:1px solid var(--line);color:#777;font-size:.72rem}
     @media(max-width:800px){
       .services{grid-template-columns:1fr}
@@ -209,6 +220,7 @@
       .personal-card{grid-template-columns:1fr}
       .personal-price{padding-left:0;padding-top:20px;border-left:0;border-top:1px solid var(--line)}
       .contact-box{grid-template-columns:1fr}
+      .personal-cta{grid-template-columns:1fr}
       .hero{padding-top:70px}
       .back{font-size:.82rem}
     }
@@ -225,9 +237,9 @@
 <main>
   <section class="hero">
     <div class="container">
-      <p class="eyebrow">FOR BANDS &amp; MUSICIANS</p>
+      <p class="eyebrow">BY SHO / SLASH GUITAR</p>
       <h1>BAND <span class="red">SUPPORT</span></h1>
-      <p class="lead">バンド活動で得た経験を活かし、ライブ撮影・動画編集・ホームページ制作などをサポートします。内容や規模に応じて柔軟に対応します。</p>
+      <p class="lead">Guns N' LosesでSlashパートを担当するshoが、実際のバンド活動で得た経験を活かし、ライブ撮影・動画編集・バンドサイト制作をサポートします。</p>
     </div>
   </section>
 
@@ -292,30 +304,30 @@
       <div class="sd-grid">
         <article class="sd-card">
           <strong>32GB</strong>
-          <span>短時間・1回限り向け</span>
-          <p>30分撮影でも設定や実際の収録時間によっては容量がぎりぎりになる可能性があります。</p>
+          <span>参考価格 約2,500円</span>
+          <p>30分撮影でも設定や収録時間によっては容量がぎりぎりになる可能性があります。</p>
         </article>
         <article class="sd-card recommended">
           <em>RECOMMENDED</em>
           <strong>64GB</strong>
-          <span>1回の撮影に安心</span>
-          <p>30〜60分程度の撮影なら、まず64GBを推奨します。</p>
+          <span>参考価格 約2,000円</span>
+          <p>1回の撮影ならまず64GBを推奨します。余裕を持って受け渡ししやすい容量です。</p>
         </article>
         <article class="sd-card">
           <strong>128GB</strong>
-          <span>今後も使う方向け</span>
-          <p>複数回のライブ撮影や、撮影後もカードを使い続けたい方向けです。</p>
+          <span>参考価格 約4,700円</span>
+          <p>複数回のライブ撮影や、今後もカードを使い続けたい方向けです。</p>
         </article>
         <article class="sd-card">
           <strong>256GB</strong>
-          <span>長期利用・余裕重視</span>
-          <p>長時間撮影や今後の継続利用を想定する方向けです。</p>
+          <span>参考価格 約8,700円</span>
+          <p>長時間撮影や継続利用を想定する方向けです。</p>
         </article>
       </div>
 
       <div class="notes sd-price-note">
         <strong>こちらでmicroSDを用意する場合</strong><br>
-        お渡し価格は、購入時点のヨドバシカメラ販売価格に手配料700円を加えた金額です。価格や在庫は変動するため、ご依頼時に容量と最終金額をご案内します。撮影用には原則としてUHS-I U3・V30以上のカードを選びます。
+        上記は2026年7月時点のヨドバシカメラ掲載価格を参考にした目安です。購入商品・在庫・価格改定により変動するため、ご依頼時に最終金額をご案内します。撮影用には原則としてUHS-I U3・V30以上のカードを選びます。
       </div>
     </div>
   </section>
@@ -369,32 +381,7 @@
       </div>
     </div>
   </section>
-
-  <section class="section personal-section">
-    <div class="container">
-      <p class="eyebrow">SHO PERSONAL SUPPORT</p>
-      <h2 class="title">BEGINNER GUITAR <span class="red">LESSON</span></h2>
-
-      <div class="personal-card">
-        <div>
-          <h3>初心者向けギターレッスン</h3>
-          <p>ギターをこれから始めたい方、基礎から練習したい方向けです。構え方、コード、リズム、練習方法、弦交換などに対応します。</p>
-        </div>
-        <div class="personal-price">
-          <strong>30分 ¥3,000</strong>
-          <strong>60分 ¥4,500</strong>
-          <span>オンライン対応／対面は交通費・施設費別</span>
-        </div>
-      </div>
-
-      <div class="other-support">
-        <strong>OTHER SUPPORT</strong>
-        <p>相談、買い物補助、軽作業など、音楽以外の内容も対応できる場合があります。詳細はLINEからご相談ください。</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
+<section class="section">
     <div class="container">
       <h2 class="title">BEFORE <span class="red">BOOKING</span></h2>
       <div class="notes">
