@@ -1,0 +1,17 @@
+{
+  "name": "guns-n-loses-members",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "stripe": "^17.7.0"
+  },
+  "devDependencies": {
+    "vercel": "^41.4.1"
+  }
+}
