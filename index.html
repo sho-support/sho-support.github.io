@@ -184,6 +184,102 @@
     .mini-live span{color:var(--soft);font-size:.78rem}
     .pending{display:inline-block;margin-top:10px;padding:3px 8px;border:1px solid rgba(255,255,255,.2);font-size:.68rem;color:#bbb}
 
+
+    .live-toggle{
+      width:100%;
+      padding:0;
+      color:inherit;
+      background:transparent;
+      border:0;
+      text-align:left;
+      cursor:pointer
+    }
+    .live-toggle .live-card{width:100%}
+    .live-toggle:focus-visible{
+      outline:2px solid var(--red);
+      outline-offset:5px
+    }
+    .live-action span{
+      display:inline-block;
+      margin-left:10px;
+      font-size:1.35rem
+    }
+    .live-details{
+      display:grid;
+      grid-template-rows:0fr;
+      transition:grid-template-rows .35s ease
+    }
+    .live-details.open{grid-template-rows:1fr}
+    .live-details-inner{overflow:hidden}
+    .live-details-panel{
+      margin-top:14px;
+      padding:30px;
+      border:1px solid var(--line);
+      background:linear-gradient(145deg,#121212,#0b0b0b)
+    }
+    .live-details-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:28px
+    }
+    .live-details h4{
+      margin:0 0 13px;
+      font:2rem var(--rock);
+      letter-spacing:.06em
+    }
+    .live-details-list{
+      margin:0;
+      padding:0;
+      list-style:none;
+      color:var(--soft);
+      font-size:.9rem
+    }
+    .live-details-list li{
+      padding:10px 0;
+      border-bottom:1px solid var(--line)
+    }
+    .live-details-list b{color:#fff}
+    .official-info{
+      padding:24px;
+      border:1px solid rgba(213,22,53,.38);
+      background:rgba(213,22,53,.06)
+    }
+    .official-info p{
+      margin:8px 0 0;
+      color:var(--soft);
+      font-size:.82rem
+    }
+    .official-status{
+      display:inline-block;
+      margin-bottom:14px;
+      padding:5px 10px;
+      border:1px solid var(--line);
+      color:#bbb;
+      font-size:.7rem
+    }
+    .official-link{
+      display:inline-flex;
+      margin-top:18px;
+      color:#fff;
+      font:1rem var(--rock);
+      letter-spacing:.1em
+    }
+    .official-link.is-disabled{
+      color:#777;
+      pointer-events:none
+    }
+    .flyer-placeholder{
+      margin-top:20px;
+      min-height:150px;
+      display:grid;
+      place-items:center;
+      border:1px dashed rgba(255,255,255,.2);
+      color:#777;
+      font-size:.75rem;
+      text-align:center;
+      padding:20px
+    }
+
     /* Video */
     .video-shell{width:min(90%,1080px);margin-inline:auto;padding:9px;border:1px solid var(--line);background:#111;box-shadow:0 30px 80px rgba(0,0,0,.4)}
     .video{aspect-ratio:16/9;position:relative;background:#000}
@@ -232,44 +328,69 @@
     .list li:before{content:"—";color:var(--red);margin-right:8px}
     .card-bottom{padding-top:20px;margin-top:30px;border-top:1px solid var(--line);font:1.08rem var(--rock);letter-spacing:.1em;display:flex;justify-content:space-between}
 
-
-    .gallery-wrap{overflow:hidden}
-    .gallery-track{
+    .gallery-preview{
       display:grid;
-      grid-auto-flow:column;
-      grid-auto-columns:minmax(260px,34vw);
-      gap:14px;
-      overflow-x:auto;
-      padding-bottom:12px;
-      scroll-snap-type:x mandatory;
-      scrollbar-width:thin
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px
     }
-    .gallery-item{
+    .gallery-preview-card{
       position:relative;
-      aspect-ratio:4/5;
+      min-height:460px;
       overflow:hidden;
       border:1px solid var(--line);
-      background:#111;
-      scroll-snap-align:start
+      background:#111
     }
-    .gallery-item img{
-      width:100%;height:100%;object-fit:cover;display:block;
-      filter:saturate(.9) contrast(1.04);
+    .gallery-preview-card img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      filter:saturate(.92) contrast(1.04);
       transition:transform .5s ease,filter .4s ease
     }
-    .gallery-item:after{
-      content:"";position:absolute;inset:0;
-      background:linear-gradient(180deg,transparent 58%,rgba(0,0,0,.7));
+    .gallery-preview-card:after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg,transparent 52%,rgba(0,0,0,.82));
       pointer-events:none
     }
-    .gallery-item:hover img{transform:scale(1.045);filter:saturate(1.05) contrast(1.07)}
-    .gallery-caption{
-      position:absolute;z-index:2;left:18px;bottom:14px;
-      font:1rem var(--rock);letter-spacing:.11em
+    .gallery-preview-card:hover img{
+      transform:scale(1.045);
+      filter:saturate(1.05) contrast(1.07)
     }
-    @media(max-width:640px){
-      .gallery-track{grid-auto-columns:78vw}
+    .gallery-preview-caption{
+      position:absolute;
+      z-index:2;
+      left:22px;
+      right:22px;
+      bottom:18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:20px
     }
+    .gallery-preview-caption strong{
+      display:block;
+      font:clamp(1.8rem,4vw,3rem)/1 var(--rock);
+      letter-spacing:.06em
+    }
+    .gallery-preview-caption span{
+      display:block;
+      margin-top:5px;
+      color:var(--soft);
+      font-size:.76rem
+    }
+    .gallery-preview-arrow{
+      font:2rem var(--rock);
+      color:var(--red)
+    }
+    .gallery-more{
+      margin-top:18px;
+      display:flex;
+      justify-content:flex-end
+    }
+
 
     /* Support */
     .support-box{
@@ -354,6 +475,12 @@
       .card{min-height:310px;padding:27px}
       .contact-pane{min-height:auto}
       .footer-bottom{flex-direction:column;align-items:flex-start}
+
+      .gallery-preview{grid-template-columns:1fr}
+      .gallery-preview-card{min-height:420px}
+      .live-details-grid{grid-template-columns:1fr}
+      .live-details-panel{padding:22px}
+
     }
     @media(prefers-reduced-motion:reduce){
       *{animation-duration:.01ms!important;transition-duration:.01ms!important}
@@ -389,6 +516,7 @@
     <a href="#follow">SNS</a>
     <a href="#live">LIVE</a>
     <a href="#video">VIDEO</a>
+    <a href="#gallery">GALLERY</a>
     <a href="#about">ABOUT</a>
     <a href="#support">SUPPORT</a>
     <a href="#contact">CONTACT</a>
@@ -447,21 +575,53 @@
         <h2 class="title">NEXT <span class="red">LIVE</span></h2>
         <p class="sub">次回の出演情報</p>
       </div>
+      <button class="live-toggle reveal" id="liveToggle" type="button"
+              aria-expanded="false" aria-controls="liveDetails">
+        <div class="live-card">
+          <div class="date-box">
+            <span class="month">SEP</span>
+            <span class="day">05</span>
+            <span class="year">2026 SAT</span>
+          </div>
+          <div class="live-info">
+            <p class="label">JAS FESTIVAL</p>
+            <h3>榴岡公園野外音楽堂</h3>
+            <p class="venue">仙台市榴ヶ岡</p>
+            <p class="meta">出演時間未定／14:30以降になる可能性あり／持ち時間20〜30分予定</p>
+            <p class="meta">雨天中止</p>
+          </div>
+          <div class="live-action">DETAILS <span id="liveArrow">＋</span></div>
+        </div>
+      </button>
 
-      <div class="live-card reveal">
-        <div class="date-box">
-          <span class="month">SEP</span>
-          <span class="day">05</span>
-          <span class="year">2026 SAT</span>
+      <div class="live-details" id="liveDetails">
+        <div class="live-details-inner">
+          <div class="live-details-panel">
+            <div class="live-details-grid">
+              <div>
+                <h4>JAS FESTIVAL 2026</h4>
+                <ul class="live-details-list">
+                  <li><b>開催日：</b>2026年9月5日（土）</li>
+                  <li><b>会場：</b>榴岡公園野外音楽堂</li>
+                  <li><b>場所：</b>仙台市榴ヶ岡</li>
+                  <li><b>出演時間：</b>未定。14:30以降になる可能性あり</li>
+                  <li><b>持ち時間：</b>20〜30分予定</li>
+                  <li><b>天候：</b>雨天中止</li>
+                </ul>
+              </div>
+
+              <div class="official-info">
+                <span class="official-status">公式情報待ち</span>
+                <h4>OFFICIAL INFO</h4>
+                <p>フェス公式ページ、出演順、フライヤーなどは、運営から公開され次第ここに追加します。</p>
+                <a class="official-link is-disabled" href="#" aria-disabled="true">公式ページ 公開待ち →</a>
+                <div class="flyer-placeholder">
+                  公式フライヤー公開後、<br>この場所へ画像を掲載できます
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="live-info">
-          <p class="label">SENDAI JAZZ FESTIVAL</p>
-          <h3>榴岡公園野外音楽堂</h3>
-          <p class="venue">仙台市榴ヶ岡</p>
-          <p class="meta">出演時間未定／14:30以降になる可能性あり／持ち時間20〜30分予定</p>
-          <p class="meta">雨天中止</p>
-        </div>
-        <a class="live-action" href="#contact">DETAILS →</a>
       </div>
 
       <p class="notice">※出演時間などは運営からの正式発表後に更新します。</p>
@@ -551,25 +711,44 @@
     </div>
   </section>
 
-
   <section class="section section-alt" id="gallery">
-    <div class="container gallery-wrap">
+    <div class="container">
       <div class="heading reveal">
         <p class="eyebrow">LIVE MOMENTS</p>
         <h2 class="title">LIVE <span class="red">GALLERY</span></h2>
-        <p class="sub">ステージの空気を、写真でも。</p>
+        <p class="sub">ライブ写真をもっと見る</p>
       </div>
 
-      <div class="gallery-track reveal" aria-label="ライブ写真ギャラリー">
-        <figure class="gallery-item"><img src="images/hero-09.webp" alt="ライブ中のボーカルとギタリスト" loading="lazy"><figcaption class="gallery-caption">VOCAL & GUITAR</figcaption></figure>
-        <figure class="gallery-item"><img src="images/hero-10.webp" alt="ライブ中のギタリスト" loading="lazy"><figcaption class="gallery-caption">RHYTHM GUITAR</figcaption></figure>
-        <figure class="gallery-item"><img src="images/hero-07.webp" alt="ライブ中のギタリストとドラマー" loading="lazy"><figcaption class="gallery-caption">LIVE HOUSE</figcaption></figure>
-        <figure class="gallery-item"><img src="images/hero-08.webp" alt="ライブ中のリードギタリスト" loading="lazy"><figcaption class="gallery-caption">LEAD GUITAR</figcaption></figure>
-        <figure class="gallery-item"><img src="images/hero-05.webp" alt="ステージ上のボーカル" loading="lazy"><figcaption class="gallery-caption">VOCAL</figcaption></figure>
-        <figure class="gallery-item"><img src="images/hero-04.webp" alt="演奏中のドラマー" loading="lazy"><figcaption class="gallery-caption">DRUMS</figcaption></figure>
+      <div class="gallery-preview">
+        <a class="gallery-preview-card reveal" href="gallery.html">
+          <img src="images/hero-09.webp" alt="ライブ中のボーカルとギタリスト" loading="lazy">
+          <div class="gallery-preview-caption">
+            <div>
+              <strong>VOCAL &amp; GUITAR</strong>
+              <span>LIVE HOUSE</span>
+            </div>
+            <span class="gallery-preview-arrow">→</span>
+          </div>
+        </a>
+
+        <a class="gallery-preview-card reveal" href="gallery.html">
+          <img src="images/hero-01.webp" alt="野外ライブで演奏するGuns N' Loses" loading="lazy">
+          <div class="gallery-preview-caption">
+            <div>
+              <strong>OUTDOOR LIVE</strong>
+              <span>MATSUSHIMA</span>
+            </div>
+            <span class="gallery-preview-arrow">→</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="gallery-more reveal">
+        <a class="btn btn-ghost" href="gallery.html">写真をもっと見る →</a>
       </div>
     </div>
   </section>
+
 
   <section class="section" id="support">
     <div class="container">
@@ -722,6 +901,19 @@
     reveals.forEach(el => io.observe(el));
   } else {
     reveals.forEach(el => el.classList.add("visible"));
+  }
+
+
+  const liveToggle = document.getElementById("liveToggle");
+  const liveDetails = document.getElementById("liveDetails");
+  const liveArrow = document.getElementById("liveArrow");
+
+  if (liveToggle && liveDetails) {
+    liveToggle.addEventListener("click", () => {
+      const isOpen = liveDetails.classList.toggle("open");
+      liveToggle.setAttribute("aria-expanded", String(isOpen));
+      if (liveArrow) liveArrow.textContent = isOpen ? "−" : "＋";
+    });
   }
 
   document.getElementById("year").textContent = new Date().getFullYear();

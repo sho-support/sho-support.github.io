@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Guns N' Losesのライブ写真ギャラリー。">
+  <meta name="theme-color" content="#080808">
+  <title>Live Gallery | Guns N' Loses</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#070707;
+      --panel:#111;
+      --text:#fff;
+      --soft:#c7c7c7;
+      --muted:#8f8f8f;
+      --red:#d51635;
+      --line:rgba(255,255,255,.13);
+      --rock:"Bebas Neue",sans-serif;
+      --jp:"Noto Sans JP",sans-serif
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 8%,rgba(213,22,53,.1),transparent 30%),
+        var(--bg);
+      font-family:var(--jp)
+    }
+    a{color:inherit;text-decoration:none}
+    .container{width:min(calc(100% - 34px),1180px);margin:auto}
+    header{
+      position:sticky;
+      top:0;
+      z-index:100;
+      background:rgba(5,5,5,.92);
+      border-bottom:1px solid var(--line);
+      backdrop-filter:blur(14px)
+    }
+    .header-inner{
+      min-height:72px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px
+    }
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font:1.72rem var(--rock);
+      letter-spacing:.07em
+    }
+    .logo-mark{
+      width:11px;
+      height:30px;
+      background:var(--red);
+      transform:skewX(-12deg);
+      box-shadow:8px 0 rgba(213,22,53,.35)
+    }
+    .back{
+      font:1.04rem var(--rock);
+      letter-spacing:.1em
+    }
+    main{padding:90px 0}
+    .eyebrow{
+      display:flex;
+      align-items:center;
+      gap:11px;
+      margin:0 0 12px;
+      color:var(--red);
+      font:1.08rem var(--rock);
+      letter-spacing:.16em
+    }
+    .eyebrow:before{
+      content:"";
+      width:36px;
+      height:3px;
+      background:var(--red)
+    }
+    h1{
+      margin:0;
+      font:clamp(4.5rem,12vw,8rem)/.9 var(--rock);
+      letter-spacing:.04em
+    }
+    .red{color:var(--red)}
+    .lead{
+      margin:18px 0 45px;
+      color:var(--soft)
+    }
+    .gallery-grid{
+      columns:3 280px;
+      column-gap:14px
+    }
+    figure{
+      position:relative;
+      break-inside:avoid;
+      margin:0 0 14px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background:var(--panel)
+    }
+    figure img{
+      width:100%;
+      height:auto;
+      display:block;
+      transition:transform .45s ease,filter .4s ease;
+      filter:saturate(.95) contrast(1.03)
+    }
+    figure:hover img{
+      transform:scale(1.025);
+      filter:saturate(1.05) contrast(1.06)
+    }
+    figcaption{
+      position:absolute;
+      left:14px;
+      bottom:12px;
+      padding:5px 8px;
+      background:rgba(0,0,0,.72);
+      font:1rem var(--rock);
+      letter-spacing:.1em
+    }
+    .gallery-note{
+      margin-top:30px;
+      padding:18px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:.78rem
+    }
+    footer{
+      padding:34px 0;
+      border-top:1px solid var(--line);
+      color:#777;
+      font-size:.72rem
+    }
+    @media(max-width:640px){
+      .header-inner{min-height:64px}
+      .logo{font-size:1.45rem}
+      .back{font-size:.85rem}
+      main{padding:70px 0}
+      .gallery-grid{columns:1}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="container header-inner">
+    <a class="logo" href="index.html">
+      <span class="logo-mark"></span>
+      <span>GUNS N' LOSES</span>
+    </a>
+    <a class="back" href="index.html#gallery">← BACK TO HOME</a>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <p class="eyebrow">LIVE MOMENTS</p>
+    <h1>LIVE <span class="red">GALLERY</span></h1>
+    <p class="lead">野外ライブとライブハウス、それぞれのステージ写真を掲載しています。</p>
+
+    <div class="gallery-grid">
+      <figure><img src="images/hero-01.webp" alt="野外ライブのバンド全景"><figcaption>OUTDOOR LIVE</figcaption></figure>
+      <figure><img src="images/hero-02.webp" alt="野外ライブのボーカル"><figcaption>VOCAL</figcaption></figure>
+      <figure><img src="images/hero-03.webp" alt="野外ライブのリードギター"><figcaption>LEAD GUITAR</figcaption></figure>
+      <figure><img src="images/hero-04.webp" alt="野外ライブのドラム"><figcaption>DRUMS</figcaption></figure>
+      <figure><img src="images/hero-05.webp" alt="ライブハウスのボーカル"><figcaption>VOCAL</figcaption></figure>
+      <figure><img src="images/hero-06.webp" alt="ライブハウスのバンド全景"><figcaption>LIVE HOUSE</figcaption></figure>
+      <figure><img src="images/hero-07.webp" alt="ライブ中のギタリストとドラマー"><figcaption>RHYTHM SECTION</figcaption></figure>
+      <figure><img src="images/hero-08.webp" alt="ライブハウスのリードギタリスト"><figcaption>LEAD GUITAR</figcaption></figure>
+      <figure><img src="images/hero-09.webp" alt="ライブ中のボーカルとギタリスト"><figcaption>VOCAL &amp; GUITAR</figcaption></figure>
+      <figure><img src="images/hero-10.webp" alt="ライブハウスのギタリスト"><figcaption>RHYTHM GUITAR</figcaption></figure>
+    </div>
+
+    <div class="gallery-note">
+      写真は今後追加できます。新しい画像をimagesフォルダへ入れ、このページへ同じ形式のfigure要素を追加してください。
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">© 2026 Guns N' Loses. All Rights Reserved.</div>
+</footer>
+</body>
+</html>
