@@ -626,8 +626,8 @@
       <a href="#live">LIVE</a>
       <a href="#video">VIDEO</a>
       <a href="#gallery">GALLERY</a>
-      <a href="#about">ABOUT</a>
-      <a href="#support">SUPPORT</a>
+      <a href="about.html">ABOUT</a>
+      <a href="support-us.html">SUPPORT</a>
       <a href="#contact">CONTACT</a>
     </nav>
     <button class="menu-btn" id="menuBtn" aria-label="メニューを開く" aria-expanded="false">
@@ -642,8 +642,8 @@
     <a href="#live">LIVE</a>
     <a href="#video">VIDEO</a>
     <a href="#gallery">GALLERY</a>
-    <a href="#about">ABOUT</a>
-    <a href="#support">SUPPORT</a>
+    <a href="about.html">ABOUT</a>
+    <a href="support-us.html">SUPPORT</a>
     <a href="#contact">CONTACT</a>
   </nav>
 </div>
@@ -847,35 +847,20 @@
         <p class="eyebrow">WHO WE ARE</p>
         <h2 class="title">MORE ABOUT <span class="red">US</span></h2>
       </div>
-      <div class="cards">
-        <a class="card card-about reveal" href="#about">
+      <div class="cards" style="grid-template-columns:repeat(2,1fr)">
+        <a class="card card-about reveal" href="about.html">
           <span class="num">01 / ABOUT</span>
           <div>
             <h3>ABOUT<br>THE BAND</h3>
             <p class="card-ja-title">バンド紹介</p>
-            <p>メンバーや活動内容、Guns N' Losesについて紹介します。</p>
-            <ul class="list"><li>Member</li><li>Biography</li><li>Activity History</li></ul>
+            <p>仙台市を中心に活動するGuns N' Rosesトリビュートバンド、Guns N' Losesの活動と歩みを紹介します。</p>
+            <ul class="list"><li>Band Profile</li><li>Biography</li><li>Live History</li></ul>
           </div>
           <div class="card-bottom">READ MORE <span>→</span></div>
         </a>
 
-        <a class="card card-service reveal" href="support.html">
-          <span class="num">02 / SHO SUPPORT</span>
-          <div>
-            <h3>バンド<br>サポート</h3>
-            <p class="card-ja-title">制作サポート</p>
-            <p>Slash担当のshoが、バンド活動で得た経験を活かして制作をサポートします。</p>
-            <ul class="list">
-              <li>ライブ撮影</li>
-              <li>ライブ動画編集</li>
-              <li>バンドホームページ制作</li>
-            </ul>
-          </div>
-          <div class="card-bottom">VIEW SERVICE <span>→</span></div>
-        </a>
-
         <a class="card card-booking reveal" href="#contact">
-          <span class="num">03 / BOOKING</span>
+          <span class="num">02 / BOOKING</span>
           <div>
             <h3>LIVE<br>BOOKING</h3>
             <p class="card-ja-title">出演依頼</p>
@@ -892,7 +877,7 @@
       <div class="heading reveal">
         <p class="eyebrow">LIVE MOMENTS</p>
         <h2 class="title">LIVE <span class="red">GALLERY</span></h2>
-        <p class="sub">ライブ写真を2枚ずつ、自動で切り替えて表示します。</p>
+        <p class="sub">ライブの一瞬を写真で紹介します。</p>
       </div>
 
       <div class="gallery-preview">
@@ -924,9 +909,29 @@
           <p class="price-label">MONTHLY SUPPORT</p>
           <p class="price">¥500〜<span>/ 月</span></p>
           <p class="support-choice">好きな金額で応援</p>
-          <a class="btn btn-red" href="#contact">応援する →</a>
+          <a class="btn btn-red" href="support-us.html">応援ページへ →</a>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="sho-service">
+    <div class="container">
+      <div class="heading reveal">
+        <p class="eyebrow">PERSONAL SERVICE BY SHO</p>
+        <h2 class="title">BAND <span class="red">SUPPORT</span></h2>
+        <p class="sub">Slash担当のshoによる個人サービスです。ライブ撮影、動画編集、バンドサイト制作などに対応します。</p>
+      </div>
+      <a class="card card-service reveal" href="support.html" style="max-width:760px;margin-left:auto">
+        <span class="num">SERVICE / SHO SUPPORT</span>
+        <div>
+          <h3>BAND<br>SUPPORT</h3>
+          <p class="card-ja-title">制作サポート</p>
+          <p>バンド活動で得た経験を活かし、ライブ撮影・動画編集・ホームページ制作をサポートします。</p>
+          <ul class="list"><li>ライブ・練習撮影</li><li>動画編集</li><li>バンドホームページ制作</li></ul>
+        </div>
+        <div class="card-bottom">VIEW SERVICE <span>→</span></div>
+      </a>
     </div>
   </section>
 
