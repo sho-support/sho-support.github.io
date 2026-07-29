@@ -101,12 +101,17 @@
     .service-details summary:after{content:"＋";float:right;color:var(--red);font-size:1.2rem}
     .service-details[open] summary:after{content:"−"}
     .service-details .detail-body{padding:0 18px 18px}
-    .service-details .sd-grid{grid-template-columns:1fr 1fr;margin-top:8px}
-    .service-details .sd-card{padding:16px}
-    .service-details .sd-card strong{font-size:2rem}
-    .service-details .example-list{margin-top:6px}
-    .service-details .example-toggle{min-height:70px;padding:14px 16px}
-    .service-details .video-example{width:calc(100% - 32px);margin:0 16px 16px}
+    .service-details .sd-grid{grid-template-columns:1fr;margin-top:12px}
+    .service-details .sd-card{padding:18px 20px;display:grid;grid-template-columns:120px 150px 1fr;align-items:center;gap:16px}
+    .service-details .sd-card strong{font-size:2.2rem}
+    .service-details .sd-card span{margin:0}
+    .service-details .sd-card p{font-size:.8rem}
+    .service-details .sd-card em{position:static;grid-column:1/-1;margin-bottom:-8px;font-size:.85rem}
+    .editing-examples{display:grid;gap:16px;margin-top:8px}
+    .editing-example{border:1px solid var(--line);background:#0e0e0e;padding:16px}
+    .editing-example h3{margin:0 0 4px;font:1.55rem var(--rock);letter-spacing:.08em}
+    .editing-example p{margin:0 0 12px;color:var(--soft);font-size:.78rem}
+    .editing-example .video-example{width:100%;margin:0}
     .example-list{display:grid;gap:10px}
     .example-item{
       border:1px solid var(--line);
@@ -228,7 +233,9 @@
     @media(max-width:800px){
       .services{grid-template-columns:1fr}
       .service{min-height:auto}
-      .sd-grid{grid-template-columns:1fr 1fr}
+      .sd-grid{grid-template-columns:1fr}
+      .service-details .sd-card{grid-template-columns:1fr;gap:6px}
+      .service-details .sd-card em{margin-bottom:0}
       .personal-card{grid-template-columns:1fr}
       .personal-price{padding-left:0;padding-top:20px;border-left:0;border-top:1px solid var(--line)}
       .contact-box{grid-template-columns:1fr}
@@ -274,7 +281,7 @@
           <details class="service-details">
             <summary>撮影用microSDカードが必要な方へ</summary>
             <div class="detail-body">
-              <p>カードをお持ちでない場合はこちらで用意できます。撮影終了後は、撮影データが入ったカードをそのままお渡しします。</p>
+              <p>カードをお持ちでない場合はこちらで用意できます。撮影終了後は、撮影データが入ったカードをそのままお渡しします。編集前の撮影データと編集後の完成動画を両方保存したい場合は、余裕のある大きめの容量をおすすめします。</p>
               <div class="sd-grid">
                 <article class="sd-card"><strong>32GB</strong><span>参考価格 約2,500円</span><p>短時間向け。設定や収録時間によっては容量に余裕が少ない場合があります。</p></article>
                 <article class="sd-card recommended"><em>RECOMMENDED</em><strong>64GB</strong><span>参考価格 約2,000円</span><p>30〜60分程度の撮影で選びやすい容量です。</p></article>
@@ -300,14 +307,18 @@
           <details class="service-details">
             <summary>動画編集の参考例を見る</summary>
             <div class="detail-body">
-              <div class="example-list">
-                <article class="example-item">
-                  <button class="example-toggle" type="button" aria-expanded="false"><span><b>SHORT PROMO</b><small>告知用動画</small></span><strong>＋</strong></button>
-                  <div class="example-panel"><div class="example-inner"><div class="video-example video-example-short"><iframe src="https://www.youtube.com/embed/0KzZ-3CovwE" title="告知用動画の編集例" loading="lazy" allowfullscreen></iframe></div></div></div>
+              <div class="editing-examples">
+                <article class="editing-example">
+                  <h3>SHORT PROMO</h3><p>告知用動画</p>
+                  <div class="video-example video-example-short"><iframe src="https://www.youtube.com/embed/0KzZ-3CovwE" title="告知用動画の編集例" loading="lazy" allowfullscreen></iframe></div>
                 </article>
-                <article class="example-item">
-                  <button class="example-toggle" type="button" aria-expanded="false"><span><b>ONE SONG</b><small>1曲動画</small></span><strong>＋</strong></button>
-                  <div class="example-panel"><div class="example-inner"><div class="video-example"><iframe src="https://www.youtube.com/embed/7GH-uYAEIYw" title="1曲動画の編集例" loading="lazy" allowfullscreen></iframe></div></div></div>
+                <article class="editing-example">
+                  <h3>ONE SONG</h3><p>1曲動画</p>
+                  <div class="video-example"><iframe src="https://www.youtube.com/embed/7GH-uYAEIYw" title="1曲動画の編集例" loading="lazy" allowfullscreen></iframe></div>
+                </article>
+                <article class="editing-example">
+                  <h3>FULL LIVE</h3><p>フルライブ動画</p>
+                  <div class="video-example"><iframe src="https://www.youtube.com/embed/SIkXc8nU0h8" title="フルライブ動画の編集例" loading="lazy" allowfullscreen></iframe></div>
                 </article>
               </div>
             </div>
@@ -356,18 +367,6 @@
 </main>
 
 <footer><div class="container">© 2026 Guns N' Loses. All Rights Reserved.</div></footer>
-
-<script>
-  document.querySelectorAll(".example-toggle").forEach(button => {
-    button.addEventListener("click", () => {
-      const panel = button.nextElementSibling;
-      const open = panel.classList.toggle("open");
-      button.setAttribute("aria-expanded", String(open));
-      const icon = button.querySelector(":scope > strong");
-      if(icon) icon.textContent = open ? "−" : "＋";
-    });
-  });
-</script>
 
 </body>
 </html>

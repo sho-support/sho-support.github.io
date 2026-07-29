@@ -715,7 +715,7 @@
             </div>
             <h3>榴岡公園野外音楽堂</h3>
             <p class="venue">仙台市榴ヶ岡</p>
-            <p class="meta">出演時間未定／14:30以降になる可能性あり／持ち時間20〜30分予定</p>
+            <p class="meta">出演時間未定／持ち時間20〜30分予定</p>
             <p class="meta">雨天中止</p>
             <p class="click-guide">クリックして詳細を表示 <span id="liveArrow">＋</span></p>
           </div>
@@ -732,7 +732,7 @@
                   <li><b>開催日：</b>2026年9月5日（土）</li>
                   <li><b>会場：</b>榴岡公園野外音楽堂</li>
                   <li><b>場所：</b>仙台市榴ヶ岡</li>
-                  <li><b>出演時間：</b>未定。14:30以降になる可能性あり</li>
+                  <li><b>出演時間：</b>未定</li>
                   <li><b>持ち時間：</b>20〜30分予定</li>
                   <li><b>天候：</b>雨天中止</li>
                 </ul>
@@ -768,8 +768,7 @@
             <div class="mini-live-inner">
               <p><b>開催日：</b>2026年10月3日（土）</p>
               <p><b>会場：</b>いわき駅周辺の特設会場（出演会場は未定）</p>
-              <p><b>予定：</b>14:30以降の可能性あり／アンプ等は現地予定</p>
-              <p><b>状況：</b>出演・詳細未確定</p>
+                            <p><b>状況：</b>出演・詳細未確定</p>
               <div class="mini-links">
                 <a href="https://iwaki-machicon.com/" target="_blank" rel="noopener">公式サイト →</a>
                 <a href="https://www.google.com/maps/search/?api=1&query=%E3%81%84%E3%82%8F%E3%81%8D%E9%A7%85" target="_blank" rel="noopener">Google Map →</a>
@@ -788,10 +787,13 @@
           <div class="mini-live-details">
             <div class="mini-live-inner">
               <p><b>開催日：</b>2026年10月11日（日）</p>
-              <p><b>会場：</b>未定</p>
+              <p><b>会場候補：</b>千年希望の丘周辺（岩沼市）</p>
               <p><b>時間：</b>未定</p>
-              <p><b>状況：</b>出演・詳細未確定</p>
-              <p class="unknown-map">会場が決まり次第、Google Mapを追加します。</p>
+              <p><b>状況：</b>出演・会場ともに未確定</p>
+              <p class="unknown-map">正式な会場発表前のため、現時点では候補地として掲載しています。</p>
+              <div class="mini-links">
+                <a href="https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E5%B9%B4%E5%B8%8C%E6%9C%9B%E3%81%AE%E4%B8%98+%E5%B2%A9%E6%B2%BC%E5%B8%82" target="_blank" rel="noopener">候補地をGoogle Mapで見る →</a>
+              </div>
             </div>
           </div>
         </article>
@@ -1030,7 +1032,7 @@
     if(restart){clearInterval(timer);startTimer();}
   }
   function startTimer(){
-    timer = setInterval(() => showSlide((current + 1) % slides.length), 7000);
+    timer = setInterval(() => showSlide((current + 1) % slides.length), 5000);
   }
   startTimer();
 
@@ -1200,7 +1202,7 @@
     galleryPreview1.addEventListener("load", () => applyImageFit(galleryPreview1));
     galleryPreview2.addEventListener("load", () => applyImageFit(galleryPreview2));
     showNextGalleryPair();
-    setInterval(showNextGalleryPair, 6200);
+    setInterval(showNextGalleryPair, 5000);
   }
 
   const liveToggle = document.getElementById("liveToggle");
