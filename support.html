@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="Guns N' Loses Band Support。ライブ撮影、動画編集、バンドホームページ制作など。">
+  <title>Band Support | Guns N' Loses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#070707;--panel:#111;--panel2:#171717;--text:#fff;
+      --soft:#c7c7c7;--muted:#858585;--red:#d51635;
+      --line:rgba(255,255,255,.13);
+      --rock:"Bebas Neue",sans-serif;--jp:"Noto Sans JP",sans-serif
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;color:var(--text);font-family:var(--jp);
+      background:radial-gradient(circle at 18% 5%,rgba(213,22,53,.12),transparent 30%),var(--bg)
+    }
+    a{color:inherit;text-decoration:none}
+    .container{width:min(calc(100% - 34px),1160px);margin:auto}
+    header{
+      position:sticky;top:0;z-index:20;background:rgba(5,5,5,.93);
+      border-bottom:1px solid var(--line);backdrop-filter:blur(14px)
+    }
+    .head{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .logo{display:flex;align-items:center;gap:12px;font:1.75rem var(--rock);letter-spacing:.07em}
+    .mark{width:11px;height:30px;background:var(--red);transform:skewX(-12deg);box-shadow:8px 0 rgba(213,22,53,.35)}
+    .back{font:1rem var(--rock);letter-spacing:.1em}
+    .hero{padding:92px 0 58px}
+    .eyebrow{display:flex;align-items:center;gap:12px;margin:0 0 12px;color:var(--red);font:1.05rem var(--rock);letter-spacing:.16em}
+    .eyebrow:before{content:"";width:38px;height:3px;background:var(--red)}
+    h1{margin:0;font:clamp(4.5rem,12vw,8rem)/.88 var(--rock);letter-spacing:.04em}
+    .red{color:var(--red)}
+    .lead{max-width:760px;margin:22px 0 0;color:var(--soft);line-height:1.9}
+    .section{padding:58px 0}
+    .title{margin:0 0 28px;font:clamp(3rem,7vw,5.5rem)/.9 var(--rock);letter-spacing:.04em}
+    .services{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .service{min-height:310px;padding:28px;border:1px solid var(--line);background:linear-gradient(145deg,var(--panel2),#0d0d0d);display:flex;flex-direction:column}
+    .service .num{color:var(--red);font:1.05rem var(--rock);letter-spacing:.14em}
+    .service h2{margin:18px 0 14px;font:2.7rem/1 var(--rock);letter-spacing:.04em}
+    .service p{margin:0;color:var(--soft);line-height:1.8;font-size:.9rem}
+    .service ul{list-style:none;padding:0;margin:20px 0 0;color:var(--soft);font-size:.86rem}
+    .service li{padding:7px 0;border-bottom:1px solid var(--line)}
+    .price{margin-top:auto;padding-top:24px;font:2rem var(--rock);letter-spacing:.05em}
+    .price small{font:.72rem var(--jp);color:var(--muted)}
+    .notes{padding:26px;border:1px solid var(--line);background:#0d0d0d;color:var(--soft);line-height:1.9}
+    .contact-box{display:grid;grid-template-columns:1fr auto;align-items:center;gap:28px;padding:36px;border:1px solid rgba(213,22,53,.45);background:linear-gradient(135deg,rgba(213,22,53,.12),#0b0b0b)}
+    .contact-box h2{margin:0;font:3.2rem var(--rock);letter-spacing:.04em}
+    .contact-box p{margin:9px 0 0;color:var(--soft)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:58px;padding:0 26px;background:var(--red);font-weight:800;letter-spacing:.05em}
+    footer{padding:34px 0;border-top:1px solid var(--line);color:#777;font-size:.72rem}
+    @media(max-width:800px){
+      .services{grid-template-columns:1fr}
+      .service{min-height:auto}
+      .contact-box{grid-template-columns:1fr}
+      .hero{padding-top:70px}
+      .back{font-size:.82rem}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="container head">
+    <a class="logo" href="index.html"><span class="mark"></span><span>GUNS N' LOSES</span></a>
+    <a class="back" href="index.html#about">← BACK TO HOME</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">FOR BANDS &amp; MUSICIANS</p>
+      <h1>BAND <span class="red">SUPPORT</span></h1>
+      <p class="lead">バンド活動で得た経験を活かし、ライブ撮影・動画編集・ホームページ制作などをサポートします。内容や規模に応じて柔軟に対応します。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2 class="title">SERVICE &amp; <span class="red">PRICE</span></h2>
+      <div class="services">
+        <article class="service">
+          <span class="num">01 / LIVE SHOOTING</span>
+          <h2>ライブ撮影</h2>
+          <p>ライブハウス、野外イベント、リハーサルなどの動画撮影。</p>
+          <ul>
+            <li>スマートフォンによる4K撮影</li>
+            <li>撮影データのお渡し</li>
+            <li>会場条件に応じて事前相談</li>
+          </ul>
+          <div class="price">30分程度 ¥4,000〜<br><small>交通費・入場料などは別途</small></div>
+        </article>
+
+        <article class="service">
+          <span class="num">02 / VIDEO EDITING</span>
+          <h2>動画編集</h2>
+          <p>ライブ映像、Shorts、SNS向け告知動画などの編集。</p>
+          <ul>
+            <li>カット・音量調整</li>
+            <li>テロップ・タイトル追加</li>
+            <li>YouTube・SNS向け書き出し</li>
+          </ul>
+          <div class="price">内容によりお見積り<br><small>素材の長さ・本数・編集内容で変動</small></div>
+        </article>
+
+        <article class="service">
+          <span class="num">03 / BAND WEBSITE</span>
+          <h2>ホームページ制作</h2>
+          <p>バンド紹介、ライブ情報、動画、SNS、問い合わせをまとめた公式サイト。</p>
+          <ul>
+            <li>スマホ・PC対応</li>
+            <li>GitHub Pagesを利用可能</li>
+            <li>更新方法も案内</li>
+          </ul>
+          <div class="price">内容によりお見積り<br><small>ページ数・機能・素材準備で変動</small></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2 class="title">BEFORE <span class="red">BOOKING</span></h2>
+      <div class="notes">
+        <strong>料金は現時点の目安です。</strong><br>
+        会場、撮影時間、必要な編集、本数、納期などによって変わります。まずは「何を作りたいか」「ライブの日程」「動画の長さ」などをLINEでお知らせください。内容を確認してから料金をご案内します。
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="contact-box">
+        <div>
+          <h2>CONTACT</h2>
+          <p>ライブ撮影、動画編集、ホームページ制作の相談はこちら。</p>
+        </div>
+        <a class="btn" href="https://line.me/R/ti/p/@383oceah" target="_blank" rel="noopener">LINEで相談する →</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="container">© 2026 Guns N' Loses. All Rights Reserved.</div></footer>
+</body>
+</html>

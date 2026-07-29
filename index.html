@@ -335,18 +335,27 @@
     }
     .gallery-preview-card{
       position:relative;
-      height:clamp(250px,31vh,330px);
+      height:clamp(245px,29vh,315px);
       overflow:hidden;
       border:1px solid var(--line);
-      background:#111
+      background:
+        radial-gradient(circle at 50% 50%,rgba(213,22,53,.08),transparent 55%),
+        #090909
     }
     .gallery-preview-card img{
       width:100%;
       height:100%;
-      object-fit:cover;
       display:block;
+      object-fit:cover;
+      object-position:center;
       filter:saturate(.94) contrast(1.04);
-      transition:transform .5s ease,filter .4s ease
+      transition:opacity .55s ease,transform .7s ease,filter .4s ease
+    }
+    .gallery-preview-card img.is-changing{opacity:0;transform:scale(1.025)}
+    .gallery-preview-card img.is-portrait{
+      object-fit:contain;
+      padding:0 12%;
+      background:#080808
     }
     .gallery-preview-card:after{
       content:"";
@@ -356,7 +365,7 @@
       pointer-events:none
     }
     .gallery-preview-card:hover img{
-      transform:scale(1.04);
+      transform:scale(1.035);
       filter:saturate(1.06) contrast(1.07)
     }
     .gallery-preview-caption{
@@ -372,21 +381,21 @@
     }
     .gallery-preview-caption strong{
       display:block;
-      font:clamp(1.55rem,3vw,2.4rem)/1 var(--rock);
+      font:clamp(1.5rem,3vw,2.25rem)/1 var(--rock);
       letter-spacing:.06em
     }
     .gallery-preview-caption span{
       display:block;
       margin-top:3px;
       color:var(--soft);
-      font-size:.72rem
+      font-size:.7rem
     }
     .gallery-preview-arrow{
       color:var(--red)!important;
-      font:1.8rem var(--rock)!important
+      font:1.75rem var(--rock)!important
     }
     .gallery-more{
-      margin-top:14px;
+      margin-top:12px;
       display:flex;
       justify-content:flex-end
     }
@@ -456,11 +465,14 @@
       #follow .social.youtube{min-height:108px}
       #live .date-box{min-height:250px}
       #live .live-info{padding:34px}
-      #video .video-shell{width:min(82%,980px)}
+      #video .video-shell{width:min(76%,900px)}
       #about .card{min-height:315px;padding:28px}
       #support .support-box{padding:48px 58px}
       #contact .contact-pane{min-height:285px}
-      #gallery .heading{margin-bottom:24px}
+      #gallery .heading{margin-bottom:20px}
+      #video .heading{margin-bottom:22px}
+      #video{padding-top:56px;padding-bottom:24px}
+      #video .video-bottom{padding:12px 6px 4px}
     }
 
     @media(max-width:900px){
@@ -498,7 +510,7 @@
       .footer-bottom{flex-direction:column;align-items:flex-start}
 
       .gallery-preview{grid-template-columns:1fr}
-      .gallery-preview-card{height:300px;min-height:0}
+      .gallery-preview-card{height:270px;min-height:0}
       .live-details-grid{grid-template-columns:1fr}
       .live-details-panel{padding:22px}
 
@@ -645,7 +657,7 @@
         </div>
       </div>
 
-      <p class="notice">※出演時間などは運営からの正式発表後に更新します。</p>
+      <p class="notice">※「ジャズ」ではなく「ジャスフェスティバル」です。出演時間などは運営からの正式発表後に更新します。</p>
 
       <div class="upcoming">
         <div class="mini-live reveal">
@@ -704,7 +716,7 @@
           <div class="card-bottom">READ MORE <span>→</span></div>
         </a>
 
-        <a class="card card-service reveal" href="#contact">
+        <a class="card card-service reveal" href="support.html">
           <span class="num">02 / BAND SUPPORT</span>
           <div>
             <h3>BAND<br>SUPPORT</h3>
@@ -737,7 +749,7 @@
       <div class="heading reveal">
         <p class="eyebrow">LIVE MOMENTS</p>
         <h2 class="title">LIVE <span class="red">GALLERY</span></h2>
-        <p class="sub">アクセスするたびに、ライブ写真をランダムで2枚表示します。</p>
+        <p class="sub">ライブ写真を2枚ずつ、自動で切り替えて表示します。</p>
       </div>
 
       <div class="gallery-preview">
@@ -925,12 +937,43 @@
     "images/hero-07.webp","images/hero-08.webp","images/hero-09.webp",
     "images/hero-10.webp"
   ];
-  const shuffledGalleryImages = [...galleryImages].sort(() => Math.random() - 0.5);
+
   const galleryPreview1 = document.getElementById("galleryPreview1");
   const galleryPreview2 = document.getElementById("galleryPreview2");
+  let galleryIndex = Math.floor(Math.random() * galleryImages.length);
+
+  function applyImageFit(img){
+    const portrait = img.naturalHeight > img.naturalWidth * 1.12;
+    img.classList.toggle("is-portrait", portrait);
+  }
+
+  function setGalleryImage(img, src){
+    if(!img) return;
+    img.classList.add("is-changing");
+    const loader = new Image();
+    loader.onload = () => {
+      img.src = src;
+      requestAnimationFrame(() => {
+        applyImageFit(img);
+        img.classList.remove("is-changing");
+      });
+    };
+    loader.src = src;
+  }
+
+  function showNextGalleryPair(){
+    const first = galleryImages[galleryIndex % galleryImages.length];
+    const second = galleryImages[(galleryIndex + 1) % galleryImages.length];
+    setGalleryImage(galleryPreview1, first);
+    setGalleryImage(galleryPreview2, second);
+    galleryIndex = (galleryIndex + 2) % galleryImages.length;
+  }
+
   if(galleryPreview1 && galleryPreview2){
-    galleryPreview1.src = shuffledGalleryImages[0];
-    galleryPreview2.src = shuffledGalleryImages[1];
+    galleryPreview1.addEventListener("load", () => applyImageFit(galleryPreview1));
+    galleryPreview2.addEventListener("load", () => applyImageFit(galleryPreview2));
+    showNextGalleryPair();
+    setInterval(showNextGalleryPair, 5200);
   }
 
   const liveToggle = document.getElementById("liveToggle");
