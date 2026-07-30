@@ -1,5 +1,41 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Supporter Login | Guns N' Loses</title><link rel="stylesheet" href="/member.css"></head><body>
-<header><div class="wrap top"><a class="brand" href="https://gunsnloses.github.io/">GUNS N' LOSES</a><a class="back" href="https://gunsnloses.github.io/support-us.html">← SUPPORT US</a></div></header>
-<main><section class="hero"><div class="wrap"><div class="eyebrow">SUPPORTER ONLY</div><h1>MEMBER LOGIN</h1><p>Stripe決済時と同じメールアドレスでログインしてください。</p></div></section>
-<div class="wrap"><section class="panel"><label for="email">メールアドレス</label><input class="field" id="email" type="email" autocomplete="email" placeholder="you@example.com"><button class="button" id="loginBtn">ログインリンクを受け取る</button><p id="message" class="message"></p><div class="notice">パスワードは不要です。メールに届く1回限りのリンクからログインします。決済直後は会員情報への反映に少し時間がかかることがあります。</div></section></div></main>
-<script type="module" src="/member-login.js"></script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#080808">
+  <title>Supporter Login | Guns N' Loses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/member.css">
+</head>
+<body>
+<header><div class="wrap top"><a class="brand" data-official-home href="https://sho-support.github.io/">GUNS N' LOSES</a><a class="back" data-support-page href="https://sho-support.github.io/support-us.html">← SUPPORT US</a></div></header>
+<main>
+  <section class="hero"><div class="wrap"><div class="eyebrow">SUPPORTER ONLY</div><h1>MEMBER LOGIN</h1><p>Stripe決済時と同じメールアドレスへ、1回限りのログインリンクを送信します。</p></div></section>
+  <div class="wrap">
+    <section class="panel">
+      <h2 class="panel-title">LOGIN BY EMAIL</h2>
+      <p style="margin:0;color:#aaa;font-size:.88rem">パスワードの作成や入力は必要ありません。</p>
+      <form id="loginForm" novalidate>
+        <label class="field-label" for="email">メールアドレス</label>
+        <input class="field" id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+        <button class="button" id="loginBtn" type="submit">ログインリンクを受け取る</button>
+      </form>
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+      <div id="sessionBox" class="session-box hidden"><p style="margin:0 0 12px;color:#bbb">この端末ではすでにログインしています。</p><a class="button" href="/members.html">BACKSTAGE ROOMへ →</a></div>
+      <div class="login-steps">
+        <div class="login-step">決済時と同じメールアドレスを入力</div>
+        <div class="login-step">届いたメールのリンクを開く</div>
+        <div class="login-step">支援状況を確認して限定ページへ</div>
+      </div>
+      <div class="notice">決済直後は会員情報への反映に少し時間がかかる場合があります。メールが届かない場合は、迷惑メールフォルダもご確認ください。</div>
+    </section>
+  </div>
+</main>
+<footer>© 2026 Guns N' Loses. All Rights Reserved.</footer>
+<script type="module" src="/member-login.js"></script>
+</body>
+</html>

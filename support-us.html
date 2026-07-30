@@ -2,17 +2,18 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Guns N' Losesの活動を月額500円・1000円・3000円から応援できる公式サポートページです。">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="Guns N' Losesの活動を月額500円・1,000円・3,000円から応援できる公式サポートページです。">
   <title>Support Us | Guns N' Loses</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{--r:#d51635;--l:rgba(255,255,255,.14);--rock:"Bebas Neue",sans-serif}
+    :root{--r:#d51635;--l:rgba(255,255,255,.14);--soft:#c7c7c7;--muted:#8d8d8d;--rock:"Bebas Neue",sans-serif}
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
-    body{margin:0;background:radial-gradient(circle at 50% 0,rgba(213,22,53,.18),transparent 38%),#070707;color:#fff;font-family:"Noto Sans JP",sans-serif}
+    body{margin:0;background:radial-gradient(circle at 50% 0,rgba(213,22,53,.18),transparent 38%),#070707;color:#fff;font-family:"Noto Sans JP",sans-serif;line-height:1.8}
     a{color:inherit;text-decoration:none}
     .c{width:min(calc(100% - 34px),1020px);margin:auto}
     header{border-bottom:1px solid var(--l);background:rgba(5,5,5,.94);position:sticky;top:0;z-index:10;backdrop-filter:blur(10px)}
@@ -23,23 +24,37 @@
     .ey{color:var(--r);font:1.05rem var(--rock);letter-spacing:.18em}
     h1{font:clamp(5rem,15vw,9rem)/.85 var(--rock);margin:15px 0}.red{color:var(--r)}
     .lead{color:#ccc;line-height:1.95;max-width:760px;margin:auto}
-    .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:0 auto 42px}
+    .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:0 auto 30px}
     .plan{border:1px solid var(--l);background:linear-gradient(145deg,rgba(255,255,255,.045),#0c0c0c);padding:32px 24px;text-align:center;display:flex;flex-direction:column;min-height:355px}
-        .tag{min-height:24px;color:var(--r);font-size:.75rem;font-weight:800;letter-spacing:.08em}
+    .tag{min-height:24px;color:var(--r);font-size:.75rem;font-weight:800;letter-spacing:.08em}
     .plan h2{font:2.1rem var(--rock);letter-spacing:.07em;margin:10px 0 8px}
     .price{font:4.4rem var(--rock);margin:4px 0 8px;letter-spacing:.02em}.price span{font-size:1.05rem;color:#999}
     .plan p{color:#aaa;line-height:1.8;font-size:.88rem;margin:0 0 18px}
-    .btn{display:flex;align-items:center;justify-content:center;margin-top:auto;padding:16px 18px;background:var(--r);font-weight:800;border:1px solid var(--r);transition:.2s;box-shadow:0 10px 24px rgba(213,22,53,.2)}
+    .btn{display:flex;align-items:center;justify-content:center;min-height:56px;padding:15px 18px;background:var(--r);font-weight:800;border:1px solid var(--r);transition:.2s;box-shadow:0 10px 24px rgba(213,22,53,.2)}
     .btn:hover{transform:translateY(-2px);background:#ef1d40}
-    .secure{text-align:center;color:#777;font-size:.78rem;margin:-20px 0 44px}
+    .btn-ghost{background:transparent;box-shadow:none;border-color:rgba(255,255,255,.38)}
+    .btn-ghost:hover{background:rgba(255,255,255,.06)}
+    .secure{text-align:center;color:#777;font-size:.78rem;margin:0 0 42px}
+    .login-box{display:flex;flex-wrap:wrap;align-items:center;gap:30px;padding:30px;border:1px solid rgba(213,22,53,.5);background:linear-gradient(135deg,rgba(213,22,53,.12),#0b0b0b);margin-bottom:44px}
+    .login-box>div{flex:1 1 520px}
+    .login-box .mini{margin:0 0 6px;color:var(--r);font:1rem var(--rock);letter-spacing:.14em}
+    .login-box h2{margin:0;font:2.7rem var(--rock);letter-spacing:.06em}
+    .login-box p{margin:7px 0 0;color:var(--soft);font-size:.88rem}
+    .login-box .btn{flex:0 1 240px;min-width:240px}
     .info{border-top:1px solid var(--l);padding:34px 0;margin-bottom:34px}
     .info h3{font:2.1rem var(--rock);letter-spacing:.06em;margin:0 0 14px}
     .info p{color:#aaa;font-size:.9rem;line-height:1.95;margin:8px 0}
     .info a{text-decoration:underline;text-underline-offset:4px;color:#ddd}
-    .uses{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+    .uses{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:22px}
     .use{border:1px solid var(--l);background:rgba(255,255,255,.03);padding:18px}.use strong{display:block;margin-bottom:5px;font-size:.9rem}.use span{font-size:.78rem;color:#999;line-height:1.65}
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:20px;counter-reset:step}
+    .step{border:1px solid var(--l);padding:18px;background:#0e0e0e;color:#aaa;font-size:.82rem}
+    .step:before{counter-increment:step;content:"0" counter(step);display:block;margin-bottom:8px;color:var(--r);font:1.3rem var(--rock);letter-spacing:.08em}
     footer{border-top:1px solid var(--l);padding:30px 0;color:#777;font-size:.75rem}
-    @media(max-width:800px){.plans{grid-template-columns:1fr}.plan{min-height:auto}.uses{grid-template-columns:1fr}.h{min-height:66px}.logo{font-size:1.5rem}.back{font-size:.85rem}.hero{padding-top:70px}.price{font-size:4rem}}
+    @media(max-width:800px){
+      .plans,.uses,.steps{grid-template-columns:1fr}.plan{min-height:auto}.h{min-height:66px}.logo{font-size:1.5rem}.back{font-size:.82rem}.hero{padding-top:70px}.price{font-size:4rem}
+      .login-box{padding:25px 21px}.login-box .btn{min-width:0;width:100%;flex-basis:100%}
+    }
   </style>
 </head>
 <body>
@@ -49,37 +64,40 @@
     <section class="hero"><div class="c">
       <p class="ey">KEEP THE BAND MOVING</p>
       <h1>SUPPORT <span class="red">US</span></h1>
-      <p class="lead">どのプランでもサポーター向けの内容に差はありません。違いは毎月の支援金額のみです。<br>Guns N' Losesの活動を継続的に応援していただける公式サポートページです。金額を選んで、無理のない範囲でご参加ください。</p>
+      <p class="lead">どのプランでもサポーター向けの内容に差はありません。違いは毎月の支援金額のみです。<br>Guns N' Losesの活動を継続的に応援していただける公式サポートページです。無理のない金額をお選びください。</p>
     </div></section>
 
     <div class="c">
       <section class="plans" aria-label="月額サポートプラン">
         <article class="plan">
-          <div class="tag">MONTHLY SUPPORT</div>
-          <h2>SUPPORT PLAN</h2>
+          <div class="tag">MONTHLY SUPPORT</div><h2>SUPPORT PLAN</h2>
           <p class="price">¥500<span> / MONTH</span></p>
-          <p>支援金額のみを選べる、共通内容のサポータープランです。</p>
+          <p>気軽に継続して応援したい方向けのプランです。受けられる内容は全プラン共通です。</p>
           <a class="btn" href="https://buy.stripe.com/8x200jaf26Ig1RzbYN4ZG00" target="_blank" rel="noopener noreferrer">月額500円で応援する →</a>
         </article>
-
         <article class="plan">
-          <div class="tag">MONTHLY SUPPORT</div>
-          <h2>SUPPORT PLAN</h2>
+          <div class="tag">MONTHLY SUPPORT</div><h2>SUPPORT PLAN</h2>
           <p class="price">¥1,000<span> / MONTH</span></p>
-          <p>支援金額のみを選べる、共通内容のサポータープランです。</p>
+          <p>バンド活動をもう一歩支えてくださる方向けのプランです。受けられる内容は全プラン共通です。</p>
           <a class="btn" href="https://buy.stripe.com/dRmcN5fzmgiQ53L8MB4ZG01" target="_blank" rel="noopener noreferrer">月額1,000円で応援する →</a>
         </article>
-
         <article class="plan">
-          <div class="tag">MONTHLY SUPPORT</div>
-          <h2>SUPPORT PLAN</h2>
+          <div class="tag">MONTHLY SUPPORT</div><h2>SUPPORT PLAN</h2>
           <p class="price">¥3,000<span> / MONTH</span></p>
-          <p>支援金額のみを選べる、共通内容のサポータープランです。</p>
+          <p>ライブや動画制作をより強く支えてくださる方向けのプランです。受けられる内容は全プラン共通です。</p>
           <a class="btn" href="https://buy.stripe.com/aFabJ1evi7Mk3ZH0g54ZG02" target="_blank" rel="noopener noreferrer">月額3,000円で応援する →</a>
         </article>
       </section>
-
       <p class="secure">各ボタンからStripeの安全な決済ページへ移動します。</p>
+
+      <section class="login-box" aria-labelledby="supporter-login-title">
+        <div>
+          <p class="mini">ALREADY A SUPPORTER?</p>
+          <h2 id="supporter-login-title">SUPPORTER LOGIN</h2>
+          <p>支援中の方は、Stripe決済時と同じメールアドレスでログインしてください。パスワードは不要です。</p>
+        </div>
+        <a class="btn btn-ghost" href="https://guns-n-loses-members.vercel.app/member-login.html">応援者ログイン →</a>
+      </section>
 
       <section class="info">
         <h3>HOW YOUR SUPPORT HELPS</h3>
@@ -92,19 +110,22 @@
 
       <section class="info">
         <h3>SUPPORTER CONTENT</h3>
-        <p>支援者限定の練習動画や舞台裏コンテンツは、会員確認の仕組みを整えた後に公開予定です。公開開始時は、決済時に登録されたメールアドレスへご案内します。</p>
-        <p>限定ページのURLだけを共有する方式は第三者へ転送できてしまうため、現在は安全な会員ページを準備中です。</p>
+        <p>月額支援中の方だけが閲覧できるBACKSTAGE ROOMで、練習動画、舞台裏、未公開映像などを不定期に公開します。</p>
+        <div class="steps">
+          <div class="step">Stripe決済時に使用したメールアドレスを入力します。</div>
+          <div class="step">届いた1回限りのログインリンクを開きます。</div>
+          <div class="step">支援状況の確認後、限定ページが表示されます。</div>
+        </div>
       </section>
 
       <section class="info">
         <h3>BEFORE SUPPORTING</h3>
         <p>各プランは月額の自動継続決済です。一度だけの決済ではありません。</p>
-        <p>現時点では支援金額による特典内容の違いはありません。</p>
+        <p>支援金額による限定コンテンツの違いはありません。</p>
         <p>解約をご希望の場合は、Stripeから届く決済メールをご確認いただくか、サイト内の<a href="index.html#contact">Contact</a>よりご連絡ください。</p>
       </section>
     </div>
   </main>
-
   <footer><div class="c">© 2026 Guns N' Loses. All Rights Reserved.</div></footer>
 </body>
 </html>
