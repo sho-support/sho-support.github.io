@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="Guns N' Loses Band Support。ライブ撮影、動画編集、バンドホームページ制作など。">
+  <title>Band Support | Guns N' Loses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#070707;--panel:#111;--panel2:#171717;--text:#fff;
+      --soft:#c7c7c7;--muted:#858585;--red:#d51635;
+      --line:rgba(255,255,255,.13);
+      --rock:"Bebas Neue",sans-serif;--jp:"Noto Sans JP",sans-serif
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;color:var(--text);font-family:var(--jp);line-height:1.8;
+      background:radial-gradient(circle at 18% 5%,rgba(213,22,53,.12),transparent 30%),var(--bg)
+    }
+    a{color:inherit;text-decoration:none}
+    button,summary{font:inherit}
+    .container{width:min(calc(100% - 34px),1160px);margin:auto}
+    header{
+      position:sticky;top:0;z-index:20;background:rgba(5,5,5,.93);
+      border-bottom:1px solid var(--line);backdrop-filter:blur(14px)
+    }
+    .head{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .logo{display:flex;align-items:center;gap:12px;font:1.75rem var(--rock);letter-spacing:.07em}
+    .mark{width:11px;height:30px;background:var(--red);transform:skewX(-12deg);box-shadow:8px 0 rgba(213,22,53,.35)}
+    .back{font:1rem var(--rock);letter-spacing:.1em;color:#ccc}
+    .hero{padding:92px 0 58px}
+    .eyebrow{display:flex;align-items:center;gap:12px;margin:0 0 12px;color:var(--red);font:1.05rem var(--rock);letter-spacing:.16em}
+    .eyebrow:before{content:"";width:38px;height:3px;background:var(--red)}
+    h1{margin:0;font:clamp(4.5rem,12vw,8rem)/.88 var(--rock);letter-spacing:.04em}
+    .red{color:var(--red)}
+    .lead{max-width:780px;margin:22px 0 0;color:var(--soft);line-height:1.9}
+    .section{padding:58px 0}
+    .title{margin:0 0 30px;font:clamp(3rem,7vw,5.5rem)/.9 var(--rock);letter-spacing:.04em}
+
+    .service-list{display:grid;gap:20px}
+    .service{
+      border:1px solid var(--line);
+      border-left:4px solid var(--red);
+      background:linear-gradient(145deg,var(--panel2),#0d0d0d);
+      overflow:hidden
+    }
+    .service-top{
+      display:flex;flex-wrap:wrap;gap:34px;
+      padding:34px
+    }
+    .service-copy{flex:1 1 600px;min-width:0}
+    .service .num{display:block;color:var(--red);font:1.05rem var(--rock);letter-spacing:.14em}
+    .service h2{margin:15px 0 12px;font:clamp(2.5rem,5vw,4rem)/1 var(--rock);letter-spacing:.04em}
+    .service-copy>p{margin:0;color:var(--soft);font-size:.93rem}
+    .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 24px;list-style:none;padding:0;margin:22px 0 0;color:var(--soft);font-size:.87rem}
+    .features li{padding:8px 0;border-bottom:1px solid var(--line)}
+    .price-panel{
+      flex:0 1 320px;min-width:min(100%,280px);align-self:stretch;
+      display:flex;flex-direction:column;justify-content:center;
+      padding:26px;border:1px solid var(--line);background:rgba(0,0,0,.28)
+    }
+    .price-label{margin:0 0 8px;color:var(--red);font:1rem var(--rock);letter-spacing:.13em}
+    .price{font:2rem/1.45 var(--rock);letter-spacing:.05em}
+    .price small{display:block;margin-top:10px;font:.72rem/1.7 var(--jp);color:var(--muted)}
+
+    .service-details{border-top:1px solid var(--line);background:#0b0b0b}
+    .service-details summary{
+      cursor:pointer;list-style:none;padding:18px 30px;font-weight:800;
+      display:flex;align-items:center;justify-content:space-between;gap:18px
+    }
+    .service-details summary::-webkit-details-marker{display:none}
+    .service-details summary:after{content:"＋";color:var(--red);font-size:1.25rem}
+    .service-details[open] summary:after{content:"−"}
+    .detail-body{padding:0 30px 30px}
+    .detail-body>p{margin:0 0 18px;color:var(--soft);font-size:.9rem}
+
+    .sd-grid{display:grid;gap:10px}
+    .sd-card{
+      position:relative;display:flex;flex-wrap:wrap;align-items:center;
+      gap:10px 20px;padding:18px 22px;border:1px solid var(--line);background:#101010
+    }
+    .sd-card strong{flex:0 0 110px;font:2.45rem var(--rock);letter-spacing:.04em}
+    .sd-card span{flex:0 0 170px;color:#fff;font-weight:700;font-size:.84rem}
+    .sd-card p{flex:1 1 280px;margin:0;color:var(--soft);font-size:.8rem;line-height:1.75}
+    .sd-card.recommended{border-color:var(--red);padding-top:32px}
+    .sd-card em{position:absolute;top:7px;left:22px;color:var(--red);font:1rem var(--rock);letter-spacing:.09em}
+    .sd-note{margin-top:12px;padding:20px;border:1px solid var(--line);background:#0d0d0d;color:var(--soft);font-size:.86rem;line-height:1.9}
+
+    .editing-examples{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+    .editing-example{border:1px solid var(--line);background:#101010;padding:15px;min-width:0}
+    .editing-example h3{margin:0;font:1.65rem var(--rock);letter-spacing:.08em}
+    .editing-example p{margin:1px 0 12px;color:var(--soft);font-size:.78rem}
+    .video-example{width:100%;aspect-ratio:16/9;background:#000}
+    .video-example iframe{width:100%;height:100%;border:0}
+    .video-example-short{max-width:220px;margin:auto;aspect-ratio:9/16}
+
+    .notes{padding:26px;border:1px solid var(--line);background:#0d0d0d;color:var(--soft);line-height:1.9}
+
+    .payment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .payment-card{
+      min-height:100%;padding:26px;border:1px solid var(--line);
+      background:linear-gradient(145deg,var(--panel2),#0d0d0d)
+    }
+    .payment-card.featured{border-color:rgba(213,22,53,.75);box-shadow:inset 4px 0 0 var(--red)}
+    .payment-label{display:block;margin:0 0 10px;color:var(--red);font:1rem var(--rock);letter-spacing:.13em}
+    .payment-card h3{margin:0 0 12px;font:2rem/1.05 var(--rock);letter-spacing:.04em}
+    .payment-card p{margin:0;color:var(--soft);font-size:.88rem;line-height:1.9}
+    .payment-note{margin-top:14px;padding:20px 22px;border:1px solid var(--line);background:#0d0d0d;color:var(--soft);font-size:.86rem;line-height:1.9}
+    .contact-box{display:flex;flex-wrap:wrap;align-items:center;gap:28px;padding:36px;border:1px solid rgba(213,22,53,.45);background:linear-gradient(135deg,rgba(213,22,53,.12),#0b0b0b)}
+    .contact-box>div{flex:1 1 500px}
+    .contact-box>.btn{flex:0 1 230px}
+    .contact-box h2{margin:0;font:3.2rem var(--rock);letter-spacing:.04em}
+    .contact-box p{margin:9px 0 0;color:var(--soft)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:58px;padding:0 26px;background:var(--red);font-weight:800;letter-spacing:.05em;transition:.2s}
+    .btn:hover{transform:translateY(-2px);background:#ed1b3e}
+    footer{padding:34px 0;border-top:1px solid var(--line);color:#777;font-size:.72rem}
+
+    @media(max-width:900px){
+      .price-panel{min-height:auto}
+      .editing-examples{grid-template-columns:1fr}
+      .payment-grid{grid-template-columns:1fr}
+      .video-example-short{max-width:260px}
+    }
+    @media(max-width:680px){
+      .hero{padding-top:70px}
+      .back{font-size:.8rem}
+      .service-top{padding:25px 21px;gap:24px}
+      .service-details summary{padding:17px 21px}
+      .detail-body{padding:0 21px 23px}
+      .sd-card{gap:6px 14px;padding:18px}
+      .sd-card.recommended{padding-top:36px}
+      .sd-card em{left:18px}
+      .contact-box{padding:28px 22px}
+      .btn{width:100%}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="container head">
+    <a class="logo" href="index.html"><span class="mark"></span><span>GUNS N' LOSES</span></a>
+    <a class="back" href="index.html#about">← BACK TO HOME</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">BY SHO / SLASH GUITAR</p>
+      <h1>BAND <span class="red">SUPPORT</span></h1>
+      <p class="lead">Guns N' LosesでSlashパートを担当するshoが、実際のバンド活動で得た経験を活かし、ライブ撮影・動画編集・バンドサイト制作をサポートします。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2 class="title">SERVICE &amp; <span class="red">PRICE</span></h2>
+      <div class="service-list">
+        <article class="service">
+          <div class="service-top">
+            <div class="service-copy">
+              <span class="num">01 / LIVE SHOOTING</span>
+              <h2>ライブ・練習撮影</h2>
+              <p>ライブ、バンド練習、ダンスなどをXperia 1 VIIで固定撮影します。</p>
+              <ul class="features">
+                <li>4K固定撮影</li>
+                <li>対応するmicroSDカードをお預かり</li>
+                <li>撮影終了後、カードをそのまま返却</li>
+                <li>交通費・会場入場料は別途</li>
+                <li>炎天下では端末温度により撮影できない場合あり</li>
+              </ul>
+            </div>
+            <aside class="price-panel" aria-label="ライブ撮影料金">
+              <p class="price-label">PRICE GUIDE</p>
+              <div class="price">30分程度 ¥4,000<br>60分程度 ¥6,500<small>対面のみ／交通費・入場料別</small></div>
+            </aside>
+          </div>
+          <details class="service-details">
+            <summary>撮影用microSDカードが必要な方へ</summary>
+            <div class="detail-body">
+              <p>カードをお持ちでない場合はこちらで用意できます。撮影終了後は、撮影データが入ったカードをそのままお渡しします。編集前の撮影データと編集後の完成動画を両方保存したい場合は、余裕のある大きめの容量をおすすめします。</p>
+              <div class="sd-grid">
+                <article class="sd-card"><strong>32GB</strong><span>参考価格 約4,000円</span><p>短時間向け。設定や収録時間によっては容量に余裕が少ない場合があります。</p></article>
+                <article class="sd-card recommended"><em>RECOMMENDED</em><strong>64GB</strong><span>参考価格 約5,600円</span><p>30〜60分程度の撮影で選びやすい容量です。</p></article>
+                <article class="sd-card"><strong>128GB</strong><span>参考価格 約6,300円</span><p>複数回の撮影や、今後もカードを使いたい方向けです。</p></article>
+                <article class="sd-card"><strong>256GB</strong><span>参考価格 約9,400円</span><p>長時間撮影や継続利用を想定する方向けです。</p></article>
+              </div>
+              <div class="sd-note"><strong>こちらでmicroSDを用意する場合</strong><br>購入商品・在庫・価格改定により金額は変動するため、ご依頼時に容量と最終金額をご案内します。撮影用には原則としてUHS-I U3・V30以上のカードを選びます。</div>
+            </div>
+          </details>
+        </article>
+
+        <article class="service">
+          <div class="service-top">
+            <div class="service-copy">
+              <span class="num">02 / VIDEO EDITING</span>
+              <h2>動画編集</h2>
+              <p>VLLOを使用し、ライブ映像や告知用Shortsを編集します。</p>
+              <ul class="features">
+                <li>不要部分のカット</li>
+                <li>タイトル・テロップ追加</li>
+                <li>複数映像・画像の組み合わせ</li>
+                <li>YouTube・SNS向け書き出し</li>
+              </ul>
+            </div>
+            <aside class="price-panel" aria-label="動画編集料金">
+              <p class="price-label">PRICE GUIDE</p>
+              <div class="price">告知Shorts ¥2,500〜<br>1曲動画 ¥4,000〜<br>フルライブ ¥8,000〜<small>素材時間・編集内容・修正回数で変動</small></div>
+            </aside>
+          </div>
+          <details class="service-details">
+            <summary>動画編集の参考例を見る</summary>
+            <div class="detail-body">
+              <div class="editing-examples">
+                <article class="editing-example">
+                  <h3>SHORT PROMO</h3><p>告知用動画</p>
+                  <div class="video-example video-example-short"><iframe src="https://www.youtube.com/embed/0KzZ-3CovwE" title="告知用動画の編集例" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
+                </article>
+                <article class="editing-example">
+                  <h3>ONE SONG</h3><p>1曲動画</p>
+                  <div class="video-example"><iframe src="https://www.youtube.com/embed/7GH-uYAEIYw" title="1曲動画の編集例" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
+                </article>
+                <article class="editing-example">
+                  <h3>FULL LIVE</h3><p>フルライブ動画</p>
+                  <div class="video-example"><iframe src="https://www.youtube.com/embed/SIkXc8nU0h8" title="フルライブ動画の編集例" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
+                </article>
+              </div>
+            </div>
+          </details>
+        </article>
+
+        <article class="service">
+          <div class="service-top">
+            <div class="service-copy">
+              <span class="num">03 / BAND WEBSITE</span>
+              <h2>バンドサイト制作</h2>
+              <p>現在ご覧いただいているGuns N' Loses公式サイト程度の構成に対応します。</p>
+              <ul class="features">
+                <li>スマホ・PC対応</li>
+                <li>ライブ情報・動画・SNSリンク</li>
+                <li>写真ギャラリー</li>
+                <li>問い合わせ導線</li>
+                <li>GitHub Pagesを使用</li>
+              </ul>
+            </div>
+            <aside class="price-panel" aria-label="バンドサイト制作料金">
+              <p class="price-label">PRICE GUIDE</p>
+              <div class="price">1ページ ¥15,000〜<br>本サイト程度 ¥30,000〜<small>ページ数・写真整理・機能・修正量で変動</small></div>
+            </aside>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2 class="title">BEFORE <span class="red">BOOKING</span></h2>
+      <div class="notes"><strong>料金は目安です。</strong><br>会場、撮影時間、素材の長さ、編集内容、ページ数、納期、修正回数などによって変わります。まずは「何を依頼したいか」「日程」「希望する完成形」をLINEでお知らせください。内容を確認して、お見積りとお支払い期限をご案内します。</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow">PAYMENT TERMS</p>
+      <h2 class="title">PAYMENT <span class="red">METHOD</span></h2>
+      <div class="payment-grid">
+        <article class="payment-card featured">
+          <span class="payment-label">BANK TRANSFER</span>
+          <h3>銀行振込・原則前払い</h3>
+          <p>お見積り内容をご確認いただいた後、指定口座へ全額をお振込みください。入金確認後に撮影日程を確定し、動画編集・サイト制作などの作業を開始します。</p>
+        </article>
+        <article class="payment-card">
+          <span class="payment-label">TRANSFER FEE</span>
+          <h3>振込手数料はご依頼者様負担</h3>
+          <p>金融機関で発生する振込手数料は、ご依頼者様にてご負担をお願いします。振込先口座は、お見積り確定後にLINEで個別にご案内します。</p>
+        </article>
+        <article class="payment-card">
+          <span class="payment-label">OTHER PAYMENTS</span>
+          <h3>カード・PayPayは現在非対応</h3>
+          <p>月額応援ページを除き、Band Supportのご依頼料金は銀行振込で承ります。クレジットカードとPayPayでの受付は現在行っていません。</p>
+        </article>
+      </div>
+      <div class="payment-note"><strong>キャンセル・日程変更について</strong><br>撮影日程、外部費用、作業開始状況によって対応が変わるため、お見積り時に条件をご案内します。内容をご確認いただいたうえでお支払いください。</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="contact-box">
+        <div><h2>CONTACT</h2><p>ライブ撮影、動画編集、ホームページ制作の相談はこちら。</p></div>
+        <a class="btn" href="https://line.me/R/ti/p/@383oceah" target="_blank" rel="noopener noreferrer">LINEで相談する →</a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer><div class="container">© 2026 Guns N' Loses. All Rights Reserved.</div></footer>
+</body>
+</html>
