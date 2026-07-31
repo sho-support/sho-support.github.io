@@ -148,7 +148,17 @@ async function init() {
   const redirectError = getRedirectError();
   if (redirectError) {
     clearAuthParameters();
-    showLocked(`ログインできませんでした。${redirectError}`);
+    const normalizedError = redirectError.toLowerCase();
+    const expiredOrUsed =
+      normalizedError.includes('invalid') ||
+      normalizedError.includes('expired') ||
+      normalizedError.includes('already been used');
+
+    showLocked(
+      expiredOrUsed
+        ? 'ログインリンクが期限切れ、使用済み、または無効です。ログイン画面から新しいリンクを発行してください。'
+        : `ログインできませんでした。${redirectError}`
+    );
     return;
   }
 

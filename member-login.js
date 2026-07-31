@@ -52,7 +52,7 @@ form.addEventListener('submit', async (event) => {
     if (error) throw error;
 
     setMessage(
-      'ログイン用メールを送信しました。受信箱と迷惑メールフォルダを確認し、メール内のリンクを開いてください。',
+      'ログイン用メールを送信しました。リンクは1回限りで、通常は送信から1時間以内に開く必要があります。受信箱と迷惑メールフォルダを確認し、届いた最新のメールを開いてください。',
       'success'
     );
     form.reset();
