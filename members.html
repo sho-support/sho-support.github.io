@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070707">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="description" content="Guns N' Loses 月額サポーター限定BACKSTAGE ROOM">
+  <title>Backstage Room | Guns N' Loses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="member.css">
+</head>
+<body>
+  <header>
+    <div class="wrap top">
+      <a class="brand" href="index.html"><span></span>GUNS N' LOSES</a>
+      <a class="back" href="index.html">← OFFICIAL SITE</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero compact">
+      <div class="wrap">
+        <div class="eyebrow">SUPPORTER ONLY</div>
+        <h1>BACKSTAGE <em>ROOM</em></h1>
+        <p>月額サポーター限定の練習動画・舞台裏・未公開コンテンツです。</p>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <section id="loading" class="state-panel" aria-live="polite">
+        <div class="loader" aria-hidden="true"></div>
+        <h2>CHECKING ACCESS</h2>
+        <p>ログイン情報とサポート状況を確認しています。</p>
+      </section>
+
+      <section id="locked" class="state-panel hidden">
+        <div class="state-mark">LOCKED</div>
+        <h2>有効なサポートを確認できません</h2>
+        <p id="lockedMessage">Stripe決済時と同じメールアドレスでログインしてください。</p>
+        <div class="state-actions">
+          <a class="button link-button" href="support-us.html">SUPPORT US</a>
+          <button class="button secondary" id="logoutLocked" type="button">ログアウト</button>
+        </div>
+      </section>
+
+      <section id="memberArea" class="hidden">
+        <div class="member-head">
+          <div>
+            <strong>SUPPORTER ACCESS</strong>
+            <div id="memberMeta" class="member-meta"></div>
+          </div>
+          <button class="button secondary compact-button" id="logoutBtn" type="button">ログアウト</button>
+        </div>
+        <div id="videoGrid" class="video-grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer><div class="wrap">© 2026 Guns N' Loses. All Rights Reserved.</div></footer>
+  <script type="module" src="members.js"></script>
+</body>
+</html>

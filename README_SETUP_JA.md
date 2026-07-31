@@ -1,193 +1,143 @@
-# Guns N' Loses 支援者専用ページ 完成版セットアップ
+# Guns N' Loses 応援者ページ — GitHub Pages + Supabase 完成版
 
-この更新は次の3点をまとめて反映します。
+このフォルダは、Vercelを使わずに次の構成で動かす最終ファイルです。
 
-1. `support.html` を横長カードの縦並びへ変更
-2. `index.html` のJAS FESTIVAL詳細から大きなOFFICIAL INFO欄を削除
-3. Stripe支援中の人だけが入れるBACKSTAGE ROOMを追加
+- GitHub Pages：公式サイト、ログイン画面、BACKSTAGE ROOM
+- Supabase Auth：メールのマジックリンクログイン
+- Supabase Edge Functions：支援者判定、限定動画取得、Stripe Webhook
+- Stripe：月額決済と契約状態通知
 
-## ZIP内の配置
+## 1. GitHubへアップロードするファイル
 
-```text
-/
-├─ index.html
-├─ support.html
-├─ support-us.html
-├─ .env.example
-├─ package.json
-├─ supabase.sql
-├─ vercel.json
-├─ README_SETUP_JA.md
-├─ api/
-│  ├─ _shared.js
-│  ├─ public-config.js
-│  ├─ member-status.js
-│  ├─ member-videos.js
-│  └─ stripe-webhook.js
-├─ data/
-│  └─ member-videos.json
-└─ public/
-   ├─ member.css
-   ├─ member-login.html
-   ├─ member-login.js
-   ├─ members.html
-   └─ members.js
-```
-
-GitHubの同じ場所へ上書きしてください。画像・`about.html`・`gallery.html`などは変更しません。
-
----
-
-## 1. GitHub Pages側で先に確認するページ
-
-アップロード後、数分待って次を確認します。
-
-- `https://sho-support.github.io/`
-- `https://sho-support.github.io/support.html`
-- `https://sho-support.github.io/support-us.html`
-
-確認内容：
-
-- Band Supportが3列ではなく、横長カード3枚の縦並びになっている
-- microSDを開いても文字が縦1列にならない
-- 動画編集を開くと3本の参考動画が同時に表示される
-- JAS FESTIVAL詳細に大きなOFFICIAL INFO欄がない
-- Support Usの3つのStripeボタンが今までどおり開く
-- 「応援者ログイン」ボタンが表示される
-
----
-
-## 2. Supabase設定
-
-### 新規プロジェクトの場合
-
-1. Supabaseで新規プロジェクトを作成
-2. SQL Editorを開く
-3. `supabase.sql` を全文実行
-4. Project Settings → APIで次を控える
-   - Project URL
-   - Publishable key（anon key）
-   - service_role key
-
-`service_role key` はGitHubやHTMLへ絶対に貼らないでください。
-
-### 以前のSQLを実行済みの場合
-
-今回の `supabase.sql` は不足列を追加できるようにしてあります。もう一度全文を実行してください。
-
-### Authentication URL設定
-
-Authentication → URL Configurationで設定します。
-
-Vercelプロジェクト名を `guns-n-loses-members` にした場合：
-
-- Site URL：`https://guns-n-loses-members.vercel.app`
-- Redirect URLs：`https://guns-n-loses-members.vercel.app/members.html`
-
-Vercelで別URLになった場合は、実際のURLへ置き換えてください。
-
----
-
-## 3. Vercel設定
-
-1. Vercelで `sho-support` リポジトリをImport
-2. Project Nameを可能なら `guns-n-loses-members` にする
-3. Framework Presetは `Other`
-4. Root Directoryは空欄のまま
-5. Environment Variablesへ次を登録
+リポジトリの一番上へ、以下を同名上書きでアップロードします。
 
 ```text
-SUPABASE_URL
-SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY
-STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET
-OFFICIAL_SITE_URL=https://sho-support.github.io
+support.html
+support-us.html
+member-config.js
+member-login.html
+member-login.js
+members.html
+members.js
+member.css
 ```
 
-6. Deployを実行
-7. 次が開くことを確認
+`member-config.js`にはブラウザ公開用のSupabase Publishable keyだけが入っています。Stripeの秘密鍵、Webhook secret、Supabase Secret keyは入っていません。
+
+以前アップロードしたVercel用の`api/`、`public/`、`data/`、`vercel.json`、`package.json`は、今回のページから参照されません。残っていても新しいページの動作には影響しませんが、後で整理する場合は削除できます。
+
+## 2. 今回の修正
+
+- `support-us.html`の応援者ログイン先をVercelから`member-login.html`へ変更
+- ログイン画面とBACKSTAGE ROOMをGitHub Pagesのルートへ配置
+- ブラウザからSupabase Edge Functionsを直接呼び出す構成へ変更
+- 限定動画が未登録の場合は`COMING SOON`を表示
+- microSD参考価格を次へ修正
+  - 32GB：約4,000円
+  - 64GB：約5,600円
+  - 128GB：約6,300円
+  - 256GB：約9,400円
+
+参考価格は、信頼できるUHS-I・U3・V30以上のカードをこちらで用意する場合の目安です。購入商品・在庫・価格改定により最終金額は変動します。
+
+## 3. Supabase Authentication URL設定
+
+Supabase Dashboardで次へ進みます。
 
 ```text
-https://guns-n-loses-members.vercel.app/member-login.html
+Authentication
+→ URL Configuration
 ```
 
-VercelのURLが違った場合は、`support-us.html` にある次のURLを実際のURLへ1か所だけ置換します。
+設定値：
 
 ```text
-https://guns-n-loses-members.vercel.app/member-login.html
+Site URL
+https://sho-support.github.io/
+
+Redirect URLs
+https://sho-support.github.io/members.html
 ```
 
-置換後、`support-us.html`だけGitHubへ再アップロードします。
+保存します。`member-login.js`の`emailRedirectTo`も同じ`members.html`を使用します。
 
----
+## 4. メール送信設定
 
-## 4. Stripe Webhook設定
+Supabase標準SMTPは、本番の一般ユーザー向け送信には使えません。標準SMTPではプロジェクトチームに登録したメールアドレス以外への送信が拒否されます。
 
-Stripe Dashboard → Developers / Workbench → WebhooksでEndpointを追加します。
-
-Endpoint URL：
+一般の応援者へログインメールを送るには、次へ進んでCustom SMTPを設定します。
 
 ```text
-https://guns-n-loses-members.vercel.app/api/stripe-webhook
+Authentication
+→ Email
+→ SMTP Settings / Custom SMTP
 ```
 
-Vercel URLが異なる場合は実際のURLへ変更します。
+利用候補：Resend、Brevo、SendGrid、Postmarkなど。SMTPホスト、ポート、ユーザー名、パスワード、送信元メールアドレスが必要です。
 
-受信イベント：
+## 5. Edge Functionsの最終状態
 
 ```text
-checkout.session.completed
-customer.subscription.created
-customer.subscription.updated
-customer.subscription.deleted
-customer.subscription.paused
-customer.subscription.resumed
-invoice.paid
-invoice.payment_failed
+stripe-webhook  ：Verify JWT OFF
+member-status   ：Verify JWT ON
+member-videos   ：Verify JWT ON
 ```
 
-作成後に表示されるSigning secret（`whsec_...`）を、Vercelの `STRIPE_WEBHOOK_SECRET` に登録して再デプロイします。
+現在の関数コードは次の認証方式です。
 
----
+- `stripe-webhook`：Stripe署名で認証
+- `member-status`：SupabaseログインユーザーJWTで認証
+- `member-videos`：SupabaseログインユーザーJWTで認証し、支援中だけ動画を返す
 
-## 5. 限定動画の追加
+将来、Supabaseの署名方式変更後に会員関数が401になる場合は、`member-status`と`member-videos`の組み込みVerify JWTをOFFにして、関数内の`withSupabase({ auth: "user" })`だけで検証する方法があります。現時点では実際のログインテスト結果を優先してください。
 
-`data/member-videos.json` は現在空です。そのため、支援者ページには「COMING SOON」と表示されます。
+## 6. 限定動画の追加
 
-動画を追加するときは次の形式にします。
+Supabase DashboardのTable Editorで`member_videos`を開き、行を追加します。
 
-```json
-[
-  {
-    "title": "7月のバンド練習",
-    "description": "次回ライブに向けた練習映像です。",
-    "videoUrl": "https://www.youtube.com/embed/動画ID",
-    "publishedAt": "2026-07-30"
-  }
-]
+```text
+title          動画タイトル
+description    説明
+youtube_id     YouTube動画IDだけ
+published_at   公開日
+sort_order     大きい数字ほど先頭
+is_published   trueで表示
 ```
 
-YouTubeは限定公開にし、通常の視聴URLではなく埋め込みURLを使用します。
+YouTube URLが次の場合：
 
-注意：YouTube限定公開URLは、閲覧者がURLを第三者へ共有できます。完全な転載防止ではありません。
+```text
+https://www.youtube.com/watch?v=AbCdEf12345
+```
 
----
+`youtube_id`へ入れるのは次だけです。
 
-## 6. 本番テスト
+```text
+AbCdEf12345
+```
 
-次の順番で確認します。
+動画はYouTubeの限定公開を推奨します。ただし限定公開URLや埋め込み動画は、閲覧者による共有を完全には防止できません。
 
-1. Stripeの月額支援をテスト用メールアドレスで行う
-2. Stripe WebhookがHTTP 200になっていることを確認
-3. Supabaseの `supporters` テーブルにメールアドレスと `active` が入ることを確認
-4. Support Usの「応援者ログイン」を押す
-5. Stripe決済時と同じメールアドレスを入力
-6. 届いたメールのリンクを開く
-7. BACKSTAGE ROOMが表示されることを確認
-8. 別の未支援メールではACCESS LOCKEDになることを確認
-9. Stripeで解約し、契約終了後に閲覧できなくなることを確認
+## 7. 本番確認
 
-## 完成判定
+1. GitHub Pagesへ8ファイルをアップロード
+2. `https://sho-support.github.io/member-login.html`を開く
+3. Supabase組織メンバーのメールアドレスでログインメール送信を試す
+4. Custom SMTP設定後、一般のメールアドレスでも送信を確認
+5. Stripeで月額支援を行う
+6. Stripe WorkbenchのWebhook deliveryがHTTP 200か確認
+7. Supabase `supporters`テーブルにメールと`active`が入ったか確認
+8. 決済時と同じメールでログインし、BACKSTAGE ROOMが開くか確認
+9. 未支援メールではLOCKEDになるか確認
 
-コードと画面はこのZIPで揃っています。ただし、支援者認証は外部サービスとの接続が必要です。Supabase・Vercel・Stripe Webhookの設定と、本番メールでの動作確認が終わるまでは公開運用の完成とは判定しません。
+## 8. 公開してはいけない値
+
+次はGitHub、HTML、JavaScript、チャット、スクリーンショットへ出さないでください。
+
+```text
+Stripe Secret key（sk_live_...）
+Stripe Webhook signing secret（whsec_...）
+Supabase Secret key（sb_secret_...）
+```
+
+Publishable key（`sb_publishable_...`）はブラウザ利用を前提とした公開用キーです。

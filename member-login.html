@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070707">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Guns N' Loses 月額サポーター専用ログインページ">
+  <title>Supporter Login | Guns N' Loses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="member.css">
+</head>
+<body>
+  <header>
+    <div class="wrap top">
+      <a class="brand" href="index.html"><span></span>GUNS N' LOSES</a>
+      <a class="back" href="support-us.html">← SUPPORT US</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div class="eyebrow">SUPPORTER ONLY</div>
+        <h1>MEMBER <em>LOGIN</em></h1>
+        <p>Stripe決済時と同じメールアドレスへ、1回限りのログインリンクを送ります。</p>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <section class="panel" aria-labelledby="login-title">
+        <h2 id="login-title">LOGIN BY EMAIL</h2>
+        <form id="loginForm" novalidate>
+          <label for="email">メールアドレス</label>
+          <input class="field" id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+          <button class="button" id="loginBtn" type="submit">ログインリンクを受け取る</button>
+        </form>
+        <p id="message" class="message" role="status" aria-live="polite"></p>
+        <div class="notice">
+          <strong>パスワードは不要です。</strong><br>
+          メール内のリンクを開くと、支援状況を確認してBACKSTAGE ROOMへ移動します。決済直後はStripeからの反映に少し時間がかかる場合があります。
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer><div class="wrap">© 2026 Guns N' Loses. All Rights Reserved.</div></footer>
+  <script type="module" src="member-login.js"></script>
+</body>
+</html>
