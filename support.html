@@ -100,6 +100,17 @@
     .video-example-short{max-width:220px;margin:auto;aspect-ratio:9/16}
 
     .notes{padding:26px;border:1px solid var(--line);background:#0d0d0d;color:var(--soft);line-height:1.9}
+
+    .payment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .payment-card{
+      min-height:100%;padding:26px;border:1px solid var(--line);
+      background:linear-gradient(145deg,var(--panel2),#0d0d0d)
+    }
+    .payment-card.featured{border-color:rgba(213,22,53,.75);box-shadow:inset 4px 0 0 var(--red)}
+    .payment-label{display:block;margin:0 0 10px;color:var(--red);font:1rem var(--rock);letter-spacing:.13em}
+    .payment-card h3{margin:0 0 12px;font:2rem/1.05 var(--rock);letter-spacing:.04em}
+    .payment-card p{margin:0;color:var(--soft);font-size:.88rem;line-height:1.9}
+    .payment-note{margin-top:14px;padding:20px 22px;border:1px solid var(--line);background:#0d0d0d;color:var(--soft);font-size:.86rem;line-height:1.9}
     .contact-box{display:flex;flex-wrap:wrap;align-items:center;gap:28px;padding:36px;border:1px solid rgba(213,22,53,.45);background:linear-gradient(135deg,rgba(213,22,53,.12),#0b0b0b)}
     .contact-box>div{flex:1 1 500px}
     .contact-box>.btn{flex:0 1 230px}
@@ -112,6 +123,7 @@
     @media(max-width:900px){
       .price-panel{min-height:auto}
       .editing-examples{grid-template-columns:1fr}
+      .payment-grid{grid-template-columns:1fr}
       .video-example-short{max-width:260px}
     }
     @media(max-width:680px){
@@ -249,7 +261,32 @@
   <section class="section">
     <div class="container">
       <h2 class="title">BEFORE <span class="red">BOOKING</span></h2>
-      <div class="notes"><strong>料金は目安です。</strong><br>会場、撮影時間、素材の長さ、編集内容、ページ数、納期、修正回数などによって変わります。まずは「何を依頼したいか」「日程」「希望する完成形」をLINEでお知らせください。内容を確認して、作業前に料金をご案内します。</div>
+      <div class="notes"><strong>料金は目安です。</strong><br>会場、撮影時間、素材の長さ、編集内容、ページ数、納期、修正回数などによって変わります。まずは「何を依頼したいか」「日程」「希望する完成形」をLINEでお知らせください。内容を確認して、お見積りとお支払い期限をご案内します。</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow">PAYMENT TERMS</p>
+      <h2 class="title">PAYMENT <span class="red">METHOD</span></h2>
+      <div class="payment-grid">
+        <article class="payment-card featured">
+          <span class="payment-label">BANK TRANSFER</span>
+          <h3>銀行振込・原則前払い</h3>
+          <p>お見積り内容をご確認いただいた後、指定口座へ全額をお振込みください。入金確認後に撮影日程を確定し、動画編集・サイト制作などの作業を開始します。</p>
+        </article>
+        <article class="payment-card">
+          <span class="payment-label">TRANSFER FEE</span>
+          <h3>振込手数料はご依頼者様負担</h3>
+          <p>金融機関で発生する振込手数料は、ご依頼者様にてご負担をお願いします。振込先口座は、お見積り確定後にLINEで個別にご案内します。</p>
+        </article>
+        <article class="payment-card">
+          <span class="payment-label">OTHER PAYMENTS</span>
+          <h3>カード・PayPayは現在非対応</h3>
+          <p>月額応援ページを除き、Band Supportのご依頼料金は銀行振込で承ります。クレジットカードとPayPayでの受付は現在行っていません。</p>
+        </article>
+      </div>
+      <div class="payment-note"><strong>キャンセル・日程変更について</strong><br>撮影日程、外部費用、作業開始状況によって対応が変わるため、お見積り時に条件をご案内します。内容をご確認いただいたうえでお支払いください。</div>
     </div>
   </section>
 

@@ -141,3 +141,8 @@ Supabase Secret key（sb_secret_...）
 ```
 
 Publishable key（`sb_publishable_...`）はブラウザ利用を前提とした公開用キーです。
+
+
+## Band Supportの支払い方法
+
+`support.html`には、銀行振込・原則前払い、振込手数料は依頼者負担、カード・PayPayは現在非対応という案内を追加しています。
