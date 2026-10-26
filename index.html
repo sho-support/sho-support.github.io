@@ -145,6 +145,14 @@
     .btn-red{background:var(--red);box-shadow:0 12px 34px rgba(213,22,53,.25)}
     .btn-red:hover{background:#e71c3d}
     .btn-ghost{border-color:rgba(255,255,255,.5);background:rgba(0,0,0,.28);backdrop-filter:blur(8px)}
+    .hero-service-link{
+      display:inline-flex;align-items:center;gap:10px;margin-top:16px;padding:10px 14px;
+      border-left:3px solid #f08a35;background:rgba(0,0,0,.42);color:#f2f2f2;
+      font-size:.82rem;font-weight:700;letter-spacing:.04em;backdrop-filter:blur(8px);
+      transition:.25s
+    }
+    .hero-service-link strong{color:#ff9d55;letter-spacing:.08em}
+    .hero-service-link:hover{transform:translateX(4px);background:rgba(20,20,20,.7)}
     .dots{position:absolute;right:28px;bottom:32px;display:flex;gap:9px;z-index:3}
     .dot{width:30px;height:3px;border:0;background:rgba(255,255,255,.3);padding:0;cursor:pointer;transition:.3s}
     .dot.active{background:var(--red);width:46px}
@@ -630,6 +638,9 @@
         <a class="btn btn-red" href="https://www.youtube.com/@shoguitar5077" target="_blank" rel="noopener">WATCH LIVE VIDEOS →</a>
         <a class="btn btn-ghost" href="#live">NEXT LIVE ↓</a>
       </div>
+      <a class="hero-service-link" href="sho-support.html#support">
+        サイト制作・ライブ撮影・動画編集などのご依頼は <strong>SHO PAGEへ →</strong>
+      </a>
     </div>
     <div class="dots" id="dots" aria-label="ヒーロー画像切り替え"></div>
   </section>
