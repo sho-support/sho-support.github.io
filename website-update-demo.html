@@ -45,10 +45,10 @@
       <div class="field"><label>開催日</label><input id="liveDate" type="date" value="2027-01-10"></div>
       <div class="field"><label>イベント名</label><input id="liveName" value="ROCK NIGHT 2027"></div>
       <div class="field"><label>会場 / 出演時間</label><input id="livePlace" value="仙台 LIVE HOUSE / 18:30"></div>
-      <div class="field"><label>セットリスト</label><textarea id="setlist">Welcome to the Jungle
-Mr. Brownstone
-Sweet Child O' Mine</textarea></div>
-      <div class="field"><label>YouTube URL（任意）</label><input id="youtube" placeholder="https://youtu.be/..."></div>
+      <div class="field"><label>イベント詳細</label><textarea id="eventDetail">出演：ABC BAND
+前売 ¥2,500 / 当日 ¥3,000
+
+必要ならここにイベント詳細、タイムテーブル、YouTube URLなども自由に入力できます。</textarea></div>
       <div class="btns"><button class="btn" id="applyLive">LIVEを反映</button><button class="btn secondary reset">戻す</button></div>
     </div>
 
@@ -72,7 +72,7 @@ Sweet Child O' Mine</textarea></div>
       <div class="mockhero" id="mockHero"><div><div class="mocklabel">OFFICIAL WEBSITE</div><h3>ABC BAND</h3><p>Rock / Sendai</p></div></div>
       <div class="mockbody">
         <div class="mocklabel">NEXT LIVE</div>
-        <div class="livecard" id="liveCard"><strong id="pName">ROCK NIGHT 2027</strong><span id="pDate">2027.01.10</span><br><span id="pPlace">仙台 LIVE HOUSE / 18:30</span><details><summary>SETLIST</summary><div id="pSetlist">Welcome to the Jungle<br>Mr. Brownstone<br>Sweet Child O' Mine</div></details></div>
+        <div class="livecard" id="liveCard"><strong id="pName">ROCK NIGHT 2027</strong><span id="pDate">2027.01.10</span><br><span id="pPlace">仙台 LIVE HOUSE / 18:30</span><details><summary>イベント詳細</summary><div id="pSetlist">出演：ABC BAND<br>前売 ¥2,500 / 当日 ¥3,000</div></details></div>
         <div class="notice" id="pNotice">次回ライブの詳細を公開しました！</div>
         <div class="mocklabel" style="margin-top:12px">GALLERY</div>
         <div class="gallery" id="gallery"><div></div><div></div><div></div></div>
@@ -100,7 +100,7 @@ Sweet Child O' Mine</textarea></div>
  tabs.forEach(b=>b.onclick=()=>{if(b.classList.contains('locked')){document.getElementById('lockmsg').classList.add('show');return}showTab(b.dataset.tab)});
  function flash(el){el.classList.remove('changed');void el.offsetWidth;el.classList.add('changed')}
  document.getElementById('applyLive').onclick=()=>{
-   const d=document.getElementById('liveDate').value,n=document.getElementById('liveName').value,p=document.getElementById('livePlace').value,s=document.getElementById('setlist').value;
+   const d=document.getElementById('liveDate').value,n=document.getElementById('liveName').value,p=document.getElementById('livePlace').value,s=document.getElementById('eventDetail').value;
    document.getElementById('pName').textContent=n||'LIVE EVENT';document.getElementById('pDate').textContent=d?d.replaceAll('-','.'):'DATE TBD';document.getElementById('pPlace').textContent=p||'詳細後日';
    document.getElementById('pSetlist').innerHTML=(s||'未定').split('\n').map(x=>x.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))).join('<br>');flash(document.getElementById('liveCard'));toast('LIVE情報を反映しました');
  };
