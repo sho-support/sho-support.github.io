@@ -25,15 +25,144 @@
     .live-list{display:grid;gap:10px}.live{display:grid;grid-template-columns:120px 1fr auto;gap:20px;align-items:center;padding:20px 22px;border:1px solid var(--line);background:#0d0d0d}.date{font:2rem var(--rock)}.live h3{margin:0;font:1.6rem var(--rock)}.live p{margin:3px 0 0;color:var(--soft);font-size:.85rem}
     .video-card{padding:0;overflow:hidden}.video-copy{padding:24px}.video-copy h3{margin:6px 0 7px;font:2rem var(--rock)}.video-copy p{font-size:.85rem}.video-link{display:block;padding:15px 24px;border-top:1px solid var(--line);font:1rem var(--rock);letter-spacing:.1em}.video-link:hover{background:#171717;color:var(--orange)}
     .gear{padding:34px;border:1px solid rgba(255,138,52,.42);background:linear-gradient(120deg,rgba(255,138,52,.12),#101010 58%,rgba(255,255,255,.02))}.gear strong{display:block;margin-top:8px;font:clamp(2.4rem,6vw,4.8rem)/.9 var(--rock)}.gear p{max-width:760px;color:var(--soft)}.note{font-size:.78rem;color:var(--muted)}.service ul{padding-left:18px;color:var(--soft)}.price{margin-top:18px;padding-top:15px;border-top:1px solid var(--line);font:1.6rem var(--rock)}
-    .service-accordion{display:grid;gap:10px}.service-group{border:1px solid var(--line);background:linear-gradient(145deg,#151515,#0c0c0c);overflow:hidden}.service-group summary{cursor:pointer;list-style:none;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:20px}.service-group summary::-webkit-details-marker{display:none}.service-group summary:after{content:"＋";color:var(--orange);font-size:1.25rem}.service-group[open] summary:after{content:"−"}.service-head span{display:block;color:var(--orange);font:.86rem var(--rock);letter-spacing:.13em}.service-head strong{display:block;margin-top:3px;font:1.8rem var(--rock);letter-spacing:.04em}.service-summary{color:var(--soft);font-size:.8rem;text-align:right}.service-body{padding:0 22px 22px;border-top:1px solid var(--line)}.service-body h4{margin:20px 0 8px;font:1.5rem var(--rock);letter-spacing:.05em}.service-body p{margin:0;color:var(--soft);font-size:.88rem}.service-body ul{margin:10px 0 0;padding-left:19px;color:var(--soft);font-size:.86rem}.price-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.price-item{padding:16px;border:1px solid var(--line);background:#0d0d0d}.price-item b{display:block;font:1.5rem var(--rock);letter-spacing:.04em}.price-item small{display:block;margin-top:4px;color:var(--muted);line-height:1.6}.support-mini{margin-top:14px;padding:16px 18px;border:1px solid var(--line);background:#0d0d0d;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}.support-mini p{margin:0;color:var(--soft);font-size:.82rem}.support-mini strong{color:#fff}.wishlist-muted{color:var(--muted);font-size:.78rem}.contact{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;padding:30px;border:1px solid rgba(255,138,52,.45);background:rgba(255,138,52,.05);margin-top:14px}.contact h3{margin:0;font:3rem var(--rock)}footer{padding:34px 0;border-top:1px solid var(--line);color:#777;font-size:.72rem}
-    @media(max-width:820px){nav a:not(.back){display:none}.grid,.grid.three{grid-template-columns:1fr}.live{grid-template-columns:92px 1fr}.live .tag{grid-column:1/-1;width:max-content}.contact{grid-template-columns:1fr}.price-grid{grid-template-columns:1fr}.service-group summary{align-items:flex-start}.service-summary{text-align:left}}
+    .service-accordion{display:grid;gap:10px}.service-group{border:1px solid var(--line);background:linear-gradient(145deg,#151515,#0c0c0c);overflow:hidden}.service-group summary{cursor:pointer;list-style:none;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:20px}.service-group summary::-webkit-details-marker{display:none}.service-group summary:after{content:"＋";color:var(--orange);font-size:1.25rem}.service-group[open] summary:after{content:"−"}.service-head span{display:block;color:var(--orange);font:.86rem var(--rock);letter-spacing:.13em}.service-head strong{display:block;margin-top:3px;font:1.8rem var(--rock);letter-spacing:.04em}.service-summary{color:var(--soft);font-size:.8rem;text-align:right}.service-body{padding:0 22px 22px;border-top:1px solid var(--line)}.service-body h4{margin:20px 0 8px;font:1.5rem var(--rock);letter-spacing:.05em}.service-body p{margin:0;color:var(--soft);font-size:.88rem}.service-body ul{margin:10px 0 0;padding-left:19px;color:var(--soft);font-size:.86rem}.price-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.price-item{padding:16px;border:1px solid var(--line);background:#0d0d0d}.price-item b{display:block;font:1.5rem var(--rock);letter-spacing:.04em}.price-item small{display:block;margin-top:4px;color:var(--muted);line-height:1.6}.support-mini{margin-top:14px;padding:16px 18px;border:1px solid var(--line);background:#0d0d0d;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}.support-mini p{margin:0;color:var(--soft);font-size:.82rem}.support-mini strong{color:#fff}.wishlist-muted{color:var(--muted);font-size:.78rem}
+    .example-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}.example-link{display:block;padding:13px 12px;border:1px solid var(--line);background:#101010;font-size:.78rem;font-weight:800;text-align:center}.example-link:hover{border-color:var(--orange);color:var(--orange)}
+    .service-table{margin-top:14px;border:1px solid var(--line);background:#0b0b0b}.service-row{display:grid;grid-template-columns:minmax(150px,.85fr) minmax(0,1.5fr);border-top:1px solid var(--line)}.service-row:first-child{border-top:0}.service-row>div{padding:14px 16px}.service-row>div:first-child{font-weight:800;color:#fff;background:rgba(255,255,255,.025)}.service-row small{display:block;color:var(--muted);line-height:1.55;margin-top:3px}.service-price{color:var(--orange);font-weight:800}.feature-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.feature-chips span{padding:6px 9px;border:1px solid var(--line);background:#101010;color:#ddd;font-size:.73rem}.case-note{margin-top:12px;padding:14px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.8rem}
+    .contact{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;padding:30px;border:1px solid rgba(255,138,52,.45);background:rgba(255,138,52,.05);margin-top:14px}.contact h3{margin:0;font:3rem var(--rock)}footer{padding:34px 0;border-top:1px solid var(--line);color:#777;font-size:.72rem}
+    @media(max-width:820px){nav a:not(.back){display:none}.grid,.grid.three{grid-template-columns:1fr}.live{grid-template-columns:92px 1fr}.live .tag{grid-column:1/-1;width:max-content}.contact{grid-template-columns:1fr}.price-grid{grid-template-columns:1fr}.service-group summary{align-items:flex-start}.service-summary{text-align:left}.example-links{grid-template-columns:1fr}.service-row{grid-template-columns:1fr}.service-row>div:first-child{padding-bottom:5px}.service-row>div:last-child{padding-top:5px}}
     @media(max-width:520px){.container{width:min(calc(100% - 24px),var(--max))}.hero{min-height:68svh;padding-top:58px}h1{font-size:clamp(5rem,25vw,8rem)}.section{padding:68px 0}.live{grid-template-columns:1fr;gap:5px}.btn{width:100%}}
   </style>
 </head>
 <body>
 <header><div class="container head"><a class="brand" href="sho-support.html"><span class="mark"></span><span>SHO</span></a><nav><a href="#live">LIVE</a><a href="#projects">PROJECTS</a><a href="#videos">VIDEO</a><a href="#support">SUPPORT</a><a class="back" href="index.html">GUNS N' LOSES →</a></nav></div></header>
 <main>
-<section class="hero"><div class="container"><p class="kicker">GUITARIST / LIVE / SUPPORT</p><h1>SHO<br><span class="outline">OFFICIAL</span></h1><p class="hero-copy">Guns N' LosesでSlashパートを担当。ライブ出演、演奏動画、使用機材、バンド活動で得た経験を活かしたサポートなど、SHO個人の活動をまとめています。</p><div class="badges"><span class="badge gnl">GUNS N' LOSES</span><span class="badge cin">CINDERELLA / GUITAR</span></div><div class="actions"><a class="btn btn-main" href="#live">NEXT LIVE ↓</a><a class="btn" href="https://www.youtube.com/@sho_Guns_N_Loses" target="_blank" rel="noopener">YOUTUBE →</a></div></div></section>
+<section class="hero"><div class="container"><p class="kicker">GUITARIST / LIVE / SUPPORT</p><h1>SHO<br><span class="outline">OFFICIAL</span></h1><p class="hero-copy">Guns N' LosesでSlashパートを担当。ライブ出演、演奏動画、使用機材、バンド活動で得た経験を活かしたサポートなど、SHO個人の活動をまとめています。</p><div class="badges"><span class="badge gnl">GUNS N' LOSES</span><span class="badge cin">CINDERELLA / GUITAR</span></div><div class="actions"><a class="btn btn-main" href="#support">SERVICE / PRICE ↓</a><a class="btn" href="https://www.youtube.com/@sho_Guns_N_Loses" target="_blank" rel="noopener">YOUTUBE →</a></div></div></section>
+
+<section class="section" id="support">
+  <div class="container">
+    <p class="eyebrow">SERVICE / PRICE</p>
+    <h2 class="title">SHO SUPPORT</h2>
+    <p class="lead">ホームページ制作・更新、ライブ撮影・動画編集、初心者向けギターなど。スマホでは必要な項目だけ開いて確認できます。</p>
+
+    <div class="service-accordion">
+      <details class="service-group" open>
+        <summary>
+          <span class="service-head"><span>01 / WEBSITE</span><strong>ホームページ制作・更新</strong></span>
+          <span class="service-summary">制作 ¥15,000〜 / 更新 ¥2,500〜</span>
+        </summary>
+        <div class="service-body">
+          <h4>ホームページ制作</h4>
+          <p>バンド・アーティスト・個人活動などに合わせて、スマホとPCの両方で見やすいサイトを制作します。写真の掲載も可能です。</p>
+
+          <div class="service-table">
+            <div class="service-row">
+              <div>1ページ制作</div>
+              <div><span class="service-price">¥15,000〜</span><small>プロフィール・SNS・問い合わせなど、シンプルな構成。</small></div>
+            </div>
+            <div class="service-row">
+              <div>本サイト程度</div>
+              <div><span class="service-price">¥30,000〜</span><small>Guns N' Loses公式サイト程度の構成。ページ数・機能・写真整理などで変動。</small></div>
+            </div>
+          </div>
+
+          <div class="feature-chips">
+            <span>写真ギャラリー</span><span>LIVE予定</span><span>過去LIVE履歴</span><span>セットリスト</span><span>ライブ動画URL</span><span>YouTube / SNS</span><span>各メンバーページ</span><span>問い合わせ導線</span><span>スマホ対応</span>
+          </div>
+
+          <div class="case-note">過去ライブの開催日・会場・セットリスト・その時のYouTubeライブ動画をまとめたり、写真ギャラリー、必要に応じて各メンバー専用ページも作成できます。応援・支援ページや決済を伴う機能は内容に応じて別途相談となります。</div>
+
+          <div class="example-links">
+            <a class="example-link" href="index.html" target="_blank">Guns N' Loses 本サイト例 →</a>
+            <a class="example-link" href="gallery.html" target="_blank">写真ギャラリー例 →</a>
+            <a class="example-link" href="about.html" target="_blank">過去LIVE・セトリ例 →</a>
+          </div>
+
+          <h4>ホームページ更新</h4>
+          <p>公開後のサイト更新も対応します。月額プランでは専用更新フォームから直接依頼できる仕組みを予定しています。</p>
+          <div class="service-table">
+            <div class="service-row">
+              <div>都度更新</div>
+              <div><span class="service-price">¥2,500 / 回</span><small>小規模な更新1件。</small></div>
+            </div>
+            <div class="service-row">
+              <div>月2回まで</div>
+              <div><span class="service-price">¥4,000 / 月</span><small>未使用分の翌月繰越なし。</small></div>
+            </div>
+            <div class="service-row">
+              <div>月4回まで</div>
+              <div><span class="service-price">¥7,000 / 月</span><small>未使用分の翌月繰越なし。</small></div>
+            </div>
+          </div>
+
+          <div class="feature-chips">
+            <span>次回LIVE追加</span><span>日時・会場変更</span><span>写真追加</span><span>ギャラリー更新</span><span>YouTube追加</span><span>プロフィール変更</span><span>お知らせ追加</span><span>リンク変更</span>
+          </div>
+          <div class="case-note">開催日を過ぎたライブをNEXT LIVEからLIVE HISTORYへ自動で移動する仕組みも対応予定です。大幅なデザイン変更、新規ページ追加、機能追加は通常更新とは別途見積りです。</div>
+
+          <div class="actions"><a class="btn" href="website-support.html">制作・更新プランの流れを見る →</a></div>
+        </div>
+      </details>
+
+      <details class="service-group">
+        <summary>
+          <span class="service-head"><span>02 / LIVE &amp; VIDEO</span><strong>ライブ撮影関連</strong></span>
+          <span class="service-summary">撮影・動画編集</span>
+        </summary>
+        <div class="service-body">
+          <h4>ライブ・練習撮影</h4>
+          <p>ライブ、バンド練習、ダンスなどを固定撮影します。交通費・会場入場料は別途です。</p>
+          <div class="service-table">
+            <div class="service-row"><div>30分程度</div><div><span class="service-price">¥4,000</span><small>4K固定撮影 / 対面のみ</small></div></div>
+            <div class="service-row"><div>60分程度</div><div><span class="service-price">¥6,500</span><small>4K固定撮影 / 対面のみ</small></div></div>
+          </div>
+          <h4>動画編集</h4>
+          <div class="service-table">
+            <div class="service-row"><div>告知Shorts</div><div><span class="service-price">¥2,500〜</span></div></div>
+            <div class="service-row"><div>1曲動画</div><div><span class="service-price">¥4,000〜</span></div></div>
+            <div class="service-row"><div>フルライブ</div><div><span class="service-price">¥8,000〜</span><small>素材時間・編集内容で変動。</small></div></div>
+          </div>
+          <div class="actions"><a class="btn" href="support.html">撮影・編集の詳細を見る →</a></div>
+        </div>
+      </details>
+
+      <details class="service-group">
+        <summary>
+          <span class="service-head"><span>03 / GUITAR</span><strong>初心者向けギター</strong></span>
+          <span class="service-summary">60分 ¥3,500</span>
+        </summary>
+        <div class="service-body">
+          <p>これからギターを始めたい方や、独学でつまずいている方向けの個人サポートです。</p>
+          <div class="service-table">
+            <div class="service-row"><div>60分</div><div><span class="service-price">¥3,500</span><small>スタジオ代・駐車場代・交通費は別途実費。</small></div></div>
+          </div>
+          <div class="feature-chips"><span>構え方</span><span>コード</span><span>リズム</span><span>基礎練習</span><span>弦交換</span><span>練習方法</span><span>ギター・機材選び</span></div>
+        </div>
+      </details>
+
+      <details class="service-group">
+        <summary>
+          <span class="service-head"><span>04 / OTHER</span><strong>その他の相談</strong></span>
+          <span class="service-summary">¥3,500〜</span>
+        </summary>
+        <div class="service-body">
+          <p>音楽・バンド活動を中心に、対応できる内容であれば個別に相談を受け付けます。</p>
+          <div class="feature-chips"><span>ギター購入相談</span><span>アンプ比較</span><span>エフェクター比較</span><span>初めて揃える機材</span><span>バンド活動相談</span></div>
+          <div class="service-table"><div class="service-row"><div>相談</div><div><span class="service-price">¥3,500〜</span><small>内容・時間・距離により変動。</small></div></div></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="support-mini">
+      <p><strong>活動サポート</strong>　機材・消耗品などのほしい物リストは現在準備中です。</p>
+      <span class="wishlist-muted">WISH LIST / COMING SOON</span>
+    </div>
+
+    <div class="contact">
+      <div><h3>CONTACT</h3><p>ホームページ・撮影・編集・ギター・その他の相談はLINEから。</p></div>
+      <a class="btn btn-main" href="https://line.me/R/ti/p/@383oceah" target="_blank" rel="noopener">LINEで相談する →</a>
+    </div>
+  </div>
+</section>
 
 <section class="section alt" id="live"><div class="container"><p class="eyebrow">SCHEDULE</p><h2 class="title">LIVE</h2><p class="lead">SHOが出演するライブ予定。バンドごとに表示を分けています。会場・出演時間などは決まり次第更新します。</p><div class="live-list">
 <article class="live"><div class="date">2026.10.31</div><div><h3>CINDERELLA</h3><p>SHO Guitar / 詳細後日</p></div><span class="tag cin">CINDERELLA</span></article>
@@ -52,124 +181,7 @@
 <article class="card video-card"><div class="video-copy"><span class="mini">2026.10.03 / IWAKI</span><h3>IWAKI MACHINAKA CONCERT</h3><p>Welcome to the Jungle / Mr. Brownstone / Out Ta Get Me / Sweet Child O' Mine / Nightrain</p></div><a class="video-link" href="https://youtu.be/ThGepKp0piw?si=H1OrO0U4A4W4-nY2" target="_blank" rel="noopener">WATCH ON YOUTUBE →</a></article>
 </div></div></section>
 
-<section class="section" id="support">
-  <div class="container">
-    <p class="eyebrow">SERVICE / SUPPORT</p>
-    <h2 class="title">SHO SUPPORT</h2>
-    <p class="lead">ライブ撮影・動画編集、ホームページ制作、ギター関連など。必要な項目だけ開いて詳細を確認できます。</p>
 
-    <div class="service-accordion">
-      <details class="service-group">
-        <summary>
-          <span class="service-head"><span>01 / LIVE &amp; VIDEO</span><strong>ライブ撮影関連</strong></span>
-          <span class="service-summary">撮影・動画編集</span>
-        </summary>
-        <div class="service-body">
-          <h4>ライブ・練習撮影</h4>
-          <p>ライブ、バンド練習、ダンスなどを固定撮影します。交通費・会場入場料は別途です。</p>
-          <div class="price-grid">
-            <div class="price-item"><b>30分程度 ¥4,000</b><small>4K固定撮影 / 対面のみ</small></div>
-            <div class="price-item"><b>60分程度 ¥6,500</b><small>4K固定撮影 / 対面のみ</small></div>
-          </div>
-          <ul>
-            <li>撮影データはmicroSDカードでお渡し可能</li>
-            <li>長時間撮影では64GB以上を推奨</li>
-            <li>炎天下など端末温度が上がる環境では撮影できない場合あり</li>
-          </ul>
-
-          <h4>動画編集</h4>
-          <p>ライブ映像や告知用Shortsを、YouTube・SNS向けに編集します。</p>
-          <div class="price-grid">
-            <div class="price-item"><b>告知Shorts ¥2,500〜</b><small>短尺告知・SNS向け</small></div>
-            <div class="price-item"><b>1曲動画 ¥4,000〜</b><small>カット・タイトル等</small></div>
-            <div class="price-item"><b>フルライブ ¥8,000〜</b><small>素材時間・編集内容で変動</small></div>
-          </div>
-        </div>
-      </details>
-
-      <details class="service-group">
-        <summary>
-          <span class="service-head"><span>02 / WEBSITE &amp; CREATIVE</span><strong>制作サポート</strong></span>
-          <span class="service-summary">HP制作・更新・バンド向け制作</span>
-        </summary>
-        <div class="service-body">
-          <h4>ホームページ制作</h4>
-          <p>スマホ・PC対応、ライブ情報、動画、SNSリンク、写真ギャラリー、問い合わせ導線などに対応します。</p>
-          <div class="price-grid">
-            <div class="price-item"><b>1ページ ¥15,000〜</b><small>内容・機能により変動</small></div>
-            <div class="price-item"><b>本サイト程度 ¥30,000〜</b><small>ページ数・写真整理・機能で変動</small></div>
-          </div>
-
-          <h4>ホームページ更新サポート</h4>
-          <p>公開後のライブ情報、文章、写真、リンクなどの更新を代行します。大幅なデザイン変更や新規ページ追加は別途見積りです。</p>
-          <div class="price-grid">
-            <div class="price-item"><b>都度更新 ¥2,500 / 回</b><small>小規模な更新1件</small></div>
-            <div class="price-item"><b>月2回まで ¥4,000 / 月</b><small>未使用分の翌月繰越なし</small></div>
-            <div class="price-item"><b>月4回まで ¥7,000 / 月</b><small>未使用分の翌月繰越なし</small></div>
-          </div>
-
-          <h4>その他の制作</h4>
-          <ul>
-            <li>ライブ告知用画像・短尺動画</li>
-            <li>YouTube・SNS掲載用の素材整理</li>
-            <li>バンド活動に必要な簡単なWeb導線づくり</li>
-          </ul>
-          <div class="actions"><a class="btn" href="website-support.html">ホームページ制作・更新の流れ →</a></div>
-        </div>
-      </details>
-
-      <details class="service-group">
-        <summary>
-          <span class="service-head"><span>03 / GUITAR</span><strong>初心者向けギター</strong></span>
-          <span class="service-summary">60分 ¥3,500</span>
-        </summary>
-        <div class="service-body">
-          <p>これからギターを始めたい方や、独学でつまずいている方向けの個人サポートです。</p>
-          <div class="price-grid">
-            <div class="price-item"><b>60分 ¥3,500</b><small>スタジオ代・駐車場代・交通費は別途実費</small></div>
-          </div>
-          <ul>
-            <li>ギターの構え方・ピックの持ち方</li>
-            <li>コード・リズム・基礎練習</li>
-            <li>練習方法の相談</li>
-            <li>弦交換</li>
-            <li>初めてのギター・アンプ・機材選び</li>
-          </ul>
-        </div>
-      </details>
-
-      <details class="service-group">
-        <summary>
-          <span class="service-head"><span>04 / OTHER</span><strong>その他の相談</strong></span>
-          <span class="service-summary">内容を確認して見積り</span>
-        </summary>
-        <div class="service-body">
-          <p>音楽やバンド活動を中心に、対応できる内容であれば個別に相談を受け付けます。</p>
-          <ul>
-            <li>ギター・アンプ・エフェクターの購入相談</li>
-            <li>候補商品の比較や機材選び</li>
-            <li>ギターを始めるために必要な物の相談</li>
-            <li>ライブやバンド活動に関する簡単な相談</li>
-            <li>その他、内容を確認して対応可否を案内</li>
-          </ul>
-          <div class="price-grid">
-            <div class="price-item"><b>¥3,500〜</b><small>内容・時間・距離により変動</small></div>
-          </div>
-        </div>
-      </details>
-    </div>
-
-    <div class="support-mini">
-      <p><strong>活動サポート</strong>　機材・消耗品などのほしい物リストは現在準備中です。</p>
-      <span class="wishlist-muted">WISH LIST / COMING SOON</span>
-    </div>
-
-    <div class="contact">
-      <div><h3>CONTACT</h3><p>撮影・制作・ギター・その他の相談はLINEから。</p></div>
-      <a class="btn btn-main" href="https://line.me/R/ti/p/@383oceah" target="_blank" rel="noopener">LINEで相談する →</a>
-    </div>
-  </div>
-</section>
 </main>
 <footer><div class="container">© 2026 SHO / Guns N' Loses.</div></footer>
 </body>
