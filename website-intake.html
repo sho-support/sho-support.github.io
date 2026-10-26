@@ -80,10 +80,11 @@
 </div></details>
 
 <details class="card"><summary>05 LIVE情報</summary><div class="body">
-  <label>次回LIVE<textarea name="next_live" placeholder="日付 / イベント名 / 会場 / 出演時間 / URL など"></textarea></label>
-  <label>過去LIVE情報<textarea name="past_live" placeholder="日付 / 会場 / セットリスト / YouTube URL など。分かる範囲でOK。"></textarea></label>
+  <label>次回LIVE<textarea name="next_live" placeholder="日付 / イベント名 / 会場 / 出演時間 など"></textarea></label>
+  <label>イベント詳細<textarea name="live_detail" placeholder="出演者、料金、タイムテーブル、セットリスト、YouTube URLなど。必要な内容だけ自由に入力してください。"></textarea></label>
+  <label>過去LIVE情報<textarea name="past_live" placeholder="日付 / 会場 / イベント詳細 / YouTube URL など。分かる範囲でOK。"></textarea></label>
   <label>LIVE一覧の表示希望<select name="live_style"><option>おまかせ</option><option>開催日順</option><option>新しい順</option><option>古い順</option></select></label>
-  <label class="check"><input type="checkbox" name="setlist_dropdown" value="yes">セットリストはプルダウン表示にしたい</label>
+  <label class="check"><input type="checkbox" name="detail_dropdown" value="yes">イベント詳細はプルダウン表示にしたい</label>
 </div></details>
 
 <details class="card"><summary>06 SNS・連絡先</summary><div class="body">
@@ -211,6 +212,7 @@
       '希望機能: '+((d.checks.features||[]).join(', ')),
       '写真希望: '+(f.photo_notes||''),
       '次回LIVE: '+(f.next_live||''),
+      'イベント詳細: '+(f.live_detail||''),
       '過去LIVE: '+(f.past_live||''),
       'YouTube: '+(f.youtube||''),
       'Instagram: '+(f.instagram||''),
