@@ -15,7 +15,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 label{display:block;margin-top:14px;font-size:.8rem;font-weight:800}.hint{display:block;margin-top:4px;color:var(--muted);font-size:.7rem;font-weight:500}.required{color:var(--orange2)}
 input[type=text],input[type=url],input[type=email],input[type=date],input[type=time],textarea,select{width:100%;margin-top:7px;padding:12px;border:1px solid var(--line);background:#111;color:#fff;border-radius:10px;font:inherit}input::placeholder,textarea::placeholder{color:#6f6f6f;opacity:1}textarea{min-height:96px;resize:vertical}
 input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(240,138,53,.5);border-radius:12px;background:#0e0e0e;color:#bbb}input[type=file]::file-selector-button{border:0;border-radius:999px;padding:8px 12px;margin-right:10px;background:#222;color:#fff;font-weight:800}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.check{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:13px;background:#101010;font-size:.76rem}.check input{margin-top:3px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.check{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:13px;background:#101010;font-size:.76rem}.check input{margin-top:3px}.feature-option{min-width:0}.feature-url{display:none;margin:7px 0 2px;padding:10px;border:1px solid rgba(240,138,53,.3);border-radius:12px;background:#0d0d0d}.feature-url.show{display:block}.feature-url label{margin-top:0}.feature-url input{margin-top:5px}
 .member,.liveblock{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#101010}.blockhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.blockhead h4{margin:0}.remove{border:0;background:transparent;color:#aaa;font-size:.72rem;text-decoration:underline}.addbtn{width:100%;margin-top:10px;padding:11px 12px;border:1px solid rgba(240,138,53,.45);border-radius:999px;background:#111;color:var(--orange2);font-weight:900}
 .notice{margin-top:13px;padding:13px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.75rem}.conditional{display:none}.conditional.show{display:block}.mini-title{margin:16px 0 0;font-size:.76rem;color:var(--orange2);font-weight:900}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.btn{border:0;border-radius:999px;padding:13px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{text-align:center;color:var(--muted);font-size:.7rem;margin-top:9px}.preview{white-space:pre-wrap;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0b0b;font-size:.75rem;color:#ddd;display:none}
 @media(max-width:640px){.row,.checkgrid,.buttons{grid-template-columns:1fr}.hero{padding-top:30px}.brand{font-size:.83rem}.siteid{font-size:.7rem}}
@@ -32,7 +32,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 
 <form id="intake"><section class="section">
 
-<details class="card" open><summary>01 基本情報</summary><div class="body">
+<details class="card"><summary>01 基本情報</summary><div class="body">
   <label>サイト名 / バンド名 / 店名 <span class="required">*</span>
     <input name="site_name" type="text" placeholder="HPトップに表示される名前（例：ABC BAND）">
     <span class="hint">この名前をホームページのメイン表示に使います。</span>
@@ -56,16 +56,45 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 </div></details>
 
 <details class="card"><summary>03 ページ・機能</summary><div class="body">
-  <span class="hint" style="margin-top:13px">本サイトプランでは一般的なバンド・アーティストサイトの機能をできるだけ標準に含めます。</span>
+  <span class="hint" style="margin-top:13px">複数ページサイトプランでは一般的なバンド・アーティストサイトの機能をできるだけ標準に含めます。</span>
   <div class="checkgrid">
-    <label class="check"><input type="checkbox" name="features" value="TOP" checked>TOP</label>
-    <label class="check"><input type="checkbox" name="features" value="写真ギャラリー">写真ギャラリー</label>
-    <label class="check"><input type="checkbox" name="features" value="次回LIVE">次回LIVE</label>
-    <label class="check"><input type="checkbox" name="features" value="過去LIVE">過去LIVE</label>
-    <label class="check"><input type="checkbox" name="features" value="メンバー個別ページ">メンバー個別ページ</label>
-    <label class="check"><input type="checkbox" name="features" value="YouTubeリンクボタン">YouTubeリンクボタン</label>
-    <label class="check"><input type="checkbox" name="features" value="SNSリンクボタン">SNSリンクボタン</label>
-    <label class="check"><input type="checkbox" name="features" value="問い合わせ・連絡先">問い合わせ・連絡先</label>
+    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="TOP" checked>TOP</label></div>
+    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="写真ギャラリー">写真ギャラリー</label></div>
+    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="次回LIVE">次回LIVE</label></div>
+    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="過去LIVE">過去LIVE</label></div>
+    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="メンバー個別ページ">メンバー個別ページ</label></div>
+
+    <div class="feature-option">
+      <label class="check"><input type="checkbox" name="features" value="YouTubeリンクボタン" data-url-target="youtubeInline">YouTubeリンクボタン</label>
+      <div class="feature-url" id="youtubeInline"><label>YouTube URL<input name="youtube" type="url" placeholder="https://youtube.com/..."></label></div>
+    </div>
+
+    <div class="feature-option">
+      <label class="check"><input type="checkbox" name="features" value="Instagramリンクボタン" data-url-target="instagramInline">Instagram</label>
+      <div class="feature-url" id="instagramInline"><label>Instagram URL<input name="instagram" type="url" placeholder="https://instagram.com/..."></label></div>
+    </div>
+
+    <div class="feature-option">
+      <label class="check"><input type="checkbox" name="features" value="Xリンクボタン" data-url-target="xInline">X</label>
+      <div class="feature-url" id="xInline"><label>X URL<input name="x_url" type="url" placeholder="https://x.com/..."></label></div>
+    </div>
+
+    <div class="feature-option">
+      <label class="check"><input type="checkbox" name="features" value="TikTokリンクボタン" data-url-target="tiktokInline">TikTok</label>
+      <div class="feature-url" id="tiktokInline"><label>TikTok URL<input name="tiktok" type="url" placeholder="https://tiktok.com/@..."></label></div>
+    </div>
+
+    <div class="feature-option">
+      <label class="check"><input type="checkbox" name="features" value="Facebookリンクボタン" data-url-target="facebookInline">Facebook</label>
+      <div class="feature-url" id="facebookInline"><label>Facebook URL<input name="facebook" type="url" placeholder="https://facebook.com/..."></label></div>
+    </div>
+
+    <div class="feature-option">
+      <label class="check"><input type="checkbox" name="features" value="その他SNSリンクボタン" data-url-target="otherSnsInline">その他SNS</label>
+      <div class="feature-url" id="otherSnsInline"><label>SNS名<input name="other_sns_name" type="text" placeholder="例：Threads"></label><label>URL<input name="other_sns" type="url" placeholder="https://..."></label></div>
+    </div>
+
+    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="問い合わせ・連絡先">問い合わせ・連絡先</label></div>
   </div>
   <label>その他ほしい機能<textarea name="other_features" placeholder="例：応援ページ、FAQ、機材紹介など"></textarea></label>
   <div class="notice">決済、会員制、予約、EC、6名を超える個別メンバーページ、大規模な追加機能は別途相談・追加費用となる場合があります。</div>
@@ -74,7 +103,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <details class="card"><summary>04 メンバー情報（個別ページが必要な場合）</summary><div class="body">
   <div id="members"></div>
   <button type="button" class="addbtn" id="addMember">＋ メンバーを追加</button>
-  <div class="notice">本サイトプランは個別メンバーページ5名まで標準。6名以上は要相談・追加費用となる場合があります。</div>
+  <div class="notice">複数ページサイトプランは個別メンバーページ5名まで標準。6名以上は要相談・追加費用となる場合があります。</div>
 </div></details>
 
 <details class="card"><summary>05 LIVE情報</summary><div class="body">
@@ -83,21 +112,25 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
   <div class="notice">LIVEごとに「日付・時間・イベント名・会場・イベント詳細」を1セットで追加できます。イベント詳細には出演者、料金、タイムテーブル、セットリスト、YouTube URLなど必要な内容だけ入力してください。</div>
 </div></details>
 
-<details class="card"><summary>06 YouTube・SNS・連絡先</summary><div class="body">
-  <div id="linkGuide" class="notice">03 ページ・機能で選んだ項目の入力欄だけ表示されます。</div>
-  <div id="youtubeFields" class="conditional"><div class="mini-title">YouTubeリンクボタン</div><label>YouTube URL<input name="youtube" type="url" placeholder="https://youtube.com/..."></label></div>
-  <div id="snsFields" class="conditional"><div class="mini-title">SNSリンクボタン</div><label>Instagram URL<input name="instagram" type="url"></label><label>X URL<input name="x_url" type="url"></label><label>TikTok URL<input name="tiktok" type="url"></label><label>その他SNS URL<input name="other_sns" type="url"></label></div>
-  <div id="contactFields" class="conditional"><div class="mini-title">問い合わせ・連絡先</div><label>LINE URL<input name="line_url" type="url"></label><label>公開するメールアドレス<input name="public_email" type="email"></label><label>Instagramなどを連絡先として使う場合<input name="contact_url" type="url" placeholder="https://..."></label><label>その他<input name="other_contact" type="text"></label><div class="notice">公開サイトに載せてよい連絡先だけ入力してください。</div></div>
+<details class="card"><summary>06 問い合わせ・連絡先</summary><div class="body">
+  <div id="contactGuide" class="notice">03 ページ・機能で「問い合わせ・連絡先」を選んだ場合に入力します。</div>
+  <div id="contactFields" class="conditional">
+    <label>LINE URL<input name="line_url" type="url" placeholder="https://line.me/..."></label>
+    <label>公開するメールアドレス<input name="public_email" type="email"></label>
+    <label>Instagramなどを連絡先として使う場合<input name="contact_url" type="url" placeholder="https://..."></label>
+    <label>その他<input name="other_contact" type="text"></label>
+    <div class="notice">公開サイトに載せてよい連絡先だけ入力してください。</div>
+  </div>
 </div></details>
 
 <details class="card"><summary>07 公開・URL</summary><div class="body">
-  <label>公開URL
-    <select name="domain" id="domainSelect"><option>無料URLでOK</option><option>独自ドメインを希望</option><option>すでに独自ドメインを持っている</option><option>まだ決めていない</option></select>
+  <label>公開URLの方法
+    <select name="domain" id="domainSelect"><option>無料URLでOK</option><option>独自ドメイン名を希望</option><option>すでに独自ドメインを持っている</option><option>まだ決めていない</option></select>
     <span class="hint">独自ドメインの取得・更新費用など外部サービス実費は別途になる場合があります。</span>
   </label>
-  <div id="domainDetail" class="conditional"><label>希望・所有ドメイン<input name="domain_name" type="text" placeholder="例：abcbandofficial.com"></label><span class="hint">希望ドメインは取得できるか確認してから決定します。</span></div>
+  <div id="domainDetail" class="conditional"><label>希望・所有ドメイン<input name="domain_name" type="text" placeholder="例：abcbandofficial.com"></label><span class="hint">希望名がすでに使われている場合は取得できません。空き状況を確認してから決定します。</span></div>
   <label>紹介コード<input name="referral" type="text" placeholder="紹介者がいる場合"></label>
-  <div class="notice">本サイトプランの公開記念3か月無料は自動適用予定。無料期間の終了日は管理画面に常時表示し、終了後に自動で有料プランへ切り替えることはありません。</div>
+  <div class="notice">複数ページサイトプランの公開記念3か月無料は自動適用予定。無料期間の終了日は管理画面に常時表示し、終了後に自動で有料プランへ切り替えることはありません。</div>
 </div></details>
 
 <details class="card"><summary>08 最終確認</summary><div class="body">
@@ -153,9 +186,11 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
    return [...document.querySelectorAll('input[name="features"]:checked')].map(x=>x.value);
  }
  function toggleLinks(){
+   document.querySelectorAll('[data-url-target]').forEach(box=>{
+     const target=document.getElementById(box.dataset.urlTarget);
+     if(target) target.classList.toggle('show',box.checked);
+   });
    const f=selectedFeatures();
-   document.getElementById('youtubeFields').classList.toggle('show',f.includes('YouTubeリンクボタン'));
-   document.getElementById('snsFields').classList.toggle('show',f.includes('SNSリンクボタン'));
    document.getElementById('contactFields').classList.toggle('show',f.includes('問い合わせ・連絡先'));
  }
  function toggleDomain(){
@@ -207,6 +242,13 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
  }
  document.getElementById('previewBtn').onclick=()=>{const p=document.getElementById('preview');p.textContent=summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'})};
  document.getElementById('submitDemo').onclick=()=>{save();const p=document.getElementById('preview');p.textContent='【デモ】本番ではこの内容と添付ファイルをSITE ID '+siteId+' に紐づけて送信します。\n\n'+summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'})};
+ document.querySelectorAll('.card .body').forEach(body=>{
+   body.addEventListener('click',e=>{
+     if(e.target.closest('input,select,textarea,button,label,a,.member,.liveblock,.feature-url')) return;
+     const details=body.closest('details');
+     if(details) details.open=false;
+   });
+ });
  restore();
 })();
 </script>
