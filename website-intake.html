@@ -17,7 +17,7 @@ input[type=text],input[type=url],input[type=email],input[type=date],input[type=t
 input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(240,138,53,.5);border-radius:12px;background:#0e0e0e;color:#bbb}input[type=file]::file-selector-button{border:0;border-radius:999px;padding:8px 12px;margin-right:10px;background:#222;color:#fff;font-weight:800}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.check{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:13px;background:#101010;font-size:.76rem}.check input{margin-top:3px}.feature-option{min-width:0}.feature-url{display:none;margin:7px 0 2px;padding:10px;border:1px solid rgba(240,138,53,.3);border-radius:12px;background:#0d0d0d}.feature-url.show{display:block}.feature-url label{margin-top:0}.feature-url input{margin-top:5px}
 .member,.liveblock{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#101010}.blockhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.blockhead h4{margin:0}.remove{border:0;background:transparent;color:#aaa;font-size:.72rem;text-decoration:underline}.addbtn{width:100%;margin-top:10px;padding:11px 12px;border:1px solid rgba(240,138,53,.45);border-radius:999px;background:#111;color:var(--orange2);font-weight:900}
-.notice{margin-top:13px;padding:13px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.75rem}.conditional{display:none}.conditional.show{display:block}.mini-title{margin:16px 0 0;font-size:.76rem;color:var(--orange2);font-weight:900}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.btn{border:0;border-radius:999px;padding:13px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{text-align:center;color:var(--muted);font-size:.7rem;margin-top:9px}.preview{white-space:pre-wrap;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0b0b;font-size:.75rem;color:#ddd;display:none}
+.notice{margin-top:13px;padding:13px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.75rem}.close-section{width:100%;margin-top:18px;padding:12px 14px;border:1px solid rgba(217,174,92,.3);border-radius:10px;background:#0b0b0b;color:#ddd;font-weight:900;font-size:.86rem;cursor:pointer}.close-section:hover{border-color:var(--orange2);color:#fff}.conditional{display:none}.conditional.show{display:block}.mini-title{margin:16px 0 0;font-size:.76rem;color:var(--orange2);font-weight:900}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.btn{border:0;border-radius:999px;padding:13px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{text-align:center;color:var(--muted);font-size:.7rem;margin-top:9px}.preview{white-space:pre-wrap;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0b0b;font-size:.75rem;color:#ddd;display:none}
 @media(max-width:640px){.row,.checkgrid,.buttons{grid-template-columns:1fr}.hero{padding-top:30px}.brand{font-size:.83rem}.siteid{font-size:.7rem}}
 </style><link rel="stylesheet" href="website-theme.css">
 </head>
@@ -45,7 +45,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
   </label>
   <label>こんなサイトがいい！<textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。LIVE情報を一番目立たせたい。"></textarea></label>
   <label>参考にしたいサイトURL<input name="reference_url" type="url" placeholder="https://..."></label>
-  <label>希望カラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label>
+  <label>HPの希望イメージカラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label>
 </div></details>
 
 <details class="card"><summary>02 TOP・写真</summary><div class="body">
@@ -154,6 +154,20 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
  const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks');
  let memberCount=0,liveCount=0,timer;
 
+ document.querySelectorAll('.card .body').forEach(body=>{
+   const close=document.createElement('button');
+   close.type='button';
+   close.className='close-section';
+   close.textContent='− 閉じる';
+   close.addEventListener('click',()=>{
+     const details=body.closest('details');
+     if(!details) return;
+     details.open=false;
+     details.querySelector('summary')?.scrollIntoView({behavior:'smooth',block:'center'});
+   });
+   body.appendChild(close);
+ });
+
  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
  function addMember(data={}){
@@ -234,7 +248,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
  }
  function summary(){
    const d=serialize(),f=d.fields,lines=[
-    'SITE ID: '+siteId,'サイト名: '+(f.site_name||''),'目的: '+(f.purpose||''),'イメージ: '+(f.image_text||''),'参考URL: '+(f.reference_url||''),'希望カラー: '+(f.colors||''),
+    'SITE ID: '+siteId,'サイト名: '+(f.site_name||''),'目的: '+(f.purpose||''),'イメージ: '+(f.image_text||''),'参考URL: '+(f.reference_url||''),'HPの希望イメージカラー: '+(f.colors||''),
     '希望機能: '+((d.checks.features||[]).join(', ')),'ギャラリー並び: '+(f.gallery_order||''),'公開URL: '+(f.domain||''),'希望ドメイン: '+(f.domain_name||''),'紹介コード: '+(f.referral||'')
    ];
    d.members.forEach((m,i)=>lines.push('MEMBER '+(i+1)+': '+[m.name,m.part,m.bio,m.sns].filter(Boolean).join(' / ')));
