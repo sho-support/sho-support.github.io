@@ -1,0 +1,122 @@
+/* SHO WEB SUPPORT / 80s US ROCK THEME
+   Black leather, deep crimson, muted gold/chrome. Body copy stays highly readable. */
+:root{
+  --bg:#050505 !important;
+  --panel:#0d0d0d !important;
+  --panel2:#151111 !important;
+  --soft:#e0dcd5 !important;
+  --muted:#aaa198 !important;
+  --orange:#c51f38 !important;
+  --orange2:#d9ae5c !important;
+  --red:#c51f38 !important;
+  --line:rgba(222,188,126,.22) !important;
+  --rock:"Bebas Neue","Arial Narrow",sans-serif !important;
+  --jp:"Noto Sans JP",system-ui,-apple-system,sans-serif !important;
+}
+html{background:#050505}
+body{
+  color:#fff !important;
+  font-size:16px;
+  background:
+    radial-gradient(circle at 8% 0,rgba(197,31,56,.18),transparent 28%),
+    radial-gradient(circle at 92% 20%,rgba(217,174,92,.08),transparent 26%),
+    repeating-linear-gradient(135deg,rgba(255,255,255,.008) 0 1px,transparent 1px 10px),
+    #050505 !important;
+}
+header{
+  background:rgba(4,4,4,.95) !important;
+  border-bottom:1px solid rgba(197,31,56,.52) !important;
+  box-shadow:0 8px 26px rgba(0,0,0,.34);
+}
+.logo,.brand{letter-spacing:.08em}
+.mark{
+  background:linear-gradient(180deg,#e13a52,#8b1023) !important;
+  box-shadow:7px 0 rgba(217,174,92,.32) !important;
+}
+.eyebrow,.kicker,.hero small,.price small,.up small,.linkcard small,.mini{
+  color:var(--orange2) !important;
+  letter-spacing:.14em;
+}
+h1,.title,.campaign strong,.price h3,.yen,.up strong,.example strong{
+  text-shadow:0 2px 0 rgba(0,0,0,.7),0 0 24px rgba(197,31,56,.08);
+}
+.hero h1{letter-spacing:.015em !important}
+.hero p,.lead,.sub,.price p,.up span,.linkcard span,.campaign p,.example span,
+.hint,.notice,.answer,.step p,.choice,.detail,.example,.save,.tip{
+  color:var(--soft) !important;
+  line-height:1.8 !important;
+}
+.hero p,.lead{font-size:clamp(.9rem,2.2vw,1rem) !important}
+.sub,.price p,.up span,.linkcard span,.campaign p,.example span,.hint,.notice,.step p{
+  font-size:clamp(.82rem,2vw,.92rem) !important;
+}
+.btn,.secondary,.pillbtn{
+  border-radius:10px !important;
+  min-height:50px !important;
+  letter-spacing:.04em !important;
+}
+.btn:not(.ghost){
+  background:linear-gradient(135deg,#c51f38,#851226) !important;
+  color:#fff !important;
+  border:1px solid rgba(238,94,113,.58) !important;
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 10px 26px rgba(0,0,0,.22);
+}
+.btn.ghost,.secondary,.pillbtn{
+  background:linear-gradient(145deg,#171313,#090909) !important;
+  color:#fff !important;
+  border:1px solid rgba(217,174,92,.3) !important;
+}
+.btn:hover,.secondary:hover,.pillbtn:hover{border-color:var(--orange2) !important}
+.browser,.operation,.linkcard,.price,.up,.campaign,.example,.box,.summary,.step,
+.faq details,.card,.flow,.planwrap,.note,.choice{
+  border-radius:12px !important;
+  border-color:rgba(222,188,126,.2) !important;
+}
+.price.main,.up.reco,.campaign,.summary{
+  border-color:rgba(197,31,56,.5) !important;
+  background:linear-gradient(145deg,rgba(197,31,56,.075),#0c0b0b) !important;
+}
+.linkcard,.price,.up,.example,.box,.step,.faq details,.card{
+  background:linear-gradient(145deg,#141111,#090909) !important;
+}
+.chip,.badge,.tag,.opgrid span{
+  border-radius:5px !important;
+  border-color:rgba(217,174,92,.24) !important;
+}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{
+  outline:2px solid var(--orange2) !important;
+  outline-offset:3px;
+}
+summary{line-height:1.55}
+.site-legal-nav{
+  width:min(calc(100% - 24px),1120px);
+  margin:0 auto;
+  padding:18px 0 32px;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px 16px;
+  border-top:1px solid rgba(255,255,255,.06);
+  color:#aaa198;
+  font-size:.72rem;
+}
+.site-legal-nav a{color:#c9c2b8;text-decoration:none}
+.site-legal-nav a:hover{color:var(--orange2)}
+.rock-rule{
+  height:3px;
+  margin:18px 0;
+  background:linear-gradient(90deg,var(--orange),var(--orange2),transparent);
+  transform:skewX(-18deg);
+}
+@media(max-width:600px){
+  body{font-size:16px}
+  .hero h1{font-size:clamp(2.2rem,10vw,3.1rem) !important;line-height:1.02 !important}
+  .title{font-size:clamp(2rem,10vw,2.9rem) !important}
+  .hero p,.lead{font-size:.94rem !important}
+  .sub,.price p,.up span,.linkcard span,.campaign p,.example span,.hint,.notice,.answer,.step p,.choice,.detail,.example{
+    font-size:.86rem !important;
+  }
+  .btn,.secondary,.pillbtn{font-size:.88rem !important}
+  summary{font-size:.95rem}
+  .site-legal-nav{font-size:.74rem;padding-bottom:26px}
+}
