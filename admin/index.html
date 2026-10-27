@@ -66,7 +66,7 @@ const demo=[
   history:[{at:'2026-10-27 22:18',title:'お客様確認へ',text:'SHO確認OK。顧客管理画面へ確認依頼を送る段階。'},{at:'2026-10-27 21:40',title:'AI制作完了',text:'店舗サイト初稿を生成。'}],notes:[]}
 ];
 let state=load(),filter='all',selected=state[0]?state[0].id:null;
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||structuredClone(demo)}catch(e){return JSON.parse(JSON.stringify(demo))}}
+function load(){try{const raw=localStorage.getItem(KEY);if(raw)return JSON.parse(raw);const initial=typeof structuredClone==='function'?structuredClone(demo):JSON.parse(JSON.stringify(demo));localStorage.setItem(KEY,JSON.stringify(initial));return initial}catch(e){const initial=JSON.parse(JSON.stringify(demo));localStorage.setItem(KEY,JSON.stringify(initial));return initial}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
 function sdef(id){return statuses.find(function(s){return s.id===id})||statuses[0]}
@@ -104,6 +104,10 @@ function renderDetail(){
   action='<div class="warning" style="margin-top:0">お客様側の確認待ちです。修正依頼または「公開OK」の返答を待ちます。</div><div class="actionbar"><a class="btn gold" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様確認画面を開く</a><button class="btn" id="simulateCustomerOk" type="button">デモ：お客様OK</button></div>';
  }else if(p.status==='publish_wait'){
   action='<div class="warning" style="margin-top:0;border-left-color:var(--ok)">お客様が内容を承認済みです。最終公開はお客様管理画面の「公開する」操作で実行する設計です。</div><a class="btn gold" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様管理画面を開く</a>';
+ }else if(p.status==='building'){
+  action='<div class="warning" style="margin-top:0">本番ではAI制作完了時に自動でSHO確認待ちへ移ります。</div><button class="btn primary" id="simulateBuildDone" type="button" style="margin-top:10px;width:100%">デモ：AI制作完了 → SHO確認待ち</button>';
+ }else if(p.status==='new'){
+  action='<div class="warning" style="margin-top:0">新規ヒアリングを受け付けた状態です。本番では自動で制作ジョブを開始します。</div><button class="btn primary" id="simulateBuildStart" type="button" style="margin-top:10px;width:100%">デモ：AI制作を開始</button>';
  }else if(p.status==='live'){
   action='<div class="warning" style="margin-top:0;border-left-color:var(--ok)">公開済み。今後の更新依頼も同じSITE IDのカルテ・履歴へ追加します。</div>';
  }else{
@@ -127,6 +131,10 @@ function bindActions(p){
  if(fix)fix.onclick=function(){const n=document.getElementById('reviewNote').value.trim();if(!n)return alert('修正内容を入力してください。');p.status='building';p.current='SHOの修正指示を受けてAI再制作中。';p.updated=now();p.notes.unshift({at:p.updated,title:'AIへ修正依頼',text:n});save();render()};
  const customerOk=document.getElementById('simulateCustomerOk');
  if(customerOk)customerOk.onclick=function(){p.status='publish_wait';p.current='お客様確認OK。お客様の公開操作待ち。';p.updated=now();p.notes.unshift({at:p.updated,title:'お客様確認OK',text:'内容承認。公開待ちへ。'});save();render()};
+ const buildStart=document.getElementById('simulateBuildStart');
+ if(buildStart)buildStart.onclick=function(){p.status='building';p.current='ヒアリング内容をもとにAI制作中。';p.updated=now();p.notes.unshift({at:p.updated,title:'AI制作開始',text:'新規ヒアリングから制作ジョブを開始。'});save();render()};
+ const buildDone=document.getElementById('simulateBuildDone');
+ if(buildDone)buildDone.onclick=function(){p.status='sho_review';p.current='AI制作完了。SHOの確認待ち。';p.updated=now();p.notes.unshift({at:p.updated,title:'AI制作完了',text:'プレビュー生成完了。SHO確認待ちへ。'});save();render()};
 }
 function render(){renderTabs();renderList();renderDetail()}
 document.getElementById('resetDemo').onclick=function(){if(confirm('この端末のデモ状態を初期化しますか？')){localStorage.removeItem(KEY);state=load();selected=state[0]?state[0].id:null;filter='all';render()}};
