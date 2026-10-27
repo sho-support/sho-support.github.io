@@ -17,7 +17,7 @@ input[type=text],input[type=url],input[type=email],input[type=date],input[type=t
 input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(240,138,53,.5);border-radius:12px;background:#0e0e0e;color:#bbb}input[type=file]::file-selector-button{border:0;border-radius:999px;padding:8px 12px;margin-right:10px;background:#222;color:#fff;font-weight:800}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.check{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:13px;background:#101010;font-size:.76rem}.check input{margin-top:3px}.feature-option{min-width:0}.feature-url{display:none;margin:7px 0 2px;padding:10px;border:1px solid rgba(240,138,53,.3);border-radius:12px;background:#0d0d0d}.feature-url.show{display:block}.feature-url label{margin-top:0}.feature-url input{margin-top:5px}
 .member,.liveblock,.contactlink{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#101010}.contact-inline{margin-top:10px;padding:12px;border:1px solid rgba(217,174,92,.25);border-radius:12px;background:#0d0d0d}.contact-detected{display:inline-flex;margin-top:7px;padding:4px 8px;border:1px solid rgba(197,31,56,.38);border-radius:999px;color:#e8d5d8;font-size:.74rem;font-weight:800}.blockhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.blockhead h4{margin:0}.remove{border:0;background:transparent;color:#aaa;font-size:.72rem;text-decoration:underline}.addbtn{width:100%;margin-top:10px;padding:11px 12px;border:1px solid rgba(240,138,53,.45);border-radius:999px;background:#111;color:var(--orange2);font-weight:900}
-.notice{margin-top:13px;padding:13px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.75rem}.close-section{width:100%;margin-top:18px;padding:12px 14px;border:1px solid rgba(217,174,92,.3);border-radius:10px;background:#0b0b0b;color:#ddd;font-weight:900;font-size:.86rem;cursor:pointer}.close-section:hover{border-color:var(--orange2);color:#fff}.conditional{display:none}.conditional.show{display:block}.mini-title{margin:16px 0 0;font-size:.76rem;color:var(--orange2);font-weight:900}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.btn{border:0;border-radius:999px;padding:13px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{text-align:center;color:var(--muted);font-size:.7rem;margin-top:9px}.preview{white-space:pre-wrap;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0b0b;font-size:.75rem;color:#ddd;display:none}
+.notice{margin-top:13px;padding:13px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.75rem}.history-note{margin-top:10px;padding:11px 12px;border:1px solid rgba(217,174,92,.25);border-radius:10px;background:#0d0d0d;color:var(--soft);font-size:.8rem}.close-section{width:100%;margin-top:18px;padding:12px 14px;border:1px solid rgba(217,174,92,.3);border-radius:10px;background:#0b0b0b;color:#ddd;font-weight:900;font-size:.86rem;cursor:pointer}.close-section:hover{border-color:var(--orange2);color:#fff}.conditional{display:none}.conditional.show{display:block}.mini-title{margin:16px 0 0;font-size:.76rem;color:var(--orange2);font-weight:900}.buttons{display:grid;grid-template-columns:1fr;gap:8px;margin-top:18px}.btn{border:0;border-radius:999px;padding:13px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{text-align:center;color:var(--muted);font-size:.7rem;margin-top:9px}.preview{margin-top:14px;padding:14px;border:1px solid rgba(217,174,92,.28);border-radius:14px;background:#0b0b0b;font-size:.82rem;color:#ddd;display:none}.preview-title{margin:0 0 12px;font-size:1.05rem;color:#fff}.preview-section{padding:12px 0;border-top:1px solid rgba(255,255,255,.08)}.preview-section:first-of-type{border-top:0}.preview-section h4{margin:0 0 8px;color:var(--orange2);font-size:.82rem;letter-spacing:.05em}.preview-row{display:grid;grid-template-columns:minmax(110px,32%) 1fr;gap:10px;padding:5px 0}.preview-key{color:#9e968d;font-weight:800}.preview-val{color:#fff;overflow-wrap:anywhere}.preview-empty{color:#696969}.preview-files{display:flex;flex-wrap:wrap;gap:5px}.preview-file{padding:3px 7px;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:#111;color:#ddd;font-size:.76rem}@media(max-width:520px){.preview-row{grid-template-columns:1fr;gap:2px}}
 @media(max-width:640px){.row,.checkgrid,.buttons{grid-template-columns:1fr}.hero{padding-top:30px}.brand{font-size:.83rem}.siteid{font-size:.7rem}}
 </style><link rel="stylesheet" href="website-theme.css">
 </head>
@@ -118,6 +118,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <details class="card"><summary>05 LIVE情報</summary><div class="body">
   <div id="liveBlocks"></div>
   <button type="button" class="addbtn" id="addLive">＋ LIVE情報を追加</button>
+  <div class="history-note"><strong>日付で自動振り分けします。</strong><br>これからの日程はUPCOMING LIVE、過去の日程を入力するとLIVE HISTORYとして掲載できます。</div>
   <div class="notice">LIVEごとに「日付・時間・イベント名・会場・イベント詳細」を1セットで追加できます。イベント詳細には出演者、料金、タイムテーブル、セットリスト、YouTube URLなど必要な内容だけ入力してください。</div>
 </div></details>
 
@@ -138,7 +139,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
   <div class="notice">この見本はまだ本番送信には接続していません。本番では顧客IDに紐づけて安全に保存・送信します。</div>
 </div></details>
 
-<div class="buttons"><button type="button" class="btn secondary" id="previewBtn">入力内容を確認</button><button type="button" class="btn" id="submitDemo">送信イメージ</button></div>
+<div class="buttons"><button type="button" class="btn" id="previewBtn">入力内容を確認</button></div>
 <div class="status" id="status">入力内容は自動保存されます</div>
 <div class="preview" id="preview"></div>
 </section></form></main>
@@ -183,13 +184,27 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
    liveCount++;
    const n=liveCount,d=document.createElement('div');d.className='liveblock';d.dataset.live=n;
    d.innerHTML='<div class="blockhead"><h4>LIVE '+n+'</h4>'+(n>1?'<button type="button" class="remove">削除</button>':'')+'</div>'+
-   '<label>掲載区分<select data-lf="type"><option'+(data.type==='今後のLIVE'?' selected':'')+'>今後のLIVE</option><option'+(data.type==='過去LIVE'?' selected':'')+'>過去LIVE</option></select></label>'+
    '<div class="row"><label>日付<input type="date" data-lf="date" value="'+esc(data.date)+'"></label><label>時間<input type="time" data-lf="time" value="'+esc(data.time)+'"></label></div>'+
+   '<span class="contact-detected live-detected"></span>'+
    '<label>イベント名<input type="text" data-lf="name" value="'+esc(data.name)+'" placeholder="例：ROCK NIGHT 2027"></label>'+
    '<label>会場<input type="text" data-lf="venue" value="'+esc(data.venue)+'" placeholder="例：仙台 LIVE HOUSE"></label>'+
    '<label>イベント詳細<textarea data-lf="detail" placeholder="出演者、料金、タイムテーブル、セットリスト、YouTube URLなど">'+esc(data.detail)+'</textarea></label>';
+   const dateInput=d.querySelector('[data-lf="date"]');
+   dateInput.addEventListener('change',()=>{refreshLiveType(d);saveSoon()});
    d.querySelector('.remove')?.addEventListener('click',()=>{d.remove();saveSoon()});
-   liveBlocks.appendChild(d);
+   liveBlocks.appendChild(d);refreshLiveType(d);
+ }
+ function classifyLiveDate(date){
+   if(!date)return '';
+   const today=new Date();today.setHours(0,0,0,0);
+   const target=new Date(date+'T00:00:00');
+   return target<today?'LIVE HISTORY':'UPCOMING LIVE';
+ }
+ function refreshLiveType(block){
+   const date=block.querySelector('[data-lf="date"]')?.value||'';
+   const badge=block.querySelector('.live-detected');
+   const type=classifyLiveDate(date);
+   badge.textContent=type?type+'として掲載':'日付を入力すると自動で振り分け';
  }
  function detectContactType(value=''){
    const v=String(value).trim().toLowerCase();
@@ -285,18 +300,70 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
    const d=serialize(),vals=Object.values(d.fields).filter(v=>String(v).trim()).length+Object.values(d.checks).reduce((a,v)=>a+v.length,0)+d.members.filter(m=>Object.values(m).some(v=>String(v).trim())).length+d.lives.filter(l=>Object.values(l).some(v=>String(v).trim())).length+d.contacts.filter(x=>String(x.value||'').trim()).length;
    document.getElementById('bar').style.width=Math.max(10,Math.min(100,10+vals*2.5))+'%';
  }
- function summary(){
-   const d=serialize(),f=d.fields,lines=[
-    'SITE ID: '+siteId,'サイト名: '+(f.site_name||''),'目的: '+(f.purpose||''),'イメージ: '+(f.image_text||''),'参考URL: '+(f.reference_url||''),'HPの希望イメージカラー: '+(f.colors||''),
-    '希望機能: '+((d.checks.features||[]).join(', ')),'ギャラリー並び: '+(f.gallery_order||''),'公開URL: '+(f.domain||''),'希望ドメイン: '+(f.domain_name||''),'紹介コード: '+(f.referral||'')
-   ];
-   d.members.forEach((m,i)=>lines.push('MEMBER '+(i+1)+': '+[m.name,m.part,m.bio,m.sns].filter(Boolean).join(' / ')));
-   d.lives.forEach((l,i)=>lines.push('LIVE '+(i+1)+': '+[l.type,l.date,l.time,l.name,l.venue,l.detail].filter(Boolean).join(' / ')));
-   d.contacts.forEach((x,i)=>lines.push('CONTACT '+(i+1)+': '+[x.type,x.label,x.value].filter(Boolean).join(' / ')));
-   return lines.join('\n');
+ function fileNames(name){
+   const input=form.elements[name];
+   const files=input?.files?[...input.files]:[];
+   return files.map(f=>f.name);
  }
- document.getElementById('previewBtn').onclick=()=>{const p=document.getElementById('preview');p.textContent=summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'})};
- document.getElementById('submitDemo').onclick=()=>{save();const p=document.getElementById('preview');p.textContent='【デモ】本番ではこの内容と添付ファイルをSITE ID '+siteId+' に紐づけて送信します。\n\n'+summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'})};
+ function fileHtml(names){
+   if(!names.length)return '<span class="preview-empty">未選択</span>';
+   return '<div class="preview-files">'+names.map(n=>'<span class="preview-file">'+esc(n)+'</span>').join('')+'</div>';
+ }
+ function row(label,value,allowHtml=false){
+   const empty=value===undefined||value===null||String(value).trim()==='';
+   return '<div class="preview-row"><div class="preview-key">'+esc(label)+'</div><div class="preview-val">'+(empty?'<span class="preview-empty">未入力</span>':allowHtml?value:esc(value))+'</div></div>';
+ }
+ function renderPreview(){
+   const d=serialize(),f=d.fields;
+   const parts=['<h3 class="preview-title">入力内容の確認</h3>'];
+
+   parts.push('<section class="preview-section"><h4>01 基本情報</h4>'+
+     row('サイト名 / バンド名 / 店名',f.site_name)+row('担当者名',f.contact_name)+row('連絡用メール',f.contact_email)+
+     row('サイトの目的',f.purpose)+row('こんなサイトがいい！',f.image_text)+row('参考サイトURL',f.reference_url)+row('HPの希望イメージカラー',f.colors)+'</section>');
+
+   parts.push('<section class="preview-section"><h4>02 使用する写真</h4>'+
+     row('TOPに使いたい写真',fileHtml(fileNames('top_photos')),true)+
+     row('ギャラリー写真',fileHtml(fileNames('gallery_photos')),true)+
+     row('ギャラリー並び順',f.gallery_order)+row('ロゴ',fileHtml(fileNames('logo_file')),true)+row('写真の補足',f.photo_notes)+'</section>');
+
+   parts.push('<section class="preview-section"><h4>03 ページ・機能</h4>'+
+     row('希望機能',(d.checks.features||[]).join(' / '))+row('その他ほしい機能',f.other_features)+'</section>');
+
+   if(d.members.some(m=>Object.values(m).some(v=>String(v||'').trim()))){
+     parts.push('<section class="preview-section"><h4>04 メンバー情報</h4>'+
+       d.members.map((m,i)=>row('MEMBER '+(i+1),[m.name,m.part,m.bio,m.sns].filter(Boolean).join(' / '))).join('')+'</section>');
+   }
+
+   if(d.lives.some(l=>Object.values(l).some(v=>String(v||'').trim()))){
+     parts.push('<section class="preview-section"><h4>05 LIVE情報</h4>'+
+       d.lives.map((l,i)=>{
+         const type=classifyLiveDate(l.date)||'日付未入力';
+         return row('LIVE '+(i+1)+' / '+type,[l.date,l.time,l.name,l.venue,l.detail].filter(Boolean).join(' / '));
+       }).join('')+'</section>');
+   }
+
+   if(d.contacts.some(x=>String(x.value||'').trim())){
+     parts.push('<section class="preview-section"><h4>公開する連絡先</h4>'+
+       d.contacts.filter(x=>String(x.value||'').trim()).map((x,i)=>row('CONTACT '+(i+1),[x.type,x.label,x.value].filter(Boolean).join(' / '))).join('')+'</section>');
+   }
+
+   parts.push('<section class="preview-section"><h4>06 公開・URL</h4>'+
+     row('公開URL',f.domain)+row('希望・所有ドメイン',f.domain_name)+row('紹介コード',f.referral)+'</section>');
+
+   parts.push('<section class="preview-section"><h4>07 最終確認</h4>'+
+     row('掲載権利確認',(d.checks.rights||[]).length?'確認済み':'未チェック')+
+     row('公開用連絡先の掲載許可',(d.checks.privacy||[]).length?'確認済み':'未チェック')+
+     row('その他・伝えておきたいこと',f.final_notes)+'</section>');
+
+   return parts.join('');
+ }
+ document.getElementById('previewBtn').onclick=()=>{
+   save();
+   const p=document.getElementById('preview');
+   p.innerHTML=renderPreview();
+   p.style.display='block';
+   p.scrollIntoView({behavior:'smooth',block:'start'});
+ };
  document.querySelectorAll('.card .body').forEach(body=>{
    body.addEventListener('click',e=>{
      if(e.target.closest('input,select,textarea,button,label,a,.member,.liveblock,.contactlink,.contact-inline,.feature-url')) return;
