@@ -19,7 +19,8 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 .member,.liveblock{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#101010}.blockhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.blockhead h4{margin:0}.remove{border:0;background:transparent;color:#aaa;font-size:.72rem;text-decoration:underline}.addbtn{width:100%;margin-top:10px;padding:11px 12px;border:1px solid rgba(240,138,53,.45);border-radius:999px;background:#111;color:var(--orange2);font-weight:900}
 .notice{margin-top:13px;padding:13px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.75rem}.conditional{display:none}.conditional.show{display:block}.mini-title{margin:16px 0 0;font-size:.76rem;color:var(--orange2);font-weight:900}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.btn{border:0;border-radius:999px;padding:13px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{text-align:center;color:var(--muted);font-size:.7rem;margin-top:9px}.preview{white-space:pre-wrap;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0b0b;font-size:.75rem;color:#ddd;display:none}
 @media(max-width:640px){.row,.checkgrid,.buttons{grid-template-columns:1fr}.hero{padding-top:30px}.brand{font-size:.83rem}.siteid{font-size:.7rem}}
-</style></head>
+</style><link rel="stylesheet" href="website-theme.css">
+</head>
 <body>
 <header><div class="wrap head"><div class="brand">SHO WEBSITE INTAKE</div><div class="siteid">SITE ID: <span id="siteId">----</span></div></div></header>
 <main class="wrap">
@@ -135,7 +136,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 
 <details class="card"><summary>08 最終確認</summary><div class="body">
   <label class="check"><input type="checkbox" name="rights" value="yes">掲載する写真・ロゴ・文章について、サイト掲載に必要な権利・許可を確認しています。</label>
-  <label class="check"><input type="checkbox" name="privacy" value="yes">入力した公開用連絡先やSNS URLをホームページへ掲載して問題ありません。</label>
+  <div class="notice" style="margin-bottom:10px">送信前に <a href="website-privacy.html" target="_blank" rel="noopener" style="color:var(--orange2);font-weight:800">プライバシーポリシーを確認</a> してください。</div><label class="check"><input type="checkbox" name="privacy" value="yes">入力した公開用連絡先やSNS URLをホームページへ掲載して問題ありません。</label>
   <label>その他・伝えておきたいこと<textarea name="final_notes"></textarea></label>
   <div class="notice">この見本はまだ本番送信には接続していません。本番では顧客IDに紐づけて安全に保存・送信します。</div>
 </div></details>
@@ -252,4 +253,5 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
  restore();
 })();
 </script>
+<nav class="site-legal-nav" aria-label="法務・ポリシー"><a href="website-legal.html">特商法表記</a><a href="website-terms.html">利用条件</a><a href="website-privacy.html">プライバシー</a></nav>
 </body></html>
