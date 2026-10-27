@@ -1,239 +1,213 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-X4VPQ87Q67"></script>
-  <script>
-    window.dataLayer=window.dataLayer||[];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js',new Date());
-    gtag('config','G-X4VPQ87Q67');
-  </script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#070707">
-  <meta name="robots" content="noindex,nofollow">
-  <title>Website Intake Form | SHO</title>
-  <style>
-    :root{--bg:#070707;--panel:#111;--soft:#c9c9c9;--muted:#818181;--orange:#f08a35;--orange2:#ffb274;--line:rgba(255,255,255,.13);--ok:#55d68a}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 15% 5%,rgba(240,138,53,.12),transparent 28%),var(--bg);color:#fff;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.7}.wrap{width:min(calc(100% - 24px),900px);margin:auto}header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}.head{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:900;letter-spacing:.08em}.siteid{color:var(--orange2);font-weight:800;font-size:.82rem}
-    .hero{padding:48px 0 28px}.hero h1{margin:0;font-size:clamp(2.5rem,9vw,4.7rem);line-height:1}.hero p{margin:12px 0 0;color:var(--soft)}.save{margin-top:14px;padding:10px 12px;border:1px solid rgba(85,214,138,.35);background:rgba(85,214,138,.06);color:#a6f0c4;font-size:.78rem}
-    .progress{height:5px;background:#171717;border-radius:99px;overflow:hidden;margin:20px 0 0}.bar{height:100%;width:14%;background:var(--orange);transition:.25s}
-    .section{padding:18px 0}.card{border:1px solid var(--line);background:#0c0c0c;margin-bottom:12px}.card summary{cursor:pointer;list-style:none;padding:18px;font-weight:900;display:flex;justify-content:space-between;gap:10px}.card summary::-webkit-details-marker{display:none}.card summary:after{content:"＋";color:var(--orange)}.card[open] summary:after{content:"−"}.body{padding:0 18px 20px;border-top:1px solid var(--line)}
-    label{display:block;margin-top:15px;font-size:.82rem;font-weight:800}.hint{display:block;margin-top:4px;color:var(--muted);font-size:.72rem;font-weight:500}.required{color:var(--orange2)}input[type=text],input[type=url],input[type=email],input[type=tel],input[type=date],textarea,select{width:100%;margin-top:7px;padding:13px 12px;border:1px solid var(--line);background:#111;color:#fff;border-radius:0;font:inherit}textarea{min-height:110px;resize:vertical}input[type=file]{width:100%;margin-top:8px;padding:14px;border:1px dashed rgba(240,138,53,.55);background:#0e0e0e;color:#ccc}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.check{display:flex;gap:8px;align-items:flex-start;padding:11px;border:1px solid var(--line);background:#101010;font-size:.78rem}.check input{margin-top:3px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.member{margin-top:12px;padding:13px;border:1px solid var(--line);background:#101010}.member h4{margin:0 0 8px}.addbtn{margin-top:10px;padding:10px 12px;border:1px solid var(--line);background:#161616;color:#fff;font-weight:800}.actions{position:sticky;bottom:0;padding:12px 0;background:linear-gradient(transparent,rgba(7,7,7,.97) 24%)}.actionrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btn{border:0;padding:14px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{margin-top:8px;text-align:center;color:var(--muted);font-size:.72rem}.preview{white-space:pre-wrap;margin-top:14px;padding:14px;background:#0b0b0b;border:1px solid var(--line);font-size:.78rem;color:#ddd;display:none}.notice{padding:14px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.78rem}.disabled-note{color:var(--muted);font-size:.73rem;margin-top:10px}
-    @media(max-width:640px){.row,.checkgrid,.actionrow{grid-template-columns:1fr}.hero{padding-top:36px}}
-  </style>
-</head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X4VPQ87Q67"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-X4VPQ87Q67');</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#070707"><meta name="robots" content="noindex,nofollow">
+<title>Website Intake Form | SHO</title>
+<style>
+:root{--bg:#070707;--soft:#c9c9c9;--muted:#818181;--orange:#f08a35;--orange2:#ffb274;--line:rgba(255,255,255,.14);--ok:#55d68a}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 10% 2%,rgba(240,138,53,.07),transparent 24%),var(--bg);color:#fff;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.65}.wrap{width:min(calc(100% - 24px),900px);margin:auto}
+header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}.head{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{font-weight:900;letter-spacing:.06em}.siteid{color:var(--orange2);font-weight:800;font-size:.78rem}
+.hero{padding:36px 0 22px}.hero h1{margin:0;font-size:clamp(2rem,7vw,3.5rem);line-height:1.05}.hero p{margin:10px 0 0;color:var(--soft);font-size:.84rem}.save{margin-top:12px;padding:10px 12px;border:1px solid rgba(85,214,138,.32);border-radius:14px;background:rgba(85,214,138,.05);color:#a6f0c4;font-size:.73rem}
+.progress{height:4px;background:#171717;border-radius:99px;overflow:hidden;margin-top:16px}.bar{height:100%;width:10%;background:var(--orange);transition:.25s}
+.section{padding:14px 0 40px}.card{border:1px solid var(--line);border-radius:20px;background:#0c0c0c;margin-bottom:11px;overflow:hidden}.card summary{cursor:pointer;list-style:none;padding:17px 18px;font-weight:900;display:flex;justify-content:space-between;gap:10px}.card summary::-webkit-details-marker{display:none}.card summary:after{content:"＋";color:var(--orange)}.card[open] summary:after{content:"−"}.body{padding:0 18px 20px;border-top:1px solid var(--line)}
+label{display:block;margin-top:14px;font-size:.8rem;font-weight:800}.hint{display:block;margin-top:4px;color:var(--muted);font-size:.7rem;font-weight:500}.required{color:var(--orange2)}
+input[type=text],input[type=url],input[type=email],input[type=date],input[type=time],textarea,select{width:100%;margin-top:7px;padding:12px;border:1px solid var(--line);background:#111;color:#fff;border-radius:10px;font:inherit}input::placeholder,textarea::placeholder{color:#6f6f6f;opacity:1}textarea{min-height:96px;resize:vertical}
+input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(240,138,53,.5);border-radius:12px;background:#0e0e0e;color:#bbb}input[type=file]::file-selector-button{border:0;border-radius:999px;padding:8px 12px;margin-right:10px;background:#222;color:#fff;font-weight:800}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.check{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:13px;background:#101010;font-size:.76rem}.check input{margin-top:3px}
+.member,.liveblock{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#101010}.blockhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.blockhead h4{margin:0}.remove{border:0;background:transparent;color:#aaa;font-size:.72rem;text-decoration:underline}.addbtn{width:100%;margin-top:10px;padding:11px 12px;border:1px solid rgba(240,138,53,.45);border-radius:999px;background:#111;color:var(--orange2);font-weight:900}
+.notice{margin-top:13px;padding:13px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.75rem}.conditional{display:none}.conditional.show{display:block}.mini-title{margin:16px 0 0;font-size:.76rem;color:var(--orange2);font-weight:900}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.btn{border:0;border-radius:999px;padding:13px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{text-align:center;color:var(--muted);font-size:.7rem;margin-top:9px}.preview{white-space:pre-wrap;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0b0b;font-size:.75rem;color:#ddd;display:none}
+@media(max-width:640px){.row,.checkgrid,.buttons{grid-template-columns:1fr}.hero{padding-top:30px}.brand{font-size:.83rem}.siteid{font-size:.7rem}}
+</style></head>
 <body>
 <header><div class="wrap head"><div class="brand">SHO WEBSITE INTAKE</div><div class="siteid">SITE ID: <span id="siteId">----</span></div></div></header>
 <main class="wrap">
 <section class="hero">
   <h1>制作ヒアリングフォーム</h1>
-  <p>分かるところから入力してください。写真や情報がまだ揃っていなくても途中保存できます。</p>
-  <div class="save">文字入力・選択内容はこの端末に自動保存されます。写真などの添付ファイルはブラウザを閉じると保持されないため、送信前に再確認してください。購入後に発行された専用URLを使う想定です。</div>
+  <p>分かるところから入力してください。文字入力・選択内容はこの端末に自動保存されます。</p>
+  <div class="save">写真ファイルはブラウザを閉じると保持されないため、送信前に再確認してください。</div>
   <div class="progress"><div class="bar" id="bar"></div></div>
 </section>
 
-<form id="intake">
-<section class="section">
+<form id="intake"><section class="section">
 
 <details class="card" open><summary>01 基本情報</summary><div class="body">
-  <label>サイト名 / バンド名 / 店名 <span class="required">*</span><input name="site_name" type="text" placeholder="例：ABC BAND"></label>
-  <div class="row">
-    <label>担当者名<input name="contact_name" type="text"></label>
-    <label>連絡用メール<input name="contact_email" type="email"></label>
-  </div>
-  <label>サイトの目的<select name="purpose"><option value="">選択してください</option><option>バンド・アーティスト公式サイト</option><option>店舗・サービス紹介</option><option>個人活動・ポートフォリオ</option><option>イベント・団体</option><option>その他</option></select></label>
-  <label>サイトのイメージ<textarea name="image_text" placeholder="例：黒ベースでカッコよく。写真を大きく見せたい。Guns N' Losesサイトのような雰囲気。"></textarea><span class="hint">短くてもOKです。</span></label>
+  <label>サイト名 / バンド名 / 店名 <span class="required">*</span>
+    <input name="site_name" type="text" placeholder="HPトップに表示される名前（例：ABC BAND）">
+    <span class="hint">この名前をホームページのメイン表示に使います。</span>
+  </label>
+  <div class="row"><label>担当者名<input name="contact_name" type="text"></label><label>連絡用メール<input name="contact_email" type="email"></label></div>
+  <label>サイトの目的
+    <select name="purpose"><option value="">選択してください</option><option>バンド・アーティスト公式サイト</option><option>店舗・サービス紹介</option><option>個人活動・ポートフォリオ</option><option>イベント・団体</option><option>その他</option></select>
+    <span class="hint">目的に合わせて、見せ方や必要な導線を調整します。</span>
+  </label>
+  <label>こんなサイトがいい！<textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。LIVE情報を一番目立たせたい。"></textarea></label>
   <label>参考にしたいサイトURL<input name="reference_url" type="url" placeholder="https://..."></label>
-  <label>希望カラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青"></label>
+  <label>希望カラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label>
 </div></details>
 
 <details class="card"><summary>02 TOP・写真</summary><div class="body">
-  <label>TOPに使いたい写真<input name="top_photos" type="file" accept="image/*" multiple><span class="hint">複数枚ならスライドショー候補にできます。</span></label>
+  <label>TOPに使いたい写真<input name="top_photos" type="file" accept="image/*" multiple><span class="hint">複数枚添付すると、TOPでスライドショーのように表示できます。</span></label>
   <label>ギャラリーに載せたい写真<input name="gallery_photos" type="file" accept="image/*" multiple></label>
+  <label>ギャラリーの並び順<select name="gallery_order"><option>おまかせ</option><option>新しい順</option><option>古い順</option><option>ごちゃまぜ</option></select><span class="hint">指定がなければ、写真に合わせて見やすく配置します。</span></label>
   <label>ロゴ<input name="logo_file" type="file" accept="image/*,.svg"></label>
-  <label>写真についての希望<textarea name="photo_notes" placeholder="例：1枚目をTOPの最初に。ギャラリーは新しい写真を上に。"></textarea></label>
+  <label>写真についての補足（任意）<textarea name="photo_notes" placeholder="例：この写真は大きく見せたい、ライブ写真と宣材写真を分けたい など"></textarea></label>
 </div></details>
 
 <details class="card"><summary>03 ページ・機能</summary><div class="body">
-  <span class="hint" style="margin-top:14px">本サイトプランでは一般的な構成はできるだけ標準に含めます。</span>
+  <span class="hint" style="margin-top:13px">本サイトプランでは一般的なバンド・アーティストサイトの機能をできるだけ標準に含めます。</span>
   <div class="checkgrid">
     <label class="check"><input type="checkbox" name="features" value="TOP" checked>TOP</label>
-    <label class="check"><input type="checkbox" name="features" value="TOPスライドショー">TOPスライドショー</label>
     <label class="check"><input type="checkbox" name="features" value="写真ギャラリー">写真ギャラリー</label>
     <label class="check"><input type="checkbox" name="features" value="次回LIVE">次回LIVE</label>
     <label class="check"><input type="checkbox" name="features" value="過去LIVE">過去LIVE</label>
-    <label class="check"><input type="checkbox" name="features" value="セットリスト">セットリスト</label>
     <label class="check"><input type="checkbox" name="features" value="メンバー個別ページ">メンバー個別ページ</label>
-    <label class="check"><input type="checkbox" name="features" value="YouTube">YouTube</label>
-    <label class="check"><input type="checkbox" name="features" value="SNS">SNS</label>
-    <label class="check"><input type="checkbox" name="features" value="問い合わせ">問い合わせ</label>
+    <label class="check"><input type="checkbox" name="features" value="YouTubeリンクボタン">YouTubeリンクボタン</label>
+    <label class="check"><input type="checkbox" name="features" value="SNSリンクボタン">SNSリンクボタン</label>
+    <label class="check"><input type="checkbox" name="features" value="問い合わせ・連絡先">問い合わせ・連絡先</label>
   </div>
   <label>その他ほしい機能<textarea name="other_features" placeholder="例：応援ページ、FAQ、機材紹介など"></textarea></label>
   <div class="notice">決済、会員制、予約、EC、6名を超える個別メンバーページ、大規模な追加機能は別途相談・追加費用となる場合があります。</div>
 </div></details>
 
-<details class="card"><summary>04 メンバー情報</summary><div class="body">
+<details class="card"><summary>04 メンバー情報（個別ページが必要な場合）</summary><div class="body">
   <div id="members"></div>
   <button type="button" class="addbtn" id="addMember">＋ メンバーを追加</button>
-  <div class="disabled-note">本サイトプランは個別メンバーページ5名まで標準。6名以上は要相談・追加費用となる場合があります。</div>
+  <div class="notice">本サイトプランは個別メンバーページ5名まで標準。6名以上は要相談・追加費用となる場合があります。</div>
 </div></details>
 
 <details class="card"><summary>05 LIVE情報</summary><div class="body">
-  <label>次回LIVE<textarea name="next_live" placeholder="日付 / イベント名 / 会場 / 出演時間 など"></textarea></label>
-  <label>イベント詳細<textarea name="live_detail" placeholder="出演者、料金、タイムテーブル、セットリスト、YouTube URLなど。必要な内容だけ自由に入力してください。"></textarea></label>
-  <label>過去LIVE情報<textarea name="past_live" placeholder="日付 / 会場 / イベント詳細 / YouTube URL など。分かる範囲でOK。"></textarea></label>
-  <label>LIVE一覧の表示希望<select name="live_style"><option>おまかせ</option><option>開催日順</option><option>新しい順</option><option>古い順</option></select></label>
-  <label class="check"><input type="checkbox" name="detail_dropdown" value="yes">イベント詳細はプルダウン表示にしたい</label>
+  <div id="liveBlocks"></div>
+  <button type="button" class="addbtn" id="addLive">＋ LIVE情報を追加</button>
+  <div class="notice">LIVEごとに「日付・時間・イベント名・会場・イベント詳細」を1セットで追加できます。イベント詳細には出演者、料金、タイムテーブル、セットリスト、YouTube URLなど必要な内容だけ入力してください。</div>
 </div></details>
 
-<details class="card"><summary>06 SNS・連絡先</summary><div class="body">
-  <label>YouTube URL<input name="youtube" type="url"></label>
-  <label>Instagram URL<input name="instagram" type="url"></label>
-  <label>X URL<input name="x_url" type="url"></label>
-  <label>TikTok URL<input name="tiktok" type="url"></label>
-  <label>LINE URL<input name="line_url" type="url"></label>
-  <label>公開するメールアドレス<input name="public_email" type="email"></label>
-  <label>その他の連絡先 / URL<textarea name="other_contact"></textarea></label>
-  <div class="notice">入力した連絡先のうち、公開サイトに載せてよいものだけ入力してください。</div>
+<details class="card"><summary>06 YouTube・SNS・連絡先</summary><div class="body">
+  <div id="linkGuide" class="notice">03 ページ・機能で選んだ項目の入力欄だけ表示されます。</div>
+  <div id="youtubeFields" class="conditional"><div class="mini-title">YouTubeリンクボタン</div><label>YouTube URL<input name="youtube" type="url" placeholder="https://youtube.com/..."></label></div>
+  <div id="snsFields" class="conditional"><div class="mini-title">SNSリンクボタン</div><label>Instagram URL<input name="instagram" type="url"></label><label>X URL<input name="x_url" type="url"></label><label>TikTok URL<input name="tiktok" type="url"></label><label>その他SNS URL<input name="other_sns" type="url"></label></div>
+  <div id="contactFields" class="conditional"><div class="mini-title">問い合わせ・連絡先</div><label>LINE URL<input name="line_url" type="url"></label><label>公開するメールアドレス<input name="public_email" type="email"></label><label>Instagramなどを連絡先として使う場合<input name="contact_url" type="url" placeholder="https://..."></label><label>その他<input name="other_contact" type="text"></label><div class="notice">公開サイトに載せてよい連絡先だけ入力してください。</div></div>
 </div></details>
 
-<details class="card"><summary>07 公開・運用</summary><div class="body">
-  <label>独自ドメイン<select name="domain"><option>まだ分からない</option><option>不要</option><option>希望する</option><option>すでに持っている</option></select><span class="hint">独自ドメイン代など外部サービス実費は別途になる場合があります。</span></label>
-  <label>公開後の希望<select name="after_plan"><option>まずは3か月無料期間を使う</option><option>その後は使い放題を検討</option><option>必要な時だけ都度更新したい</option><option>自分で管理したい</option><option>まだ決めていない</option></select></label>
+<details class="card"><summary>07 公開・URL</summary><div class="body">
+  <label>公開URL
+    <select name="domain" id="domainSelect"><option>無料URLでOK</option><option>独自ドメインを希望</option><option>すでに独自ドメインを持っている</option><option>まだ決めていない</option></select>
+    <span class="hint">独自ドメインの取得・更新費用など外部サービス実費は別途になる場合があります。</span>
+  </label>
+  <div id="domainDetail" class="conditional"><label>希望・所有ドメイン<input name="domain_name" type="text" placeholder="例：abcbandofficial.com"></label><span class="hint">希望ドメインは取得できるか確認してから決定します。</span></div>
   <label>紹介コード<input name="referral" type="text" placeholder="紹介者がいる場合"></label>
+  <div class="notice">本サイトプランの公開記念3か月無料は自動適用予定。無料期間の終了日は管理画面に常時表示し、終了後に自動で有料プランへ切り替えることはありません。</div>
 </div></details>
 
 <details class="card"><summary>08 最終確認</summary><div class="body">
   <label class="check"><input type="checkbox" name="rights" value="yes">掲載する写真・ロゴ・文章について、サイト掲載に必要な権利・許可を確認しています。</label>
   <label class="check"><input type="checkbox" name="privacy" value="yes">入力した公開用連絡先やSNS URLをホームページへ掲載して問題ありません。</label>
   <label>その他・伝えておきたいこと<textarea name="final_notes"></textarea></label>
-  <div class="notice">このデモフォームはまだバックエンド送信に接続していません。入力内容の自動保存・確認用として動きます。本番では顧客IDごとに安全な送信先へ接続します。</div>
+  <div class="notice">この見本はまだ本番送信には接続していません。本番では顧客IDに紐づけて安全に保存・送信します。</div>
 </div></details>
 
-<div class="actions">
-  <div class="actionrow"><button type="button" class="btn secondary" id="previewBtn">入力内容を確認</button><button type="button" class="btn" id="submitDemo">送信イメージ</button></div>
-  <div class="status" id="status">入力内容は自動保存されます</div>
-</div>
-
+<div class="buttons"><button type="button" class="btn secondary" id="previewBtn">入力内容を確認</button><button type="button" class="btn" id="submitDemo">送信イメージ</button></div>
+<div class="status" id="status">入力内容は自動保存されます</div>
 <div class="preview" id="preview"></div>
-</section>
-</form>
-</main>
+</section></form></main>
 
 <script>
-(function(){
-  const params=new URLSearchParams(location.search);
-  const siteId=params.get('id')||'DEMO';
-  document.getElementById('siteId').textContent=siteId;
-  const form=document.getElementById('intake');
-  const key='sho-intake-'+siteId;
-  const status=document.getElementById('status');
-  const members=document.getElementById('members');
-  let memberCount=0;
+(()=>{
+ const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO';
+ document.getElementById('siteId').textContent=siteId;
+ const form=document.getElementById('intake'),key='sho-intake-v2-'+siteId,status=document.getElementById('status');
+ const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks');
+ let memberCount=0,liveCount=0,timer;
 
-  function memberBlock(i,data={}){
-    const d=document.createElement('div');
-    d.className='member';
-    d.innerHTML='<h4>MEMBER '+i+'</h4>'+
-      '<label>名前<input type="text" data-member="'+i+'" data-field="name" value="'+esc(data.name||'')+'"></label>'+
-      '<label>パート<input type="text" data-member="'+i+'" data-field="part" value="'+esc(data.part||'')+'"></label>'+
-      '<label>紹介文<textarea data-member="'+i+'" data-field="bio">'+esc(data.bio||'')+'</textarea></label>'+
-      '<label>SNS URL<input type="url" data-member="'+i+'" data-field="sns" value="'+esc(data.sns||'')+'"></label>'+
-      '<label>写真<input type="file" accept="image/*"></label>';
-    members.appendChild(d);
-  }
-  function esc(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
-  function addMember(data){memberCount++;memberBlock(memberCount,data);saveSoon();}
-  document.getElementById('addMember').addEventListener('click',()=>addMember());
+ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-  function serialize(){
-    const data={siteId,fields:{},checks:{},members:[]};
-    [...form.elements].forEach(el=>{
-      if(!el.name||el.type==='file')return;
-      if(el.type==='checkbox'){
-        if(!data.checks[el.name])data.checks[el.name]=[];
-        if(el.checked)data.checks[el.name].push(el.value||'yes');
-      }else data.fields[el.name]=el.value;
-    });
-    for(let i=1;i<=memberCount;i++){
-      const m={};
-      document.querySelectorAll('[data-member="'+i+'"]').forEach(el=>m[el.dataset.field]=el.value);
-      data.members.push(m);
-    }
-    return data;
-  }
-  function save(){
-    localStorage.setItem(key,JSON.stringify(serialize()));
-    status.textContent='保存しました';
-    setTimeout(()=>status.textContent='入力内容は自動保存されます',1100);
-    updateProgress();
-  }
-  let timer;
-  function saveSoon(){clearTimeout(timer);timer=setTimeout(save,400);}
-  form.addEventListener('input',saveSoon);
-  form.addEventListener('change',saveSoon);
+ function addMember(data={}){
+   memberCount++;
+   const n=memberCount,d=document.createElement('div');d.className='member';d.dataset.member=n;
+   d.innerHTML='<div class="blockhead"><h4>MEMBER '+n+'</h4>'+(n>1?'<button type="button" class="remove">削除</button>':'')+'</div>'+
+   '<label>名前<input type="text" data-mf="name" value="'+esc(data.name)+'"></label>'+
+   '<label>パート<input type="text" data-mf="part" value="'+esc(data.part)+'"></label>'+
+   '<label>紹介文<textarea data-mf="bio">'+esc(data.bio)+'</textarea></label>'+
+   '<label>SNS URL<input type="url" data-mf="sns" value="'+esc(data.sns)+'"></label>'+
+   '<label>写真<input type="file" accept="image/*"></label>';
+   d.querySelector('.remove')?.addEventListener('click',()=>{d.remove();saveSoon()});
+   members.appendChild(d);
+ }
+ function addLive(data={}){
+   liveCount++;
+   const n=liveCount,d=document.createElement('div');d.className='liveblock';d.dataset.live=n;
+   d.innerHTML='<div class="blockhead"><h4>LIVE '+n+'</h4>'+(n>1?'<button type="button" class="remove">削除</button>':'')+'</div>'+
+   '<label>掲載区分<select data-lf="type"><option'+(data.type==='今後のLIVE'?' selected':'')+'>今後のLIVE</option><option'+(data.type==='過去LIVE'?' selected':'')+'>過去LIVE</option></select></label>'+
+   '<div class="row"><label>日付<input type="date" data-lf="date" value="'+esc(data.date)+'"></label><label>時間<input type="time" data-lf="time" value="'+esc(data.time)+'"></label></div>'+
+   '<label>イベント名<input type="text" data-lf="name" value="'+esc(data.name)+'" placeholder="例：ROCK NIGHT 2027"></label>'+
+   '<label>会場<input type="text" data-lf="venue" value="'+esc(data.venue)+'" placeholder="例：仙台 LIVE HOUSE"></label>'+
+   '<label>イベント詳細<textarea data-lf="detail" placeholder="出演者、料金、タイムテーブル、セットリスト、YouTube URLなど">'+esc(data.detail)+'</textarea></label>';
+   d.querySelector('.remove')?.addEventListener('click',()=>{d.remove();saveSoon()});
+   liveBlocks.appendChild(d);
+ }
+ document.getElementById('addMember').onclick=()=>{addMember();saveSoon()};
+ document.getElementById('addLive').onclick=()=>{addLive();saveSoon()};
 
-  function restore(){
-    const raw=localStorage.getItem(key);
-    if(!raw){addMember();return;}
-    try{
-      const data=JSON.parse(raw);
-      Object.entries(data.fields||{}).forEach(([n,v])=>{const el=form.elements[n];if(el)el.value=v;});
-      Object.entries(data.checks||{}).forEach(([n,vals])=>{
-        document.querySelectorAll('[name="'+n+'"]').forEach(el=>el.checked=vals.includes(el.value||'yes'));
-      });
-      (data.members||[]).forEach(m=>addMember(m));
-      if(!(data.members||[]).length)addMember();
-      updateProgress();
-    }catch(e){addMember();}
-  }
+ function selectedFeatures(){
+   return [...document.querySelectorAll('input[name="features"]:checked')].map(x=>x.value);
+ }
+ function toggleLinks(){
+   const f=selectedFeatures();
+   document.getElementById('youtubeFields').classList.toggle('show',f.includes('YouTubeリンクボタン'));
+   document.getElementById('snsFields').classList.toggle('show',f.includes('SNSリンクボタン'));
+   document.getElementById('contactFields').classList.toggle('show',f.includes('問い合わせ・連絡先'));
+ }
+ function toggleDomain(){
+   const v=document.getElementById('domainSelect').value;
+   document.getElementById('domainDetail').classList.toggle('show',v.includes('独自ドメイン'));
+ }
+ form.addEventListener('change',e=>{if(e.target.name==='features')toggleLinks();if(e.target.id==='domainSelect')toggleDomain();saveSoon()});
+ form.addEventListener('input',saveSoon);
 
-  function updateProgress(){
-    const d=serialize();
-    const vals=Object.values(d.fields).filter(v=>String(v).trim()).length+
-      Object.values(d.checks).reduce((a,v)=>a+v.length,0)+
-      d.members.filter(m=>Object.values(m).some(v=>String(v).trim())).length;
-    const pct=Math.max(10,Math.min(100,10+vals*3));
-    document.getElementById('bar').style.width=pct+'%';
-  }
-
-  function summary(){
-    const d=serialize();
-    const f=d.fields;
-    const lines=[
-      'SITE ID: '+siteId,
-      'サイト名: '+(f.site_name||''),
-      '担当者: '+(f.contact_name||''),
-      '目的: '+(f.purpose||''),
-      'イメージ: '+(f.image_text||''),
-      '参考URL: '+(f.reference_url||''),
-      '希望カラー: '+(f.colors||''),
-      '希望機能: '+((d.checks.features||[]).join(', ')),
-      '写真希望: '+(f.photo_notes||''),
-      '次回LIVE: '+(f.next_live||''),
-      'イベント詳細: '+(f.live_detail||''),
-      '過去LIVE: '+(f.past_live||''),
-      'YouTube: '+(f.youtube||''),
-      'Instagram: '+(f.instagram||''),
-      'LINE: '+(f.line_url||''),
-      '公開後: '+(f.after_plan||''),
-      '紹介コード: '+(f.referral||''),
-      'その他: '+(f.final_notes||'')
-    ];
-    d.members.forEach((m,i)=>lines.push('MEMBER '+(i+1)+': '+[m.name,m.part,m.bio,m.sns].filter(Boolean).join(' / ')));
-    return lines.join('\n');
-  }
-
-  document.getElementById('previewBtn').addEventListener('click',()=>{
-    const p=document.getElementById('preview');p.textContent=summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'});
-  });
-  document.getElementById('submitDemo').addEventListener('click',()=>{
-    save();
-    const p=document.getElementById('preview');p.textContent='【デモ】本番ではこの内容と添付ファイルを顧客ID '+siteId+' に紐づけて送信します。\n\n'+summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'});
-  });
-  restore();
+ function serialize(){
+   const data={siteId,fields:{},checks:{},members:[],lives:[]};
+   [...form.elements].forEach(el=>{
+     if(!el.name||el.type==='file')return;
+     if(el.type==='checkbox'){if(!data.checks[el.name])data.checks[el.name]=[];if(el.checked)data.checks[el.name].push(el.value||'yes')}
+     else data.fields[el.name]=el.value;
+   });
+   document.querySelectorAll('.member').forEach(block=>{const m={};block.querySelectorAll('[data-mf]').forEach(el=>m[el.dataset.mf]=el.value);data.members.push(m)});
+   document.querySelectorAll('.liveblock').forEach(block=>{const l={};block.querySelectorAll('[data-lf]').forEach(el=>l[el.dataset.lf]=el.value);data.lives.push(l)});
+   return data;
+ }
+ function save(){
+   localStorage.setItem(key,JSON.stringify(serialize()));status.textContent='保存しました';setTimeout(()=>status.textContent='入力内容は自動保存されます',1000);updateProgress();
+ }
+ function saveSoon(){clearTimeout(timer);timer=setTimeout(save,350)}
+ function restore(){
+   const raw=localStorage.getItem(key);
+   if(!raw){addMember();addLive();toggleLinks();toggleDomain();return}
+   try{
+     const data=JSON.parse(raw);
+     Object.entries(data.fields||{}).forEach(([n,v])=>{const el=form.elements[n];if(el)el.value=v});
+     Object.entries(data.checks||{}).forEach(([n,vals])=>document.querySelectorAll('[name="'+n+'"]').forEach(el=>el.checked=vals.includes(el.value||'yes')));
+     (data.members||[]).forEach(addMember);if(!(data.members||[]).length)addMember();
+     (data.lives||[]).forEach(addLive);if(!(data.lives||[]).length)addLive();
+     toggleLinks();toggleDomain();updateProgress();
+   }catch(e){addMember();addLive()}
+ }
+ function updateProgress(){
+   const d=serialize(),vals=Object.values(d.fields).filter(v=>String(v).trim()).length+Object.values(d.checks).reduce((a,v)=>a+v.length,0)+d.members.filter(m=>Object.values(m).some(v=>String(v).trim())).length+d.lives.filter(l=>Object.values(l).some(v=>String(v).trim())).length;
+   document.getElementById('bar').style.width=Math.max(10,Math.min(100,10+vals*2.5))+'%';
+ }
+ function summary(){
+   const d=serialize(),f=d.fields,lines=[
+    'SITE ID: '+siteId,'サイト名: '+(f.site_name||''),'目的: '+(f.purpose||''),'イメージ: '+(f.image_text||''),'参考URL: '+(f.reference_url||''),'希望カラー: '+(f.colors||''),
+    '希望機能: '+((d.checks.features||[]).join(', ')),'ギャラリー並び: '+(f.gallery_order||''),'公開URL: '+(f.domain||''),'希望ドメイン: '+(f.domain_name||''),'紹介コード: '+(f.referral||'')
+   ];
+   d.members.forEach((m,i)=>lines.push('MEMBER '+(i+1)+': '+[m.name,m.part,m.bio,m.sns].filter(Boolean).join(' / ')));
+   d.lives.forEach((l,i)=>lines.push('LIVE '+(i+1)+': '+[l.type,l.date,l.time,l.name,l.venue,l.detail].filter(Boolean).join(' / ')));
+   return lines.join('\n');
+ }
+ document.getElementById('previewBtn').onclick=()=>{const p=document.getElementById('preview');p.textContent=summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'})};
+ document.getElementById('submitDemo').onclick=()=>{save();const p=document.getElementById('preview');p.textContent='【デモ】本番ではこの内容と添付ファイルをSITE ID '+siteId+' に紐づけて送信します。\n\n'+summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'})};
+ restore();
 })();
 </script>
-</body>
-</html>
+</body></html>
