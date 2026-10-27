@@ -34,7 +34,7 @@ footer{padding:28px 0;border-top:1px solid var(--line);color:#777;font-size:.68r
 <section class="section"><div class="container">
   <p class="eyebrow">4 STEPS</p><h2 class="title">この流れで作ります</h2>
   <div class="flow">
-    <details open>
+    <details>
       <summary><span class="num">01</span><strong>好みのサイト内容を詳細まで入力</strong><span class="plus">＋</span></summary>
       <div class="detail"><p>サイトの目的、雰囲気、希望カラー、入れたいページや機能、参考にしたいサイトなどを入力します。</p><div class="example"><b>例：</b>「黒ベースでロックっぽく」「写真を大きく」「LIVE情報を一番見せたい」「このサイトの雰囲気が好き」などでOK。</div></div>
     </details>
@@ -48,7 +48,7 @@ footer{padding:28px 0;border-top:1px solid var(--line);color:#777;font-size:.68r
     </details>
     <details>
       <summary><span class="num">04</span><strong>公開</strong><span class="plus">＋</span></summary>
-      <div class="detail"><p>公開設定まで対応。本サイトプランは公開後3か月、定型更新使い放題を無料で利用できるキャンペーンを予定しています。</p><div class="example">無料期間の終了日は管理画面に常時表示。終了後に勝手に有料プランへ切り替わることはありません。</div></div>
+      <div class="detail"><p>公開設定まで対応。複数ページサイトプランは公開後3か月、定型更新使い放題を無料で利用できるキャンペーンを予定しています。</p><div class="example">無料期間の終了日は管理画面に常時表示。終了後に勝手に有料プランへ切り替わることはありません。</div></div>
     </details>
   </div>
 </div></section>
@@ -60,8 +60,8 @@ footer{padding:28px 0;border-top:1px solid var(--line);color:#777;font-size:.68r
       <summary><span class="planname"><small>ONE PAGE</small><strong>1ページサイト</strong></span><span class="planprice">¥15,000〜</span></summary>
       <div class="planbody">プロフィール・SNS・問い合わせなどを1ページにまとめるシンプルなホームページ。</div>
     </details>
-    <details open>
-      <summary><span class="planname"><small>FULL WEBSITE</small><strong>本サイト</strong></span><span class="planprice">¥30,000〜</span></summary>
+    <details>
+      <summary><span class="planname"><small>FULL WEBSITE</small><strong>複数ページサイト</strong></span><span class="planprice">¥30,000〜</span></summary>
       <div class="planbody">Guns N' Loses公式サイト程度の構成。必要に応じて以下を組み合わせます。<ul><li>TOP / 写真スライド</li><li>写真ギャラリー</li><li>次回LIVE / 過去LIVE / イベント詳細</li><li>メンバー個別ページ5名まで</li><li>YouTubeリンクボタン / SNSリンクボタン</li><li>問い合わせ・連絡先</li><li>スマホ / PC対応</li></ul></div>
     </details>
   </div>
@@ -69,9 +69,18 @@ footer{padding:28px 0;border-top:1px solid var(--line);color:#777;font-size:.68r
 </div></section>
 
 <section class="section"><div class="container">
-  <p class="eyebrow">DOMAIN</p><h2 class="title">URLも選べます</h2>
-  <div class="note">無料URLで公開するか、独自ドメインを希望するか、すでに持っているドメインを使うかをフォームで選べます。独自ドメインは希望文字列の取得可否を確認してから決定し、取得・更新費用などの実費がかかる場合があります。</div>
+  <p class="eyebrow">DOMAIN</p><h2 class="title">独自ドメイン名を希望できます</h2>
+  <div class="note">無料URLで公開することもできます。独自ドメインを希望する場合は「○○.com」など希望名を入力できますが、すでに他の人が使用している名前は取得できません。空き状況を確認してから決定し、取得・更新費用などの実費がかかる場合があります。</div>
 </div></section>
 </main>
+<script>
+document.querySelectorAll('.flow .detail, .planwrap .planbody').forEach(area=>{
+  area.addEventListener('click',e=>{
+    if(e.target.closest('a,button,input,select,textarea,label')) return;
+    const details=area.closest('details');
+    if(details) details.open=false;
+  });
+});
+</script>
 <footer><div class="container">© 2026 SHO / Website Support.</div></footer>
 </body></html>
