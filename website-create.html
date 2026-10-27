@@ -14,9 +14,9 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 .hero{padding:52px 0 38px}.eyebrow{margin:0;color:var(--orange);font:1rem var(--rock);letter-spacing:.16em}.hero h1{margin:7px 0 12px;font:clamp(2.7rem,6vw,5rem)/.95 var(--rock)}.hero p{max-width:720px;margin:0;color:var(--soft);font-size:.88rem}.hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}.pillbtn{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 18px;border:1px solid var(--line);border-radius:999px;background:#101010;font-weight:800;font-size:.8rem}.pillbtn.primary{border-color:rgba(240,138,53,.58);color:var(--orange2)}.pillbtn span:last-child{font-size:1.1rem;color:var(--orange)}
 .section{padding:48px 0;border-top:1px solid rgba(255,255,255,.05)}.title{margin:3px 0 17px;font:clamp(2.2rem,5.4vw,4.2rem)/.95 var(--rock)}.sub{margin:-6px 0 18px;color:var(--soft);font-size:.8rem}
 .flow{display:grid;gap:12px}.flow details{border:1px solid var(--line);border-radius:999px;background:#0e0e0e;overflow:hidden;transition:.2s}.flow details[open]{border-radius:26px;border-color:rgba(240,138,53,.45);background:linear-gradient(145deg,rgba(240,138,53,.06),#0d0d0d)}.flow summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:12px;padding:17px 20px}.flow summary::-webkit-details-marker{display:none}.num{display:flex;width:40px;height:40px;border-radius:50%;align-items:center;justify-content:center;background:#171717;border:1px solid var(--line);color:var(--orange);font-weight:900}.flow summary strong{font-size:.95rem}.plus{font-size:1.3rem;color:var(--orange)}.flow details[open] .plus{transform:rotate(45deg)}.detail{padding:0 24px 22px 86px;color:var(--soft);font-size:.8rem}.detail p{margin:0 0 10px}.example{padding:12px 14px;border-left:3px solid var(--orange);background:#101010;color:#ddd}.example b{color:var(--orange2)}
-.planwrap{display:grid;gap:10px}.planwrap details{border:1px solid var(--line);border-radius:24px;background:#0d0d0d}.planwrap summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:15px;align-items:center;padding:18px 20px}.planwrap summary::-webkit-details-marker{display:none}.planname strong{display:block;font:1.8rem var(--rock)}.planname small{color:var(--orange);font-weight:800}.planprice{font:1.65rem var(--rock);color:var(--orange2)}.planbody{padding:0 20px 20px;color:var(--soft);font-size:.78rem}.planbody ul{margin:8px 0 0;padding-left:18px}.note{margin-top:12px;padding:14px;border:1px solid rgba(240,138,53,.35);border-radius:18px;background:#0d0d0d;color:var(--soft);font-size:.76rem}
+.planwrap{display:grid;gap:9px}.planwrap details{border:1px solid var(--line);border-radius:14px;background:#0d0d0d}.planwrap summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:14px;align-items:center;padding:12px 16px}.planwrap summary::-webkit-details-marker{display:none}.planname strong{display:block;font:1.48rem var(--rock)}.planname small{color:var(--orange);font-weight:800}.planright{display:flex;align-items:center;gap:12px;text-align:right}.planprice{font:1.38rem var(--rock);color:var(--orange2);white-space:nowrap}.plandetail{font-size:.78rem;font-weight:900;color:#d8d2c9;white-space:nowrap}.plandetail .close-label{display:none}.planwrap details[open] .plandetail .open-label{display:none}.planwrap details[open] .plandetail .close-label{display:inline}.planbody{padding:2px 16px 16px;color:var(--soft);font-size:.78rem}.planbody ul{margin:8px 0 0;padding-left:18px}.note{margin-top:12px;padding:14px;border:1px solid rgba(240,138,53,.35);border-radius:18px;background:#0d0d0d;color:var(--soft);font-size:.76rem}
 footer{padding:28px 0;border-top:1px solid var(--line);color:#777;font-size:.68rem}
-@media(max-width:650px){.hero{padding-top:42px}.hero h1{font-size:2.55rem}.hero-actions{grid-template-columns:1fr}.section{padding:42px 0}.title{font-size:2rem}.flow summary{grid-template-columns:46px 1fr auto;padding:15px 16px}.detail{padding:0 18px 19px 18px}.planwrap summary{align-items:flex-start}.planprice{font-size:1.4rem}}
+@media(max-width:650px){.hero{padding-top:42px}.hero h1{font-size:2.55rem}.hero-actions{grid-template-columns:1fr}.section{padding:42px 0}.title{font-size:2rem}.flow summary{grid-template-columns:46px 1fr auto;padding:15px 16px}.detail{padding:0 18px 19px 18px}.planwrap summary{align-items:center;padding:11px 14px}.planname strong{font-size:1.3rem}.planright{gap:8px;flex-direction:column;align-items:flex-end}.planprice{font-size:1.22rem}.plandetail{font-size:.75rem}}
 </style><link rel="stylesheet" href="website-theme.css">
 </head>
 <body>
@@ -39,7 +39,7 @@ footer{padding:28px 0;border-top:1px solid var(--line);color:#777;font-size:.68r
   <div class="flow">
     <details>
       <summary><span class="num">01</span><strong>好みのサイト内容を詳細まで入力</strong><span class="plus">＋</span></summary>
-      <div class="detail"><p>サイトの目的、雰囲気、希望カラー、入れたいページや機能、参考にしたいサイトなどを入力します。</p><div class="example"><b>例：</b>「黒ベースでロックっぽく」「写真を大きく」「LIVE情報を一番見せたい」「このサイトの雰囲気が好き」などでOK。</div></div>
+      <div class="detail"><p>サイトの目的、雰囲気、HPの希望イメージカラー、入れたいページや機能、参考にしたいサイトなどを入力します。</p><div class="example"><b>例：</b>「黒ベースでロックっぽく」「写真を大きく」「LIVE情報を一番見せたい」「このサイトの雰囲気が好き」などでOK。</div></div>
     </details>
     <details>
       <summary><span class="num">02</span><strong>写真を添付</strong><span class="plus">＋</span></summary>
@@ -60,11 +60,11 @@ footer{padding:28px 0;border-top:1px solid var(--line);color:#777;font-size:.68r
   <p class="eyebrow">PLAN</p><h2 class="title">制作料金</h2>
   <div class="planwrap">
     <details>
-      <summary><span class="planname"><small>ONE PAGE</small><strong>1ページサイト</strong></span><span class="planprice">¥15,000〜</span></summary>
+      <summary><span class="planname"><small>ONE PAGE</small><strong>1ページサイト</strong></span><span class="planright"><span class="planprice">¥15,000〜</span><span class="plandetail"><span class="open-label">＋ 詳細</span><span class="close-label">− 閉じる</span></span></span></summary>
       <div class="planbody">プロフィール・SNS・問い合わせなどを1ページにまとめるシンプルなホームページ。</div>
     </details>
     <details>
-      <summary><span class="planname"><small>MULTI PAGE</small><strong>複数ページサイト</strong></span><span class="planprice">¥30,000〜</span></summary>
+      <summary><span class="planname"><small>MULTI PAGE</small><strong>複数ページサイト</strong></span><span class="planright"><span class="planprice">¥30,000〜</span><span class="plandetail"><span class="open-label">＋ 詳細</span><span class="close-label">− 閉じる</span></span></span></summary>
       <div class="planbody">Guns N' Loses公式サイト程度の構成。必要に応じて以下を組み合わせます。<ul><li>TOP / 写真スライド</li><li>写真ギャラリー</li><li>次回LIVE / 過去LIVE / イベント詳細</li><li>メンバー個別ページ5名まで</li><li>YouTubeリンクボタン / SNSリンクボタン</li><li>問い合わせ・連絡先</li><li>スマホ / PC対応</li></ul></div>
     </details>
   </div>
