@@ -24,7 +24,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 <section class="hero">
 <small>ORDER</small><h1>ホームページ作成依頼</h1>
 <p>制作プランを選んで、内容を確認してから決済へ進む画面です。</p>
-<div class="campaign"><strong>複数ページサイトは、定型更新使い放題3か月無料予定</strong><span>無料期間終了後の自動有料化はありません。管理画面に終了日・残り日数を表示します。</span></div>
+<div class="campaign"><strong>複数ページサイトは、定型更新使い放題3か月無料予定</strong><span>無料期間終了後の自動有料化はありません。管理画面に終了日・残り日数を表示し、終了後に改めて更新プランを選択できます。</span></div>
 </section>
 
 <section class="section">
@@ -35,21 +35,21 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 </div>
 
 <div class="box">
-<h3>2. 無料期間終了後の希望 <span class="hint">（あとから変更できます）</span></h3>
+<h3>2. 公開後の更新</h3>
+<p class="hint" style="font-size:.76rem;line-height:1.7">複数ページサイトは公開後3か月、定型更新使い放題を無料で利用予定。無料期間終了後の自動有料化はありません。実際に使ってから、改めて下記のプランを選択できます。</p>
 <div class="choices">
-  <label class="choice"><input type="radio" name="after" value="無料のまま" checked>無料のまま利用する</label>
-  <label class="choice"><input type="radio" name="after" value="LIVE更新 ¥1,000/回">必要な時だけLIVE更新 ¥1,000 / 回</label>
-  <label class="choice"><input type="radio" name="after" value="通常更新 ¥2,500/回">必要な時だけ通常更新 ¥2,500 / 回</label>
-  <label class="choice"><input type="radio" name="after" value="使い放題 ¥7,000/月">定型更新使い放題 ¥7,000 / 月を検討</label>
+  <div class="choice">無料のまま</div>
+  <div class="choice">LIVE更新 ¥1,000 / 回</div>
+  <div class="choice">通常更新 ¥2,500 / 回</div>
+  <div class="choice">定型更新使い放題 ¥7,000 / 月</div>
 </div>
-<p class="hint">現時点の希望です。3か月無料を実際に使ってから変更できます。</p>
 </div>
 
 <div class="summary">
 <small>ORDER SUMMARY</small>
 <strong id="sumPlan">複数ページサイト ¥30,000〜</strong>
 <div id="sumCampaign">公開後3か月：定型更新使い放題 無料予定</div>
-<div id="sumAfter">無料期間終了後：無料のまま</div>
+<div id="sumAfter">無料期間終了後：改めて更新プランを選択</div>
 </div>
 
 <a class="btn disabled" href="#" aria-disabled="true">決済リンク準備中</a>
@@ -66,7 +66,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
    else{sumPlan.textContent='複数ページサイト ¥30,000〜';sumCampaign.textContent='公開後3か月：定型更新使い放題 無料予定';}
  }
  plans.forEach(x=>x.onclick=()=>selectPlan(x.dataset.plan));
- document.querySelectorAll('input[name="after"]').forEach(r=>r.onchange=()=>sumAfter.textContent='無料期間終了後：'+r.value);
+
 })();
 </script>
 </body></html>
