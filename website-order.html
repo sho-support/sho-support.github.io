@@ -25,7 +25,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 <section class="hero">
 <small>ORDER</small><h1>ホームページ作成依頼</h1>
 <p>個人・バンド・アーティスト向けの標準プランです。店舗・企業サイトは内容に応じて個別見積りとなります。</p>
-<div class="campaign"><strong>個人・バンド等の複数ページサイトは、定型更新使い放題2か月無料</strong><span>無料期間終了後の自動有料化はありません。管理画面に終了日・残り日数を表示し、終了後に改めて更新プランを選択できます。キャンペーンは申込時に表示がある方が対象で、予告なく変更・終了する場合があります。</span></div>
+<div class="campaign"><strong>個人・バンド等の複数ページサイトは、定型更新使い放題3か月無料</strong><span>無料期間終了後の自動有料化はありません。管理画面に終了日・残り日数を表示し、終了後に改めて更新プランを選択できます。キャンペーンは申込時に表示がある方が対象で、予告なく変更・終了する場合があります。</span></div>
 </section>
 
 <section class="section">
@@ -37,7 +37,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 
 <div class="box">
 <h3>2. 公開後の更新</h3>
-<p class="hint" style="font-size:.76rem;line-height:1.7">複数ページサイトは公開後2か月、定型更新使い放題を無料で利用できます。無料期間終了後の自動有料化はありません。実際に使ってから、改めて下記のプランを選択できます。</p>
+<p class="hint" style="font-size:.76rem;line-height:1.7">複数ページサイトは公開後3か月、定型更新使い放題を無料で利用できます。無料期間終了後の自動有料化はありません。実際に使ってから、改めて下記のプランを選択できます。</p>
 <div class="choices">
   <div class="choice">無料のまま</div>
   <div class="choice">LIVE更新 ¥1,000 / 回</div>
@@ -49,7 +49,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 <div class="summary">
 <small>ORDER SUMMARY</small>
 <strong id="sumPlan">複数ページサイト ¥30,000〜</strong>
-<div id="sumCampaign">公開後2か月：定型更新使い放題 無料</div>
+<div id="sumCampaign">公開後3か月：定型更新使い放題 無料</div>
 <div id="sumAfter">無料期間終了後：改めて更新プランを選択</div>
 </div>
 
@@ -64,7 +64,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
  function selectPlan(p){
    plans.forEach(x=>x.classList.toggle('active',x.dataset.plan===p));
    if(p==='one'){sumPlan.textContent='1ページサイト ¥15,000〜';sumCampaign.textContent='公開後更新：必要な時に都度依頼';}
-   else{sumPlan.textContent='複数ページサイト ¥30,000〜';sumCampaign.textContent='公開後2か月：定型更新使い放題 無料';}
+   else{sumPlan.textContent='複数ページサイト ¥30,000〜';sumCampaign.textContent='公開後3か月：定型更新使い放題 無料';}
  }
  plans.forEach(x=>x.onclick=()=>selectPlan(x.dataset.plan));
 
