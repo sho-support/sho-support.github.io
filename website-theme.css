@@ -120,3 +120,16 @@ summary{line-height:1.55}
   summary{font-size:.95rem}
   .site-legal-nav{font-size:.74rem;padding-bottom:26px}
 }
+/* readability floor */
+small{font-size:.76rem !important;line-height:1.55 !important}
+footer{font-size:.74rem !important}
+.browser-top b{font-size:.72rem !important}
+.browser-link{font-size:.8rem !important}
+.chip,.feature-chips span,.plans .plan,.tip{font-size:.78rem !important}
+label{line-height:1.65}
+input,textarea,select,button{font-family:var(--jp)}
+@media(max-width:600px){
+  small{font-size:.78rem !important}
+  input,textarea,select{font-size:16px !important}
+  .stat small,.plans .plan,.tip,.chip,.feature-chips span{font-size:.8rem !important}
+}
