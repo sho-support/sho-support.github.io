@@ -16,7 +16,7 @@ label{display:block;margin-top:14px;font-size:.8rem;font-weight:800}.hint{displa
 input[type=text],input[type=url],input[type=email],input[type=date],input[type=time],textarea,select{width:100%;margin-top:7px;padding:12px;border:1px solid var(--line);background:#111;color:#fff;border-radius:10px;font:inherit}input::placeholder,textarea::placeholder{color:#6f6f6f;opacity:1}textarea{min-height:96px;resize:vertical}
 input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(240,138,53,.5);border-radius:12px;background:#0e0e0e;color:#bbb}input[type=file]::file-selector-button{border:0;border-radius:999px;padding:8px 12px;margin-right:10px;background:#222;color:#fff;font-weight:800}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.check{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:13px;background:#101010;font-size:.76rem}.check input{margin-top:3px}.feature-option{min-width:0}.feature-url{display:none;margin:7px 0 2px;padding:10px;border:1px solid rgba(240,138,53,.3);border-radius:12px;background:#0d0d0d}.feature-url.show{display:block}.feature-url label{margin-top:0}.feature-url input{margin-top:5px}
-.member,.liveblock{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#101010}.blockhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.blockhead h4{margin:0}.remove{border:0;background:transparent;color:#aaa;font-size:.72rem;text-decoration:underline}.addbtn{width:100%;margin-top:10px;padding:11px 12px;border:1px solid rgba(240,138,53,.45);border-radius:999px;background:#111;color:var(--orange2);font-weight:900}
+.member,.liveblock,.contactlink{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#101010}.contact-inline{margin-top:10px;padding:12px;border:1px solid rgba(217,174,92,.25);border-radius:12px;background:#0d0d0d}.contact-detected{display:inline-flex;margin-top:7px;padding:4px 8px;border:1px solid rgba(197,31,56,.38);border-radius:999px;color:#e8d5d8;font-size:.74rem;font-weight:800}.blockhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.blockhead h4{margin:0}.remove{border:0;background:transparent;color:#aaa;font-size:.72rem;text-decoration:underline}.addbtn{width:100%;margin-top:10px;padding:11px 12px;border:1px solid rgba(240,138,53,.45);border-radius:999px;background:#111;color:var(--orange2);font-weight:900}
 .notice{margin-top:13px;padding:13px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.75rem}.close-section{width:100%;margin-top:18px;padding:12px 14px;border:1px solid rgba(217,174,92,.3);border-radius:10px;background:#0b0b0b;color:#ddd;font-weight:900;font-size:.86rem;cursor:pointer}.close-section:hover{border-color:var(--orange2);color:#fff}.conditional{display:none}.conditional.show{display:block}.mini-title{margin:16px 0 0;font-size:.76rem;color:var(--orange2);font-weight:900}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.btn{border:0;border-radius:999px;padding:13px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{text-align:center;color:var(--muted);font-size:.7rem;margin-top:9px}.preview{white-space:pre-wrap;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0b0b;font-size:.75rem;color:#ddd;display:none}
 @media(max-width:640px){.row,.checkgrid,.buttons{grid-template-columns:1fr}.hero{padding-top:30px}.brand{font-size:.83rem}.siteid{font-size:.7rem}}
 </style><link rel="stylesheet" href="website-theme.css">
@@ -95,7 +95,15 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
       <div class="feature-url" id="otherSnsInline"><label>SNS名<input name="other_sns_name" type="text" placeholder="例：Threads"></label><label>URL<input name="other_sns" type="url" placeholder="https://..."></label></div>
     </div>
 
-    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="問い合わせ・連絡先">問い合わせ・連絡先</label></div>
+    <div class="feature-option">
+      <label class="check"><input type="checkbox" name="features" value="問い合わせ・連絡先" id="contactFeature">問い合わせ・連絡先</label>
+      <div class="contact-inline conditional" id="contactInline">
+        <span class="mini-title" style="margin-top:0">公開する連絡先</span>
+        <span class="hint">LINE・Instagram・X・Facebook・TikTok・YouTube・メール等は入力内容から自動判定します。</span>
+        <div id="contactLinks"></div>
+        <button type="button" class="addbtn" id="addContact">＋ 連絡先を追加</button>
+      </div>
+    </div>
   </div>
   <label>その他ほしい機能<textarea name="other_features" placeholder="例：応援ページ、FAQ、機材紹介など"></textarea></label>
   <div class="notice">決済、会員制、予約、EC、6名を超える個別メンバーページ、大規模な追加機能は別途相談・追加費用となる場合があります。</div>
@@ -113,18 +121,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
   <div class="notice">LIVEごとに「日付・時間・イベント名・会場・イベント詳細」を1セットで追加できます。イベント詳細には出演者、料金、タイムテーブル、セットリスト、YouTube URLなど必要な内容だけ入力してください。</div>
 </div></details>
 
-<details class="card"><summary>06 問い合わせ・連絡先</summary><div class="body">
-  <div id="contactGuide" class="notice">03 ページ・機能で「問い合わせ・連絡先」を選んだ場合に入力します。</div>
-  <div id="contactFields" class="conditional">
-    <label>LINE URL<input name="line_url" type="url" placeholder="https://line.me/..."></label>
-    <label>公開するメールアドレス<input name="public_email" type="email"></label>
-    <label>Instagramなどを連絡先として使う場合<input name="contact_url" type="url" placeholder="https://..."></label>
-    <label>その他<input name="other_contact" type="text"></label>
-    <div class="notice">公開サイトに載せてよい連絡先だけ入力してください。</div>
-  </div>
-</div></details>
-
-<details class="card"><summary>07 公開・URL</summary><div class="body">
+<details class="card"><summary>06 公開・URL</summary><div class="body">
   <label>公開URLの方法
     <select name="domain" id="domainSelect"><option>無料URLでOK</option><option>独自ドメイン名を希望</option><option>すでに独自ドメインを持っている</option><option>まだ決めていない</option></select>
     <span class="hint">独自ドメインの取得・更新費用など外部サービス実費は別途になる場合があります。</span>
@@ -134,7 +131,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
   
 </div></details>
 
-<details class="card"><summary>08 最終確認</summary><div class="body">
+<details class="card"><summary>07 最終確認</summary><div class="body">
   <label class="check"><input type="checkbox" name="rights" value="yes">掲載する写真・ロゴ・文章について、サイト掲載に必要な権利・許可を確認しています。</label>
   <div class="notice" style="margin-bottom:10px">送信前に <a href="website-privacy.html" target="_blank" rel="noopener" style="color:var(--orange2);font-weight:800">プライバシーポリシーを確認</a> してください。</div><label class="check"><input type="checkbox" name="privacy" value="yes">入力した公開用連絡先やSNS URLをホームページへ掲載して問題ありません。</label>
   <label>その他・伝えておきたいこと<textarea name="final_notes"></textarea></label>
@@ -151,8 +148,8 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
  const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO';
  document.getElementById('siteId').textContent=siteId;
  const form=document.getElementById('intake'),key='sho-intake-v2-'+siteId,status=document.getElementById('status');
- const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks');
- let memberCount=0,liveCount=0,timer;
+ const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks'),contactLinks=document.getElementById('contactLinks');
+ let memberCount=0,liveCount=0,contactCount=0,timer;
 
  document.querySelectorAll('.card .body').forEach(body=>{
    const close=document.createElement('button');
@@ -194,8 +191,41 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
    d.querySelector('.remove')?.addEventListener('click',()=>{d.remove();saveSoon()});
    liveBlocks.appendChild(d);
  }
+ function detectContactType(value=''){
+   const v=String(value).trim().toLowerCase();
+   if(!v)return '';
+   if(v.includes('line.me/')||v.includes('lin.ee/'))return 'LINE';
+   if(v.includes('instagram.com/'))return 'Instagram';
+   if(v.includes('x.com/')||v.includes('twitter.com/'))return 'X';
+   if(v.includes('facebook.com/')||v.includes('fb.me/'))return 'Facebook';
+   if(v.includes('tiktok.com/'))return 'TikTok';
+   if(v.includes('youtube.com/')||v.includes('youtu.be/'))return 'YouTube';
+   if(v.startsWith('mailto:')||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))return 'メール';
+   if(v.startsWith('tel:')||/^0\d{8,10}$/.test(v.replace(/[\s-]/g,'')))return '電話';
+   if(/^https?:\/\//.test(v))return 'Webリンク';
+   return 'その他';
+ }
+ function refreshContactType(block){
+   const input=block.querySelector('[data-cf="value"]');
+   const badge=block.querySelector('.contact-detected');
+   const type=detectContactType(input?.value||'');
+   badge.textContent=type?type+'として表示':'URL・メール等を入力すると自動判定';
+ }
+ function addContact(data={}){
+   contactCount++;
+   const d=document.createElement('div');d.className='contactlink';d.dataset.contact=contactCount;
+   d.innerHTML='<div class="blockhead"><h4>CONTACT '+contactCount+'</h4>'+(contactCount>1?'<button type="button" class="remove">削除</button>':'')+'</div>'+
+     '<label>URL・メール等<input type="text" data-cf="value" value="'+esc(data.value||'')+'" placeholder="例：https://line.me/... / https://instagram.com/... / mail@example.com"></label>'+
+     '<span class="contact-detected"></span>'+
+     '<label>ボタン名（任意）<input type="text" data-cf="label" value="'+esc(data.label||'')+'" placeholder="空欄なら自動判定した名前を使用"></label>';
+   d.querySelector('[data-cf="value"]').addEventListener('input',()=>{refreshContactType(d);saveSoon()});
+   d.querySelector('[data-cf="label"]').addEventListener('input',saveSoon);
+   d.querySelector('.remove')?.addEventListener('click',()=>{d.remove();saveSoon()});
+   contactLinks.appendChild(d);refreshContactType(d);
+ }
  document.getElementById('addMember').onclick=()=>{addMember();saveSoon()};
  document.getElementById('addLive').onclick=()=>{addLive();saveSoon()};
+ document.getElementById('addContact').onclick=()=>{addContact();saveSoon()};
 
  function selectedFeatures(){
    return [...document.querySelectorAll('input[name="features"]:checked')].map(x=>x.value);
@@ -205,8 +235,9 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
      const target=document.getElementById(box.dataset.urlTarget);
      if(target) target.classList.toggle('show',box.checked);
    });
-   const f=selectedFeatures();
-   document.getElementById('contactFields').classList.toggle('show',f.includes('問い合わせ・連絡先'));
+   const f=selectedFeatures(),showContact=f.includes('問い合わせ・連絡先');
+   document.getElementById('contactInline').classList.toggle('show',showContact);
+   if(showContact&&!document.querySelector('.contactlink')) addContact();
  }
  function toggleDomain(){
    const v=document.getElementById('domainSelect').value;
@@ -216,7 +247,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
  form.addEventListener('input',saveSoon);
 
  function serialize(){
-   const data={siteId,fields:{},checks:{},members:[],lives:[]};
+   const data={siteId,fields:{},checks:{},members:[],lives:[],contacts:[]};
    [...form.elements].forEach(el=>{
      if(!el.name||el.type==='file')return;
      if(el.type==='checkbox'){if(!data.checks[el.name])data.checks[el.name]=[];if(el.checked)data.checks[el.name].push(el.value||'yes')}
@@ -224,6 +255,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
    });
    document.querySelectorAll('.member').forEach(block=>{const m={};block.querySelectorAll('[data-mf]').forEach(el=>m[el.dataset.mf]=el.value);data.members.push(m)});
    document.querySelectorAll('.liveblock').forEach(block=>{const l={};block.querySelectorAll('[data-lf]').forEach(el=>l[el.dataset.lf]=el.value);data.lives.push(l)});
+   document.querySelectorAll('.contactlink').forEach(block=>{const x={};block.querySelectorAll('[data-cf]').forEach(el=>x[el.dataset.cf]=el.value);x.type=detectContactType(x.value);data.contacts.push(x)});
    return data;
  }
  function save(){
@@ -239,11 +271,18 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
      Object.entries(data.checks||{}).forEach(([n,vals])=>document.querySelectorAll('[name="'+n+'"]').forEach(el=>el.checked=vals.includes(el.value||'yes')));
      (data.members||[]).forEach(addMember);if(!(data.members||[]).length)addMember();
      (data.lives||[]).forEach(addLive);if(!(data.lives||[]).length)addLive();
+     let restoredContacts=data.contacts||[];
+     if(!restoredContacts.length){
+       const old=[data.fields?.line_url,data.fields?.public_email,data.fields?.contact_url].filter(Boolean);
+       restoredContacts=old.map(value=>({value,label:''}));
+       if(data.fields?.other_contact) restoredContacts.push({value:data.fields.other_contact,label:'その他'});
+     }
+     restoredContacts.forEach(addContact);
      toggleLinks();toggleDomain();updateProgress();
    }catch(e){addMember();addLive()}
  }
  function updateProgress(){
-   const d=serialize(),vals=Object.values(d.fields).filter(v=>String(v).trim()).length+Object.values(d.checks).reduce((a,v)=>a+v.length,0)+d.members.filter(m=>Object.values(m).some(v=>String(v).trim())).length+d.lives.filter(l=>Object.values(l).some(v=>String(v).trim())).length;
+   const d=serialize(),vals=Object.values(d.fields).filter(v=>String(v).trim()).length+Object.values(d.checks).reduce((a,v)=>a+v.length,0)+d.members.filter(m=>Object.values(m).some(v=>String(v).trim())).length+d.lives.filter(l=>Object.values(l).some(v=>String(v).trim())).length+d.contacts.filter(x=>String(x.value||'').trim()).length;
    document.getElementById('bar').style.width=Math.max(10,Math.min(100,10+vals*2.5))+'%';
  }
  function summary(){
@@ -253,13 +292,14 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
    ];
    d.members.forEach((m,i)=>lines.push('MEMBER '+(i+1)+': '+[m.name,m.part,m.bio,m.sns].filter(Boolean).join(' / ')));
    d.lives.forEach((l,i)=>lines.push('LIVE '+(i+1)+': '+[l.type,l.date,l.time,l.name,l.venue,l.detail].filter(Boolean).join(' / ')));
+   d.contacts.forEach((x,i)=>lines.push('CONTACT '+(i+1)+': '+[x.type,x.label,x.value].filter(Boolean).join(' / ')));
    return lines.join('\n');
  }
  document.getElementById('previewBtn').onclick=()=>{const p=document.getElementById('preview');p.textContent=summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'})};
  document.getElementById('submitDemo').onclick=()=>{save();const p=document.getElementById('preview');p.textContent='【デモ】本番ではこの内容と添付ファイルをSITE ID '+siteId+' に紐づけて送信します。\n\n'+summary();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'center'})};
  document.querySelectorAll('.card .body').forEach(body=>{
    body.addEventListener('click',e=>{
-     if(e.target.closest('input,select,textarea,button,label,a,.member,.liveblock,.feature-url')) return;
+     if(e.target.closest('input,select,textarea,button,label,a,.member,.liveblock,.contactlink,.contact-inline,.feature-url')) return;
      const details=body.closest('details');
      if(details) details.open=false;
    });
