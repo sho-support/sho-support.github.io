@@ -43,7 +43,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <section class="hero">
 <h1>制作ヒアリングフォーム</h1>
 <p>一度に全部入力しなくても大丈夫です。入力できた項目から「入力完了」にチェックしてください。</p>
-<div class="file-note">写真ファイルは現在のデモではブラウザを閉じると保持されません。本番版ではSITE IDに紐づけて保存します。</div>
+<div class="file-note" id="fileNote">写真ファイルは現在のデモではブラウザを閉じると保持されません。本番版ではSITE IDに紐づけて保存します。</div>
 <div class="savebar"><button type="button" class="savebtn" id="saveTop">入力内容を一時保存</button><div class="save-meta"><strong id="savedTop">最終保存：まだありません</strong><span id="topStatus">編集中の文字はこの端末にも自動保存されます。</span></div></div>
 <div class="progressline"><span id="progressText">入力完了 0 / 7</span><span>後から続きから入力できます</span></div>
 <div class="progress"><div class="bar" id="bar"></div></div>
@@ -147,6 +147,7 @@ import { requireWebsiteSession, uploadWebsiteFile, websiteApi } from './website-
 (async()=>{
 const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO',prodMode=params.get('prod')==='1';
 document.getElementById('siteId').textContent=siteId;
+if(prodMode)document.getElementById('fileNote').textContent='写真ファイルもSITE IDに紐づけて本番データとして保存します。';
 const lineMessage='SITE ID '+siteId+'です。ホームページ制作について相談したいです。';
 document.getElementById('lineConsult').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(lineMessage);
 const lineUrl=document.getElementById('lineConsult').href;
@@ -321,7 +322,8 @@ function renderPreview(){
  if(d.contacts.some(x=>String(x.value||'').trim()))parts.push('<section class="preview-section"><h4>公開する連絡先</h4>'+d.contacts.filter(x=>String(x.value||'').trim()).map((x,i)=>row('CONTACT '+(i+1),[x.type,x.label||defaultButton(x.type),x.value].filter(Boolean).join(' / '))).join('')+'</section>');
  parts.push('<section class="preview-section"><h4>06 公開URL</h4>'+row('公開方法',(d.checks.custom_domain||[]).length?'独自ドメインを希望':'無料URLでOK')+row('独自ドメイン区分',f.domain_type)+row('希望・所有ドメイン',f.domain_name)+'</section>');
  parts.push('<section class="preview-section"><h4>07 最終確認</h4>'+row('掲載権利確認',(d.checks.rights||[]).length?'確認済み':'未チェック')+row('公開用連絡先の掲載許可',(d.checks.privacy||[]).length?'確認済み':'未チェック')+row('その他・細かい要望',f.final_notes)+row('紹介コード',f.referral)+'</section>');
- parts.push('<div class="preview-send"><button type="button" class="btn" id="confirmSend">この内容で送信</button><p class="preview-send-note">現在は動作確認用のローカル送信です。本番版ではSITE IDに紐づけて安全に保存します。</p></div>');
+ const sendNote=prodMode?'送信するとSITE IDに紐づけて本番データとして保存され、SHO側へ自動通知されます。':'現在は動作確認用のローカル送信です。本番版ではSITE IDに紐づけて保存します。';
+ parts.push('<div class="preview-send"><button type="button" class="btn" id="confirmSend">この内容で送信</button><p class="preview-send-note">'+sendNote+'</p></div>');
  return parts.join('');
 }
 async function submitIntake(){
