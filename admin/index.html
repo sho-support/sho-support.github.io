@@ -8,136 +8,116 @@
 <title>SHO WEB SUPPORT | Admin</title>
 <link rel="stylesheet" href="../website-theme.css">
 <style>
-:root{--bg:#070707;--panel:#0d0d0f;--panel2:#131316;--text:#fff;--soft:#c9c9c9;--muted:#818187;--red:#c61f38;--gold:#d9ae5c;--line:rgba(255,255,255,.12);--ok:#55d68a;--warn:#f0a64b}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 12% 0,rgba(198,31,56,.14),transparent 26%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}
-a{color:inherit;text-decoration:none}button,input,textarea{font:inherit}
-.wrap{width:min(calc(100% - 24px),1180px);margin:auto}
-header{position:sticky;top:0;z-index:30;background:rgba(5,5,6,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.head{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:950;letter-spacing:.06em}.brand small{display:block;color:var(--muted);font-size:.62rem;letter-spacing:.13em}.demo{padding:6px 9px;border:1px solid rgba(240,166,75,.45);border-radius:999px;color:#ffd49b;font-size:.7rem;font-weight:900;background:rgba(240,166,75,.07)}
-.hero{padding:34px 0 16px}.hero h1{margin:0;font-size:clamp(2rem,6vw,3.8rem);line-height:1}.hero p{margin:10px 0 0;color:var(--soft);font-size:.88rem}.warning{margin-top:14px;padding:12px 14px;border-left:3px solid var(--warn);background:#0d0d0f;color:#d7d1c9;font-size:.78rem}
-.toolbar{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin:20px 0 12px}.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:3px}.tab{white-space:nowrap;border:1px solid var(--line);background:#0e0e10;color:#cfcfd3;padding:9px 12px;border-radius:10px;font-size:.76rem;font-weight:850}.tab.active{border-color:rgba(198,31,56,.72);background:rgba(198,31,56,.12);color:#fff}.reset{border:1px solid var(--line);background:#111;color:#aaa;padding:9px 12px;border-radius:10px;font-size:.74rem}
-.layout{display:grid;grid-template-columns:minmax(280px,390px) 1fr;gap:14px;padding-bottom:46px}.panel{border:1px solid var(--line);background:linear-gradient(145deg,#121215,#0a0a0b);border-radius:18px;overflow:hidden}.panel-title{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:950;font-size:.9rem;display:flex;align-items:center;justify-content:space-between}.list{display:grid}.project{width:100%;text-align:left;border:0;border-bottom:1px solid rgba(255,255,255,.075);background:transparent;color:#fff;padding:14px 15px;cursor:pointer}.project:hover,.project.active{background:rgba(198,31,56,.07)}.p-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.siteid{color:var(--gold);font-size:.72rem;font-weight:900;letter-spacing:.06em}.project h3{margin:3px 0 4px;font-size:.98rem}.meta{color:var(--muted);font-size:.69rem}.badge{flex:0 0 auto;padding:5px 7px;border-radius:999px;border:1px solid var(--line);font-size:.63rem;font-weight:900}.s-new{color:#ffd59e;border-color:rgba(240,166,75,.45)}.s-building{color:#bfc8ff;border-color:rgba(125,143,255,.45)}.s-sho{color:#ffafb9;border-color:rgba(198,31,56,.55)}.s-customer{color:#e5ca87;border-color:rgba(217,174,92,.5)}.s-publish{color:#b5ead0;border-color:rgba(85,214,138,.42)}.s-live{color:#8ff0b8;border-color:rgba(85,214,138,.55)}
-.empty{padding:24px;color:var(--muted);font-size:.82rem;text-align:center}
-.detail{min-height:660px}.detail-head{padding:18px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px}.detail-head h2{margin:4px 0 5px;font-size:1.35rem}.detail-actions{display:flex;gap:7px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#171719;color:#fff;padding:9px 12px;border-radius:10px;font-size:.74rem;font-weight:900;cursor:pointer}.btn.primary{background:var(--red);border-color:var(--red)}.btn.gold{background:#211b10;border-color:rgba(217,174,92,.45);color:#f3d493}.btn:disabled{opacity:.38;cursor:not-allowed}
-.detail-body{padding:16px;display:grid;gap:12px}.section-card{border:1px solid var(--line);border-radius:14px;background:#0d0d0f;overflow:hidden}.section-card h3{margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:.82rem;color:#fff}.section-inner{padding:13px 14px}.kv{display:grid;grid-template-columns:140px 1fr;gap:8px 12px;font-size:.76rem}.kv dt{color:var(--muted);font-weight:850}.kv dd{margin:0;color:#eee;overflow-wrap:anywhere}.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{padding:5px 7px;border:1px solid rgba(217,174,92,.25);border-radius:999px;background:#111;color:#e3d2ac;font-size:.68rem}.timeline{display:grid;gap:10px}.event{position:relative;padding:0 0 10px 15px;border-left:1px solid rgba(217,174,92,.26)}.event:before{content:"";position:absolute;left:-4px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--gold)}.event:last-child{padding-bottom:0}.event time{display:block;color:var(--muted);font-size:.66rem}.event strong{display:block;margin:2px 0;font-size:.78rem}.event p{margin:0;color:#c9c9cd;font-size:.74rem;white-space:pre-wrap}
-.note{width:100%;min-height:92px;margin-top:8px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#111;color:#fff;resize:vertical}.actionbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.stage{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}.stage span{padding:7px 4px;border:1px solid var(--line);border-radius:7px;text-align:center;font-size:.59rem;color:#777}.stage span.on{color:#fff;border-color:rgba(198,31,56,.6);background:rgba(198,31,56,.1)}
-.footnote{padding:14px 16px;border-top:1px solid var(--line);color:#777;font-size:.68rem}
-@media(max-width:820px){.toolbar{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.detail{min-height:0}.kv{grid-template-columns:1fr}.stage{grid-template-columns:repeat(3,1fr)}}
+:root{--bg:#070707;--panel:#0d0d0f;--text:#fff;--soft:#c9c9cd;--muted:#85858c;--red:#c61f38;--gold:#d9ae5c;--line:rgba(255,255,255,.12);--ok:#55d68a;--warn:#f0a64b}
+*{box-sizing:border-box}html,body{max-width:100%;overflow-x:hidden}body{margin:0;background:radial-gradient(circle at 12% 0,rgba(198,31,56,.14),transparent 27%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.65}
+a{color:inherit;text-decoration:none}button,textarea{font:inherit}.wrap{width:min(calc(100% - 24px),980px);margin:auto}
+header{position:sticky;top:0;z-index:30;background:rgba(5,5,6,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}.head{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:950;letter-spacing:.05em}.brand small{display:block;color:var(--muted);font-size:.62rem;letter-spacing:.14em}.demo{padding:6px 9px;border:1px solid rgba(240,166,75,.42);border-radius:999px;color:#ffd49b;font-size:.66rem;font-weight:900}
+.hero{padding:30px 0 10px}.hero h1{margin:0;font-size:clamp(2rem,7vw,3.8rem);line-height:1}.hero p{margin:10px 0 0;color:var(--soft);font-size:.86rem}.warning{margin-top:13px;padding:11px 13px;border-left:3px solid var(--warn);background:#0d0d0f;color:#d4cec5;font-size:.75rem}
+.toolbar{margin:18px 0 12px}.tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}.tab{flex:0 0 auto;border:1px solid var(--line);background:#101012;color:#c8c8cc;padding:8px 11px;border-radius:9px;font-size:.7rem;font-weight:900}.tab.active{border-color:rgba(198,31,56,.72);background:rgba(198,31,56,.12);color:#fff}.subtools{display:flex;justify-content:flex-end;margin-top:7px}.reset{border:1px solid var(--line);background:#111;color:#999;padding:7px 10px;border-radius:9px;font-size:.68rem}
+.project-list{display:grid;gap:10px;padding-bottom:46px}.project-card{border:1px solid rgba(217,174,92,.24);border-radius:17px;background:linear-gradient(145deg,#121215,#0a0a0b);overflow:hidden}.project-card>summary{cursor:pointer;list-style:none;padding:15px 16px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.project-card>summary::-webkit-details-marker{display:none}.project-card[open]>summary{border-bottom:1px solid var(--line);background:rgba(198,31,56,.045)}.sum-main{min-width:0}.siteid{color:var(--gold);font-size:.68rem;font-weight:950;letter-spacing:.06em}.site-name{margin:2px 0 3px;font-size:1rem;font-weight:950;overflow-wrap:anywhere}.meta{color:var(--muted);font-size:.67rem}.sum-side{display:flex;align-items:center;gap:7px}.chev{color:#c84a5d;font-weight:900}.project-card[open] .chev{transform:rotate(45deg)}
+.badge{display:inline-flex;padding:5px 7px;border:1px solid var(--line);border-radius:999px;font-size:.61rem;font-weight:950;white-space:nowrap}.s-request{color:#ffd49b;border-color:rgba(240,166,75,.45)}.s-building{color:#bdc8ff;border-color:rgba(125,143,255,.45)}.s-sho{color:#ffb0bb;border-color:rgba(198,31,56,.55)}.s-customer{color:#ecd18f;border-color:rgba(217,174,92,.5)}.s-live{color:#9aefbe;border-color:rgba(85,214,138,.48)}.s-private{color:#c7c7cb}.s-improving{color:#dcb8ff;border-color:rgba(176,112,232,.45)}
+.project-body{padding:13px}.top-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:11px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:#171719;color:#fff;font-size:.71rem;font-weight:950;cursor:pointer}.btn.primary{background:var(--red);border-color:var(--red)}.btn.gold{background:#211b10;border-color:rgba(217,174,92,.45);color:#f1d492}.btn.green{background:#123020;border-color:rgba(85,214,138,.45);color:#b3f0cd}.btn.full{width:100%}
+.workflow{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:9px 0 12px}.workflow span{padding:7px 4px;border:1px solid var(--line);border-radius:7px;text-align:center;color:#6f6f74;font-size:.57rem}.workflow span.on{color:#fff;border-color:rgba(198,31,56,.62);background:rgba(198,31,56,.1)}
+.fold{margin-top:9px;border:1px solid var(--line);border-radius:12px;background:#0c0c0e;overflow:hidden}.fold>summary{cursor:pointer;list-style:none;padding:11px 13px;font-size:.78rem;font-weight:950;display:flex;justify-content:space-between;gap:10px}.fold>summary::-webkit-details-marker{display:none}.fold>summary:after{content:"＋";color:var(--gold)}.fold[open]>summary{border-bottom:1px solid var(--line)}.fold[open]>summary:after{content:"−"}.inside{padding:12px 13px}.kv{display:grid;grid-template-columns:120px 1fr;gap:8px 10px;font-size:.73rem}.kv dt{color:var(--muted);font-weight:900}.kv dd{margin:0;color:#eee;overflow-wrap:anywhere}.chips{display:flex;flex-wrap:wrap;gap:5px}.chip{padding:5px 7px;border:1px solid rgba(217,174,92,.24);border-radius:8px;background:#111;color:#e2d2ad;font-size:.66rem}
+.timeline{display:grid;gap:9px}.event{position:relative;padding:0 0 9px 14px;border-left:1px solid rgba(217,174,92,.25)}.event:before{content:"";position:absolute;left:-4px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--gold)}.event time{display:block;color:var(--muted);font-size:.62rem}.event strong{display:block;margin:2px 0;font-size:.73rem}.event p{margin:0;color:#c5c5ca;font-size:.7rem;white-space:pre-wrap}.note{width:100%;min-height:86px;padding:10px;border:1px solid var(--line);border-radius:9px;background:#111;color:#fff;resize:vertical}.actionbar{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.footnote{margin-top:10px;color:#777;font-size:.64rem}
+.empty{padding:28px 12px;color:var(--muted);text-align:center;font-size:.8rem}
+@media(max-width:640px){.wrap{width:min(calc(100% - 20px),980px)}.project-card>summary{padding:14px 13px}.sum-side{align-items:flex-end;flex-direction:column;gap:5px}.workflow{grid-template-columns:1fr 1fr}.workflow span:last-child{grid-column:1/-1}.kv{grid-template-columns:1fr;gap:2px}.kv dd{margin-bottom:7px}.actionbar{grid-template-columns:1fr}.top-actions .btn{flex:1 1 150px}}
 </style>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">SHO WEB SUPPORT<small>OWNER ADMIN</small></div><div class="demo">DEMO / LOCAL DATA</div></div></header>
 <main class="wrap">
-<section class="hero">
-<h1>制作管理</h1>
-<p>顧客ごとの要望・カルテ・制作状況・承認フローをSITE ID単位で管理します。</p>
-<div class="warning"><strong>現在は管理画面の動作確認版です。</strong> 顧客の個人情報や本番カルテは公開Repoへ保存していません。この画面のデモ変更はこの端末のlocalStorageだけに保存されます。</div>
-</section>
-<div class="toolbar"><div class="tabs" id="tabs"></div><button class="reset" id="resetDemo" type="button">デモ状態を初期化</button></div>
-<section class="layout">
-<aside class="panel"><div class="panel-title"><span>案件一覧</span><span id="count"></span></div><div class="list" id="projectList"></div></aside>
-<section class="panel detail" id="detail"><div class="empty">左の案件を選択してください。</div></section>
-</section>
+<section class="hero"><h1>制作管理</h1><p>SITE IDごとに制作状況・カルテ・要望履歴・承認を管理します。</p><div class="warning"><strong>現在は動作確認版。</strong> 本番の個人情報・カルテは公開Repoへ保存しません。デモ変更はこのブラウザ内だけに保存されます。</div></section>
+<div class="toolbar"><div class="tabs" id="tabs"></div><div class="subtools"><button class="reset" id="resetDemo" type="button">デモ状態を初期化</button></div></div>
+<div class="project-list" id="projectList"></div>
 </main>
 <script>
 (function(){
-const KEY='sho-web-admin-demo-v1';
+const KEY='sho-web-admin-demo-v2';
 const statuses=[
- {id:'new',label:'新規依頼',className:'s-new'},
- {id:'building',label:'AI制作中',className:'s-building'},
- {id:'sho_review',label:'SHO確認待ち',className:'s-sho'},
- {id:'customer_review',label:'お客様確認待ち',className:'s-customer'},
- {id:'publish_wait',label:'公開待ち',className:'s-publish'},
- {id:'live',label:'公開済み',className:'s-live'}
+ {id:'request_waiting',label:'要望待ち',className:'s-request'},
+ {id:'building',label:'作成中',className:'s-building'},
+ {id:'sho_review',label:'SHO確認中',className:'s-sho'},
+ {id:'customer_review',label:'お客様最終確認中',className:'s-customer'},
+ {id:'live',label:'公開中',className:'s-live'},
+ {id:'private',label:'一時非公開',className:'s-private'},
+ {id:'improving_private',label:'改良中・一時非公開',className:'s-improving'}
 ];
-const demo=[
- {id:'1042',name:"Guns N' Loses Demo",customer:'顧客デモA',status:'sho_review',updated:'2026-10-28 01:50',preview:'../index.html',customerReview:'../website-customer-review.html?id=1042',
-  profile:{industry:'バンド / アーティスト',mood:['80s US rock','dark','premium'],colors:['黒','深い赤','くすんだゴールド'],likes:['写真を大きく見せる','太い英字見出し','LIVE情報を目立たせる'],dislikes:['角丸が多すぎるUI','小さすぎる文字','明るいSaaS風']},
-  current:'初回ヒアリング内容を反映したサイト案のSHO確認待ち。',
-  history:[
-   {at:'2026-10-28 01:42',title:'AI制作完了',text:'初回ヒアリングと確定仕様からプレビューを生成。'},
-   {at:'2026-10-28 01:25',title:'ヒアリング受付',text:'黒＋赤、80年代USロック、写真を大きく、LIVE情報を優先。'},
-   {at:'2026-10-28 01:20',title:'案件作成',text:'SITE ID 1042 を発行。'}
-  ],notes:[]},
- {id:'1043',name:'Cafe Sample',customer:'顧客デモB',status:'customer_review',updated:'2026-10-27 22:18',preview:'../website-support.html',customerReview:'../website-customer-review.html?id=1043',
-  profile:{industry:'飲食店',mood:['warm','minimal'],colors:['アイボリー','ブラウン'],likes:['料理写真を大きく','営業時間がすぐ分かる'],dislikes:['派手すぎるアニメーション']},
-  current:'SHO確認済み。お客様の確認待ち。',
-  history:[{at:'2026-10-27 22:18',title:'お客様確認へ',text:'SHO確認OK。顧客管理画面へ確認依頼を送る段階。'},{at:'2026-10-27 21:40',title:'AI制作完了',text:'店舗サイト初稿を生成。'}],notes:[]}
-];
-let state=load(),filter='all',selected=state[0]?state[0].id:null;
-function load(){try{const raw=localStorage.getItem(KEY);if(raw)return JSON.parse(raw);const initial=typeof structuredClone==='function'?structuredClone(demo):JSON.parse(JSON.stringify(demo));localStorage.setItem(KEY,JSON.stringify(initial));return initial}catch(e){const initial=JSON.parse(JSON.stringify(demo));localStorage.setItem(KEY,JSON.stringify(initial));return initial}}
+const mainFlow=['request_waiting','building','sho_review','customer_review','live'];
+const demo=[{
+ id:'1042',name:"Guns N' Loses Demo",customer:'顧客デモ',status:'sho_review',updated:'2026-10-28 23:10',
+ preview:'../index.html',customerReview:'../website-customer-review.html?id=1042',
+ profile:{industry:'バンド / アーティスト',mood:['80s US rock','dark','premium'],colors:['黒','深い赤','くすんだゴールド'],likes:['写真を大きく見せる','太い英字見出し','LIVE情報を目立たせる'],dislikes:['角丸が多すぎるUI','小さすぎる文字','明るいSaaS風']},
+ current:'初回ヒアリング内容を反映したサイト案をSHOが確認中。',
+ history:[
+  {at:'2026-10-28 23:08',title:'AI制作完了',text:'初回ヒアリングと確定仕様からプレビューを生成。'},
+  {at:'2026-10-28 22:55',title:'ヒアリング受付',text:'黒＋赤、80年代USロック、写真を大きく、LIVE情報を優先。'},
+  {at:'2026-10-28 22:50',title:'案件作成',text:'SITE ID 1042 を発行。'}
+ ],notes:[],customerApproved:false
+}];
+let state=load(),filter='all';
+function clone(v){return JSON.parse(JSON.stringify(v))}
+function load(){try{const raw=localStorage.getItem(KEY);if(raw)return JSON.parse(raw);const x=clone(demo);localStorage.setItem(KEY,JSON.stringify(x));return x}catch(e){return clone(demo)}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
-function sdef(id){return statuses.find(function(s){return s.id===id})||statuses[0]}
-function fmtList(arr){return (arr||[]).map(function(x){return '<span class="chip">'+esc(x)+'</span>'}).join('')||'<span class="meta">未登録</span>'}
-function renderTabs(){
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function sdef(id){return statuses.find(s=>s.id===id)||statuses[0]}
+function now(){return new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')}
+function fmt(arr){return (arr||[]).map(x=>'<span class="chip">'+esc(x)+'</span>').join('')||'<span class="meta">未登録</span>'}
+function tabs(){
  const items=[{id:'all',label:'すべて'}].concat(statuses);
- document.getElementById('tabs').innerHTML=items.map(function(t){
-  const n=t.id==='all'?state.length:state.filter(function(p){return p.status===t.id}).length;
+ document.getElementById('tabs').innerHTML=items.map(t=>{
+  const n=t.id==='all'?state.length:state.filter(p=>p.status===t.id).length;
   return '<button class="tab '+(filter===t.id?'active':'')+'" data-filter="'+t.id+'" type="button">'+esc(t.label)+' '+n+'</button>';
  }).join('');
- document.querySelectorAll('[data-filter]').forEach(function(b){b.onclick=function(){filter=b.dataset.filter;render()}});
+ document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;render()});
 }
-function renderList(){
- const list=state.filter(function(p){return filter==='all'||p.status===filter});
- document.getElementById('count').textContent=list.length+'件';
- document.getElementById('projectList').innerHTML=list.length?list.map(function(p){
-  const s=sdef(p.status);
-  return '<button class="project '+(selected===p.id?'active':'')+'" data-id="'+p.id+'" type="button"><div class="p-top"><div><div class="siteid">SITE ID '+esc(p.id)+'</div><h3>'+esc(p.name)+'</h3></div><span class="badge '+s.className+'">'+esc(s.label)+'</span></div><div class="meta">'+esc(p.customer)+' / 更新 '+esc(p.updated)+'</div></button>';
- }).join(''):'<div class="empty">該当案件はありません。</div>';
- document.querySelectorAll('.project').forEach(function(b){b.onclick=function(){selected=b.dataset.id;render()}});
+function workflow(p){
+ return '<div class="workflow">'+mainFlow.map(id=>'<span class="'+(p.status===id?'on':'')+'">'+esc(sdef(id).label)+'</span>').join('')+'</div>';
 }
-function stageHtml(p){
- return '<div class="stage">'+statuses.map(function(s){return '<span class="'+(p.status===s.id?'on':'')+'">'+esc(s.label)+'</span>'}).join('')+'</div>';
+function historyHtml(p){
+ const all=(p.notes||[]).concat(p.history||[]).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+ return all.map(h=>'<div class="event"><time>'+esc(h.at)+'</time><strong>'+esc(h.title)+'</strong><p>'+esc(h.text)+'</p></div>').join('');
 }
-function renderDetail(){
- const p=state.find(function(x){return x.id===selected});
- const box=document.getElementById('detail');
- if(!p){box.innerHTML='<div class="empty">左の案件を選択してください。</div>';return}
+function actionHtml(p){
+ if(p.status==='request_waiting')return '<div class="warning" style="margin-top:0">ヒアリングや追加要望の入力待ちです。</div><button class="btn primary full" id="startBuild" type="button" style="margin-top:8px">デモ：要望受信 → 作成開始</button>';
+ if(p.status==='building')return '<div class="warning" style="margin-top:0">AIが制作・修正中です。本番では完了時に自動でSHO確認中へ進みます。</div><button class="btn primary full" id="buildDone" type="button" style="margin-top:8px">デモ：作成完了 → SHO確認へ</button>';
+ if(p.status==='sho_review')return '<textarea class="note" id="reviewNote" placeholder="修正指示。例：TOP写真を2枚目に変更、赤を少し暗く。"></textarea><div class="actionbar"><button class="btn" id="requestFix" type="button">AIへ修正依頼</button><button class="btn primary" id="approveSho" type="button">SHO確認OK → お客様最終確認へ</button></div>';
+ if(p.status==='customer_review')return '<div class="warning" style="margin-top:0">お客様の最終確認中です。修正が来れば作成中へ戻り、OKならお客様自身が公開します。</div><a class="btn gold full" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener" style="margin-top:8px">お客様確認画面を開く</a>';
+ if(p.status==='live')return '<div class="warning" style="margin-top:0;border-left-color:var(--ok)">サイトは公開中です。</div><div class="actionbar"><button class="btn" id="makePrivate" type="button">一時非公開</button><button class="btn gold" id="makeImproving" type="button">改良中・一時非公開</button></div>';
+ if(p.status==='private')return '<div class="warning" style="margin-top:0">サイトを一時的に非公開にしている状態です。</div><button class="btn green full" id="resumeLive" type="button" style="margin-top:8px">公開を再開</button>';
+ if(p.status==='improving_private')return '<div class="warning" style="margin-top:0">改良のため一時非公開です。改良内容を入力して制作へ戻せます。</div><textarea class="note" id="improveNote" placeholder="改良したい内容"></textarea><div class="actionbar"><button class="btn primary" id="startImprove" type="button">AIへ改良依頼</button><button class="btn green" id="resumeLive" type="button">そのまま再公開</button></div>';
+ return '';
+}
+function card(p){
  const s=sdef(p.status);
- const history=(p.notes||[]).concat(p.history||[]).sort(function(a,b){return String(b.at).localeCompare(String(a.at))});
- let action='';
- if(p.status==='sho_review'){
-  action='<textarea class="note" id="reviewNote" placeholder="修正したい内容があればここへ。例：TOP写真を2枚目に変更、赤を少し暗く。"></textarea><div class="actionbar"><button class="btn" id="requestFix" type="button">AIへ修正依頼</button><button class="btn primary" id="approveSho" type="button">SHO確認OK → お客様確認へ</button></div>';
- }else if(p.status==='customer_review'){
-  action='<div class="warning" style="margin-top:0">お客様側の確認待ちです。修正依頼または「公開OK」の返答を待ちます。</div><div class="actionbar"><a class="btn gold" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様確認画面を開く</a><button class="btn" id="simulateCustomerOk" type="button">デモ：お客様OK</button></div>';
- }else if(p.status==='publish_wait'){
-  action='<div class="warning" style="margin-top:0;border-left-color:var(--ok)">お客様が内容を承認済みです。最終公開はお客様管理画面の「公開する」操作で実行する設計です。</div><a class="btn gold" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様管理画面を開く</a>';
- }else if(p.status==='building'){
-  action='<div class="warning" style="margin-top:0">本番ではAI制作完了時に自動でSHO確認待ちへ移ります。</div><button class="btn primary" id="simulateBuildDone" type="button" style="margin-top:10px;width:100%">デモ：AI制作完了 → SHO確認待ち</button>';
- }else if(p.status==='new'){
-  action='<div class="warning" style="margin-top:0">新規ヒアリングを受け付けた状態です。本番では自動で制作ジョブを開始します。</div><button class="btn primary" id="simulateBuildStart" type="button" style="margin-top:10px;width:100%">デモ：AI制作を開始</button>';
- }else if(p.status==='live'){
-  action='<div class="warning" style="margin-top:0;border-left-color:var(--ok)">公開済み。今後の更新依頼も同じSITE IDのカルテ・履歴へ追加します。</div>';
- }else{
-  action='<div class="warning" style="margin-top:0">この状態は将来の自動処理で更新されます。</div>';
- }
- box.innerHTML='<div class="detail-head"><div><div class="siteid">SITE ID '+esc(p.id)+'</div><h2>'+esc(p.name)+'</h2><div class="meta">'+esc(p.customer)+' / 更新 '+esc(p.updated)+'</div></div><div class="detail-actions"><span class="badge '+s.className+'">'+esc(s.label)+'</span><a class="btn" href="'+esc(p.preview)+'" target="_blank" rel="noopener">プレビューを開く</a></div></div>'+
- '<div class="detail-body">'+
- '<section class="section-card"><h3>進行状況</h3><div class="section-inner">'+stageHtml(p)+'</div></section>'+
- '<section class="section-card"><h3>現在の依頼 / 状態</h3><div class="section-inner"><div class="kv"><dt>状態</dt><dd>'+esc(s.label)+'</dd><dt>現在</dt><dd>'+esc(p.current)+'</dd><dt>顧客確認URL</dt><dd><a href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">'+esc(p.customerReview)+'</a></dd></div></div></section>'+
- '<section class="section-card"><h3>顧客カルテ</h3><div class="section-inner"><div class="kv"><dt>業種</dt><dd>'+esc(p.profile.industry)+'</dd><dt>雰囲気</dt><dd><div class="chips">'+fmtList(p.profile.mood)+'</div></dd><dt>色</dt><dd><div class="chips">'+fmtList(p.profile.colors)+'</div></dd><dt>好み</dt><dd><div class="chips">'+fmtList(p.profile.likes)+'</div></dd><dt>避けたいもの</dt><dd><div class="chips">'+fmtList(p.profile.dislikes)+'</div></dd></div></div></section>'+
- '<section class="section-card"><h3>要望・承認履歴</h3><div class="section-inner"><div class="timeline">'+history.map(function(h){return '<div class="event"><time>'+esc(h.at)+'</time><strong>'+esc(h.title)+'</strong><p>'+esc(h.text)+'</p></div>'}).join('')+'</div></div></section>'+
- '<section class="section-card"><h3>今回の操作</h3><div class="section-inner">'+action+'</div></section>'+
- '</div><div class="footnote">本番版ではカルテと履歴はprivate Repo / Supabase側から取得し、公開Repoには保存しません。</div>';
- bindActions(p);
+ return '<details class="project-card" data-id="'+esc(p.id)+'"><summary><div class="sum-main"><div class="siteid">SITE ID '+esc(p.id)+'</div><div class="site-name">'+esc(p.name)+'</div><div class="meta">'+esc(p.customer)+' / 更新 '+esc(p.updated)+'</div></div><div class="sum-side"><span class="badge '+s.className+'">'+esc(s.label)+'</span><span class="chev">＋</span></div></summary>'+
+ '<div class="project-body"><div class="top-actions"><a class="btn primary" href="'+esc(p.preview)+'" target="_blank" rel="noopener">プレビューを開く</a><a class="btn" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様画面</a></div>'+workflow(p)+
+ '<details class="fold" open><summary>現在の依頼・状態</summary><div class="inside"><dl class="kv"><dt>状態</dt><dd>'+esc(s.label)+'</dd><dt>現在</dt><dd>'+esc(p.current)+'</dd><dt>顧客確認URL</dt><dd>'+esc(p.customerReview)+'</dd></dl></div></details>'+
+ '<details class="fold"><summary>顧客カルテ</summary><div class="inside"><dl class="kv"><dt>業種</dt><dd>'+esc(p.profile.industry)+'</dd><dt>雰囲気</dt><dd><div class="chips">'+fmt(p.profile.mood)+'</div></dd><dt>色</dt><dd><div class="chips">'+fmt(p.profile.colors)+'</div></dd><dt>好み</dt><dd><div class="chips">'+fmt(p.profile.likes)+'</div></dd><dt>避けたいもの</dt><dd><div class="chips">'+fmt(p.profile.dislikes)+'</div></dd></dl></div></details>'+
+ '<details class="fold"><summary>要望・承認履歴</summary><div class="inside"><div class="timeline">'+historyHtml(p)+'</div></div></details>'+
+ '<details class="fold" open><summary>今回の操作</summary><div class="inside">'+actionHtml(p)+'</div></details>'+
+ '<div class="footnote">本番版ではカルテ・履歴・個人情報はprivate Repo / Supabase側から取得し、公開Repoには保存しません。</div></div></details>';
 }
-function now(){return new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')}
-function bindActions(p){
- const approve=document.getElementById('approveSho');
- if(approve)approve.onclick=function(){p.status='customer_review';p.current='SHO確認済み。お客様の確認待ち。';p.updated=now();p.notes.unshift({at:p.updated,title:'SHO確認OK',text:'お客様確認へ移行。'});save();render()};
- const fix=document.getElementById('requestFix');
- if(fix)fix.onclick=function(){const n=document.getElementById('reviewNote').value.trim();if(!n)return alert('修正内容を入力してください。');p.status='building';p.current='SHOの修正指示を受けてAI再制作中。';p.updated=now();p.notes.unshift({at:p.updated,title:'AIへ修正依頼',text:n});save();render()};
- const customerOk=document.getElementById('simulateCustomerOk');
- if(customerOk)customerOk.onclick=function(){p.status='publish_wait';p.current='お客様確認OK。お客様の公開操作待ち。';p.updated=now();p.notes.unshift({at:p.updated,title:'お客様確認OK',text:'内容承認。公開待ちへ。'});save();render()};
- const buildStart=document.getElementById('simulateBuildStart');
- if(buildStart)buildStart.onclick=function(){p.status='building';p.current='ヒアリング内容をもとにAI制作中。';p.updated=now();p.notes.unshift({at:p.updated,title:'AI制作開始',text:'新規ヒアリングから制作ジョブを開始。'});save();render()};
- const buildDone=document.getElementById('simulateBuildDone');
- if(buildDone)buildDone.onclick=function(){p.status='sho_review';p.current='AI制作完了。SHOの確認待ち。';p.updated=now();p.notes.unshift({at:p.updated,title:'AI制作完了',text:'プレビュー生成完了。SHO確認待ちへ。'});save();render()};
+function bind(p,root){
+ const q=id=>root.querySelector('#'+id);
+ q('startBuild')?.addEventListener('click',()=>move(p,'building','要望を受信。AIがサイトを作成中。','作成開始','受信した要望から制作を開始。'));
+ q('buildDone')?.addEventListener('click',()=>move(p,'sho_review','AI制作完了。SHOが内容を確認中。','AI制作完了','SHO確認へ移行。'));
+ q('approveSho')?.addEventListener('click',()=>move(p,'customer_review','SHO確認済み。お客様の最終確認中。','SHO確認OK','お客様最終確認へ移行。'));
+ q('requestFix')?.addEventListener('click',()=>{const t=q('reviewNote').value.trim();if(!t)return alert('修正内容を入力してください。');move(p,'building','SHOの修正指示を受けて作成中。','SHOから修正依頼',t)});
+ q('makePrivate')?.addEventListener('click',()=>move(p,'private','サイトを一時非公開中。','一時非公開','SHO操作で一時非公開。'));
+ q('makeImproving')?.addEventListener('click',()=>move(p,'improving_private','改良のため一時非公開中。','改良中・一時非公開','改良準備のため一時非公開。'));
+ q('resumeLive')?.addEventListener('click',()=>move(p,'live','サイト公開中。','公開再開','サイトを再公開。'));
+ q('startImprove')?.addEventListener('click',()=>{const t=q('improveNote').value.trim();if(!t)return alert('改良内容を入力してください。');move(p,'building','改良内容をもとに作成中。','改良依頼',t)});
 }
-function render(){renderTabs();renderList();renderDetail()}
-document.getElementById('resetDemo').onclick=function(){if(confirm('この端末のデモ状態を初期化しますか？')){localStorage.removeItem(KEY);state=load();selected=state[0]?state[0].id:null;filter='all';render()}};
+function move(p,status,current,title,text){p.status=status;p.current=current;p.updated=now();p.customerApproved=false;p.notes=p.notes||[];p.notes.unshift({at:p.updated,title,text});save();render()}
+function render(){
+ tabs();
+ const list=state.filter(p=>filter==='all'||p.status===filter);
+ const box=document.getElementById('projectList');
+ box.innerHTML=list.length?list.map(card).join(''):'<div class="empty">該当案件はありません。</div>';
+ box.querySelectorAll('.project-card').forEach(root=>{const p=state.find(x=>x.id===root.dataset.id);bind(p,root)});
+}
+document.getElementById('resetDemo').onclick=()=>{if(confirm('このブラウザのデモ状態を初期化しますか？')){localStorage.removeItem(KEY);state=load();filter='all';render()}};
 render();
 })();
 </script>
