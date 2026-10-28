@@ -31,20 +31,32 @@ header{border-bottom:1px solid var(--line);background:#070708}.head{min-height:6
 <div id="app"></div>
 <section class="card"><h2>LINEで相談</h2><div class="body"><div class="line-consult-wrap" style="margin-top:0"><p class="line-consult-copy">修正内容や分からないことはLINEでも相談できます。SITE ID入りの文章が最初から入力されます。</p><a class="btn" id="lineConsult" href="#" target="_blank" rel="noopener">LINEで相談する</a><div class="line-qr"><div id="lineQr"></div></div><div class="msg line-mobile-note">スマホではボタンからLINEを開けます。</div><div class="msg">PCではQRコードをスマホで読み取ってください。</div></div></div></section>
 </main>
-<script>
-(function(){
+<script type="module">
+import { requireWebsiteSession, websiteApi } from './website-client.js';
+
+(async()=>{
 const KEY='sho-web-admin-demo-v2';
-const id=new URLSearchParams(location.search).get('id')||'1042';
+const params=new URLSearchParams(location.search);
+const id=params.get('id')||'1042';
+const prodMode=params.get('prod')==='1';
 document.getElementById('siteId').textContent=id;
+if(prodMode){
+  document.querySelector('.demo').textContent='ログイン中のお客様専用画面です。SITE IDに紐づく制作状況を表示しています。';
+  await requireWebsiteSession(location.href);
+}
+
 const lineMessage='SITE ID '+id+'です。ホームページについて相談したいです。';
 document.getElementById('lineConsult').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(lineMessage);
 const lineUrl=document.getElementById('lineConsult').href;
 if(window.QRCode&&document.getElementById('lineQr'))new QRCode(document.getElementById('lineQr'),{text:lineUrl,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function now(){return new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')}
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return []}}
-function save(s){localStorage.setItem(KEY,JSON.stringify(s))}
-function label(s){return {request_waiting:'要望待ち',building:'作成中',sho_review:'SHO確認中',customer_review:'お客様最終確認中',live:'公開中',private:'一時非公開',improving_private:'改良中・一時非公開'}[s]||s}
+
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const now=()=>new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-');
+const label=s=>({request_waiting:'要望待ち',building:'作成中',sho_review:'SHO確認中',customer_review:'お客様最終確認中',live:'公開中',private:'一時非公開',improving_private:'改良中・一時非公開'}[s]||s);
+
+function demoLoad(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return []}}
+function demoSave(s){localStorage.setItem(KEY,JSON.stringify(s))}
+
 function action(p){
  if(p.status==='customer_review'&&!p.customerApproved){
   return '<textarea class="note" id="revision" placeholder="修正したい点があれば自由に入力してください。箇条書きでも大丈夫です。"></textarea><div class="actions"><button class="btn" id="sendRevision" type="button">修正を依頼する</button><button class="btn primary" id="approve" type="button">この内容でOK</button></div><div class="msg">「この内容でOK」を押しても、まだ公開されません。続けて公開確認が表示されます。</div>';
@@ -59,20 +71,75 @@ function action(p){
  if(p.status==='sho_review')return '<div class="info">現在SHOが制作内容を確認しています。確認完了後、この画面で最終確認できます。</div>';
  return '<div class="info">現在は要望入力待ちです。</div>';
 }
-function render(){
- const state=load(),p=state.find(x=>String(x.id)===String(id)),app=document.getElementById('app');
- if(!p){app.innerHTML='<section class="card"><div class="body">このSITE IDのデモ案件が見つかりません。SHO管理画面のデモ状態を初期化してから再度開いてください。</div></section>';return}
+
+async function loadProject(){
+ if(prodMode){
+  const result=await websiteApi('load_site',{site_id:id});
+  const site=result?.site;
+  if(!site)return null;
+  return {
+   id:site.site_id,
+   name:site.site_name||'ホームページ',
+   status:site.status,
+   updated:site.updated_at?new Date(site.updated_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):'',
+   preview:site.preview_url||'',
+   customerApproved:Boolean(site.customer_approved),
+  };
+ }
+ const state=demoLoad();
+ return state.find(x=>String(x.id)===String(id))||null;
+}
+
+async function render(){
+ const app=document.getElementById('app');
+ let p;
+ try{p=await loadProject()}catch(error){console.error(error);app.innerHTML='<section class="card"><div class="body danger">サイト情報を読み込めませんでした。時間を置いて再度お試しください。</div></section>';return}
+ if(!p){app.innerHTML='<section class="card"><div class="body">このSITE IDの案件が見つかりません。</div></section>';return}
+
+ const previewHtml=p.preview
+  ? '<a class="btn primary" href="'+esc(p.preview)+'" target="_blank" rel="noopener">プレビューを開く</a>'
+  : '<span style="color:#777;font-size:.75rem">プレビュー準備中です</span>';
+
  app.innerHTML='<section class="card"><h2>現在の状態</h2><div class="body"><span class="status">'+esc(label(p.status))+'</span><div class="kv"><b>サイト名</b><span>'+esc(p.name)+'</span><b>最終更新</b><span>'+esc(p.updated)+'</span></div></div></section>'+
- '<section class="card"><h2>制作サイト</h2><div class="body"><div class="preview"><div><p style="margin:0 0 10px;color:#aaa;font-size:.76rem">別画面でサイトを確認できます</p><a class="btn primary" href="'+esc(p.preview)+'" target="_blank" rel="noopener">プレビューを開く</a></div></div></div></section>'+
+ '<section class="card"><h2>制作サイト</h2><div class="body"><div class="preview"><div><p style="margin:0 0 10px;color:#aaa;font-size:.76rem">別画面でサイトを確認できます</p>'+previewHtml+'</div></div></div></section>'+
  '<section class="card"><h2>確認・公開</h2><div class="body">'+action(p)+'</div></section>';
- bind(p,state);
+ bind(p);
 }
-function bind(p,state){
- document.getElementById('sendRevision')?.addEventListener('click',()=>{const t=document.getElementById('revision').value.trim();if(!t)return alert('修正内容を入力してください。');p.status='building';p.customerApproved=false;p.current='お客様から修正依頼。再作成中。';p.updated=now();p.notes=p.notes||[];p.notes.unshift({at:p.updated,title:'お客様から修正依頼',text:t});save(state);render()});
- document.getElementById('approve')?.addEventListener('click',()=>{if(!confirm('サイト内容を承認しますか？まだ公開はされません。'))return;p.customerApproved=true;p.updated=now();p.notes=p.notes||[];p.notes.unshift({at:p.updated,title:'お客様が内容承認',text:'最終確認OK。公開操作待ち。'});save(state);render()});
- document.getElementById('publish')?.addEventListener('click',()=>{if(!confirm('この内容でサイトを公開しますか？'))return;p.status='live';p.customerApproved=false;p.current='サイト公開中。';p.updated=now();p.notes=p.notes||[];p.notes.unshift({at:p.updated,title:'お客様が公開',text:'お客様の公開操作で公開中へ移行。'});save(state);render()});
+
+function bind(p){
+ document.getElementById('sendRevision')?.addEventListener('click',async()=>{
+  const t=document.getElementById('revision').value.trim();
+  if(!t)return alert('修正内容を入力してください。');
+  if(prodMode){
+   try{await websiteApi('review_action',{site_id:id,review_action:'revision',detail:t});await render()}catch(error){alert(error.message||'送信できませんでした。')}
+   return;
+  }
+  const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
+  target.status='building';target.customerApproved=false;target.current='お客様から修正依頼。再作成中。';target.updated=now();target.notes=target.notes||[];target.notes.unshift({at:target.updated,title:'お客様から修正依頼',text:t});demoSave(state);render();
+ });
+
+ document.getElementById('approve')?.addEventListener('click',async()=>{
+  if(!confirm('サイト内容を承認しますか？まだ公開はされません。'))return;
+  if(prodMode){
+   try{await websiteApi('review_action',{site_id:id,review_action:'approve'});await render()}catch(error){alert(error.message||'承認できませんでした。')}
+   return;
+  }
+  const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
+  target.customerApproved=true;target.updated=now();target.notes=target.notes||[];target.notes.unshift({at:target.updated,title:'お客様が内容承認',text:'最終確認OK。公開操作待ち。'});demoSave(state);render();
+ });
+
+ document.getElementById('publish')?.addEventListener('click',async()=>{
+  if(!confirm('この内容でサイトを公開しますか？'))return;
+  if(prodMode){
+   try{await websiteApi('review_action',{site_id:id,review_action:'publish'});await render()}catch(error){alert(error.message||'公開できませんでした。')}
+   return;
+  }
+  const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
+  target.status='live';target.customerApproved=false;target.current='サイト公開中。';target.updated=now();target.notes=target.notes||[];target.notes.unshift({at:target.updated,title:'お客様が公開',text:'お客様の公開操作で公開中へ移行。'});demoSave(state);render();
+ });
 }
-render();
+
+await render();
 })();
 </script>
 </body>
