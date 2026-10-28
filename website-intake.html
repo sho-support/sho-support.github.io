@@ -331,6 +331,9 @@ async function submitIntake(){
  if(!String(f.site_name||'').trim())return alert('サイト名 / バンド名 / 店名を入力してください。');
  if(!(d.checks.rights||[]).length)return alert('掲載権利の確認にチェックしてください。');
  if(!(d.checks.privacy||[]).length)return alert('公開用連絡先の掲載許可を確認してください。');
+ const submitBtn=document.getElementById('confirmSend');
+ if(submitBtn?.disabled)return;
+ if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='送信中…';}
 
  if(prodMode){
   try{
@@ -342,7 +345,7 @@ async function submitIntake(){
    updateSavedLabels();
    status.textContent='送信しました';
    const p=document.getElementById('preview'),done=document.createElement('div');done.className='file-note';done.innerHTML='<strong>送信しました。</strong><br>SITE ID '+esc(siteId)+' の制作依頼として受け付けました。SHO側へ自動通知されます。';p.appendChild(done);document.getElementById('confirmSend')?.setAttribute('disabled','disabled');return;
-  }catch(error){console.error(error);status.textContent='送信できませんでした。時間を置いて再度お試しください。';return}
+  }catch(error){console.error(error);status.textContent='送信できませんでした。時間を置いて再度お試しください。';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='この内容で送信';}return}
  }
 
  const adminKey='sho-web-admin-demo-v2';let projects=[];try{projects=JSON.parse(localStorage.getItem(adminKey))||[]}catch(e){}
