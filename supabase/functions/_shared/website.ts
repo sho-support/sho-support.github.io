@@ -69,3 +69,62 @@ export async function linePush(to: string | null | undefined, text: string) {
 export async function notifyOwner(text: string) {
   return linePush(Deno.env.get('LINE_OWNER_USER_ID'), text);
 }
+
+
+function githubHeaders() {
+  const token = Deno.env.get('GITHUB_PAGES_TOKEN');
+  if (!token) throw new Error('GITHUB_PAGES_TOKEN is missing.');
+  return {
+    Accept: 'application/vnd.github+json',
+    Authorization: `Bearer ${token}`,
+    'X-GitHub-Api-Version': '2026-03-10',
+    'Content-Type': 'application/json',
+  };
+}
+
+function parseRepo(repoFullName: string) {
+  const match = String(repoFullName || '').match(/^([^/]+)\/([^/]+)$/);
+  if (!match) throw new Error('Invalid GitHub repository name.');
+  return { owner: match[1], repo: match[2] };
+}
+
+export async function setGithubPagesSource(repoFullName: string, branch = 'main', path: '/' | '/docs' = '/') {
+  const { owner, repo } = parseRepo(repoFullName);
+  const base = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pages`;
+  const headers = githubHeaders();
+  const current = await fetch(base, { headers });
+
+  if (current.status === 404) {
+    const created = await fetch(base, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ build_type: 'legacy', source: { branch, path } }),
+    });
+    if (!created.ok) throw new Error(`GitHub Pages create failed: ${created.status} ${await created.text()}`);
+    return await created.json().catch(() => ({}));
+  }
+
+  if (!current.ok) throw new Error(`GitHub Pages read failed: ${current.status} ${await current.text()}`);
+
+  const updated = await fetch(base, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ build_type: 'legacy', source: { branch, path } }),
+  });
+  if (!updated.ok) throw new Error(`GitHub Pages update failed: ${updated.status} ${await updated.text()}`);
+  return { ok: true };
+}
+
+export async function setGithubPagesDomain(repoFullName: string, cname: string | null) {
+  const { owner, repo } = parseRepo(repoFullName);
+  const response = await fetch(
+    `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pages`,
+    {
+      method: 'PUT',
+      headers: githubHeaders(),
+      body: JSON.stringify({ cname: cname || null }),
+    },
+  );
+  if (!response.ok) throw new Error(`GitHub Pages domain update failed: ${response.status} ${await response.text()}`);
+  return { ok: true };
+}
