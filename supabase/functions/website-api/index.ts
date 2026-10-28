@@ -1,4 +1,4 @@
-import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource } from '../_shared/website.ts';
+import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, triggerWebsiteWorker } from '../_shared/website.ts';
 
 type Body = {
   action?: string;
@@ -226,6 +226,7 @@ Deno.serve(async (req) => {
         instruction: '最新のヒアリング内容をもとにサイトを制作してください。',
         payload: { source: 'intake_submit' },
       });
+      EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch((error) => console.error('website-worker trigger error', error)));
 
       await notifyOwner(`【SHO WEB SUPPORT】\nSITE ID ${siteId}\nヒアリングが送信されました。\n${site?.site_name || ''}`);
       return json({ ok: true, submitted_at: submittedAt });
@@ -255,6 +256,7 @@ Deno.serve(async (req) => {
           instruction: detail,
           payload: { source: 'customer_review' },
         });
+        EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch((error) => console.error('website-worker trigger error', error)));
         await notifyOwner(`【修正依頼】SITE ID ${siteId}\n${detail.slice(0, 1200)}`);
         return json({ ok: true, status: 'building' });
       }
@@ -383,6 +385,7 @@ Deno.serve(async (req) => {
           instruction: String(body.detail).trim(),
           payload: { source: 'admin_transition' },
         });
+        EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch((error) => console.error('website-worker trigger error', error)));
       }
 
       if (body.status === 'customer_review') {
