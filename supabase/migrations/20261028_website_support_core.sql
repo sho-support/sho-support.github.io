@@ -15,6 +15,11 @@ create table if not exists public.website_sites (
   customer_approved boolean not null default false,
   preview_url text,
   public_url text,
+  repo_full_name text,
+  publish_branch text not null default 'main',
+  live_path text not null default '/' check (live_path in ('/','/docs')),
+  offline_path text not null default '/docs' check (offline_path in ('/','/docs')),
+  custom_domain text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
