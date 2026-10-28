@@ -134,6 +134,39 @@ Deno.serve(async (req) => {
     if (!role) return json({ error: 'このSITE IDへのアクセス権がありません。' }, 403);
     const canEdit = role === 'admin' || role === 'owner' || role === 'editor';
 
+    if (action === 'admin_run_worker') {
+      if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
+      const { data: latest, error: latestError } = await admin
+        .from('website_jobs')
+        .select('*')
+        .eq('site_id', siteId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latestError) throw latestError;
+      if (!latest) return json({ error: '実行できるAIジョブがありません。' }, 409);
+
+      let jobId = latest.id;
+      if (latest.status === 'error') {
+        const { data: retry, error: retryError } = await admin.from('website_jobs').insert({
+          site_id: siteId,
+          kind: latest.kind,
+          status: 'queued',
+          instruction: latest.instruction || '最新の依頼内容をもとに再実行してください。',
+          payload: { ...(latest.payload || {}), source: 'admin_retry', retry_of: latest.id },
+        }).select('id').single();
+        if (retryError) throw retryError;
+        jobId = retry.id;
+      } else if (latest.status === 'running') {
+        return json({ ok: true, status: 'running', job_id: latest.id });
+      } else if (latest.status !== 'queued') {
+        return json({ error: '現在はAIを再実行する必要がありません。' }, 409);
+      }
+
+      EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch((error) => console.error('website-worker trigger error', error)));
+      return json({ ok: true, status: 'queued', job_id: jobId });
+    }
+
     if (action === 'load_site') {
       const [
         { data: site, error: siteError },
