@@ -1,4 +1,4 @@
-import { adminClient, json, linePush, notifyOwner } from '../_shared/website.ts';
+import { adminClient, json, linePush, notifyOwner, getLineMessagingToken } from '../_shared/website.ts';
 
 function base64Bytes(value: string) {
   try {
@@ -26,7 +26,7 @@ async function verifySignature(rawBody: string, signature: string, secret: strin
 }
 
 async function reply(replyToken: string | undefined, text: string) {
-  const token = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN');
+  const token = await getLineMessagingToken();
   if (!token || !replyToken) return;
   const response = await fetch('https://api.line.me/v2/bot/message/reply', {
     method: 'POST',
@@ -37,7 +37,7 @@ async function reply(replyToken: string | undefined, text: string) {
 }
 
 async function profile(lineUserId: string) {
-  const token = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN');
+  const token = await getLineMessagingToken();
   if (!token) return null;
   const response = await fetch(`https://api.line.me/v2/bot/profile/${encodeURIComponent(lineUserId)}`, {
     headers: { Authorization: `Bearer ${token}` },
