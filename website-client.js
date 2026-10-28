@@ -4,7 +4,7 @@ import {
   FunctionsFetchError,
   FunctionsRelayError,
 } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './member-config.js';
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './website-config.js';
 
 export const websiteSupabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
