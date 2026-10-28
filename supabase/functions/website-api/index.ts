@@ -1,4 +1,4 @@
-import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush } from '../_shared/website.ts';
+import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource } from '../_shared/website.ts';
 
 type Body = {
   action?: string;
@@ -10,6 +10,11 @@ type Body = {
   site_name?: string;
   customer_user_id?: string;
   customer_email?: string;
+  repo_full_name?: string;
+  publish_branch?: string;
+  live_path?: '/' | '/docs';
+  offline_path?: '/' | '/docs';
+  custom_domain?: string | null;
   review_action?: 'revision' | 'approve' | 'publish';
 };
 
@@ -97,6 +102,10 @@ Deno.serve(async (req) => {
         status: 'request_waiting',
         current_note: 'ヒアリング入力待ち。',
         customer_approved: false,
+        repo_full_name: body.repo_full_name || null,
+        publish_branch: body.publish_branch || 'main',
+        live_path: body.live_path || '/',
+        offline_path: body.offline_path || '/docs',
       }, { onConflict: 'site_id' });
       if (siteError) throw siteError;
 
@@ -243,11 +252,18 @@ Deno.serve(async (req) => {
       if (reviewAction === 'publish') {
         const { data: site, error: readError } = await admin
           .from('website_sites')
-          .select('customer_approved')
+          .select('customer_approved,repo_full_name,publish_branch,live_path')
           .eq('site_id', siteId)
           .single();
         if (readError) throw readError;
         if (!site.customer_approved) return json({ error: '先にサイト内容の承認が必要です。' }, 409);
+        if (!site.repo_full_name) return json({ error: '公開先GitHub Repoがまだ設定されていません。' }, 409);
+
+        await setGithubPagesSource(
+          site.repo_full_name,
+          site.publish_branch || 'main',
+          (site.live_path || '/') as '/' | '/docs',
+        );
 
         const { error } = await admin.from('website_sites').update({
           status: 'live',
@@ -269,10 +285,61 @@ Deno.serve(async (req) => {
       return json({ error: 'review_actionが不正です。' }, 400);
     }
 
+    if (action === 'admin_repo_config') {
+      if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
+      const repoFullName = String(body.repo_full_name || '').trim();
+      if (repoFullName && !/^[^/]+\/[^/]+$/.test(repoFullName)) return json({ error: 'GitHub Repo名が不正です。' }, 400);
+      const { error } = await admin.from('website_sites').update({
+        repo_full_name: repoFullName || null,
+        publish_branch: body.publish_branch || 'main',
+        live_path: body.live_path || '/',
+        offline_path: body.offline_path || '/docs',
+      }).eq('site_id', siteId);
+      if (error) throw error;
+      return json({ ok: true });
+    }
+
+    if (action === 'admin_domain') {
+      if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
+      const { data: site, error: readError } = await admin
+        .from('website_sites')
+        .select('repo_full_name')
+        .eq('site_id', siteId)
+        .single();
+      if (readError) throw readError;
+      if (!site.repo_full_name) return json({ error: '公開先GitHub Repoがまだ設定されていません。' }, 409);
+      const domain = body.custom_domain ? String(body.custom_domain).trim().toLowerCase() : null;
+      await setGithubPagesDomain(site.repo_full_name, domain);
+      const { error } = await admin.from('website_sites').update({ custom_domain: domain }).eq('site_id', siteId);
+      if (error) throw error;
+      await admin.from('website_activity').insert({
+        site_id: siteId, actor_type: 'admin', actor_user_id: user.id,
+        action: 'domain_updated', detail: domain ? `独自ドメイン設定: ${domain}` : '独自ドメイン設定を解除。',
+      });
+      return json({ ok: true, custom_domain: domain });
+    }
+
     if (action === 'admin_transition') {
       if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
       const allowed = ['request_waiting','building','sho_review','customer_review','live','private','improving_private'];
       if (!allowed.includes(String(body.status))) return json({ error: 'ステータスが不正です。' }, 400);
+
+      if (['live','private','improving_private'].includes(String(body.status))) {
+        const { data: site, error: readError } = await admin
+          .from('website_sites')
+          .select('repo_full_name,publish_branch,live_path,offline_path')
+          .eq('site_id', siteId)
+          .single();
+        if (readError) throw readError;
+        if (!site.repo_full_name) return json({ error: '公開先GitHub Repoがまだ設定されていません。' }, 409);
+        const path = body.status === 'live' ? (site.live_path || '/') : (site.offline_path || '/docs');
+        await setGithubPagesSource(
+          site.repo_full_name,
+          site.publish_branch || 'main',
+          path as '/' | '/docs',
+        );
+      }
+
       const { error } = await admin.from('website_sites').update({
         status: body.status,
         current_note: String(body.current_note || ''),
