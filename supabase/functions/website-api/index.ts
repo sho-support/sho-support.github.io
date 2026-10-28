@@ -140,17 +140,20 @@ Deno.serve(async (req) => {
         { data: intake, error: intakeError },
         { data: activity, error: activityError },
         { data: jobs, error: jobsError },
+        { data: profile, error: profileError },
       ] = await Promise.all([
         admin.from('website_sites').select('*').eq('site_id', siteId).single(),
         admin.from('website_intakes').select('*').eq('site_id', siteId).maybeSingle(),
         admin.from('website_activity').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(100),
         admin.from('website_jobs').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(20),
+        admin.from('website_profiles').select('*').eq('site_id', siteId).maybeSingle(),
       ]);
       if (siteError) throw siteError;
       if (intakeError) throw intakeError;
       if (activityError) throw activityError;
       if (jobsError) throw jobsError;
-      return json({ site, intake, activity: activity || [], jobs: jobs || [], role });
+      if (profileError) throw profileError;
+      return json({ site, intake, activity: activity || [], jobs: jobs || [], profile, role });
     }
 
     if (action === 'save_draft') {
@@ -187,6 +190,27 @@ Deno.serve(async (req) => {
         .select('site_name')
         .single();
       if (siteError) throw siteError;
+
+      const intakePayload = (body.payload || {}) as Record<string, any>;
+      const intakeFields = (intakePayload.fields || {}) as Record<string, any>;
+      const intakeChecks = (intakePayload.checks || {}) as Record<string, any>;
+      await admin.from('website_profiles').upsert({
+        site_id: siteId,
+        industry: String(intakeFields.purpose || ''),
+        summary: String(intakeFields.image_text || ''),
+        preferences: {
+          mood: intakeFields.image_text ? [String(intakeFields.image_text)] : [],
+          colors: intakeFields.colors ? [String(intakeFields.colors)] : [],
+          likes: Array.isArray(intakeChecks.features) ? intakeChecks.features : [],
+          dislikes: [],
+        },
+        decisions: {
+          live_layout: Array.isArray(intakeChecks.live_all_page) && intakeChecks.live_all_page.length
+            ? 'all_live_on_separate_page'
+            : 'upcoming_on_top_history_separate',
+          custom_domain_requested: Array.isArray(intakeChecks.custom_domain) && intakeChecks.custom_domain.length > 0,
+        },
+      }, { onConflict: 'site_id' });
 
       await admin.from('website_activity').insert({
         site_id: siteId,
