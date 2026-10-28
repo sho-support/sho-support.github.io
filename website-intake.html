@@ -123,6 +123,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <div class="buttons"><button type="button" class="btn" id="previewBtn">入力内容を確認</button></div>
 <div class="preview" id="preview"></div>
 <div class="save-meta" style="text-align:center;margin:12px 0 4px"><strong id="savedFooter">最終保存：まだありません</strong></div>
+<div style="margin-top:12px;text-align:center"><a class="close-section" id="lineConsult" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-width:180px">LINEで相談する</a><div class="hint" style="margin-top:6px">入力方法や掲載内容で迷った場合はこちら。SITE ID入りでLINEが開きます。</div></div>
 </section></form>
 </main>
 <nav class="site-legal-nav" aria-label="法務・ポリシー"><a href="website-legal.html">特商法表記</a><a href="website-terms.html">利用条件</a><a href="website-privacy.html">プライバシー</a></nav>
@@ -131,6 +132,8 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 (()=>{
 const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO';
 document.getElementById('siteId').textContent=siteId;
+const lineMessage='SITE ID '+siteId+'です。ホームページ制作について相談したいです。';
+document.getElementById('lineConsult').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(lineMessage);
 const form=document.getElementById('intake'),key='sho-intake-v3-'+siteId,status=document.getElementById('status');
 const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks'),contactLinks=document.getElementById('contactLinks');
 let memberCount=0,liveCount=0,contactCount=0,timer,lastSaved='';
