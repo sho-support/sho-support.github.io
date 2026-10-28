@@ -31,9 +31,13 @@ header{position:sticky;top:0;z-index:30;background:rgba(5,5,6,.95);border-bottom
 <div class="toolbar"><div class="tabs" id="tabs"></div><div class="subtools"><button class="reset" id="resetDemo" type="button">デモ状態を初期化</button></div></div>
 <div class="project-list" id="projectList"></div>
 </main>
-<script>
-(function(){
+<script type="module">
+import { requireWebsiteSession, websiteApi } from '../website-client.js';
+
+(async()=>{
 const KEY='sho-web-admin-demo-v2';
+const params=new URLSearchParams(location.search);
+const prodMode=params.get('prod')==='1';
 const statuses=[
  {id:'request_waiting',label:'要望待ち',className:'s-request'},
  {id:'building',label:'作成中',className:'s-building'},
@@ -53,16 +57,66 @@ const demo=[{
   {at:'2026-10-28 23:08',title:'AI制作完了',text:'初回ヒアリングと確定仕様からプレビューを生成。'},
   {at:'2026-10-28 22:55',title:'ヒアリング受付',text:'黒＋赤、80年代USロック、写真を大きく、LIVE情報を優先。'},
   {at:'2026-10-28 22:50',title:'案件作成',text:'SITE ID 1042 を発行。'}
- ],notes:[],customerApproved:false
+ ],notes:[],customerApproved:false,jobs:[]
 }];
-let state=load(),filter='all';
-function clone(v){return JSON.parse(JSON.stringify(v))}
-function load(){try{const raw=localStorage.getItem(KEY);if(raw)return JSON.parse(raw);const x=clone(demo);localStorage.setItem(KEY,JSON.stringify(x));return x}catch(e){return clone(demo)}}
-function save(){localStorage.setItem(KEY,JSON.stringify(state))}
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function sdef(id){return statuses.find(s=>s.id===id)||statuses[0]}
-function now(){return new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')}
-function fmt(arr){return (arr||[]).map(x=>'<span class="chip">'+esc(x)+'</span>').join('')||'<span class="meta">未登録</span>'}
+
+let state=[],filter='all';
+const clone=v=>JSON.parse(JSON.stringify(v));
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const sdef=id=>statuses.find(s=>s.id===id)||statuses[0];
+const now=()=>new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-');
+const fmt=arr=>(arr||[]).map(x=>'<span class="chip">'+esc(x)+'</span>').join('')||'<span class="meta">未登録</span>';
+const formatDate=v=>v?new Date(v).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):'';
+const activityLabel=a=>({
+ site_created:'案件作成',intake_submitted:'ヒアリング受付',customer_revision_requested:'お客様から修正依頼',
+ customer_approved:'お客様確認OK',published:'公開',admin_transition:'SHO操作',line_message:'LINEメッセージ'
+}[a]||a);
+const jobLabel=j=>({
+ initial_create:'初回制作',customer_revision:'お客様修正',sho_revision:'SHO修正',improvement:'改良'
+}[j]||j||'');
+const jobStatus=s=>({queued:'待機中',running:'AI作成中',sho_review:'SHO確認待ち',done:'完了',error:'エラー'}[s]||s||'');
+
+function loadDemo(){
+ try{
+  const raw=localStorage.getItem(KEY);
+  if(raw)return JSON.parse(raw);
+  const x=clone(demo);localStorage.setItem(KEY,JSON.stringify(x));return x;
+ }catch{return clone(demo)}
+}
+function saveDemo(){localStorage.setItem(KEY,JSON.stringify(state))}
+
+function normalizeProduction(detail){
+ const site=detail.site||{},payload=detail.intake?.payload||{},f=payload.fields||{},checks=payload.checks||{};
+ const features=Array.isArray(checks.features)?checks.features:[];
+ const history=(detail.activity||[]).map(a=>({at:formatDate(a.created_at),title:activityLabel(a.action),text:a.detail||''}));
+ return {
+  id:site.site_id,
+  name:site.site_name||f.site_name||'ホームページ',
+  customer:f.contact_name||f.contact_email||'顧客',
+  status:site.status,
+  updated:formatDate(site.updated_at),
+  preview:site.preview_url||'',
+  customerReview:'../website-customer-review.html?id='+encodeURIComponent(site.site_id)+'&prod=1',
+  profile:{
+   industry:f.purpose||'未入力',
+   mood:f.image_text?[f.image_text]:[],
+   colors:f.colors?[f.colors]:[],
+   likes:features.concat((checks.live_all_page||[]).length?['LIVE関連をすべて別ページ']:[]),
+   dislikes:[],
+  },
+  current:site.current_note||'',
+  history,notes:[],customerApproved:Boolean(site.customer_approved),jobs:detail.jobs||[]
+ };
+}
+
+async function loadProduction(){
+ await requireWebsiteSession(location.href);
+ const list=await websiteApi('list_sites');
+ if(!list?.admin)throw new Error('SHO管理者として登録されたアカウントでログインしてください。');
+ const sites=Array.isArray(list.sites)?list.sites:[];
+ return await Promise.all(sites.map(async s=>normalizeProduction(await websiteApi('load_site',{site_id:s.site_id}))));
+}
+
 function tabs(){
  const items=[{id:'all',label:'すべて'}].concat(statuses);
  document.getElementById('tabs').innerHTML=items.map(t=>{
@@ -71,16 +125,20 @@ function tabs(){
  }).join('');
  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;render()});
 }
-function workflow(p){
- return '<div class="workflow">'+mainFlow.map(id=>'<span class="'+(p.status===id?'on':'')+'">'+esc(sdef(id).label)+'</span>').join('')+'</div>';
-}
+function workflow(p){return '<div class="workflow">'+mainFlow.map(id=>'<span class="'+(p.status===id?'on':'')+'">'+esc(sdef(id).label)+'</span>').join('')+'</div>'}
 function historyHtml(p){
  const all=(p.notes||[]).concat(p.history||[]).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
- return all.map(h=>'<div class="event"><time>'+esc(h.at)+'</time><strong>'+esc(h.title)+'</strong><p>'+esc(h.text)+'</p></div>').join('');
+ return all.length?all.map(h=>'<div class="event"><time>'+esc(h.at)+'</time><strong>'+esc(h.title)+'</strong><p>'+esc(h.text)+'</p></div>').join(''):'<span class="meta">履歴はまだありません。</span>';
+}
+function latestJob(p){
+ const j=(p.jobs||[])[0];
+ if(!j)return '<span class="meta">なし</span>';
+ const err=j.error_message?' / '+j.error_message:'';
+ return '<span>'+esc(jobLabel(j.kind))+' / '+esc(jobStatus(j.status))+esc(err)+'</span>';
 }
 function actionHtml(p){
- if(p.status==='request_waiting')return '<div class="warning" style="margin-top:0">ヒアリングや追加要望の入力待ちです。</div><button class="btn primary full" id="startBuild" type="button" style="margin-top:8px">デモ：要望受信 → 作成開始</button>';
- if(p.status==='building')return '<div class="warning" style="margin-top:0">AIが制作・修正中です。本番では完了時に自動でSHO確認中へ進みます。</div><button class="btn primary full" id="buildDone" type="button" style="margin-top:8px">デモ：作成完了 → SHO確認へ</button>';
+ if(p.status==='request_waiting')return prodMode?'<div class="warning" style="margin-top:0">お客様のヒアリング・要望入力待ちです。送信されると自動で作成中へ進みます。</div>':'<div class="warning" style="margin-top:0">ヒアリングや追加要望の入力待ちです。</div><button class="btn primary full" id="startBuild" type="button" style="margin-top:8px">デモ：要望受信 → 作成開始</button>';
+ if(p.status==='building')return '<div class="warning" style="margin-top:0">AI制作キューまたは修正作業中です。AIワーカー接続後は完了時に自動でSHO確認中へ進みます。</div><button class="btn primary full" id="buildDone" type="button" style="margin-top:8px">'+(prodMode?'手動：制作完了 → SHO確認へ':'デモ：作成完了 → SHO確認へ')+'</button>';
  if(p.status==='sho_review')return '<textarea class="note" id="reviewNote" placeholder="修正指示。例：TOP写真を2枚目に変更、赤を少し暗く。"></textarea><div class="actionbar"><button class="btn" id="requestFix" type="button">AIへ修正依頼</button><button class="btn primary" id="approveSho" type="button">SHO確認OK → お客様最終確認へ</button></div>';
  if(p.status==='customer_review')return '<div class="warning" style="margin-top:0">お客様の最終確認中です。修正が来れば作成中へ戻り、OKならお客様自身が公開します。</div><a class="btn gold full" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener" style="margin-top:8px">お客様確認画面を開く</a>';
  if(p.status==='live')return '<div class="warning" style="margin-top:0;border-left-color:var(--ok)">サイトは公開中です。</div><div class="actionbar"><button class="btn" id="makePrivate" type="button">一時非公開</button><button class="btn gold" id="makeImproving" type="button">改良中・一時非公開</button></div>';
@@ -90,34 +148,57 @@ function actionHtml(p){
 }
 function card(p){
  const s=sdef(p.status);
+ const preview=p.preview?'<a class="btn primary" href="'+esc(p.preview)+'" target="_blank" rel="noopener">プレビューを開く</a>':'<span class="btn" style="opacity:.45;pointer-events:none">プレビュー準備中</span>';
  return '<details class="project-card" data-id="'+esc(p.id)+'"><summary><div class="sum-main"><div class="siteid">SITE ID '+esc(p.id)+'</div><div class="site-name">'+esc(p.name)+'</div><div class="meta">'+esc(p.customer)+' / 更新 '+esc(p.updated)+'</div></div><div class="sum-side"><span class="badge '+s.className+'">'+esc(s.label)+'</span><span class="chev">＋</span></div></summary>'+
- '<div class="project-body"><div class="top-actions"><a class="btn primary" href="'+esc(p.preview)+'" target="_blank" rel="noopener">プレビューを開く</a><a class="btn" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様画面</a></div>'+workflow(p)+
- '<details class="fold" open><summary>現在の依頼・状態</summary><div class="inside"><dl class="kv"><dt>状態</dt><dd>'+esc(s.label)+'</dd><dt>現在</dt><dd>'+esc(p.current)+'</dd><dt>顧客確認URL</dt><dd>'+esc(p.customerReview)+'</dd></dl></div></details>'+
- '<details class="fold"><summary>顧客カルテ</summary><div class="inside"><dl class="kv"><dt>業種</dt><dd>'+esc(p.profile.industry)+'</dd><dt>雰囲気</dt><dd><div class="chips">'+fmt(p.profile.mood)+'</div></dd><dt>色</dt><dd><div class="chips">'+fmt(p.profile.colors)+'</div></dd><dt>好み</dt><dd><div class="chips">'+fmt(p.profile.likes)+'</div></dd><dt>避けたいもの</dt><dd><div class="chips">'+fmt(p.profile.dislikes)+'</div></dd></dl></div></details>'+
+ '<div class="project-body"><div class="top-actions">'+preview+'<a class="btn" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様画面</a></div>'+workflow(p)+
+ '<details class="fold" open><summary>現在の依頼・状態</summary><div class="inside"><dl class="kv"><dt>状態</dt><dd>'+esc(s.label)+'</dd><dt>現在</dt><dd>'+esc(p.current)+'</dd><dt>AIジョブ</dt><dd>'+latestJob(p)+'</dd><dt>顧客確認URL</dt><dd>'+esc(p.customerReview)+'</dd></dl></div></details>'+
+ '<details class="fold"><summary>顧客カルテ</summary><div class="inside"><dl class="kv"><dt>業種</dt><dd>'+esc(p.profile.industry)+'</dd><dt>雰囲気・要望</dt><dd><div class="chips">'+fmt(p.profile.mood)+'</div></dd><dt>色</dt><dd><div class="chips">'+fmt(p.profile.colors)+'</div></dd><dt>希望機能</dt><dd><div class="chips">'+fmt(p.profile.likes)+'</div></dd><dt>避けたいもの</dt><dd><div class="chips">'+fmt(p.profile.dislikes)+'</div></dd></dl></div></details>'+
  '<details class="fold"><summary>要望・承認履歴</summary><div class="inside"><div class="timeline">'+historyHtml(p)+'</div></div></details>'+
  '<details class="fold" open><summary>今回の操作</summary><div class="inside">'+actionHtml(p)+'</div></details>'+
- '<div class="footnote">本番版ではカルテ・履歴・個人情報はprivate Repo / Supabase側から取得し、公開Repoには保存しません。</div></div></details>';
+ '<div class="footnote">'+(prodMode?'本番データ：Supabase / private Storage':'デモデータ：このブラウザのlocalStorage')+'</div></div></details>';
 }
+
+async function prodMove(p,status,current,detail=''){
+ try{
+  await websiteApi('admin_transition',{site_id:p.id,status,current_note:current,detail});
+  state=await loadProduction();render();
+ }catch(error){alert(error.message||'更新できませんでした。')}
+}
+function demoMove(p,status,current,title,text){p.status=status;p.current=current;p.updated=now();p.customerApproved=false;p.notes=p.notes||[];p.notes.unshift({at:p.updated,title,text});saveDemo();render()}
+
 function bind(p,root){
  const q=id=>root.querySelector('#'+id);
- q('startBuild')?.addEventListener('click',()=>move(p,'building','要望を受信。AIがサイトを作成中。','作成開始','受信した要望から制作を開始。'));
- q('buildDone')?.addEventListener('click',()=>move(p,'sho_review','AI制作完了。SHOが内容を確認中。','AI制作完了','SHO確認へ移行。'));
- q('approveSho')?.addEventListener('click',()=>move(p,'customer_review','SHO確認済み。お客様の最終確認中。','SHO確認OK','お客様最終確認へ移行。'));
- q('requestFix')?.addEventListener('click',()=>{const t=q('reviewNote').value.trim();if(!t)return alert('修正内容を入力してください。');move(p,'building','SHOの修正指示を受けて作成中。','SHOから修正依頼',t)});
- q('makePrivate')?.addEventListener('click',()=>move(p,'private','サイトを一時非公開中。','一時非公開','SHO操作で一時非公開。'));
- q('makeImproving')?.addEventListener('click',()=>move(p,'improving_private','改良のため一時非公開中。','改良中・一時非公開','改良準備のため一時非公開。'));
- q('resumeLive')?.addEventListener('click',()=>move(p,'live','サイト公開中。','公開再開','サイトを再公開。'));
- q('startImprove')?.addEventListener('click',()=>{const t=q('improveNote').value.trim();if(!t)return alert('改良内容を入力してください。');move(p,'building','改良内容をもとに作成中。','改良依頼',t)});
+ q('startBuild')?.addEventListener('click',()=>demoMove(p,'building','要望を受信。AIがサイトを作成中。','作成開始','受信した要望から制作を開始。'));
+ q('buildDone')?.addEventListener('click',()=>prodMode?prodMove(p,'sho_review','制作完了。SHOが内容を確認中。','制作完了を確認。'):demoMove(p,'sho_review','AI制作完了。SHOが内容を確認中。','AI制作完了','SHO確認へ移行。'));
+ q('approveSho')?.addEventListener('click',()=>prodMode?prodMove(p,'customer_review','SHO確認済み。お客様の最終確認中。','SHO確認OK。お客様最終確認へ。'):demoMove(p,'customer_review','SHO確認済み。お客様の最終確認中。','SHO確認OK','お客様最終確認へ移行。'));
+ q('requestFix')?.addEventListener('click',()=>{const t=q('reviewNote').value.trim();if(!t)return alert('修正内容を入力してください。');prodMode?prodMove(p,'building','SHOの修正指示を受けて作成中。',t):demoMove(p,'building','SHOの修正指示を受けて作成中。','SHOから修正依頼',t)});
+ q('makePrivate')?.addEventListener('click',()=>prodMode?prodMove(p,'private','サイトを一時非公開中。','一時非公開。'):demoMove(p,'private','サイトを一時非公開中。','一時非公開','SHO操作で一時非公開。'));
+ q('makeImproving')?.addEventListener('click',()=>prodMode?prodMove(p,'improving_private','改良のため一時非公開中。','改良準備のため一時非公開。'):demoMove(p,'improving_private','改良のため一時非公開中。','改良中・一時非公開','改良準備のため一時非公開。'));
+ q('resumeLive')?.addEventListener('click',()=>prodMode?prodMove(p,'live','サイト公開中。','公開を再開。'):demoMove(p,'live','サイト公開中。','公開再開','サイトを再公開。'));
+ q('startImprove')?.addEventListener('click',()=>{const t=q('improveNote').value.trim();if(!t)return alert('改良内容を入力してください。');prodMode?prodMove(p,'building','改良内容をもとに作成中。',t):demoMove(p,'building','改良内容をもとに作成中。','改良依頼',t)});
 }
-function move(p,status,current,title,text){p.status=status;p.current=current;p.updated=now();p.customerApproved=false;p.notes=p.notes||[];p.notes.unshift({at:p.updated,title,text});save();render()}
+
 function render(){
  tabs();
  const list=state.filter(p=>filter==='all'||p.status===filter);
  const box=document.getElementById('projectList');
  box.innerHTML=list.length?list.map(card).join(''):'<div class="empty">該当案件はありません。</div>';
- box.querySelectorAll('.project-card').forEach(root=>{const p=state.find(x=>x.id===root.dataset.id);bind(p,root)});
+ box.querySelectorAll('.project-card').forEach(root=>{const p=state.find(x=>String(x.id)===String(root.dataset.id));if(p)bind(p,root)});
 }
-document.getElementById('resetDemo').onclick=()=>{if(confirm('このブラウザのデモ状態を初期化しますか？')){localStorage.removeItem(KEY);state=load();filter='all';render()}};
+
+if(prodMode){
+ document.querySelector('.demo').textContent='PRODUCTION / SUPABASE';
+ document.querySelector('.warning').innerHTML='<strong>本番管理モード。</strong> 顧客情報・ヒアリング・履歴は認証されたSupabaseデータから取得します。';
+ document.getElementById('resetDemo').style.display='none';
+ try{state=await loadProduction()}catch(error){
+  console.error(error);
+  document.getElementById('projectList').innerHTML='<div class="empty">'+esc(error.message||'管理データを読み込めませんでした。')+'</div>';
+  return;
+ }
+}else{
+ state=loadDemo();
+ document.getElementById('resetDemo').onclick=()=>{if(confirm('このブラウザのデモ状態を初期化しますか？')){localStorage.removeItem(KEY);state=loadDemo();filter='all';render()}};
+}
 render();
 })();
 </script>
