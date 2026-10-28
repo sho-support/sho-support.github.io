@@ -43,7 +43,6 @@ Deno.serve(async (req) => {
     const action = body.action || '';
 
     if (action === 'list_sites') {
-      const role = await siteRole(admin, user.id, '__probe__').catch(() => null);
       const { data: adminRow, error: adminError } = await admin
         .from('website_admins')
         .select('user_id')
@@ -78,7 +77,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'create_site') {
-      const adminRole = await siteRole(admin, user.id, '__probe__').catch(() => null);
       const { data: adminRow, error: adminError } = await admin
         .from('website_admins')
         .select('user_id')
@@ -128,15 +126,22 @@ Deno.serve(async (req) => {
     const canEdit = role === 'admin' || role === 'owner' || role === 'editor';
 
     if (action === 'load_site') {
-      const [{ data: site, error: siteError }, { data: intake, error: intakeError }, { data: activity, error: activityError }] = await Promise.all([
+      const [
+        { data: site, error: siteError },
+        { data: intake, error: intakeError },
+        { data: activity, error: activityError },
+        { data: jobs, error: jobsError },
+      ] = await Promise.all([
         admin.from('website_sites').select('*').eq('site_id', siteId).single(),
         admin.from('website_intakes').select('*').eq('site_id', siteId).maybeSingle(),
         admin.from('website_activity').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(100),
+        admin.from('website_jobs').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(20),
       ]);
       if (siteError) throw siteError;
       if (intakeError) throw intakeError;
       if (activityError) throw activityError;
-      return json({ site, intake, activity: activity || [], role });
+      if (jobsError) throw jobsError;
+      return json({ site, intake, activity: activity || [], jobs: jobs || [], role });
     }
 
     if (action === 'save_draft') {
