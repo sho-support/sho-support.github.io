@@ -21,12 +21,15 @@ header{border-bottom:1px solid var(--line);background:#070708}.head{min-height:6
 <main class="wrap">
 <section class="hero"><h1>サイト確認</h1><p>制作したホームページをご確認ください。修正があれば送信し、問題なければ内容承認後にご自身で公開できます。</p><div class="demo">現在は承認フロー確認用のデモです。同じブラウザのSHO管理画面デモと状態が連動します。</div></section>
 <div id="app"></div>
+<section class="card"><h2>LINEで相談</h2><div class="body"><p style="margin:0 0 10px;color:#aaa;font-size:.76rem">修正内容や分からないことはLINEでも相談できます。SITE ID入りのメッセージが自動で入力されます。</p><a class="btn" id="lineConsult" href="#" target="_blank" rel="noopener">LINEで相談する</a></div></section>
 </main>
 <script>
 (function(){
 const KEY='sho-web-admin-demo-v2';
 const id=new URLSearchParams(location.search).get('id')||'1042';
 document.getElementById('siteId').textContent=id;
+const lineMessage='SITE ID '+id+'です。ホームページについて相談したいです。';
+document.getElementById('lineConsult').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(lineMessage);
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function now(){return new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')}
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return []}}
