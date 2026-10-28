@@ -181,6 +181,13 @@ Deno.serve(async (req) => {
         action: 'intake_submitted',
         detail: 'ヒアリングフォームを送信。',
       });
+      await admin.from('website_jobs').insert({
+        site_id: siteId,
+        kind: 'initial_create',
+        status: 'queued',
+        instruction: '最新のヒアリング内容をもとにサイトを制作してください。',
+        payload: { source: 'intake_submit' },
+      });
 
       await notifyOwner(`【SHO WEB SUPPORT】\nSITE ID ${siteId}\nヒアリングが送信されました。\n${site?.site_name || ''}`);
       return json({ ok: true, submitted_at: submittedAt });
@@ -202,6 +209,13 @@ Deno.serve(async (req) => {
         await admin.from('website_activity').insert({
           site_id: siteId, actor_type: 'customer', actor_user_id: user.id,
           action: 'customer_revision_requested', detail,
+        });
+        await admin.from('website_jobs').insert({
+          site_id: siteId,
+          kind: 'customer_revision',
+          status: 'queued',
+          instruction: detail,
+          payload: { source: 'customer_review' },
         });
         await notifyOwner(`【修正依頼】SITE ID ${siteId}\n${detail.slice(0, 1200)}`);
         return json({ ok: true, status: 'building' });
@@ -265,6 +279,15 @@ Deno.serve(async (req) => {
         action: 'admin_transition', detail: String(body.detail || body.current_note || body.status),
         payload: { status: body.status },
       });
+      if (body.status === 'building' && String(body.detail || '').trim()) {
+        await admin.from('website_jobs').insert({
+          site_id: siteId,
+          kind: 'sho_revision',
+          status: 'queued',
+          instruction: String(body.detail).trim(),
+          payload: { source: 'admin_transition' },
+        });
+      }
 
       if (body.status === 'customer_review') {
         const { data: link } = await admin.from('website_line_links').select('line_user_id').eq('site_id', siteId).maybeSingle();
