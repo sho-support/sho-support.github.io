@@ -109,6 +109,8 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 </div>
 </div></details>
 
+<div class="savebar bottom-save"><button type="button" class="savebtn" id="saveBottom">入力内容を一時保存</button><div class="save-meta"><strong id="savedBottom">最終保存：まだありません</strong><span id="status">入力内容はこの端末に自動保存されます</span></div></div>
+
 <details class="card" data-section="7"><summary><span>07 最終確認</span><span class="done-mark">✓</span></summary><div class="body">
 <label class="check"><input type="checkbox" name="rights" value="yes">掲載する写真・ロゴ・文章について、サイト掲載に必要な権利・許可を確認しています。</label>
 <div class="notice" style="margin-bottom:9px">送信前に <a href="website-privacy.html" target="_blank" rel="noopener" style="color:#e8ca87;font-weight:900">プライバシーポリシーを確認</a> してください。</div>
@@ -118,9 +120,9 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 
 <div class="referral"><label>紹介コード（ある場合）<input name="referral" type="text" placeholder="紹介者からコードを受け取っている場合のみ"></label></div>
 
-<div class="savebar bottom-save"><button type="button" class="savebtn" id="saveBottom">入力内容を一時保存</button><div class="save-meta"><strong id="savedBottom">最終保存：まだありません</strong><span id="status">入力内容はこの端末に自動保存されます</span></div></div>
 <div class="buttons"><button type="button" class="btn" id="previewBtn">入力内容を確認</button></div>
 <div class="preview" id="preview"></div>
+<div class="save-meta" style="text-align:center;margin:12px 0 4px"><strong id="savedFooter">最終保存：まだありません</strong></div>
 </section></form>
 </main>
 <nav class="site-legal-nav" aria-label="法務・ポリシー"><a href="website-legal.html">特商法表記</a><a href="website-terms.html">利用条件</a><a href="website-privacy.html">プライバシー</a></nav>
@@ -220,7 +222,7 @@ function saveDraft(manual=false){
  updateCompletion();
 }
 function saveSoon(){clearTimeout(timer);timer=setTimeout(()=>saveDraft(false),400)}
-function updateSavedLabels(){const t=lastSaved?'最終保存：'+lastSaved:'最終保存：まだありません';document.getElementById('savedTop').textContent=t;document.getElementById('savedBottom').textContent=t}
+function updateSavedLabels(){const t=lastSaved?'最終保存：'+lastSaved:'最終保存：まだありません';document.getElementById('savedTop').textContent=t;document.getElementById('savedBottom').textContent=t;document.getElementById('savedFooter').textContent=t}
 function updateCompletion(){
  const done=[...document.querySelectorAll('[name="section_complete"]:checked')].map(x=>x.value);
  document.querySelectorAll('.card').forEach(c=>c.classList.toggle('done',done.includes(c.dataset.section)));
