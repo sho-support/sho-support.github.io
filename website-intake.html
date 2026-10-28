@@ -36,7 +36,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <h1>制作ヒアリングフォーム</h1>
 <p>一度に全部入力しなくても大丈夫です。入力できた項目から「入力完了」にチェックしてください。</p>
 <div class="file-note">写真ファイルは現在のデモではブラウザを閉じると保持されません。本番版ではSITE IDに紐づけて保存します。</div>
-<div class="savebar"><button type="button" class="savebtn" id="saveTop">入力内容を一時保存</button><div class="save-meta"><strong id="savedTop">最終保存：まだありません</strong><span>編集中の文字はこの端末にも自動保存されます。</span></div></div>
+<div class="savebar"><button type="button" class="savebtn" id="saveTop">入力内容を一時保存</button><div class="save-meta"><strong id="savedTop">最終保存：まだありません</strong><span id="topStatus">編集中の文字はこの端末にも自動保存されます。</span></div></div>
 <div class="progressline"><span id="progressText">入力完了 0 / 7</span><span>後から続きから入力できます</span></div>
 <div class="progress"><div class="bar" id="bar"></div></div>
 </section>
@@ -218,7 +218,7 @@ function serialize(){
 function saveDraft(manual=false){
  if(manual)lastSaved=now();
  const data=serialize();data.meta.lastSaved=lastSaved;localStorage.setItem(key,JSON.stringify(data));
- if(manual){status.textContent='一時保存しました';updateSavedLabels()}else{status.textContent='編集中の内容は自動保存されています'}
+ if(manual){status.textContent='一時保存しました';document.getElementById('topStatus').textContent='一時保存しました';updateSavedLabels()}else{status.textContent='編集中の内容は自動保存されています';document.getElementById('topStatus').textContent='編集中の文字はこの端末にも自動保存されています'}
  updateCompletion();
 }
 function saveSoon(){clearTimeout(timer);timer=setTimeout(()=>saveDraft(false),400)}
