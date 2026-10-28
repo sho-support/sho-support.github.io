@@ -114,31 +114,34 @@ function bind(p){
  document.getElementById('closeRevision')?.addEventListener('click',()=>{
   if(revisionPanel)revisionPanel.hidden=true;
  });
- document.getElementById('sendRevision')?.addEventListener('click',async()=>{
-  const t=document.getElementById('revision').value.trim();
+ document.getElementById('sendRevision')?.addEventListener('click',async(e)=>{
+  const btn=e.currentTarget,t=document.getElementById('revision').value.trim();
   if(!t)return alert('修正内容を入力してください。');
+  if(btn.disabled)return;btn.disabled=true;btn.textContent='送信中…';
   if(prodMode){
-   try{await websiteApi('review_action',{site_id:id,review_action:'revision',detail:t});await render()}catch(error){alert(error.message||'送信できませんでした。')}
+   try{await websiteApi('review_action',{site_id:id,review_action:'revision',detail:t});await render()}catch(error){btn.disabled=false;btn.textContent='修正内容を送信';alert(error.message||'送信できませんでした。')}
    return;
   }
   const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
   target.status='building';target.customerApproved=false;target.current='お客様から修正依頼。再作成中。';target.updated=now();target.notes=target.notes||[];target.notes.unshift({at:target.updated,title:'お客様から修正依頼',text:t});demoSave(state);render();
  });
 
- document.getElementById('approve')?.addEventListener('click',async()=>{
+ document.getElementById('approve')?.addEventListener('click',async(e)=>{
   if(!confirm('サイト内容を承認しますか？まだ公開はされません。'))return;
+  const btn=e.currentTarget;if(btn.disabled)return;btn.disabled=true;btn.textContent='承認中…';
   if(prodMode){
-   try{await websiteApi('review_action',{site_id:id,review_action:'approve'});await render()}catch(error){alert(error.message||'承認できませんでした。')}
+   try{await websiteApi('review_action',{site_id:id,review_action:'approve'});await render()}catch(error){btn.disabled=false;btn.textContent='この内容でOK';alert(error.message||'承認できませんでした。')}
    return;
   }
   const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
   target.customerApproved=true;target.updated=now();target.notes=target.notes||[];target.notes.unshift({at:target.updated,title:'お客様が内容承認',text:'最終確認OK。公開操作待ち。'});demoSave(state);render();
  });
 
- document.getElementById('publish')?.addEventListener('click',async()=>{
+ document.getElementById('publish')?.addEventListener('click',async(e)=>{
   if(!confirm('この内容でサイトを公開しますか？'))return;
+  const btn=e.currentTarget;if(btn.disabled)return;btn.disabled=true;btn.textContent='公開中…';
   if(prodMode){
-   try{await websiteApi('review_action',{site_id:id,review_action:'publish'});await render()}catch(error){alert(error.message||'公開できませんでした。')}
+   try{await websiteApi('review_action',{site_id:id,review_action:'publish'});await render()}catch(error){btn.disabled=false;btn.textContent='この内容で公開する';alert(error.message||'公開できませんでした。')}
    return;
   }
   const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
