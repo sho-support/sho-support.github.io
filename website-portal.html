@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#070707">
+<title>Customer Portal | SHO WEB SUPPORT</title>
+<link rel="stylesheet" href="website-theme.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#070707;color:#fff;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.65}.wrap{width:min(calc(100% - 24px),820px);margin:auto}.head{padding:18px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(255,255,255,.1)}.brand{font-weight:950}.logout{border:1px solid rgba(255,255,255,.14);border-radius:9px;background:#111;color:#ccc;padding:8px 10px}.hero{padding:34px 0 16px}.hero h1{margin:0;font-size:clamp(2.1rem,8vw,3.8rem);line-height:1}.hero p{color:#c8c8c8}.sites{display:grid;gap:10px;padding-bottom:40px}.card{padding:15px;border:1px solid rgba(217,174,92,.24);border-radius:14px;background:#0d0d0f}.siteid{color:#d9ae5c;font-size:.7rem;font-weight:900}.card h2{margin:3px 0 5px;font-size:1.05rem}.status{display:inline-flex;padding:4px 7px;border:1px solid rgba(198,31,56,.45);border-radius:999px;color:#f0c7ce;font-size:.65rem;font-weight:900}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.btn{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:#151515;color:#fff;text-decoration:none;font-size:.74rem;font-weight:900}.btn.primary{background:#c51f38;border-color:#c51f38}.msg{padding:18px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#0d0d0f;color:#aaa}.hidden{display:none}@media(max-width:560px){.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap head"><div class="brand">SHO WEB SUPPORT</div><button class="logout" id="logout" type="button">ログアウト</button></div></header>
+<main class="wrap">
+<section class="hero"><div style="color:#d9ae5c;font-weight:900;font-size:.72rem">CUSTOMER PORTAL</div><h1>お客様管理ページ</h1><p>参加しているホームページだけが表示されます。複数人で同じSITE IDを共有できます。</p></section>
+<div class="msg" id="loading">読み込んでいます…</div>
+<div class="msg hidden" id="empty">紐づいているSITE IDがありません。入金確認後のご案内をご確認いただくか、LINEからお問い合わせください。</div>
+<div class="sites hidden" id="sites"></div>
+</main>
+<script type="module" src="website-portal.js"></script>
+</body>
+</html>
