@@ -67,7 +67,17 @@ export async function linePush(to: string | null | undefined, text: string) {
 }
 
 export async function notifyOwner(text: string) {
-  return linePush(Deno.env.get('LINE_OWNER_USER_ID'), text);
+  let ownerUserId = Deno.env.get('LINE_OWNER_USER_ID') || '';
+  if (!ownerUserId) {
+    try {
+      const admin = adminClient();
+      const { data } = await admin.from('website_settings').select('value').eq('key', 'line_owner').maybeSingle();
+      ownerUserId = String(data?.value?.user_id || '');
+    } catch (error) {
+      console.error('Failed to resolve LINE owner user ID', error);
+    }
+  }
+  return linePush(ownerUserId, text);
 }
 
 
