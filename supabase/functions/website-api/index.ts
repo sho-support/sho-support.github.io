@@ -268,6 +268,18 @@ Deno.serve(async (req) => {
     if (action === 'review_action') {
       if (!canEdit) return json({ error: '操作権限がありません。' }, 403);
       const reviewAction = body.review_action;
+      const { data: reviewSite, error: reviewSiteError } = await admin
+        .from('website_sites')
+        .select('status,customer_approved')
+        .eq('site_id', siteId)
+        .single();
+      if (reviewSiteError) throw reviewSiteError;
+      if (!['revision','approve','publish'].includes(String(reviewAction))) {
+        return json({ error: 'review_actionが不正です。' }, 400);
+      }
+      if (reviewSite.status !== 'customer_review') {
+        return json({ error: '現在はお客様の最終確認を受け付ける状態ではありません。' }, 409);
+      }
 
       if (reviewAction === 'revision') {
         const detail = String(body.detail || '').trim();
@@ -315,7 +327,7 @@ Deno.serve(async (req) => {
           .eq('site_id', siteId)
           .single();
         if (readError) throw readError;
-        if (!site.customer_approved) return json({ error: '先にサイト内容の承認が必要です。' }, 409);
+        if (!site.customer_approved || !reviewSite.customer_approved) return json({ error: '先にサイト内容の承認が必要です。' }, 409);
         if (!site.repo_full_name) return json({ error: '公開先GitHub Repoがまだ設定されていません。' }, 409);
 
         await setGithubPagesSource(
