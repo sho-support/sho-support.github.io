@@ -27,7 +27,15 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 .referral{margin:14px 0;padding:13px;border:1px solid rgba(217,174,92,.22);border-radius:13px;background:#0d0d0f}.referral label{margin:0}.bottom-save{margin-top:14px}.buttons{display:grid;grid-template-columns:1fr;gap:8px;margin-top:11px}.btn{border:0;border-radius:11px;padding:13px 12px;font-weight:950;background:var(--red);color:#fff}.status{text-align:center;color:var(--muted);font-size:.68rem;margin-top:8px}
 .preview{margin-top:13px;padding:13px;border:1px solid rgba(217,174,92,.28);border-radius:13px;background:#0b0b0b;font-size:.8rem;color:#ddd;display:none}.preview-title{margin:0 0 10px;font-size:1rem}.preview-section{padding:11px 0;border-top:1px solid rgba(255,255,255,.08)}.preview-section h4{margin:0 0 7px;color:#e8ca87;font-size:.79rem}.preview-row{display:grid;grid-template-columns:minmax(105px,30%) 1fr;gap:8px;padding:4px 0}.preview-key{color:#9b958d;font-weight:850}.preview-val{color:#fff;overflow-wrap:anywhere}.preview-empty{color:#666}.preview-files{display:flex;flex-wrap:wrap;gap:5px}.preview-file{padding:3px 6px;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:#111;font-size:.72rem}.preview-send{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.09)}.preview-send .btn{width:100%}.preview-send-note{text-align:center;color:var(--muted);font-size:.68rem}
 @media(max-width:640px){.row,.checkgrid{grid-template-columns:1fr}.savebar{grid-template-columns:1fr}.section-footer{grid-template-columns:1fr}.close-section{width:100%}.preview-row{grid-template-columns:1fr;gap:1px}.hero{padding-top:27px}}
+
+.line-consult-wrap{margin-top:12px;padding:13px;border:1px solid rgba(217,174,92,.22);border-radius:12px;background:#0d0d0f;text-align:center}
+.line-consult-copy{margin:0 0 9px;color:#aaa;font-size:.72rem}
+.line-qr{display:none;justify-content:center;margin-top:10px}
+.line-qr>div{padding:10px;background:#fff;border-radius:10px}
+.line-qr canvas,.line-qr img{display:block;max-width:170px;height:auto}
+@media(min-width:760px){.line-qr{display:flex}.line-mobile-note{display:none}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">SHO WEBSITE INTAKE</div><div class="siteid">SITE ID: <span id="siteId">----</span></div></div></header>
@@ -123,7 +131,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <div class="buttons"><button type="button" class="btn" id="previewBtn">入力内容を確認</button></div>
 <div class="preview" id="preview"></div>
 <div class="save-meta" style="text-align:center;margin:12px 0 4px"><strong id="savedFooter">最終保存：まだありません</strong></div>
-<div style="margin-top:12px;text-align:center"><a class="close-section" id="lineConsult" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-width:180px">LINEで相談する</a><div class="hint" style="margin-top:6px">入力方法や掲載内容で迷った場合はこちら。SITE ID入りでLINEが開きます。</div></div>
+<div class="line-consult-wrap"><p class="line-consult-copy">入力方法や掲載内容で迷った場合はこちら。SITE ID入りの文章が最初から入力されます。</p><a class="close-section" id="lineConsult" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-width:180px">LINEで相談する</a><div class="hint line-mobile-note" style="margin-top:6px">スマホではボタンからLINEを開けます。</div><div class="line-qr"><div id="lineQr"></div></div><div class="hint" style="margin-top:6px">PCではQRコードをスマホで読み取ってください。</div></div>
 </section></form>
 </main>
 <nav class="site-legal-nav" aria-label="法務・ポリシー"><a href="website-legal.html">特商法表記</a><a href="website-terms.html">利用条件</a><a href="website-privacy.html">プライバシー</a></nav>
@@ -134,6 +142,8 @@ const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO
 document.getElementById('siteId').textContent=siteId;
 const lineMessage='SITE ID '+siteId+'です。ホームページ制作について相談したいです。';
 document.getElementById('lineConsult').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(lineMessage);
+const lineUrl=document.getElementById('lineConsult').href;
+if(window.QRCode&&document.getElementById('lineQr'))new QRCode(document.getElementById('lineQr'),{text:lineUrl,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
 const form=document.getElementById('intake'),key='sho-intake-v3-'+siteId,status=document.getElementById('status');
 const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks'),contactLinks=document.getElementById('contactLinks');
 let memberCount=0,liveCount=0,contactCount=0,timer,lastSaved='';
