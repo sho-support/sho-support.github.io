@@ -92,9 +92,12 @@ create index if not exists website_jobs_status_created_idx on public.website_job
 create index if not exists website_jobs_site_created_idx on public.website_jobs(site_id,created_at desc);
 create index if not exists website_activity_site_created_idx on public.website_activity(site_id,created_at desc);
 create index if not exists website_site_users_user_idx on public.website_site_users(user_id);
+create index if not exists website_activity_actor_user_idx on public.website_activity(actor_user_id);
 
 create or replace function public.website_touch_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql
+set search_path = public
+as $
 begin
   new.updated_at = now();
   return new;
@@ -154,7 +157,7 @@ alter table public.website_jobs enable row level security;
 drop policy if exists website_admins_self_select on public.website_admins;
 create policy website_admins_self_select on public.website_admins
 for select to authenticated
-using (user_id = auth.uid());
+using (user_id = (select auth.uid()));
 
 drop policy if exists website_sites_access_select on public.website_sites;
 create policy website_sites_access_select on public.website_sites
@@ -164,7 +167,7 @@ using (public.has_website_site_access(site_id));
 drop policy if exists website_site_users_access_select on public.website_site_users;
 create policy website_site_users_access_select on public.website_site_users
 for select to authenticated
-using (user_id = auth.uid() or public.is_website_admin());
+using (user_id = (select auth.uid()) or public.is_website_admin());
 
 drop policy if exists website_intakes_access_select on public.website_intakes;
 create policy website_intakes_access_select on public.website_intakes
