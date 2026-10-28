@@ -142,9 +142,10 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 </main>
 <nav class="site-legal-nav" aria-label="法務・ポリシー"><a href="website-legal.html">特商法表記</a><a href="website-terms.html">利用条件</a><a href="website-privacy.html">プライバシー</a></nav>
 
-<script>
-(()=>{
-const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO';
+<script type="module">
+import { requireWebsiteSession, uploadWebsiteFile, websiteApi } from './website-client.js';
+(async()=>{
+const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO',prodMode=params.get('prod')==='1';
 document.getElementById('siteId').textContent=siteId;
 const lineMessage='SITE ID '+siteId+'です。ホームページ制作について相談したいです。';
 document.getElementById('lineConsult').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(lineMessage);
@@ -152,7 +153,8 @@ const lineUrl=document.getElementById('lineConsult').href;
 if(window.QRCode&&document.getElementById('lineQr'))new QRCode(document.getElementById('lineQr'),{text:lineUrl,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
 const form=document.getElementById('intake'),key='sho-intake-v3-'+siteId,status=document.getElementById('status');
 const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks'),contactLinks=document.getElementById('contactLinks');
-let memberCount=0,liveCount=0,contactCount=0,timer,lastSaved='';
+let memberCount=0,liveCount=0,contactCount=0,timer,lastSaved='',uploadedFiles={top_photos:[],gallery_photos:[],logo_file:[]};
+let saveQueue=Promise.resolve();
 
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const now=()=>new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-');
@@ -224,7 +226,7 @@ form.addEventListener('change',e=>{if(e.target.name==='features'||e.target.id===
 form.addEventListener('input',saveSoon);
 
 function serialize(){
- const data={siteId,fields:{},checks:{},members:[],lives:[],contacts:[],meta:{lastSaved}};
+ const data={siteId,fields:{},checks:{},members:[],lives:[],contacts:[],files:uploadedFiles,meta:{lastSaved}};
  [...form.elements].forEach(el=>{
   if(!el.name||el.type==='file')return;
   if(el.type==='checkbox'){if(!data.checks[el.name])data.checks[el.name]=[];if(el.checked)data.checks[el.name].push(el.value||'yes')}else data.fields[el.name]=el.value;
@@ -234,36 +236,79 @@ function serialize(){
  document.querySelectorAll('.contactlink').forEach(block=>{const x={};block.querySelectorAll('[data-cf]').forEach(el=>x[el.dataset.cf]=el.value);x.type=detectType(x.value);data.contacts.push(x)});
  return data;
 }
-function saveDraft(manual=false){
- if(manual)lastSaved=now();
- const data=serialize();data.meta.lastSaved=lastSaved;localStorage.setItem(key,JSON.stringify(data));
- if(manual){status.textContent='一時保存しました';document.getElementById('topStatus').textContent='一時保存しました';updateSavedLabels()}else{status.textContent='編集中の内容は自動保存されています';document.getElementById('topStatus').textContent='編集中の文字はこの端末にも自動保存されています'}
- updateCompletion();
+async function performSave(manual=false){
+ try{
+  if(prodMode&&manual)await uploadSelectedFiles();
+  if(prodMode){
+   const payload=serialize();
+   const result=await websiteApi('save_draft',{site_id:siteId,payload});
+   lastSaved=result?.last_saved_at?new Date(result.last_saved_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):now();
+  }else{
+   if(manual)lastSaved=now();
+   const data=serialize();data.meta.lastSaved=lastSaved;localStorage.setItem(key,JSON.stringify(data));
+  }
+  if(manual){status.textContent='一時保存しました';document.getElementById('topStatus').textContent='一時保存しました';updateSavedLabels()}
+  else{status.textContent=prodMode?'編集中の内容を自動保存しました':'編集中の内容は自動保存されています';document.getElementById('topStatus').textContent=prodMode?'編集中の内容を自動保存しました':'編集中の文字はこの端末にも自動保存されています'}
+  updateCompletion();
+  return true;
+ }catch(error){
+  console.error(error);status.textContent='保存できませんでした。通信状態をご確認ください。';document.getElementById('topStatus').textContent='保存できませんでした';return false;
+ }
 }
-function saveSoon(){clearTimeout(timer);timer=setTimeout(()=>saveDraft(false),400)}
+function saveDraft(manual=false){saveQueue=saveQueue.then(()=>performSave(manual));return saveQueue}
+function saveSoon(){clearTimeout(timer);timer=setTimeout(()=>saveDraft(false),650)}
 function updateSavedLabels(){const t=lastSaved?'最終保存：'+lastSaved:'最終保存：まだありません';document.getElementById('savedTop').textContent=t;document.getElementById('savedBottom').textContent=t;document.getElementById('savedFooter').textContent=t}
 function updateCompletion(){
  const done=[...document.querySelectorAll('[name="section_complete"]:checked')].map(x=>x.value);
  document.querySelectorAll('.card').forEach(c=>c.classList.toggle('done',done.includes(c.dataset.section)));
  document.getElementById('progressText').textContent='入力完了 '+done.length+' / 7';document.getElementById('bar').style.width=(done.length/7*100)+'%';
 }
-function restore(){
+function applyData(data={}){
+ lastSaved=data.meta?.lastSaved||'';
+ uploadedFiles=data.files||{top_photos:[],gallery_photos:[],logo_file:[]};
+ Object.entries(data.fields||{}).forEach(([n,v])=>{const el=form.elements[n];if(el&&typeof el.value!=='undefined')el.value=v});
+ Object.entries(data.checks||{}).forEach(([n,vals])=>document.querySelectorAll('[name="'+n+'"]').forEach(el=>el.checked=(vals||[]).includes(el.value||'yes')));
+ (data.members||[]).forEach(addMember);if(!(data.members||[]).length)addMember();
+ (data.lives||[]).forEach(addLive);if(!(data.lives||[]).length)addLive();
+ (data.contacts||[]).forEach(addContact);
+ toggleConditional();updateCompletion();updateSavedLabels();
+}
+async function restore(){
+ if(prodMode){
+  try{
+   const result=await websiteApi('load_site',{site_id:siteId});
+   const data=result?.intake?.payload||{};
+   if(result?.intake?.last_saved_at&&!data.meta?.lastSaved)data.meta={...(data.meta||{}),lastSaved:new Date(result.intake.last_saved_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')};
+   applyData(data);return;
+  }catch(error){console.error(error);status.textContent='保存済みデータを読み込めませんでした。';addMember();addLive();toggleConditional();return}
+ }
  const raw=localStorage.getItem(key);
  if(!raw){addMember();addLive();toggleConditional();updateCompletion();return}
- try{
-  const data=JSON.parse(raw);lastSaved=data.meta?.lastSaved||'';
-  Object.entries(data.fields||{}).forEach(([n,v])=>{const el=form.elements[n];if(el&&typeof el.value!=='undefined')el.value=v});
-  Object.entries(data.checks||{}).forEach(([n,vals])=>document.querySelectorAll('[name="'+n+'"]').forEach(el=>el.checked=vals.includes(el.value||'yes')));
-  (data.members||[]).forEach(addMember);if(!(data.members||[]).length)addMember();
-  (data.lives||[]).forEach(addLive);if(!(data.lives||[]).length)addLive();
-  (data.contacts||[]).forEach(addContact);
-  toggleConditional();updateCompletion();updateSavedLabels();
- }catch(e){addMember();addLive();toggleConditional()}
+ try{applyData(JSON.parse(raw))}catch(e){addMember();addLive();toggleConditional()}
 }
 document.getElementById('saveTop').onclick=()=>saveDraft(true);
 document.getElementById('saveBottom').onclick=()=>saveDraft(true);
 
-function fileNames(name){const input=form.elements[name];return input?.files?[...input.files].map(f=>f.name):[]}
+async function uploadSelectedFiles(){
+ const fields=['top_photos','gallery_photos','logo_file'];
+ for(const field of fields){
+  const input=form.elements[field];
+  const files=input?.files?[...input.files]:[];
+  if(!uploadedFiles[field])uploadedFiles[field]=[];
+  for(const file of files){
+   const exists=uploadedFiles[field].some(x=>x.name===file.name&&Number(x.size||0)===Number(file.size||0));
+   if(exists)continue;
+   const path=await uploadWebsiteFile(siteId,file,field);
+   uploadedFiles[field].push({name:file.name,size:file.size,type:file.type,path});
+  }
+  if(files.length)input.value='';
+ }
+}
+function fileNames(name){
+ const saved=(uploadedFiles[name]||[]).map(x=>x.name);
+ const current=form.elements[name]?.files?[...form.elements[name].files].map(f=>f.name):[];
+ return [...saved,...current];
+}
 function filesHtml(names){return names.length?'<div class="preview-files">'+names.map(n=>'<span class="preview-file">'+esc(n)+'</span>').join('')+'</div>':'<span class="preview-empty">未選択</span>'}
 function row(k,v,html=false){const empty=v===undefined||v===null||String(v).trim()==='';return '<div class="preview-row"><div class="preview-key">'+esc(k)+'</div><div class="preview-val">'+(empty?'<span class="preview-empty">未入力</span>':html?v:esc(v))+'</div></div>'}
 function renderPreview(){
@@ -279,17 +324,35 @@ function renderPreview(){
  parts.push('<div class="preview-send"><button type="button" class="btn" id="confirmSend">この内容で送信</button><p class="preview-send-note">現在は動作確認用のローカル送信です。本番版ではSITE IDに紐づけて安全に保存します。</p></div>');
  return parts.join('');
 }
-function demoSubmit(){
- const d=serialize(),f=d.fields;if(!String(f.site_name||'').trim())return alert('サイト名 / バンド名 / 店名を入力してください。');if(!(d.checks.rights||[]).length)return alert('掲載権利の確認にチェックしてください。');if(!(d.checks.privacy||[]).length)return alert('公開用連絡先の掲載許可を確認してください。');
+async function submitIntake(){
+ const d=serialize(),f=d.fields;
+ if(!String(f.site_name||'').trim())return alert('サイト名 / バンド名 / 店名を入力してください。');
+ if(!(d.checks.rights||[]).length)return alert('掲載権利の確認にチェックしてください。');
+ if(!(d.checks.privacy||[]).length)return alert('公開用連絡先の掲載許可を確認してください。');
+
+ if(prodMode){
+  try{
+   status.textContent='写真と入力内容を送信しています…';
+   await uploadSelectedFiles();
+   const payload=serialize();
+   const result=await websiteApi('submit_intake',{site_id:siteId,payload});
+   lastSaved=result?.submitted_at?new Date(result.submitted_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):now();
+   updateSavedLabels();
+   status.textContent='送信しました';
+   const p=document.getElementById('preview'),done=document.createElement('div');done.className='file-note';done.innerHTML='<strong>送信しました。</strong><br>SITE ID '+esc(siteId)+' の制作依頼として受け付けました。SHO側へ自動通知されます。';p.appendChild(done);document.getElementById('confirmSend')?.setAttribute('disabled','disabled');return;
+  }catch(error){console.error(error);status.textContent='送信できませんでした。時間を置いて再度お試しください。';return}
+ }
+
  const adminKey='sho-web-admin-demo-v2';let projects=[];try{projects=JSON.parse(localStorage.getItem(adminKey))||[]}catch(e){}
  const time=now(),request=[f.image_text&&'希望イメージ: '+f.image_text,f.colors&&'希望カラー: '+f.colors,(d.checks.features||[]).length&&'希望機能: '+d.checks.features.join('、'),f.other_features&&'その他機能: '+f.other_features,f.final_notes&&'細かい要望: '+f.final_notes].filter(Boolean).join('\n');
  const existing=projects.find(x=>String(x.id)===String(siteId));
  const project={id:String(siteId),name:f.site_name,customer:f.contact_name||'顧客',status:'building',updated:time,preview:'../index.html',customerReview:'../website-customer-review.html?id='+encodeURIComponent(siteId),profile:{industry:f.purpose||'未設定',mood:f.image_text?[f.image_text]:['未整理'],colors:f.colors?[f.colors]:['おまかせ'],likes:f.image_text?[f.image_text]:[],dislikes:existing?.profile?.dislikes||[]},current:'ヒアリング内容を受信。サイト作成中。',history:[{at:time,title:'ヒアリング受付',text:request||'初回ヒアリングを受け付けました。'}].concat(existing?.history||[]),notes:existing?.notes||[],customerApproved:false};
  if(existing)projects[projects.indexOf(existing)]=project;else projects.unshift(project);localStorage.setItem(adminKey,JSON.stringify(projects));status.textContent='送信しました（デモ）';const p=document.getElementById('preview');const done=document.createElement('div');done.className='file-note';done.innerHTML='<strong>送信しました。</strong><br>SITE ID '+esc(siteId)+' の案件として管理画面デモへ追加しました。';p.appendChild(done);document.getElementById('confirmSend')?.setAttribute('disabled','disabled');
 }
-document.getElementById('previewBtn').onclick=()=>{saveDraft(true);const p=document.getElementById('preview');p.innerHTML=renderPreview();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('confirmSend')?.addEventListener('click',demoSubmit)};
+document.getElementById('previewBtn').onclick=async()=>{await saveDraft(true);const p=document.getElementById('preview');p.innerHTML=renderPreview();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('confirmSend')?.addEventListener('click',submitIntake)};
 
-restore();
+if(prodMode)await requireWebsiteSession(location.href);
+await restore();
 })();
 </script>
 </body>
