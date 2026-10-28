@@ -121,7 +121,7 @@ create or replace function public.is_website_admin()
 returns boolean
 language sql
 stable
-security definer
+security invoker
 set search_path = public
 as $$
   select exists(select 1 from public.website_admins where user_id = auth.uid());
@@ -131,7 +131,7 @@ create or replace function public.has_website_site_access(target_site_id text)
 returns boolean
 language sql
 stable
-security definer
+security invoker
 set search_path = public
 as $$
   select public.is_website_admin()
