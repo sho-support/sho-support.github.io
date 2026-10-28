@@ -6,6 +6,12 @@ create table if not exists public.website_admins (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.website_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.website_sites (
   site_id text primary key,
   site_name text not null default '',
@@ -123,6 +129,7 @@ as $$
 $$;
 
 alter table public.website_admins enable row level security;
+alter table public.website_settings enable row level security;
 alter table public.website_sites enable row level security;
 alter table public.website_site_users enable row level security;
 alter table public.website_intakes enable row level security;
