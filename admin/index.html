@@ -86,8 +86,9 @@ function loadDemo(){
 function saveDemo(){localStorage.setItem(KEY,JSON.stringify(state))}
 
 function normalizeProduction(detail){
- const site=detail.site||{},payload=detail.intake?.payload||{},f=payload.fields||{},checks=payload.checks||{};
+ const site=detail.site||{},payload=detail.intake?.payload||{},f=payload.fields||{},checks=payload.checks||{},savedProfile=detail.profile||{};
  const features=Array.isArray(checks.features)?checks.features:[];
+ const prefs=savedProfile.preferences||{};
  const history=(detail.activity||[]).map(a=>({at:formatDate(a.created_at),title:activityLabel(a.action),text:a.detail||''}));
  return {
   id:site.site_id,
@@ -98,11 +99,11 @@ function normalizeProduction(detail){
   preview:site.preview_url||'',
   customerReview:'../website-customer-review.html?id='+encodeURIComponent(site.site_id)+'&prod=1',
   profile:{
-   industry:f.purpose||'未入力',
-   mood:f.image_text?[f.image_text]:[],
-   colors:f.colors?[f.colors]:[],
-   likes:features.concat((checks.live_all_page||[]).length?['LIVE関連をすべて別ページ']:[]),
-   dislikes:[],
+   industry:savedProfile.industry||f.purpose||'未入力',
+   mood:Array.isArray(prefs.mood)&&prefs.mood.length?prefs.mood:(f.image_text?[f.image_text]:[]),
+   colors:Array.isArray(prefs.colors)&&prefs.colors.length?prefs.colors:(f.colors?[f.colors]:[]),
+   likes:Array.isArray(prefs.likes)&&prefs.likes.length?prefs.likes:features.concat((checks.live_all_page||[]).length?['LIVE関連をすべて別ページ']:[]),
+   dislikes:Array.isArray(prefs.dislikes)?prefs.dislikes:[],
   },
   current:site.current_note||'',
   history,notes:[],customerApproved:Boolean(site.customer_approved),jobs:detail.jobs||[],
