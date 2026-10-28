@@ -46,6 +46,15 @@ create table if not exists public.website_intakes (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.website_profiles (
+  site_id text primary key references public.website_sites(site_id) on delete cascade,
+  industry text,
+  summary text,
+  preferences jsonb not null default '{}'::jsonb,
+  decisions jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.website_line_links (
   site_id text primary key references public.website_sites(site_id) on delete cascade,
   line_user_id text unique not null,
@@ -100,6 +109,10 @@ drop trigger if exists website_intakes_touch on public.website_intakes;
 create trigger website_intakes_touch before update on public.website_intakes
 for each row execute function public.website_touch_updated_at();
 
+drop trigger if exists website_profiles_touch on public.website_profiles;
+create trigger website_profiles_touch before update on public.website_profiles
+for each row execute function public.website_touch_updated_at();
+
 drop trigger if exists website_line_links_touch on public.website_line_links;
 create trigger website_line_links_touch before update on public.website_line_links
 for each row execute function public.website_touch_updated_at();
@@ -133,6 +146,7 @@ alter table public.website_settings enable row level security;
 alter table public.website_sites enable row level security;
 alter table public.website_site_users enable row level security;
 alter table public.website_intakes enable row level security;
+alter table public.website_profiles enable row level security;
 alter table public.website_line_links enable row level security;
 alter table public.website_activity enable row level security;
 alter table public.website_jobs enable row level security;
@@ -154,6 +168,11 @@ using (user_id = auth.uid() or public.is_website_admin());
 
 drop policy if exists website_intakes_access_select on public.website_intakes;
 create policy website_intakes_access_select on public.website_intakes
+for select to authenticated
+using (public.has_website_site_access(site_id));
+
+drop policy if exists website_profiles_access_select on public.website_profiles;
+create policy website_profiles_access_select on public.website_profiles
 for select to authenticated
 using (public.has_website_site_access(site_id));
 
