@@ -15,7 +15,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 .box{margin-top:12px;padding:18px;border:1px solid var(--line);border-radius:20px;background:#0d0d0d}.box h3{margin:0 0 8px;font-size:1rem}.choices{display:grid;gap:8px}.choice{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:14px;background:#101010;font-size:.76rem}.choice input{margin-top:3px}.hint{color:var(--muted);font-size:.7rem}
 .summary{margin-top:14px;padding:16px;border:1px solid rgba(84,215,137,.35);border-radius:18px;background:rgba(84,215,137,.04)}.summary small{color:#9aeeb8}.summary strong{display:block;margin-top:4px;font-size:1rem}.summary div{margin-top:4px;color:var(--soft);font-size:.76rem}
 .btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;margin-top:12px;border-radius:999px;background:var(--orange);color:#090909;font-weight:900}.btn.disabled{background:#222;color:#777;pointer-events:none}.secondary{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;margin-top:8px;border:1px solid var(--line);border-radius:999px;background:#101010;font-weight:800;font-size:.78rem}
-.notice{margin-top:10px;color:var(--muted);font-size:.7rem;text-align:center}
+.notice{margin-top:10px;color:var(--muted);font-size:.7rem;text-align:center}.domain-option{margin-top:12px;padding:16px;border:1px solid rgba(217,174,92,.3);border-radius:16px;background:#0d0d0d}.domain-option>label{display:flex;gap:9px;align-items:flex-start;font-weight:900;font-size:.82rem}.domain-option input{margin-top:4px}.domain-price{display:block;margin:6px 0 0;color:var(--orange2);font-weight:900}.domain-detail{margin-top:10px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0b0b0b}.domain-detail summary{cursor:pointer;padding:11px 12px;font-size:.75rem;font-weight:900}.domain-copy{padding:0 12px 12px;color:var(--soft);font-size:.72rem}.domain-copy strong{color:#fff}.domain-copy ul{margin:7px 0 0;padding-left:1.2em}.domain-copy li+li{margin-top:4px}
 @media(max-width:650px){.plans{grid-template-columns:1fr}.hero{padding-top:34px}}
 </style><link rel="stylesheet" href="website-theme.css">
 </head>
@@ -46,11 +46,24 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 </div>
 </div>
 
+<div class="domain-option">
+<label><input type="checkbox" id="domainOption">独自ドメイン設定を希望する</label>
+<span class="domain-price">設定代行 ¥5,000〜 ＋ ドメイン取得・更新の実費</span>
+<span class="hint">例：abcband.com のような専用URL。無料URLでもサイトの機能や表示品質は変わりません。</span>
+<details class="domain-detail"><summary>独自ドメインのメリット・デメリットを見る</summary><div class="domain-copy">
+<strong>メリット</strong>
+<ul><li>短く覚えやすいURLにできる</li><li>店舗・企業・公式サイトとしての印象を整えやすい</li><li>将来ほかのサーバーへ移る場合も同じドメインを使い続けやすい</li></ul>
+<strong style="display:block;margin-top:10px">デメリット・費用</strong>
+<ul><li>ドメイン会社へ毎年の取得・更新費用がかかる</li><li>ドメイン種類や契約会社によって料金が変わる</li><li>更新を止めると、そのURLを使えなくなる可能性がある</li><li>既存ドメインの移管や特殊なDNS設定は追加費用になる場合がある</li></ul>
+<div style="margin-top:9px">SHO WEB SUPPORTでは、取得先の案内・DNS設定・GitHub Pagesへの接続・HTTPS確認まで対応します。ドメインは原則としてお客様名義で取得します。</div>
+</div></details>
+</div>
+
 <div class="summary">
 <small>ORDER SUMMARY</small>
 <strong id="sumPlan">複数ページサイト ¥30,000〜</strong>
 <div id="sumCampaign">公開後3か月：定型更新使い放題 無料</div>
-<div id="sumAfter">無料期間終了後：改めて更新プランを選択</div>
+<div id="sumAfter">無料期間終了後：改めて更新プランを選択</div><div id="sumDomain">独自ドメイン：なし（無料URL）</div>
 </div>
 
 <a class="btn" href="website-payment.html">お支払い方法を見る →</a>
@@ -60,13 +73,14 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 </main>
 <script>
 (()=>{
- const plans=document.querySelectorAll('.plan'),sumPlan=document.getElementById('sumPlan'),sumCampaign=document.getElementById('sumCampaign'),sumAfter=document.getElementById('sumAfter');
+ const plans=document.querySelectorAll('.plan'),sumPlan=document.getElementById('sumPlan'),sumCampaign=document.getElementById('sumCampaign'),sumAfter=document.getElementById('sumAfter'),domainOption=document.getElementById('domainOption'),sumDomain=document.getElementById('sumDomain');
  function selectPlan(p){
    plans.forEach(x=>x.classList.toggle('active',x.dataset.plan===p));
    if(p==='one'){sumPlan.textContent='1ページサイト ¥15,000〜';sumCampaign.textContent='公開後更新：必要な時に都度依頼';}
    else{sumPlan.textContent='複数ページサイト ¥30,000〜';sumCampaign.textContent='公開後3か月：定型更新使い放題 無料';}
  }
  plans.forEach(x=>x.onclick=()=>selectPlan(x.dataset.plan));
+ domainOption.addEventListener('change',()=>{sumDomain.textContent=domainOption.checked?'独自ドメイン：設定代行 ¥5,000〜 ＋ 実費':'独自ドメイン：なし（無料URL）';});
 
 })();
 </script>
