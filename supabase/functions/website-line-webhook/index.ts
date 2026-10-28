@@ -68,6 +68,21 @@ Deno.serve(async (req) => {
       if (!lineUserId) continue;
 
       const text = String(event.message.text || '').trim();
+
+      const adminCode = Deno.env.get('LINE_ADMIN_LINK_CODE') || '';
+      const adminLink = text.match(/^SHO\s+ADMIN\s+LINK\s+(.+)$/i);
+      if (adminLink && adminCode && adminLink[1].trim() === adminCode) {
+        const p = await profile(lineUserId);
+        const { error: settingError } = await admin.from('website_settings').upsert({
+          key: 'line_owner',
+          value: { user_id: lineUserId, display_name: p?.displayName || null },
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'key' });
+        if (settingError) throw settingError;
+        await reply(event.replyToken, 'SHO WEB SUPPORTの自動通知先として、このLINEを登録しました。');
+        continue;
+      }
+
       const idMatch = text.match(/SITE\s*ID\s*[:：]?\s*([A-Za-z0-9_-]{3,32})/i);
 
       let siteId: string | null = null;
