@@ -3,429 +3,273 @@
 <head>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-X4VPQ87Q67"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-X4VPQ87Q67');</script>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#070707"><meta name="robots" content="noindex,nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070707">
+<meta name="robots" content="noindex,nofollow">
 <title>Website Intake Form | SHO</title>
+<link rel="stylesheet" href="website-theme.css">
 <style>
-:root{--bg:#070707;--soft:#c9c9c9;--muted:#818181;--orange:#f08a35;--orange2:#ffb274;--line:rgba(255,255,255,.14);--ok:#55d68a}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 10% 2%,rgba(240,138,53,.07),transparent 24%),var(--bg);color:#fff;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.65}.wrap{width:min(calc(100% - 24px),900px);margin:auto}
-header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}.head{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{font-weight:900;letter-spacing:.06em}.siteid{color:var(--orange2);font-weight:800;font-size:.78rem}
-.hero{padding:36px 0 22px}.hero h1{margin:0;font-size:clamp(2rem,7vw,3.5rem);line-height:1.05}.hero p{margin:10px 0 0;color:var(--soft);font-size:.84rem}.save{margin-top:12px;padding:10px 12px;border:1px solid rgba(85,214,138,.32);border-radius:14px;background:rgba(85,214,138,.05);color:#a6f0c4;font-size:.73rem}
-.progress{height:4px;background:#171717;border-radius:99px;overflow:hidden;margin-top:16px}.bar{height:100%;width:10%;background:var(--orange);transition:.25s}
-.section{padding:14px 0 40px}.card{border:1px solid rgba(197,31,56,.46)!important;border-radius:20px;background:linear-gradient(145deg,rgba(197,31,56,.045),#0b0b0b)!important;margin-bottom:11px;overflow:hidden;box-shadow:inset 0 1px rgba(255,255,255,.02)}.card[open]{border-color:rgba(225,58,82,.72)!important;background:linear-gradient(145deg,rgba(197,31,56,.075),#0b0b0b)!important}.card summary{cursor:pointer;list-style:none;padding:17px 18px;font-weight:900;display:flex;justify-content:space-between;gap:10px}.card summary::-webkit-details-marker{display:none}.card summary:after{content:"＋";color:var(--orange)}.card[open] summary:after{content:"−"}.body{padding:0 18px 20px;border-top:1px solid var(--line)}
-label{display:block;margin-top:14px;font-size:.8rem;font-weight:800}.hint{display:block;margin-top:4px;color:var(--muted);font-size:.7rem;font-weight:500}.required{color:var(--orange2)}
-input[type=text],input[type=url],input[type=email],input[type=date],input[type=time],textarea,select{width:100%;margin-top:7px;padding:12px;border:1px solid var(--line);background:#111;color:#fff;border-radius:10px;font:inherit}input::placeholder,textarea::placeholder{color:#6f6f6f;opacity:1}textarea{min-height:96px;resize:vertical}
-input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(240,138,53,.5);border-radius:12px;background:#0e0e0e;color:#bbb}input[type=file]::file-selector-button{border:0;border-radius:999px;padding:8px 12px;margin-right:10px;background:#222;color:#fff;font-weight:800}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.check{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:13px;background:#101010;font-size:.76rem}.check input{margin-top:3px}.feature-option{min-width:0}.feature-url{display:none;margin:7px 0 2px;padding:10px;border:1px solid rgba(240,138,53,.3);border-radius:12px;background:#0d0d0d}.feature-url.show{display:block}.feature-url label{margin-top:0}.feature-url input{margin-top:5px}
-.member,.liveblock,.contactlink{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#101010}.contact-inline{margin-top:10px;padding:12px;border:1px solid rgba(217,174,92,.25);border-radius:12px;background:#0d0d0d}.contact-detected{display:inline-flex;margin-top:7px;padding:4px 8px;border:1px solid rgba(197,31,56,.38);border-radius:999px;color:#e8d5d8;font-size:.74rem;font-weight:800}.blockhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.blockhead h4{margin:0}.remove{border:0;background:transparent;color:#aaa;font-size:.72rem;text-decoration:underline}.addbtn{width:100%;margin-top:10px;padding:11px 12px;border:1px solid rgba(240,138,53,.45);border-radius:999px;background:#111;color:var(--orange2);font-weight:900}
-.notice{margin-top:13px;padding:13px;border-left:3px solid var(--orange);background:#0d0d0d;color:var(--soft);font-size:.75rem}.history-note{margin-top:10px;padding:11px 12px;border:1px solid rgba(217,174,92,.25);border-radius:10px;background:#0d0d0d;color:var(--soft);font-size:.8rem}.close-section{width:100%;margin-top:18px;padding:12px 14px;border:1px solid rgba(217,174,92,.3);border-radius:10px;background:#0b0b0b;color:#ddd;font-weight:900;font-size:.86rem;cursor:pointer}.close-section:hover{border-color:var(--orange2);color:#fff}.conditional{display:none}.conditional.show{display:block}.mini-title{margin:16px 0 0;font-size:.76rem;color:var(--orange2);font-weight:900}.buttons{display:grid;grid-template-columns:1fr;gap:8px;margin-top:18px}.btn{border:0;border-radius:999px;padding:13px 12px;font-weight:900;background:var(--orange);color:#090909}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.status{text-align:center;color:var(--muted);font-size:.7rem;margin-top:9px}.preview{margin-top:14px;padding:14px;border:1px solid rgba(217,174,92,.28);border-radius:14px;background:#0b0b0b;font-size:.82rem;color:#ddd;display:none}.preview-title{margin:0 0 12px;font-size:1.05rem;color:#fff}.preview-section{padding:12px 0;border-top:1px solid rgba(255,255,255,.08)}.preview-section:first-of-type{border-top:0}.preview-section h4{margin:0 0 8px;color:var(--orange2);font-size:.82rem;letter-spacing:.05em}.preview-row{display:grid;grid-template-columns:minmax(110px,32%) 1fr;gap:10px;padding:5px 0}.preview-key{color:#9e968d;font-weight:800}.preview-val{color:#fff;overflow-wrap:anywhere}.preview-empty{color:#696969}.preview-files{display:flex;flex-wrap:wrap;gap:5px}.preview-file{padding:3px 7px;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:#111;color:#ddd;font-size:.76rem}.preview-send{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.09)}.preview-send .btn{width:100%}.preview-send-note{margin:8px 0 0;color:var(--muted);font-size:.7rem;text-align:center}@media(max-width:520px){.preview-row{grid-template-columns:1fr;gap:2px}}
-@media(max-width:640px){.row,.checkgrid,.buttons{grid-template-columns:1fr}.hero{padding-top:30px}.brand{font-size:.83rem}.siteid{font-size:.7rem}}
-</style><link rel="stylesheet" href="website-theme.css">
+:root{--bg:#070707;--soft:#c9c9c9;--muted:#818181;--red:#c61f38;--gold:#d9ae5c;--line:rgba(255,255,255,.14);--ok:#55d68a}
+*{box-sizing:border-box}html,body{max-width:100%;overflow-x:hidden}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 10% 2%,rgba(198,31,56,.09),transparent 25%),var(--bg);color:#fff;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.65}.wrap{width:min(calc(100% - 24px),900px);margin:auto}
+header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}.head{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{font-weight:950;letter-spacing:.06em}.siteid{color:var(--gold);font-weight:900;font-size:.75rem}
+.hero{padding:30px 0 18px}.hero h1{margin:0;font-size:clamp(2rem,7vw,3.5rem);line-height:1.05}.hero p{margin:9px 0 0;color:var(--soft);font-size:.82rem}.file-note{margin-top:11px;padding:10px 12px;border:1px solid rgba(217,174,92,.25);border-radius:11px;background:#0d0d0d;color:#d0c8b7;font-size:.71rem}
+.savebar{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;margin-top:13px}.savebtn{border:1px solid rgba(217,174,92,.42);border-radius:10px;background:#17130c;color:#f0d598;padding:10px 13px;font-weight:950;font-size:.76rem}.save-meta{min-width:0;color:var(--muted);font-size:.68rem}.save-meta strong{display:block;color:#c9c9cd;font-size:.72rem}.progressline{display:flex;justify-content:space-between;gap:10px;margin-top:13px;color:#aaa;font-size:.68rem}.progress{height:4px;background:#171717;border-radius:99px;overflow:hidden;margin-top:6px}.bar{height:100%;width:0;background:var(--red);transition:.25s}
+.section{padding:12px 0 40px}.card{border:1px solid rgba(198,31,56,.44)!important;border-radius:17px;background:linear-gradient(145deg,rgba(198,31,56,.045),#0b0b0b)!important;margin-bottom:10px;overflow:hidden}.card[open]{border-color:rgba(222,57,80,.72)!important;background:linear-gradient(145deg,rgba(198,31,56,.075),#0b0b0b)!important}.card summary{cursor:pointer;list-style:none;padding:16px 17px;font-weight:950;display:flex;align-items:center;gap:9px}.card summary::-webkit-details-marker{display:none}.card summary:after{content:"＋";margin-left:auto;color:#d3364d}.card[open] summary:after{content:"−"}.done-mark{display:none;color:var(--ok);font-size:.82rem}.card.done .done-mark{display:inline}.body{padding:0 17px 18px;border-top:1px solid var(--line)}
+label{display:block;margin-top:13px;font-size:.79rem;font-weight:850}.hint{display:block;margin-top:4px;color:var(--muted);font-size:.69rem;font-weight:500}.required{color:#efc676}
+input[type=text],input[type=url],input[type=email],input[type=date],input[type=time],textarea,select{width:100%;margin-top:7px;padding:12px;border:1px solid var(--line);background:#111;color:#fff;border-radius:10px;font:inherit;font-size:16px}input::placeholder,textarea::placeholder{color:#666;opacity:1}textarea{min-height:94px;resize:vertical}
+input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(217,174,92,.45);border-radius:11px;background:#0e0e0e;color:#bbb}input[type=file]::file-selector-button{border:0;border-radius:8px;padding:8px 11px;margin-right:9px;background:#222;color:#fff;font-weight:900}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.check{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:11px;background:#101010;font-size:.75rem}.check input{margin-top:3px;flex:0 0 auto}.feature-option{min-width:0}.conditional{display:none}.conditional.show{display:block}.feature-url,.contact-inline,.live-layout{margin:7px 0 2px;padding:10px;border:1px solid rgba(217,174,92,.25);border-radius:11px;background:#0d0d0d}.feature-url{display:none}.feature-url.show{display:block}.feature-url label{margin-top:0}.mini-title{display:block;margin:0 0 3px;color:#e7c779;font-size:.75rem;font-weight:950}
+.member,.liveblock,.contactlink{margin-top:11px;padding:13px;border:1px solid var(--line);border-radius:13px;background:#101010}.blockhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.blockhead h4{margin:0;font-size:.82rem}.remove{border:0;background:transparent;color:#aaa;font-size:.7rem;text-decoration:underline}.addbtn{width:100%;margin-top:9px;padding:10px 11px;border:1px solid rgba(217,174,92,.4);border-radius:10px;background:#111;color:#e8ca87;font-weight:950;font-size:.76rem}
+.social-row{margin-top:8px;padding:9px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:#0d0d0d}.social-row .mini-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px}.auto-badge{display:inline-flex;padding:3px 7px;border:1px solid rgba(198,31,56,.4);border-radius:999px;color:#e7cbd0;font-size:.65rem;font-weight:900}.button-preview{display:inline-flex;max-width:100%;padding:5px 8px;border:1px solid rgba(217,174,92,.35);border-radius:7px;background:#17130c;color:#f0d598;font-size:.66rem;font-weight:900;overflow-wrap:anywhere}
+.notice{margin-top:12px;padding:12px;border-left:3px solid var(--red);background:#0d0d0d;color:var(--soft);font-size:.73rem}.history-note{margin-top:10px;padding:11px 12px;border:1px solid rgba(217,174,92,.25);border-radius:10px;background:#0d0d0d;color:var(--soft);font-size:.76rem}
+.section-footer{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:17px;padding-top:13px;border-top:1px solid rgba(255,255,255,.08)}.section-complete{display:flex;align-items:center;gap:8px;margin:0;padding:9px 10px;border:1px solid rgba(85,214,138,.24);border-radius:9px;background:rgba(85,214,138,.04);color:#cdebd9;font-size:.72rem}.section-complete input{margin:0}.close-section{padding:10px 12px;border:1px solid rgba(217,174,92,.3);border-radius:9px;background:#0b0b0b;color:#ddd;font-weight:900;font-size:.74rem}
+.referral{margin:14px 0;padding:13px;border:1px solid rgba(217,174,92,.22);border-radius:13px;background:#0d0d0f}.referral label{margin:0}.bottom-save{margin-top:14px}.buttons{display:grid;grid-template-columns:1fr;gap:8px;margin-top:11px}.btn{border:0;border-radius:11px;padding:13px 12px;font-weight:950;background:var(--red);color:#fff}.status{text-align:center;color:var(--muted);font-size:.68rem;margin-top:8px}
+.preview{margin-top:13px;padding:13px;border:1px solid rgba(217,174,92,.28);border-radius:13px;background:#0b0b0b;font-size:.8rem;color:#ddd;display:none}.preview-title{margin:0 0 10px;font-size:1rem}.preview-section{padding:11px 0;border-top:1px solid rgba(255,255,255,.08)}.preview-section h4{margin:0 0 7px;color:#e8ca87;font-size:.79rem}.preview-row{display:grid;grid-template-columns:minmax(105px,30%) 1fr;gap:8px;padding:4px 0}.preview-key{color:#9b958d;font-weight:850}.preview-val{color:#fff;overflow-wrap:anywhere}.preview-empty{color:#666}.preview-files{display:flex;flex-wrap:wrap;gap:5px}.preview-file{padding:3px 6px;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:#111;font-size:.72rem}.preview-send{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.09)}.preview-send .btn{width:100%}.preview-send-note{text-align:center;color:var(--muted);font-size:.68rem}
+@media(max-width:640px){.row,.checkgrid{grid-template-columns:1fr}.savebar{grid-template-columns:1fr}.section-footer{grid-template-columns:1fr}.close-section{width:100%}.preview-row{grid-template-columns:1fr;gap:1px}.hero{padding-top:27px}}
+</style>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">SHO WEBSITE INTAKE</div><div class="siteid">SITE ID: <span id="siteId">----</span></div></div></header>
 <main class="wrap">
 <section class="hero">
-  <h1>制作ヒアリングフォーム</h1>
-  <p>分かるところから入力してください。文字入力・選択内容はこの端末に自動保存されます。</p>
-  <div class="save">写真ファイルはブラウザを閉じると保持されないため、送信前に再確認してください。</div>
-  <div class="progress"><div class="bar" id="bar"></div></div>
+<h1>制作ヒアリングフォーム</h1>
+<p>一度に全部入力しなくても大丈夫です。入力できた項目から「入力完了」にチェックしてください。</p>
+<div class="file-note">写真ファイルは現在のデモではブラウザを閉じると保持されません。本番版ではSITE IDに紐づけて保存します。</div>
+<div class="savebar"><button type="button" class="savebtn" id="saveTop">入力内容を一時保存</button><div class="save-meta"><strong id="savedTop">最終保存：まだありません</strong><span>編集中の文字はこの端末にも自動保存されます。</span></div></div>
+<div class="progressline"><span id="progressText">入力完了 0 / 7</span><span>後から続きから入力できます</span></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
 </section>
 
 <form id="intake"><section class="section">
 
-<details class="card"><summary>01 基本情報</summary><div class="body">
-  <label>サイト名 / バンド名 / 店名 <span class="required">*</span>
-    <input name="site_name" type="text" placeholder="HPトップに表示される名前（例：ABC BAND）">
-    <span class="hint">この名前をホームページのメイン表示に使います。</span>
-  </label>
-  <div class="row"><label>担当者名<input name="contact_name" type="text"></label><label>連絡用メール<input name="contact_email" type="email"></label></div>
-  <label>サイトの目的
-    <select name="purpose"><option value="">選択してください</option><option>バンド・アーティスト公式サイト</option><option>店舗・サービス紹介</option><option>個人活動・ポートフォリオ</option><option>イベント・団体</option><option>その他</option></select>
-    <span class="hint">目的に合わせて、見せ方や必要な導線を調整します。</span>
-  </label>
-  <label>こんなサイトがいい！<textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。LIVE情報を一番目立たせたい。"></textarea></label>
-  <label>参考にしたいサイトURL<input name="reference_url" type="url" placeholder="https://..."></label>
-  <label>HPの希望イメージカラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label>
+<details class="card" data-section="1"><summary><span>01 基本情報</span><span class="done-mark">✓</span></summary><div class="body">
+<label>サイト名 / バンド名 / 店名 <span class="required">*</span><input name="site_name" type="text" placeholder="HPトップに表示される名前（例：ABC BAND）"><span class="hint">ホームページのメイン表示に使います。</span></label>
+<div class="row"><label>担当者名<input name="contact_name" type="text"></label><label>連絡用メール<input name="contact_email" type="email"></label></div>
+<label>サイトの目的<select name="purpose"><option value="">選択してください</option><option>バンド・アーティスト公式サイト</option><option>店舗・サービス紹介</option><option>個人活動・ポートフォリオ</option><option>イベント・団体</option><option>企業・事業サイト</option><option>その他</option></select></label>
+<label>こんなサイトがいい！<textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。LIVE情報を目立たせたい。"></textarea></label>
+<label>参考にしたいサイトURL<input name="reference_url" type="url" placeholder="https://..."></label>
+<label>HPの希望イメージカラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label>
 </div></details>
 
-<details class="card"><summary>02 使用する写真</summary><div class="body">
-  <label>TOPに使いたい写真<input name="top_photos" type="file" accept="image/*" multiple><span class="hint">複数枚添付すると、TOPでスライドショーのように表示できます。</span></label>
-  <label>ギャラリーに載せたい写真<input name="gallery_photos" type="file" accept="image/*" multiple></label>
-  <label>ギャラリーの並び順<select name="gallery_order"><option>おまかせ</option><option>新しい順</option><option>古い順</option><option>ごちゃまぜ</option></select><span class="hint">指定がなければ、写真に合わせて見やすく配置します。</span></label>
-  <label>ロゴ<input name="logo_file" type="file" accept="image/*,.svg"></label>
-  <label>写真についての補足（任意）<textarea name="photo_notes" placeholder="例：この写真は大きく見せたい、ライブ写真と宣材写真を分けたい など"></textarea></label>
+<details class="card" data-section="2"><summary><span>02 使用する写真</span><span class="done-mark">✓</span></summary><div class="body">
+<label>TOPに使用する写真<input name="top_photos" type="file" accept="image/*" multiple><span class="hint">複数枚ならTOPでスライド表示にもできます。</span></label>
+<label>ギャラリーに載せたい写真<input name="gallery_photos" type="file" accept="image/*" multiple></label>
+<label>ギャラリーの並び順<select name="gallery_order"><option>おまかせ</option><option>新しい順</option><option>古い順</option><option>ごちゃまぜ</option></select></label>
+<label>ロゴ<input name="logo_file" type="file" accept="image/*,.svg"></label>
+<label>写真についての補足（任意）<textarea name="photo_notes" placeholder="例：この写真を一番大きくしたい、ライブ写真と宣材写真を分けたい など"></textarea></label>
 </div></details>
 
-<details class="card"><summary>03 ページ・機能</summary><div class="body">
-  <span class="hint" style="margin-top:13px">複数ページサイトプランでは一般的なバンド・アーティストサイトの機能をできるだけ標準に含めます。</span>
-  <div class="checkgrid">
-    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="TOP" checked>TOP</label></div>
-    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="写真ギャラリー">写真ギャラリー</label></div>
-    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="次回LIVE">次回LIVE</label></div>
-    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="過去LIVE">過去LIVE</label></div>
-    <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="メンバー個別ページ">メンバー個別ページ</label></div>
+<details class="card" data-section="3"><summary><span>03 ページ・機能</span><span class="done-mark">✓</span></summary><div class="body">
+<span class="hint" style="margin-top:12px">TOPページは必ず作成します。追加したいページ・表示・リンクにチェックしてください。</span>
+<div class="checkgrid">
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="写真ギャラリー">写真ギャラリー</label></div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="これからのLIVE表示">これからのLIVE表示</label></div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="過去LIVEページ">過去LIVEページ</label></div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="メンバー個別ページ">メンバー個別ページ</label></div>
 
-    <div class="feature-option">
-      <label class="check"><input type="checkbox" name="features" value="YouTubeリンクボタン" data-url-target="youtubeInline">YouTubeリンクボタン</label>
-      <div class="feature-url" id="youtubeInline"><label>YouTube URL<input name="youtube" type="url" placeholder="https://youtube.com/..."></label></div>
-    </div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="YouTubeリンクボタン" data-url-target="youtubeInline">YouTubeリンクボタン</label><div class="feature-url" id="youtubeInline"><label>YouTube URL<input name="youtube" type="url" placeholder="https://youtube.com/..."></label></div></div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="Instagramリンクボタン" data-url-target="instagramInline">Instagram</label><div class="feature-url" id="instagramInline"><label>Instagram URL<input name="instagram" type="url" placeholder="https://instagram.com/..."></label></div></div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="Xリンクボタン" data-url-target="xInline">X</label><div class="feature-url" id="xInline"><label>X URL<input name="x_url" type="url" placeholder="https://x.com/..."></label></div></div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="TikTokリンクボタン" data-url-target="tiktokInline">TikTok</label><div class="feature-url" id="tiktokInline"><label>TikTok URL<input name="tiktok" type="url" placeholder="https://tiktok.com/@..."></label></div></div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="Facebookリンクボタン" data-url-target="facebookInline">Facebook</label><div class="feature-url" id="facebookInline"><label>Facebook URL<input name="facebook" type="url" placeholder="https://facebook.com/..."></label></div></div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="その他SNSリンクボタン" data-url-target="otherSnsInline">その他SNS</label><div class="feature-url" id="otherSnsInline"><label>SNS名<input name="other_sns_name" type="text" placeholder="例：Threads"></label><label>URL<input name="other_sns" type="url" placeholder="https://..."></label></div></div>
 
-    <div class="feature-option">
-      <label class="check"><input type="checkbox" name="features" value="Instagramリンクボタン" data-url-target="instagramInline">Instagram</label>
-      <div class="feature-url" id="instagramInline"><label>Instagram URL<input name="instagram" type="url" placeholder="https://instagram.com/..."></label></div>
-    </div>
+<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="問い合わせ・連絡先" id="contactFeature">問い合わせ・連絡先</label>
+<div class="contact-inline conditional" id="contactInline"><span class="mini-title">公開する連絡先</span><span class="hint">LINE・Instagram・X・メール等はURLから自動判定します。</span><div id="contactLinks"></div><button type="button" class="addbtn" id="addContact">＋ 連絡先を追加</button></div></div>
+</div>
 
-    <div class="feature-option">
-      <label class="check"><input type="checkbox" name="features" value="Xリンクボタン" data-url-target="xInline">X</label>
-      <div class="feature-url" id="xInline"><label>X URL<input name="x_url" type="url" placeholder="https://x.com/..."></label></div>
-    </div>
+<div class="live-layout"><span class="mini-title">LIVEの標準配置</span><span class="hint">標準では「これからのLIVE」はTOPへ表示し、「過去LIVE」は別ページへ掲載します。</span><label class="check" style="margin-top:8px"><input type="checkbox" name="live_all_page" value="yes">LIVE関連をすべて別ページにまとめたい</label></div>
 
-    <div class="feature-option">
-      <label class="check"><input type="checkbox" name="features" value="TikTokリンクボタン" data-url-target="tiktokInline">TikTok</label>
-      <div class="feature-url" id="tiktokInline"><label>TikTok URL<input name="tiktok" type="url" placeholder="https://tiktok.com/@..."></label></div>
-    </div>
-
-    <div class="feature-option">
-      <label class="check"><input type="checkbox" name="features" value="Facebookリンクボタン" data-url-target="facebookInline">Facebook</label>
-      <div class="feature-url" id="facebookInline"><label>Facebook URL<input name="facebook" type="url" placeholder="https://facebook.com/..."></label></div>
-    </div>
-
-    <div class="feature-option">
-      <label class="check"><input type="checkbox" name="features" value="その他SNSリンクボタン" data-url-target="otherSnsInline">その他SNS</label>
-      <div class="feature-url" id="otherSnsInline"><label>SNS名<input name="other_sns_name" type="text" placeholder="例：Threads"></label><label>URL<input name="other_sns" type="url" placeholder="https://..."></label></div>
-    </div>
-
-    <div class="feature-option">
-      <label class="check"><input type="checkbox" name="features" value="問い合わせ・連絡先" id="contactFeature">問い合わせ・連絡先</label>
-      <div class="contact-inline conditional" id="contactInline">
-        <span class="mini-title" style="margin-top:0">公開する連絡先</span>
-        <span class="hint">LINE・Instagram・X・Facebook・TikTok・YouTube・メール等は入力内容から自動判定します。</span>
-        <div id="contactLinks"></div>
-        <button type="button" class="addbtn" id="addContact">＋ 連絡先を追加</button>
-      </div>
-    </div>
-  </div>
-  <label>その他ほしい機能<textarea name="other_features" placeholder="例：応援ページ、FAQ、機材紹介など"></textarea></label>
-  <div class="notice">決済、会員制、予約、EC、6名を超える個別メンバーページ、大規模な追加機能は別途相談・追加費用となる場合があります。</div>
+<label>その他ほしい機能<textarea name="other_features" placeholder="例：FAQ、予約導線、応援ページ、機材紹介など"></textarea></label>
+<div class="notice">決済、会員制、予約、EC、6名を超える個別メンバーページ、大規模な追加機能は別途相談・追加費用となる場合があります。</div>
 </div></details>
 
-<details class="card"><summary>04 メンバー情報（個別ページが必要な場合）</summary><div class="body">
-  <div id="members"></div>
-  <button type="button" class="addbtn" id="addMember">＋ メンバーを追加</button>
-  <div class="notice">複数ページサイトプランは個別メンバーページ5名まで標準。6名以上は要相談・追加費用となる場合があります。</div>
+<details class="card" data-section="4"><summary><span>04 メンバー情報（必要な場合）</span><span class="done-mark">✓</span></summary><div class="body">
+<span class="hint" style="margin-top:12px">メンバー個別ページを希望する場合に入力してください。SNSリンクは1人につき複数追加できます。</span>
+<div id="members"></div>
+<button type="button" class="addbtn" id="addMember">＋ メンバーを追加</button>
+<div class="notice">複数ページサイトプランは個別メンバーページ5名まで標準。6名以上は要相談です。</div>
 </div></details>
 
-<details class="card"><summary>05 LIVE情報</summary><div class="body">
-  <div id="liveBlocks"></div>
-  <button type="button" class="addbtn" id="addLive">＋ LIVE情報を追加</button>
-  <div class="history-note"><strong>日付で自動振り分けします。</strong><br>これからの日程はUPCOMING LIVE、過去の日程を入力するとLIVE HISTORYとして掲載できます。</div>
-  <div class="notice">LIVEごとに「日付・時間・イベント名・会場・イベント詳細」を1セットで追加できます。イベント詳細には出演者、料金、タイムテーブル、セットリスト、YouTube URLなど必要な内容だけ入力してください。</div>
+<details class="card" data-section="5"><summary><span>05 LIVE情報</span><span class="done-mark">✓</span></summary><div class="body">
+<div id="liveBlocks"></div>
+<button type="button" class="addbtn" id="addLive">＋ LIVE情報を追加</button>
+<div class="history-note"><strong>日付で自動振り分けします。</strong><br>日付で「過去LIVE一覧」と「これからのLIVE一覧」へ自動で振り分けられます。</div>
+<div class="notice">LIVEごとに日付・時間・イベント名・会場・イベント詳細を追加できます。イベント詳細は出演者、料金、タイムテーブル、セットリスト、YouTube URLなど必要な内容だけでOKです。</div>
 </div></details>
 
-<details class="card"><summary>06 公開・URL</summary><div class="body">
-  <label>公開URLの方法
-    <select name="domain" id="domainSelect"><option>無料URLでOK</option><option>独自ドメイン名を希望</option><option>すでに独自ドメインを持っている</option><option>まだ決めていない</option></select>
-    <span class="hint">独自ドメインの取得・更新費用など外部サービス実費は別途になる場合があります。</span>
-  </label>
-  <div id="domainDetail" class="conditional"><label>希望・所有ドメイン<input name="domain_name" type="text" placeholder="例：abcbandofficial.com"></label><span class="hint">希望名がすでに使われている場合は取得できません。空き状況を確認してから決定します。</span></div>
-  <label>紹介コード<input name="referral" type="text" placeholder="紹介者がいる場合"></label>
-  
+<details class="card" data-section="6"><summary><span>06 公開URL</span><span class="done-mark">✓</span></summary><div class="body">
+<div class="history-note"><strong>基本は無料URLで問題ありません。</strong><br>SHO WEB SUPPORT側で用意する無料URLで公開できます。独自ドメイン（例：abcband.com）が必要な場合だけ下にチェックしてください。</div>
+<label class="check"><input type="checkbox" name="custom_domain" value="yes" id="customDomain">独自ドメインを希望する / すでに持っている</label>
+<div id="domainDetail" class="conditional">
+<label>独自ドメインについて<select name="domain_type"><option value="">選択してください</option><option>新しく取得したい</option><option>すでに持っている</option></select></label>
+<label>希望・所有ドメイン<input name="domain_name" type="text" placeholder="例：abcbandofficial.com"></label>
+<span class="hint">取得・更新費用など外部サービス実費がかかる場合があります。</span>
+</div>
 </div></details>
 
-<details class="card"><summary>07 最終確認</summary><div class="body">
-  <label class="check"><input type="checkbox" name="rights" value="yes">掲載する写真・ロゴ・文章について、サイト掲載に必要な権利・許可を確認しています。</label>
-  <div class="notice" style="margin-bottom:10px">送信前に <a href="website-privacy.html" target="_blank" rel="noopener" style="color:var(--orange2);font-weight:800">プライバシーポリシーを確認</a> してください。</div><label class="check"><input type="checkbox" name="privacy" value="yes">入力した公開用連絡先やSNS URLをホームページへ掲載して問題ありません。</label>
-  <label>その他・伝えておきたいこと<textarea name="final_notes"></textarea></label>
-  <div class="notice">この見本はまだ本番送信には接続していません。本番では顧客IDに紐づけて安全に保存・送信します。</div>
+<details class="card" data-section="7"><summary><span>07 最終確認</span><span class="done-mark">✓</span></summary><div class="body">
+<label class="check"><input type="checkbox" name="rights" value="yes">掲載する写真・ロゴ・文章について、サイト掲載に必要な権利・許可を確認しています。</label>
+<div class="notice" style="margin-bottom:9px">送信前に <a href="website-privacy.html" target="_blank" rel="noopener" style="color:#e8ca87;font-weight:900">プライバシーポリシーを確認</a> してください。</div>
+<label class="check"><input type="checkbox" name="privacy" value="yes">入力した公開用連絡先やSNS URLをホームページへ掲載して問題ありません。</label>
+<label>その他・伝えておきたいこと<textarea name="final_notes" placeholder="細かい要望、迷っていること、こうしてほしい等を自由に入力してください。箇条書きでも、なぐり書きでも大丈夫です。"></textarea></label>
 </div></details>
 
+<div class="referral"><label>紹介コード（ある場合）<input name="referral" type="text" placeholder="紹介者からコードを受け取っている場合のみ"></label></div>
+
+<div class="savebar bottom-save"><button type="button" class="savebtn" id="saveBottom">入力内容を一時保存</button><div class="save-meta"><strong id="savedBottom">最終保存：まだありません</strong><span id="status">入力内容はこの端末に自動保存されます</span></div></div>
 <div class="buttons"><button type="button" class="btn" id="previewBtn">入力内容を確認</button></div>
-<div class="status" id="status">入力内容は自動保存されます</div>
 <div class="preview" id="preview"></div>
-</section></form></main>
+</section></form>
+</main>
+<nav class="site-legal-nav" aria-label="法務・ポリシー"><a href="website-legal.html">特商法表記</a><a href="website-terms.html">利用条件</a><a href="website-privacy.html">プライバシー</a></nav>
 
 <script>
 (()=>{
- const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO';
- document.getElementById('siteId').textContent=siteId;
- const form=document.getElementById('intake'),key='sho-intake-v2-'+siteId,status=document.getElementById('status');
- const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks'),contactLinks=document.getElementById('contactLinks');
- let memberCount=0,liveCount=0,contactCount=0,timer;
+const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO';
+document.getElementById('siteId').textContent=siteId;
+const form=document.getElementById('intake'),key='sho-intake-v3-'+siteId,status=document.getElementById('status');
+const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks'),contactLinks=document.getElementById('contactLinks');
+let memberCount=0,liveCount=0,contactCount=0,timer,lastSaved='';
 
- document.querySelectorAll('.card .body').forEach(body=>{
-   const close=document.createElement('button');
-   close.type='button';
-   close.className='close-section';
-   close.textContent='− 閉じる';
-   close.addEventListener('click',()=>{
-     const details=body.closest('details');
-     if(!details) return;
-     details.open=false;
-     details.querySelector('summary')?.scrollIntoView({behavior:'smooth',block:'center'});
-   });
-   body.appendChild(close);
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const now=()=>new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-');
+
+function detectType(value=''){
+ const v=String(value).trim().toLowerCase();
+ if(!v)return '';
+ if(v.includes('line.me/')||v.includes('lin.ee/'))return 'LINE';
+ if(v.includes('instagram.com/'))return 'Instagram';
+ if(v.includes('x.com/')||v.includes('twitter.com/'))return 'X';
+ if(v.includes('facebook.com/')||v.includes('fb.me/'))return 'Facebook';
+ if(v.includes('tiktok.com/'))return 'TikTok';
+ if(v.includes('youtube.com/')||v.includes('youtu.be/'))return 'YouTube';
+ if(v.startsWith('mailto:')||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))return 'メール';
+ if(v.startsWith('tel:')||/^0\d{8,10}$/.test(v.replace(/[\s-]/g,'')))return '電話';
+ if(/^https?:\/\//.test(v))return 'Webリンク';
+ return 'その他';
+}
+function defaultButton(type){return {LINE:'LINEで問い合わせ',Instagram:'Instagram',X:'Xを見る',Facebook:'Facebook',TikTok:'TikTok',YouTube:'YouTubeを見る','メール':'メールで問い合わせ','電話':'電話する','Webリンク':'リンクを開く'}[type]||'お問い合わせ'}
+
+function addSocial(container,data={}){
+ const d=document.createElement('div');d.className='social-row member-social';
+ d.innerHTML='<div class="blockhead"><span class="mini-title">SNS / リンク</span><button type="button" class="remove">削除</button></div><input type="text" data-ms="url" value="'+esc(data.url||'')+'" placeholder="https://..."><div class="mini-line"><span class="auto-badge"></span></div>';
+ const input=d.querySelector('[data-ms="url"]'),badge=d.querySelector('.auto-badge');
+ const refresh=()=>{const t=detectType(input.value);badge.textContent=t||'URLを入力すると自動判定'};
+ input.addEventListener('input',()=>{refresh();saveSoon()});d.querySelector('.remove').onclick=()=>{d.remove();saveSoon()};container.appendChild(d);refresh();
+}
+function addMember(data={}){
+ memberCount++;const n=memberCount,d=document.createElement('div');d.className='member';
+ d.innerHTML='<div class="blockhead"><h4>MEMBER '+n+'</h4>'+(n>1?'<button type="button" class="remove member-remove">削除</button>':'')+'</div><label>名前<input type="text" data-mf="name" value="'+esc(data.name||'')+'"></label><label>パート / 役割<input type="text" data-mf="part" value="'+esc(data.part||'')+'"></label><label>紹介文<textarea data-mf="bio">'+esc(data.bio||'')+'</textarea></label><div class="member-socials"></div><button type="button" class="addbtn add-social">＋ SNS・リンクを追加</button><label>写真<input type="file" accept="image/*"></label>';
+ const socials=d.querySelector('.member-socials');(data.socials||[]).forEach(x=>addSocial(socials,x));if(data.sns&&!data.socials?.length)addSocial(socials,{url:data.sns});
+ d.querySelector('.add-social').onclick=()=>{addSocial(socials);saveSoon()};d.querySelector('.member-remove')?.addEventListener('click',()=>{d.remove();saveSoon()});members.appendChild(d);
+}
+function classifyLive(date){if(!date)return '';const t=new Date();t.setHours(0,0,0,0);return new Date(date+'T00:00:00')<t?'過去LIVE一覧':'これからのLIVE一覧'}
+function addLive(data={}){
+ liveCount++;const n=liveCount,d=document.createElement('div');d.className='liveblock';
+ d.innerHTML='<div class="blockhead"><h4>LIVE '+n+'</h4>'+(n>1?'<button type="button" class="remove live-remove">削除</button>':'')+'</div><div class="row"><label>日付<input type="date" data-lf="date" value="'+esc(data.date||'')+'"></label><label>時間<input type="time" data-lf="time" value="'+esc(data.time||'')+'"></label></div><span class="auto-badge live-badge"></span><label>イベント名<input type="text" data-lf="name" value="'+esc(data.name||'')+'" placeholder="例：ROCK NIGHT"></label><label>会場<input type="text" data-lf="venue" value="'+esc(data.venue||'')+'"></label><label>イベント詳細<textarea data-lf="detail" placeholder="出演者、料金、タイムテーブル、セットリスト、YouTube URLなど">'+esc(data.detail||'')+'</textarea></label>';
+ const date=d.querySelector('[data-lf="date"]'),badge=d.querySelector('.live-badge');const refresh=()=>badge.textContent=classifyLive(date.value)||'日付を入力すると自動で振り分け';
+ date.addEventListener('change',()=>{refresh();saveSoon()});d.querySelector('.live-remove')?.addEventListener('click',()=>{d.remove();saveSoon()});liveBlocks.appendChild(d);refresh();
+}
+function addContact(data={}){
+ contactCount++;const n=contactCount,d=document.createElement('div');d.className='contactlink';
+ d.innerHTML='<div class="blockhead"><h4>CONTACT '+n+'</h4>'+(n>1?'<button type="button" class="remove contact-remove">削除</button>':'')+'</div><label>URL・メール等<input type="text" data-cf="value" value="'+esc(data.value||'')+'" placeholder="例：https://line.me/... / mail@example.com"></label><div class="mini-line"><span class="auto-badge"></span><span class="button-preview"></span></div><label>ボタン名（任意）<input type="text" data-cf="label" value="'+esc(data.label||'')+'" placeholder="例：LINEで問い合わせ / お問い合わせ / 予約はこちら"></label>';
+ const value=d.querySelector('[data-cf="value"]'),label=d.querySelector('[data-cf="label"]'),badge=d.querySelector('.auto-badge'),preview=d.querySelector('.button-preview');
+ const refresh=()=>{const t=detectType(value.value);badge.textContent=t||'URLを入力すると自動判定';preview.textContent='表示例：'+(label.value.trim()||defaultButton(t))};
+ value.addEventListener('input',()=>{refresh();saveSoon()});label.addEventListener('input',()=>{refresh();saveSoon()});d.querySelector('.contact-remove')?.addEventListener('click',()=>{d.remove();saveSoon()});contactLinks.appendChild(d);refresh();
+}
+
+document.getElementById('addMember').onclick=()=>{addMember();saveSoon()};
+document.getElementById('addLive').onclick=()=>{addLive();saveSoon()};
+document.getElementById('addContact').onclick=()=>{addContact();saveSoon()};
+
+document.querySelectorAll('.card').forEach(card=>{
+ const body=card.querySelector('.body'),section=card.dataset.section;
+ const footer=document.createElement('div');footer.className='section-footer';
+ footer.innerHTML='<label class="section-complete"><input type="checkbox" name="section_complete" value="'+section+'">この項目の入力を完了</label><button type="button" class="close-section">− 閉じる</button>';
+ body.appendChild(footer);
+ footer.querySelector('.close-section').onclick=()=>{card.open=false;card.scrollIntoView({behavior:'smooth',block:'center'})};
+ footer.querySelector('[name="section_complete"]').addEventListener('change',()=>{updateCompletion();saveSoon()});
+});
+
+function toggleConditional(){
+ document.querySelectorAll('[data-url-target]').forEach(box=>document.getElementById(box.dataset.urlTarget)?.classList.toggle('show',box.checked));
+ const contact=[...document.querySelectorAll('[name="features"]:checked')].some(x=>x.value==='問い合わせ・連絡先');
+ document.getElementById('contactInline').classList.toggle('show',contact);if(contact&&!document.querySelector('.contactlink'))addContact();
+ document.getElementById('domainDetail').classList.toggle('show',document.getElementById('customDomain').checked);
+}
+form.addEventListener('change',e=>{if(e.target.name==='features'||e.target.id==='customDomain')toggleConditional();saveSoon()});
+form.addEventListener('input',saveSoon);
+
+function serialize(){
+ const data={siteId,fields:{},checks:{},members:[],lives:[],contacts:[],meta:{lastSaved}};
+ [...form.elements].forEach(el=>{
+  if(!el.name||el.type==='file')return;
+  if(el.type==='checkbox'){if(!data.checks[el.name])data.checks[el.name]=[];if(el.checked)data.checks[el.name].push(el.value||'yes')}else data.fields[el.name]=el.value;
  });
+ document.querySelectorAll('.member').forEach(block=>{const m={socials:[]};block.querySelectorAll('[data-mf]').forEach(el=>m[el.dataset.mf]=el.value);block.querySelectorAll('.member-social').forEach(s=>{const url=s.querySelector('[data-ms="url"]').value;if(url.trim())m.socials.push({url})});data.members.push(m)});
+ document.querySelectorAll('.liveblock').forEach(block=>{const l={};block.querySelectorAll('[data-lf]').forEach(el=>l[el.dataset.lf]=el.value);data.lives.push(l)});
+ document.querySelectorAll('.contactlink').forEach(block=>{const x={};block.querySelectorAll('[data-cf]').forEach(el=>x[el.dataset.cf]=el.value);x.type=detectType(x.value);data.contacts.push(x)});
+ return data;
+}
+function saveDraft(manual=false){
+ if(manual)lastSaved=now();
+ const data=serialize();data.meta.lastSaved=lastSaved;localStorage.setItem(key,JSON.stringify(data));
+ if(manual){status.textContent='一時保存しました';updateSavedLabels()}else{status.textContent='編集中の内容は自動保存されています'}
+ updateCompletion();
+}
+function saveSoon(){clearTimeout(timer);timer=setTimeout(()=>saveDraft(false),400)}
+function updateSavedLabels(){const t=lastSaved?'最終保存：'+lastSaved:'最終保存：まだありません';document.getElementById('savedTop').textContent=t;document.getElementById('savedBottom').textContent=t}
+function updateCompletion(){
+ const done=[...document.querySelectorAll('[name="section_complete"]:checked')].map(x=>x.value);
+ document.querySelectorAll('.card').forEach(c=>c.classList.toggle('done',done.includes(c.dataset.section)));
+ document.getElementById('progressText').textContent='入力完了 '+done.length+' / 7';document.getElementById('bar').style.width=(done.length/7*100)+'%';
+}
+function restore(){
+ const raw=localStorage.getItem(key);
+ if(!raw){addMember();addLive();toggleConditional();updateCompletion();return}
+ try{
+  const data=JSON.parse(raw);lastSaved=data.meta?.lastSaved||'';
+  Object.entries(data.fields||{}).forEach(([n,v])=>{const el=form.elements[n];if(el&&typeof el.value!=='undefined')el.value=v});
+  Object.entries(data.checks||{}).forEach(([n,vals])=>document.querySelectorAll('[name="'+n+'"]').forEach(el=>el.checked=vals.includes(el.value||'yes')));
+  (data.members||[]).forEach(addMember);if(!(data.members||[]).length)addMember();
+  (data.lives||[]).forEach(addLive);if(!(data.lives||[]).length)addLive();
+  (data.contacts||[]).forEach(addContact);
+  toggleConditional();updateCompletion();updateSavedLabels();
+ }catch(e){addMember();addLive();toggleConditional()}
+}
+document.getElementById('saveTop').onclick=()=>saveDraft(true);
+document.getElementById('saveBottom').onclick=()=>saveDraft(true);
 
- const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+function fileNames(name){const input=form.elements[name];return input?.files?[...input.files].map(f=>f.name):[]}
+function filesHtml(names){return names.length?'<div class="preview-files">'+names.map(n=>'<span class="preview-file">'+esc(n)+'</span>').join('')+'</div>':'<span class="preview-empty">未選択</span>'}
+function row(k,v,html=false){const empty=v===undefined||v===null||String(v).trim()==='';return '<div class="preview-row"><div class="preview-key">'+esc(k)+'</div><div class="preview-val">'+(empty?'<span class="preview-empty">未入力</span>':html?v:esc(v))+'</div></div>'}
+function renderPreview(){
+ const d=serialize(),f=d.fields,parts=['<h3 class="preview-title">入力内容の確認</h3>'];
+ parts.push('<section class="preview-section"><h4>01 基本情報</h4>'+row('サイト名',f.site_name)+row('担当者名',f.contact_name)+row('連絡用メール',f.contact_email)+row('目的',f.purpose)+row('希望イメージ',f.image_text)+row('参考URL',f.reference_url)+row('希望カラー',f.colors)+'</section>');
+ parts.push('<section class="preview-section"><h4>02 使用する写真</h4>'+row('TOP写真',filesHtml(fileNames('top_photos')),true)+row('ギャラリー',filesHtml(fileNames('gallery_photos')),true)+row('並び順',f.gallery_order)+row('ロゴ',filesHtml(fileNames('logo_file')),true)+row('写真補足',f.photo_notes)+'</section>');
+ parts.push('<section class="preview-section"><h4>03 ページ・機能</h4>'+row('希望機能',(d.checks.features||[]).join(' / '))+row('LIVE配置',(d.checks.live_all_page||[]).length?'LIVE関連をすべて別ページ':'標準：これからのLIVEはTOP・過去LIVEは別ページ')+row('その他機能',f.other_features)+'</section>');
+ if(d.members.some(m=>m.name||m.part||m.bio||m.socials.length))parts.push('<section class="preview-section"><h4>04 メンバー情報</h4>'+d.members.map((m,i)=>row('MEMBER '+(i+1),[m.name,m.part,m.bio,m.socials.map(s=>s.url).join(', ')].filter(Boolean).join(' / '))).join('')+'</section>');
+ if(d.lives.some(l=>Object.values(l).some(v=>String(v||'').trim())))parts.push('<section class="preview-section"><h4>05 LIVE情報</h4>'+d.lives.map((l,i)=>row('LIVE '+(i+1)+' / '+(classifyLive(l.date)||'日付未入力'),[l.date,l.time,l.name,l.venue,l.detail].filter(Boolean).join(' / '))).join('')+'</section>');
+ if(d.contacts.some(x=>String(x.value||'').trim()))parts.push('<section class="preview-section"><h4>公開する連絡先</h4>'+d.contacts.filter(x=>String(x.value||'').trim()).map((x,i)=>row('CONTACT '+(i+1),[x.type,x.label||defaultButton(x.type),x.value].filter(Boolean).join(' / '))).join('')+'</section>');
+ parts.push('<section class="preview-section"><h4>06 公開URL</h4>'+row('公開方法',(d.checks.custom_domain||[]).length?'独自ドメインを希望':'無料URLでOK')+row('独自ドメイン区分',f.domain_type)+row('希望・所有ドメイン',f.domain_name)+'</section>');
+ parts.push('<section class="preview-section"><h4>07 最終確認</h4>'+row('掲載権利確認',(d.checks.rights||[]).length?'確認済み':'未チェック')+row('公開用連絡先の掲載許可',(d.checks.privacy||[]).length?'確認済み':'未チェック')+row('その他・細かい要望',f.final_notes)+row('紹介コード',f.referral)+'</section>');
+ parts.push('<div class="preview-send"><button type="button" class="btn" id="confirmSend">この内容で送信</button><p class="preview-send-note">現在は動作確認用のローカル送信です。本番版ではSITE IDに紐づけて安全に保存します。</p></div>');
+ return parts.join('');
+}
+function demoSubmit(){
+ const d=serialize(),f=d.fields;if(!String(f.site_name||'').trim())return alert('サイト名 / バンド名 / 店名を入力してください。');if(!(d.checks.rights||[]).length)return alert('掲載権利の確認にチェックしてください。');if(!(d.checks.privacy||[]).length)return alert('公開用連絡先の掲載許可を確認してください。');
+ const adminKey='sho-web-admin-demo-v2';let projects=[];try{projects=JSON.parse(localStorage.getItem(adminKey))||[]}catch(e){}
+ const time=now(),request=[f.image_text&&'希望イメージ: '+f.image_text,f.colors&&'希望カラー: '+f.colors,(d.checks.features||[]).length&&'希望機能: '+d.checks.features.join('、'),f.other_features&&'その他機能: '+f.other_features,f.final_notes&&'細かい要望: '+f.final_notes].filter(Boolean).join('\n');
+ const existing=projects.find(x=>String(x.id)===String(siteId));
+ const project={id:String(siteId),name:f.site_name,customer:f.contact_name||'顧客',status:'building',updated:time,preview:'../index.html',customerReview:'../website-customer-review.html?id='+encodeURIComponent(siteId),profile:{industry:f.purpose||'未設定',mood:f.image_text?[f.image_text]:['未整理'],colors:f.colors?[f.colors]:['おまかせ'],likes:f.image_text?[f.image_text]:[],dislikes:existing?.profile?.dislikes||[]},current:'ヒアリング内容を受信。サイト作成中。',history:[{at:time,title:'ヒアリング受付',text:request||'初回ヒアリングを受け付けました。'}].concat(existing?.history||[]),notes:existing?.notes||[],customerApproved:false};
+ if(existing)projects[projects.indexOf(existing)]=project;else projects.unshift(project);localStorage.setItem(adminKey,JSON.stringify(projects));status.textContent='送信しました（デモ）';const p=document.getElementById('preview');const done=document.createElement('div');done.className='file-note';done.innerHTML='<strong>送信しました。</strong><br>SITE ID '+esc(siteId)+' の案件として管理画面デモへ追加しました。';p.appendChild(done);document.getElementById('confirmSend')?.setAttribute('disabled','disabled');
+}
+document.getElementById('previewBtn').onclick=()=>{saveDraft(true);const p=document.getElementById('preview');p.innerHTML=renderPreview();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('confirmSend')?.addEventListener('click',demoSubmit)};
 
- function addMember(data={}){
-   memberCount++;
-   const n=memberCount,d=document.createElement('div');d.className='member';d.dataset.member=n;
-   d.innerHTML='<div class="blockhead"><h4>MEMBER '+n+'</h4>'+(n>1?'<button type="button" class="remove">削除</button>':'')+'</div>'+
-   '<label>名前<input type="text" data-mf="name" value="'+esc(data.name)+'"></label>'+
-   '<label>パート<input type="text" data-mf="part" value="'+esc(data.part)+'"></label>'+
-   '<label>紹介文<textarea data-mf="bio">'+esc(data.bio)+'</textarea></label>'+
-   '<label>SNS URL<input type="url" data-mf="sns" value="'+esc(data.sns)+'"></label>'+
-   '<label>写真<input type="file" accept="image/*"></label>';
-   d.querySelector('.remove')?.addEventListener('click',()=>{d.remove();saveSoon()});
-   members.appendChild(d);
- }
- function addLive(data={}){
-   liveCount++;
-   const n=liveCount,d=document.createElement('div');d.className='liveblock';d.dataset.live=n;
-   d.innerHTML='<div class="blockhead"><h4>LIVE '+n+'</h4>'+(n>1?'<button type="button" class="remove">削除</button>':'')+'</div>'+
-   '<div class="row"><label>日付<input type="date" data-lf="date" value="'+esc(data.date)+'"></label><label>時間<input type="time" data-lf="time" value="'+esc(data.time)+'"></label></div>'+
-   '<span class="contact-detected live-detected"></span>'+
-   '<label>イベント名<input type="text" data-lf="name" value="'+esc(data.name)+'" placeholder="例：ROCK NIGHT 2027"></label>'+
-   '<label>会場<input type="text" data-lf="venue" value="'+esc(data.venue)+'" placeholder="例：仙台 LIVE HOUSE"></label>'+
-   '<label>イベント詳細<textarea data-lf="detail" placeholder="出演者、料金、タイムテーブル、セットリスト、YouTube URLなど">'+esc(data.detail)+'</textarea></label>';
-   const dateInput=d.querySelector('[data-lf="date"]');
-   dateInput.addEventListener('change',()=>{refreshLiveType(d);saveSoon()});
-   d.querySelector('.remove')?.addEventListener('click',()=>{d.remove();saveSoon()});
-   liveBlocks.appendChild(d);refreshLiveType(d);
- }
- function classifyLiveDate(date){
-   if(!date)return '';
-   const today=new Date();today.setHours(0,0,0,0);
-   const target=new Date(date+'T00:00:00');
-   return target<today?'LIVE HISTORY':'UPCOMING LIVE';
- }
- function refreshLiveType(block){
-   const date=block.querySelector('[data-lf="date"]')?.value||'';
-   const badge=block.querySelector('.live-detected');
-   const type=classifyLiveDate(date);
-   badge.textContent=type?type+'として掲載':'日付を入力すると自動で振り分け';
- }
- function detectContactType(value=''){
-   const v=String(value).trim().toLowerCase();
-   if(!v)return '';
-   if(v.includes('line.me/')||v.includes('lin.ee/'))return 'LINE';
-   if(v.includes('instagram.com/'))return 'Instagram';
-   if(v.includes('x.com/')||v.includes('twitter.com/'))return 'X';
-   if(v.includes('facebook.com/')||v.includes('fb.me/'))return 'Facebook';
-   if(v.includes('tiktok.com/'))return 'TikTok';
-   if(v.includes('youtube.com/')||v.includes('youtu.be/'))return 'YouTube';
-   if(v.startsWith('mailto:')||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))return 'メール';
-   if(v.startsWith('tel:')||/^0\d{8,10}$/.test(v.replace(/[\s-]/g,'')))return '電話';
-   if(/^https?:\/\//.test(v))return 'Webリンク';
-   return 'その他';
- }
- function refreshContactType(block){
-   const input=block.querySelector('[data-cf="value"]');
-   const badge=block.querySelector('.contact-detected');
-   const type=detectContactType(input?.value||'');
-   badge.textContent=type?type+'として表示':'URL・メール等を入力すると自動判定';
- }
- function addContact(data={}){
-   contactCount++;
-   const d=document.createElement('div');d.className='contactlink';d.dataset.contact=contactCount;
-   d.innerHTML='<div class="blockhead"><h4>CONTACT '+contactCount+'</h4>'+(contactCount>1?'<button type="button" class="remove">削除</button>':'')+'</div>'+
-     '<label>URL・メール等<input type="text" data-cf="value" value="'+esc(data.value||'')+'" placeholder="例：https://line.me/... / https://instagram.com/... / mail@example.com"></label>'+
-     '<span class="contact-detected"></span>'+
-     '<label>ボタン名（任意）<input type="text" data-cf="label" value="'+esc(data.label||'')+'" placeholder="空欄なら自動判定した名前を使用"></label>';
-   d.querySelector('[data-cf="value"]').addEventListener('input',()=>{refreshContactType(d);saveSoon()});
-   d.querySelector('[data-cf="label"]').addEventListener('input',saveSoon);
-   d.querySelector('.remove')?.addEventListener('click',()=>{d.remove();saveSoon()});
-   contactLinks.appendChild(d);refreshContactType(d);
- }
- document.getElementById('addMember').onclick=()=>{addMember();saveSoon()};
- document.getElementById('addLive').onclick=()=>{addLive();saveSoon()};
- document.getElementById('addContact').onclick=()=>{addContact();saveSoon()};
-
- function selectedFeatures(){
-   return [...document.querySelectorAll('input[name="features"]:checked')].map(x=>x.value);
- }
- function toggleLinks(){
-   document.querySelectorAll('[data-url-target]').forEach(box=>{
-     const target=document.getElementById(box.dataset.urlTarget);
-     if(target) target.classList.toggle('show',box.checked);
-   });
-   const f=selectedFeatures(),showContact=f.includes('問い合わせ・連絡先');
-   document.getElementById('contactInline').classList.toggle('show',showContact);
-   if(showContact&&!document.querySelector('.contactlink')) addContact();
- }
- function toggleDomain(){
-   const v=document.getElementById('domainSelect').value;
-   document.getElementById('domainDetail').classList.toggle('show',v.includes('独自ドメイン'));
- }
- form.addEventListener('change',e=>{if(e.target.name==='features')toggleLinks();if(e.target.id==='domainSelect')toggleDomain();saveSoon()});
- form.addEventListener('input',saveSoon);
-
- function serialize(){
-   const data={siteId,fields:{},checks:{},members:[],lives:[],contacts:[]};
-   [...form.elements].forEach(el=>{
-     if(!el.name||el.type==='file')return;
-     if(el.type==='checkbox'){if(!data.checks[el.name])data.checks[el.name]=[];if(el.checked)data.checks[el.name].push(el.value||'yes')}
-     else data.fields[el.name]=el.value;
-   });
-   document.querySelectorAll('.member').forEach(block=>{const m={};block.querySelectorAll('[data-mf]').forEach(el=>m[el.dataset.mf]=el.value);data.members.push(m)});
-   document.querySelectorAll('.liveblock').forEach(block=>{const l={};block.querySelectorAll('[data-lf]').forEach(el=>l[el.dataset.lf]=el.value);data.lives.push(l)});
-   document.querySelectorAll('.contactlink').forEach(block=>{const x={};block.querySelectorAll('[data-cf]').forEach(el=>x[el.dataset.cf]=el.value);x.type=detectContactType(x.value);data.contacts.push(x)});
-   return data;
- }
- function save(){
-   localStorage.setItem(key,JSON.stringify(serialize()));status.textContent='保存しました';setTimeout(()=>status.textContent='入力内容は自動保存されます',1000);updateProgress();
- }
- function saveSoon(){clearTimeout(timer);timer=setTimeout(save,350)}
- function restore(){
-   const raw=localStorage.getItem(key);
-   if(!raw){addMember();addLive();toggleLinks();toggleDomain();return}
-   try{
-     const data=JSON.parse(raw);
-     Object.entries(data.fields||{}).forEach(([n,v])=>{const el=form.elements[n];if(el)el.value=v});
-     Object.entries(data.checks||{}).forEach(([n,vals])=>document.querySelectorAll('[name="'+n+'"]').forEach(el=>el.checked=vals.includes(el.value||'yes')));
-     (data.members||[]).forEach(addMember);if(!(data.members||[]).length)addMember();
-     (data.lives||[]).forEach(addLive);if(!(data.lives||[]).length)addLive();
-     let restoredContacts=data.contacts||[];
-     if(!restoredContacts.length){
-       const old=[data.fields?.line_url,data.fields?.public_email,data.fields?.contact_url].filter(Boolean);
-       restoredContacts=old.map(value=>({value,label:''}));
-       if(data.fields?.other_contact) restoredContacts.push({value:data.fields.other_contact,label:'その他'});
-     }
-     restoredContacts.forEach(addContact);
-     toggleLinks();toggleDomain();updateProgress();
-   }catch(e){addMember();addLive()}
- }
- function updateProgress(){
-   const d=serialize(),vals=Object.values(d.fields).filter(v=>String(v).trim()).length+Object.values(d.checks).reduce((a,v)=>a+v.length,0)+d.members.filter(m=>Object.values(m).some(v=>String(v).trim())).length+d.lives.filter(l=>Object.values(l).some(v=>String(v).trim())).length+d.contacts.filter(x=>String(x.value||'').trim()).length;
-   document.getElementById('bar').style.width=Math.max(10,Math.min(100,10+vals*2.5))+'%';
- }
- function fileNames(name){
-   const input=form.elements[name];
-   const files=input?.files?[...input.files]:[];
-   return files.map(f=>f.name);
- }
- function fileHtml(names){
-   if(!names.length)return '<span class="preview-empty">未選択</span>';
-   return '<div class="preview-files">'+names.map(n=>'<span class="preview-file">'+esc(n)+'</span>').join('')+'</div>';
- }
- function row(label,value,allowHtml=false){
-   const empty=value===undefined||value===null||String(value).trim()==='';
-   return '<div class="preview-row"><div class="preview-key">'+esc(label)+'</div><div class="preview-val">'+(empty?'<span class="preview-empty">未入力</span>':allowHtml?value:esc(value))+'</div></div>';
- }
- function renderPreview(){
-   const d=serialize(),f=d.fields;
-   const parts=['<h3 class="preview-title">入力内容の確認</h3>'];
-
-   parts.push('<section class="preview-section"><h4>01 基本情報</h4>'+
-     row('サイト名 / バンド名 / 店名',f.site_name)+row('担当者名',f.contact_name)+row('連絡用メール',f.contact_email)+
-     row('サイトの目的',f.purpose)+row('こんなサイトがいい！',f.image_text)+row('参考サイトURL',f.reference_url)+row('HPの希望イメージカラー',f.colors)+'</section>');
-
-   parts.push('<section class="preview-section"><h4>02 使用する写真</h4>'+
-     row('TOPに使いたい写真',fileHtml(fileNames('top_photos')),true)+
-     row('ギャラリー写真',fileHtml(fileNames('gallery_photos')),true)+
-     row('ギャラリー並び順',f.gallery_order)+row('ロゴ',fileHtml(fileNames('logo_file')),true)+row('写真の補足',f.photo_notes)+'</section>');
-
-   parts.push('<section class="preview-section"><h4>03 ページ・機能</h4>'+
-     row('希望機能',(d.checks.features||[]).join(' / '))+row('その他ほしい機能',f.other_features)+'</section>');
-
-   if(d.members.some(m=>Object.values(m).some(v=>String(v||'').trim()))){
-     parts.push('<section class="preview-section"><h4>04 メンバー情報</h4>'+
-       d.members.map((m,i)=>row('MEMBER '+(i+1),[m.name,m.part,m.bio,m.sns].filter(Boolean).join(' / '))).join('')+'</section>');
-   }
-
-   if(d.lives.some(l=>Object.values(l).some(v=>String(v||'').trim()))){
-     parts.push('<section class="preview-section"><h4>05 LIVE情報</h4>'+
-       d.lives.map((l,i)=>{
-         const type=classifyLiveDate(l.date)||'日付未入力';
-         return row('LIVE '+(i+1)+' / '+type,[l.date,l.time,l.name,l.venue,l.detail].filter(Boolean).join(' / '));
-       }).join('')+'</section>');
-   }
-
-   if(d.contacts.some(x=>String(x.value||'').trim())){
-     parts.push('<section class="preview-section"><h4>公開する連絡先</h4>'+
-       d.contacts.filter(x=>String(x.value||'').trim()).map((x,i)=>row('CONTACT '+(i+1),[x.type,x.label,x.value].filter(Boolean).join(' / '))).join('')+'</section>');
-   }
-
-   parts.push('<section class="preview-section"><h4>06 公開・URL</h4>'+
-     row('公開URL',f.domain)+row('希望・所有ドメイン',f.domain_name)+row('紹介コード',f.referral)+'</section>');
-
-   parts.push('<section class="preview-section"><h4>07 最終確認</h4>'+
-     row('掲載権利確認',(d.checks.rights||[]).length?'確認済み':'未チェック')+
-     row('公開用連絡先の掲載許可',(d.checks.privacy||[]).length?'確認済み':'未チェック')+
-     row('その他・伝えておきたいこと',f.final_notes)+'</section>');
-
-   parts.push('<div class="preview-send"><button type="button" class="btn" id="confirmSend">この内容で送信</button><p class="preview-send-note">現在は動作確認用のローカル送信です。本番接続後は安全な保存先へ送信されます。</p></div>');
-   return parts.join('');
- }
- function demoSubmit(){
-   const d=serialize(),f=d.fields;
-   if(!String(f.site_name||'').trim()){alert('サイト名 / バンド名 / 店名を入力してください。');return}
-   if(!(d.checks.rights||[]).length){alert('掲載する写真・文章等の権利確認にチェックしてください。');return}
-   if(!(d.checks.privacy||[]).length){alert('公開用連絡先・SNS URLの掲載許可を確認してください。');return}
-   const adminKey='sho-web-admin-demo-v1';
-   let projects=[];
-   try{projects=JSON.parse(localStorage.getItem(adminKey))||[]}catch(e){projects=[]}
-   const now=new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-');
-   const requestParts=[
-     f.image_text?('希望イメージ: '+f.image_text):'',
-     f.colors?('希望カラー: '+f.colors):'',
-     (d.checks.features||[]).length?('希望機能: '+(d.checks.features||[]).join('、')):'',
-     f.other_features?('その他機能: '+f.other_features):'',
-     f.final_notes?('その他: '+f.final_notes):''
-   ].filter(Boolean);
-   const project={
-     id:String(siteId),
-     name:f.site_name,
-     customer:f.contact_name||'顧客',
-     status:'new',
-     updated:now,
-     preview:'../index.html',
-     customerReview:'../website-customer-review.html?id='+encodeURIComponent(siteId),
-     profile:{
-       industry:f.purpose||'未設定',
-       mood:f.image_text?[f.image_text]:['未整理'],
-       colors:f.colors?[f.colors]:['おまかせ'],
-       likes:f.image_text?[f.image_text]:[],
-       dislikes:[]
-     },
-     current:'ヒアリングフォームを受信。AI制作開始待ち。',
-     history:[{at:now,title:'ヒアリング受付',text:requestParts.join('\n')||'初回ヒアリングを受け付けました。'}],
-     notes:[]
-   };
-   const index=projects.findIndex(x=>String(x.id)===String(siteId));
-   if(index>=0){
-     project.history=project.history.concat(projects[index].history||[]);
-     project.notes=projects[index].notes||[];
-     projects[index]=project;
-   }else projects.unshift(project);
-   localStorage.setItem(adminKey,JSON.stringify(projects));
-   status.textContent='送信しました（デモ）';
-   const p=document.getElementById('preview');
-   const done=document.createElement('div');
-   done.className='save';
-   done.style.marginTop='14px';
-   done.innerHTML='<strong>送信しました。</strong><br>SITE ID '+esc(siteId)+' の新規依頼としてSHO管理画面デモに追加しました。';
-   p.appendChild(done);
-   document.getElementById('confirmSend')?.setAttribute('disabled','disabled');
- }
- document.getElementById('previewBtn').onclick=()=>{
-   save();
-   const p=document.getElementById('preview');
-   p.innerHTML=renderPreview();
-   p.style.display='block';
-   p.scrollIntoView({behavior:'smooth',block:'start'});
-   document.getElementById('confirmSend')?.addEventListener('click',demoSubmit);
- };
- document.querySelectorAll('.card .body').forEach(body=>{
-   body.addEventListener('click',e=>{
-     if(e.target.closest('input,select,textarea,button,label,a,.member,.liveblock,.contactlink,.contact-inline,.feature-url')) return;
-     const details=body.closest('details');
-     if(details) details.open=false;
-   });
- });
- restore();
+restore();
 })();
 </script>
-<nav class="site-legal-nav" aria-label="法務・ポリシー"><a href="website-legal.html">特商法表記</a><a href="website-terms.html">利用条件</a><a href="website-privacy.html">プライバシー</a></nav>
-</body></html>
+</body>
+</html>
