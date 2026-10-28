@@ -121,6 +121,29 @@ export async function notifyOwner(text: string) {
 }
 
 
+export async function triggerWebsiteWorker(siteId: string) {
+  const url = Deno.env.get('SUPABASE_URL') || '';
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  if (!url || !key) {
+    console.error('website-worker trigger skipped: Supabase server secrets are missing.');
+    return { ok: false, skipped: true };
+  }
+  const response = await fetch(`${url}/functions/v1/website-worker`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ site_id: siteId }),
+  });
+  if (!response.ok) {
+    console.error('website-worker trigger failed', response.status, await response.text());
+    return { ok: false, status: response.status };
+  }
+  return { ok: true };
+}
+
+
 function githubHeaders() {
   const token = Deno.env.get('GITHUB_PAGES_TOKEN');
   if (!token) throw new Error('GITHUB_PAGES_TOKEN is missing.');
