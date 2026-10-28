@@ -3,7 +3,7 @@ import {
   FunctionsHttpError,
   FunctionsFetchError,
   FunctionsRelayError,
-} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm';
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './website-config.js';
 
 export const websiteSupabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
