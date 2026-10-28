@@ -51,8 +51,48 @@ export async function siteRole(admin: ReturnType<typeof adminClient>, userId: st
   return data?.role || null;
 }
 
+let cachedLineToken = '';
+let cachedLineTokenUntil = 0;
+
+async function getLineAccessToken() {
+  const fixed = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN') || '';
+  if (fixed) return fixed;
+
+  const now = Date.now();
+  if (cachedLineToken && now < cachedLineTokenUntil) return cachedLineToken;
+
+  const clientId = Deno.env.get('LINE_CHANNEL_ID') || '';
+  const clientSecret = Deno.env.get('LINE_CHANNEL_SECRET') || '';
+  if (!clientId || !clientSecret) return '';
+
+  const body = new URLSearchParams({
+    grant_type: 'client_credentials',
+    client_id: clientId,
+    client_secret: clientSecret,
+  });
+  const response = await fetch('https://api.line.me/oauth2/v3/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+  if (!response.ok) {
+    console.error('LINE token issue failed', response.status, await response.text());
+    return '';
+  }
+
+  const data = await response.json().catch(() => ({}));
+  cachedLineToken = String(data?.access_token || '');
+  const expiresIn = Math.max(60, Number(data?.expires_in || 900));
+  cachedLineTokenUntil = now + Math.max(60, expiresIn - 60) * 1000;
+  return cachedLineToken;
+}
+
+export async function getLineMessagingToken() {
+  return getLineAccessToken();
+}
+
 export async function linePush(to: string | null | undefined, text: string) {
-  const token = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN');
+  const token = await getLineAccessToken();
   if (!token || !to) return { skipped: true };
   const response = await fetch('https://api.line.me/v2/bot/message/push', {
     method: 'POST',
