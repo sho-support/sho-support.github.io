@@ -105,7 +105,10 @@ function normalizeProduction(detail){
    dislikes:[],
   },
   current:site.current_note||'',
-  history,notes:[],customerApproved:Boolean(site.customer_approved),jobs:detail.jobs||[]
+  history,notes:[],customerApproved:Boolean(site.customer_approved),jobs:detail.jobs||[],
+  repoFullName:site.repo_full_name||'',publishBranch:site.publish_branch||'main',
+  livePath:site.live_path||'/',offlinePath:site.offline_path||'/docs',
+  customDomain:site.custom_domain||'',publicUrl:site.public_url||''
  };
 }
 
@@ -154,6 +157,7 @@ function card(p){
  '<details class="fold" open><summary>現在の依頼・状態</summary><div class="inside"><dl class="kv"><dt>状態</dt><dd>'+esc(s.label)+'</dd><dt>現在</dt><dd>'+esc(p.current)+'</dd><dt>AIジョブ</dt><dd>'+latestJob(p)+'</dd><dt>顧客確認URL</dt><dd>'+esc(p.customerReview)+'</dd></dl></div></details>'+
  '<details class="fold"><summary>顧客カルテ</summary><div class="inside"><dl class="kv"><dt>業種</dt><dd>'+esc(p.profile.industry)+'</dd><dt>雰囲気・要望</dt><dd><div class="chips">'+fmt(p.profile.mood)+'</div></dd><dt>色</dt><dd><div class="chips">'+fmt(p.profile.colors)+'</div></dd><dt>希望機能</dt><dd><div class="chips">'+fmt(p.profile.likes)+'</div></dd><dt>避けたいもの</dt><dd><div class="chips">'+fmt(p.profile.dislikes)+'</div></dd></dl></div></details>'+
  '<details class="fold"><summary>要望・承認履歴</summary><div class="inside"><div class="timeline">'+historyHtml(p)+'</div></div></details>'+
+ (prodMode?'<details class="fold"><summary>公開設定</summary><div class="inside"><label style="display:block;font-size:.7rem;color:#aaa">GitHub Repo<input id="repoFullName" type="text" value="'+esc(p.repoFullName)+'" placeholder="sho-support/customer-site-1042" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label><div class="actionbar"><label style="font-size:.7rem;color:#aaa">公開ブランチ<input id="publishBranch" type="text" value="'+esc(p.publishBranch)+'" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label><label style="font-size:.7rem;color:#aaa">独自ドメイン<input id="customDomain" type="text" value="'+esc(p.customDomain)+'" placeholder="example.com" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label></div><div class="actionbar"><button class="btn" id="saveRepoConfig" type="button">Repo設定を保存</button><button class="btn gold" id="saveDomain" type="button">独自ドメインをGitHubへ設定</button></div><div class="meta" style="margin-top:8px">通常公開：/　｜　一時非公開・改良中：/docs　｜　DNS設定はドメイン会社側で別途行います。</div></div></details>':'')+
  '<details class="fold" open><summary>今回の操作</summary><div class="inside">'+actionHtml(p)+'</div></details>'+
  '<div class="footnote">'+(prodMode?'本番データ：Supabase / private Storage':'デモデータ：このブラウザのlocalStorage')+'</div></div></details>';
 }
@@ -176,6 +180,8 @@ function bind(p,root){
  q('makeImproving')?.addEventListener('click',()=>prodMode?prodMove(p,'improving_private','改良のため一時非公開中。','改良準備のため一時非公開。'):demoMove(p,'improving_private','改良のため一時非公開中。','改良中・一時非公開','改良準備のため一時非公開。'));
  q('resumeLive')?.addEventListener('click',()=>prodMode?prodMove(p,'live','サイト公開中。','公開を再開。'):demoMove(p,'live','サイト公開中。','公開再開','サイトを再公開。'));
  q('startImprove')?.addEventListener('click',()=>{const t=q('improveNote').value.trim();if(!t)return alert('改良内容を入力してください。');prodMode?prodMove(p,'building','改良内容をもとに作成中。',t):demoMove(p,'building','改良内容をもとに作成中。','改良依頼',t)});
+ q('saveRepoConfig')?.addEventListener('click',async()=>{try{await websiteApi('admin_repo_config',{site_id:p.id,repo_full_name:q('repoFullName').value.trim(),publish_branch:q('publishBranch').value.trim()||'main',live_path:'/',offline_path:'/docs'});state=await loadProduction();render()}catch(error){alert(error.message||'Repo設定を保存できませんでした。')}});
+ q('saveDomain')?.addEventListener('click',async()=>{try{const d=q('customDomain').value.trim();await websiteApi('admin_domain',{site_id:p.id,custom_domain:d||null});state=await loadProduction();render()}catch(error){alert(error.message||'独自ドメインを設定できませんでした。')}});
 }
 
 function render(){
