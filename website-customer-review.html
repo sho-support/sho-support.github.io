@@ -8,55 +8,56 @@
 <title>Website Review | SHO WEB SUPPORT</title>
 <link rel="stylesheet" href="website-theme.css">
 <style>
-:root{--bg:#070707;--panel:#101012;--text:#fff;--soft:#c8c8cb;--muted:#818187;--red:#c61f38;--gold:#d9ae5c;--line:rgba(255,255,255,.12);--ok:#55d68a}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,rgba(198,31,56,.12),transparent 26%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}.wrap{width:min(calc(100% - 24px),820px);margin:auto}button,textarea{font:inherit}a{color:inherit;text-decoration:none}
+:root{--bg:#070707;--text:#fff;--soft:#c8c8cb;--muted:#818187;--red:#c61f38;--gold:#d9ae5c;--line:rgba(255,255,255,.12);--ok:#55d68a}
+*{box-sizing:border-box}html,body{max-width:100%;overflow-x:hidden}body{margin:0;background:radial-gradient(circle at 10% 0,rgba(198,31,56,.12),transparent 26%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.65}.wrap{width:min(calc(100% - 24px),820px);margin:auto}button,textarea{font:inherit}a{color:inherit;text-decoration:none}
 header{border-bottom:1px solid var(--line);background:#070708}.head{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:950;letter-spacing:.05em}.siteid{color:var(--gold);font-size:.72rem;font-weight:900}
-.hero{padding:38px 0 20px}.hero h1{margin:0;font-size:clamp(2rem,7vw,3.7rem);line-height:1}.hero p{margin:10px 0 0;color:var(--soft);font-size:.86rem}.demo{margin-top:13px;padding:10px 12px;border-left:3px solid var(--gold);background:#0d0d0f;color:#cfc8bc;font-size:.75rem}
-.card{margin:12px 0;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#121214,#0b0b0c);overflow:hidden}.card h2{margin:0;padding:13px 15px;border-bottom:1px solid var(--line);font-size:.92rem}.body{padding:15px}.status{display:inline-flex;padding:6px 9px;border:1px solid rgba(217,174,92,.45);border-radius:999px;color:#efd59d;font-size:.7rem;font-weight:900}.kv{display:grid;grid-template-columns:130px 1fr;gap:8px 12px;margin-top:14px;font-size:.78rem}.kv b{color:var(--muted)}.preview{display:flex;align-items:center;justify-content:center;min-height:128px;border:1px dashed rgba(255,255,255,.16);border-radius:12px;background:#0b0b0c;text-align:center}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 16px;border:1px solid var(--line);border-radius:10px;background:#171719;color:#fff;font-weight:900;font-size:.78rem;cursor:pointer}.btn.primary{background:var(--red);border-color:var(--red)}.btn.publish{background:#143021;border-color:rgba(85,214,138,.45);color:#aaf0c7}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.note{width:100%;min-height:100px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#111;color:#fff;resize:vertical}.msg{margin-top:10px;color:#aaa;font-size:.74rem}.success{padding:14px;border:1px solid rgba(85,214,138,.3);background:rgba(85,214,138,.06);border-radius:12px;color:#aff0ca;font-size:.8rem}.hidden{display:none!important}
-@media(max-width:620px){.kv,.actions{grid-template-columns:1fr}.hero{padding-top:28px}}
+.hero{padding:34px 0 18px}.hero h1{margin:0;font-size:clamp(2rem,7vw,3.6rem);line-height:1}.hero p{margin:10px 0 0;color:var(--soft);font-size:.84rem}.demo{margin-top:12px;padding:10px 12px;border-left:3px solid var(--gold);background:#0d0d0f;color:#cfc8bc;font-size:.72rem}
+.card{margin:12px 0;border:1px solid rgba(217,174,92,.22);border-radius:16px;background:linear-gradient(145deg,#121214,#0b0b0c);overflow:hidden}.card h2{margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:.9rem}.body{padding:14px}.status{display:inline-flex;padding:6px 9px;border:1px solid rgba(217,174,92,.45);border-radius:999px;color:#efd59d;font-size:.69rem;font-weight:900}.kv{display:grid;grid-template-columns:120px 1fr;gap:8px 10px;margin-top:13px;font-size:.76rem}.kv b{color:var(--muted)}.preview{display:flex;align-items:center;justify-content:center;min-height:120px;border:1px dashed rgba(255,255,255,.16);border-radius:12px;background:#0b0b0c;text-align:center}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 15px;border:1px solid var(--line);border-radius:10px;background:#171719;color:#fff;font-weight:900;font-size:.77rem;cursor:pointer}.btn.primary{background:var(--red);border-color:var(--red)}.btn.publish{background:#143021;border-color:rgba(85,214,138,.45);color:#aaf0c7}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.note{width:100%;min-height:100px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#111;color:#fff;resize:vertical}.msg{margin-top:9px;color:#aaa;font-size:.7rem}.info{padding:13px;border-left:3px solid var(--gold);background:#0d0d0f;color:#d4d0c8;font-size:.76rem}.success{padding:13px;border:1px solid rgba(85,214,138,.3);background:rgba(85,214,138,.06);border-radius:12px;color:#aff0ca;font-size:.78rem}.danger{padding:13px;border:1px solid rgba(198,31,56,.35);background:rgba(198,31,56,.06);border-radius:12px;color:#f2c3ca;font-size:.78rem}
+@media(max-width:620px){.kv,.actions{grid-template-columns:1fr}.hero{padding-top:27px}}
 </style>
 </head>
 <body>
 <header><div class="wrap head"><div class="brand">SHO WEB SUPPORT</div><div class="siteid">SITE ID: <span id="siteId">----</span></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>サイト確認</h1><p>制作したホームページをご確認ください。修正がある場合は内容を送信し、問題なければ承認後に公開できます。</p><div class="demo">現在は承認フロー確認用のデモです。この端末上の管理画面デモと状態が連動します。</div></section>
+<section class="hero"><h1>サイト確認</h1><p>制作したホームページをご確認ください。修正があれば送信し、問題なければ内容承認後にご自身で公開できます。</p><div class="demo">現在は承認フロー確認用のデモです。同じブラウザのSHO管理画面デモと状態が連動します。</div></section>
 <div id="app"></div>
 </main>
 <script>
 (function(){
-const KEY='sho-web-admin-demo-v1';
+const KEY='sho-web-admin-demo-v2';
 const id=new URLSearchParams(location.search).get('id')||'1042';
 document.getElementById('siteId').textContent=id;
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function now(){return new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')}
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return []}}
 function save(s){localStorage.setItem(KEY,JSON.stringify(s))}
-function statusLabel(s){return {new:'新規依頼',building:'制作中',sho_review:'SHO確認待ち',customer_review:'お客様確認待ち',publish_wait:'公開待ち',live:'公開済み'}[s]||s}
-function render(){
- const state=load(),p=state.find(function(x){return x.id===id}),app=document.getElementById('app');
- if(!p){app.innerHTML='<section class="card"><div class="body">このSITE IDのデモ案件がありません。先にSHO管理画面を開いてデモ状態を作成してください。</div></section>';return}
- let action='';
- if(p.status==='customer_review'){
-   action='<textarea class="note" id="revision" placeholder="修正したい点がある場合はこちらへ入力してください。例：TOPの2枚目の写真を1枚目にしたい。"></textarea><div class="actions"><button class="btn" id="sendRevision" type="button">修正を依頼する</button><button class="btn primary" id="approve" type="button">この内容でOK</button></div><div class="msg">「この内容でOK」を押しても、まだ公開はされません。次に公開確認へ進みます。</div>';
- }else if(p.status==='publish_wait'){
-   action='<div class="success">内容は承認済みです。公開して問題なければ、下のボタンで本番公開へ進みます。</div><div class="actions" style="grid-template-columns:1fr"><button class="btn publish" id="publish" type="button">この内容で公開する</button></div>';
- }else if(p.status==='live'){
-   action='<div class="success">このサイトは公開済みです。今後の更新依頼も同じSITE IDで履歴に追加されます。</div>';
- }else{
-   action='<div class="demo" style="margin-top:0">現在は「'+esc(statusLabel(p.status))+'」です。SHOの確認が完了すると、この画面でお客様確認ができるようになります。</div>';
+function label(s){return {request_waiting:'要望待ち',building:'作成中',sho_review:'SHO確認中',customer_review:'お客様最終確認中',live:'公開中',private:'一時非公開',improving_private:'改良中・一時非公開'}[s]||s}
+function action(p){
+ if(p.status==='customer_review'&&!p.customerApproved){
+  return '<textarea class="note" id="revision" placeholder="修正したい点があれば自由に入力してください。箇条書きでも大丈夫です。"></textarea><div class="actions"><button class="btn" id="sendRevision" type="button">修正を依頼する</button><button class="btn primary" id="approve" type="button">この内容でOK</button></div><div class="msg">「この内容でOK」を押しても、まだ公開されません。続けて公開確認が表示されます。</div>';
  }
- app.innerHTML='<section class="card"><h2>現在の状態</h2><div class="body"><span class="status">'+esc(statusLabel(p.status))+'</span><div class="kv"><b>サイト名</b><span>'+esc(p.name)+'</span><b>更新</b><span>'+esc(p.updated)+'</span></div></div></section>'+
- '<section class="card"><h2>制作サイト</h2><div class="body"><div class="preview"><div><p style="margin:0 0 10px;color:#aaa;font-size:.78rem">別画面でサイトを確認できます</p><a class="btn" href="'+esc(p.preview)+'" target="_blank" rel="noopener">プレビューを開く</a></div></div></div></section>'+
- '<section class="card"><h2>確認・公開</h2><div class="body">'+action+'</div></section>';
+ if(p.status==='customer_review'&&p.customerApproved){
+  return '<div class="success">サイト内容は承認済みです。公開して問題なければ、下のボタンで公開してください。</div><div class="actions" style="grid-template-columns:1fr"><button class="btn publish" id="publish" type="button">この内容で公開する</button></div><div class="msg">公開後も、必要に応じて一時非公開や改良対応ができます。</div>';
+ }
+ if(p.status==='live')return '<div class="success">このサイトは現在公開中です。</div>';
+ if(p.status==='private')return '<div class="info">このサイトは現在、一時非公開です。</div>';
+ if(p.status==='improving_private')return '<div class="info">現在、サイト改良のため一時非公開です。</div>';
+ if(p.status==='building')return '<div class="info">現在サイトを作成・修正しています。完成後にSHOの確認を行い、その後こちらで最終確認できるようになります。</div>';
+ if(p.status==='sho_review')return '<div class="info">現在SHOが制作内容を確認しています。確認完了後、この画面で最終確認できます。</div>';
+ return '<div class="info">現在は要望入力待ちです。</div>';
+}
+function render(){
+ const state=load(),p=state.find(x=>String(x.id)===String(id)),app=document.getElementById('app');
+ if(!p){app.innerHTML='<section class="card"><div class="body">このSITE IDのデモ案件が見つかりません。SHO管理画面のデモ状態を初期化してから再度開いてください。</div></section>';return}
+ app.innerHTML='<section class="card"><h2>現在の状態</h2><div class="body"><span class="status">'+esc(label(p.status))+'</span><div class="kv"><b>サイト名</b><span>'+esc(p.name)+'</span><b>最終更新</b><span>'+esc(p.updated)+'</span></div></div></section>'+
+ '<section class="card"><h2>制作サイト</h2><div class="body"><div class="preview"><div><p style="margin:0 0 10px;color:#aaa;font-size:.76rem">別画面でサイトを確認できます</p><a class="btn primary" href="'+esc(p.preview)+'" target="_blank" rel="noopener">プレビューを開く</a></div></div></div></section>'+
+ '<section class="card"><h2>確認・公開</h2><div class="body">'+action(p)+'</div></section>';
  bind(p,state);
 }
 function bind(p,state){
- const rev=document.getElementById('sendRevision');
- if(rev)rev.onclick=function(){const text=document.getElementById('revision').value.trim();if(!text)return alert('修正内容を入力してください。');p.status='building';p.current='お客様の修正依頼を受けてAI再制作中。';p.updated=now();p.notes=p.notes||[];p.notes.unshift({at:p.updated,title:'お客様から修正依頼',text:text});save(state);render()};
- const approve=document.getElementById('approve');
- if(approve)approve.onclick=function(){if(!confirm('この内容で問題ないことを確認しますか？まだ公開はされません。'))return;p.status='publish_wait';p.current='お客様確認OK。お客様の公開操作待ち。';p.updated=now();p.notes=p.notes||[];p.notes.unshift({at:p.updated,title:'お客様確認OK',text:'内容承認。公開待ちへ。'});save(state);render()};
- const publish=document.getElementById('publish');
- if(publish)publish.onclick=function(){if(!confirm('この内容で公開しますか？'))return;p.status='live';p.current='公開済み。';p.updated=now();p.notes=p.notes||[];p.notes.unshift({at:p.updated,title:'お客様が公開',text:'お客様の公開操作で公開済みに移行。'});save(state);render()};
+ document.getElementById('sendRevision')?.addEventListener('click',()=>{const t=document.getElementById('revision').value.trim();if(!t)return alert('修正内容を入力してください。');p.status='building';p.customerApproved=false;p.current='お客様から修正依頼。再作成中。';p.updated=now();p.notes=p.notes||[];p.notes.unshift({at:p.updated,title:'お客様から修正依頼',text:t});save(state);render()});
+ document.getElementById('approve')?.addEventListener('click',()=>{if(!confirm('サイト内容を承認しますか？まだ公開はされません。'))return;p.customerApproved=true;p.updated=now();p.notes=p.notes||[];p.notes.unshift({at:p.updated,title:'お客様が内容承認',text:'最終確認OK。公開操作待ち。'});save(state);render()});
+ document.getElementById('publish')?.addEventListener('click',()=>{if(!confirm('この内容でサイトを公開しますか？'))return;p.status='live';p.customerApproved=false;p.current='サイト公開中。';p.updated=now();p.notes=p.notes||[];p.notes.unshift({at:p.updated,title:'お客様が公開',text:'お客様の公開操作で公開中へ移行。'});save(state);render()});
 }
 render();
 })();
