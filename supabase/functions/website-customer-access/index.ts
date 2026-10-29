@@ -45,7 +45,7 @@ function forceOrderFields(payload:any, order:any) {
 Deno.serve(async(req)=>{
   if(req.method==='OPTIONS') return new Response('ok',{headers:{
     'Access-Control-Allow-Origin':allowedOrigin,
-    'Access-Control-Allow-Headers':'content-type, apikey, x-client-info',
+    'Access-Control-Allow-Headers':'authorization, content-type, apikey, x-client-info',
     'Access-Control-Allow-Methods':'POST, OPTIONS',
   }});
   if(req.method!=='POST') return json({error:'Method not allowed'},405);
