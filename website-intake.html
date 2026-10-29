@@ -55,7 +55,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <label>サイト名 / バンド名 / 店名 <span class="required">*</span><input name="site_name" type="text" placeholder="HPトップに表示される名前（例：ABC BAND）"><span class="hint">ホームページのメイン表示に使います。</span></label>
 <div class="row"><label>担当者名<input name="contact_name" type="text"></label><label>連絡用メール<input name="contact_email" type="email"></label></div>
 <label>サイトの目的<select name="purpose"><option value="">選択してください</option><option>バンド・アーティスト公式サイト</option><option>店舗・サービス紹介</option><option>個人活動・ポートフォリオ</option><option>イベント・団体</option><option>企業・事業サイト</option><option>その他</option></select></label>
-<label>制作プラン<select name="build_plan" id="buildPlan"><option value="one">1ページサイト ¥15,000〜</option><option value="semi">セミオーダーサイト ¥22,000〜</option><option value="full">フルオーダーサイト ¥30,000〜</option></select><span class="hint">ご注文内容に合わせて選択してください。</span></label>
+<label>制作プラン<select name="build_plan" id="buildPlan"><option value="one">1ページ完結サイト ¥15,000〜</option><option value="semi">セミオーダーサイト ¥22,000〜</option><option value="full">フルオーダーサイト ¥30,000〜</option></select><span class="hint">ご注文内容に合わせて選択してください。</span></label>
 <div id="templateSelectWrap" class="conditional"><label>セミオーダーのテンプレート<select name="template_style" id="templateStyle"><option value="">選択してください</option><option value="rock">T01 Rock Stage / かっこいい・ダーク</option><option value="cafe">T02 Cafe Linen / カフェ・ナチュラル</option><option value="cute">T03 Sweet Bloom / かわいい・やわらかい</option><option value="minimal">T04 Minimal Grid / シンプル</option><option value="premium">T05 Premium Noir / 高級感</option><option value="pop">T06 Pop Studio / ポップ</option><option value="vintage">T07 Vintage Poster / レトロ・クラシック</option><option value="cyber">T08 Neon Circuit / サイバー・ネオン</option><option value="organic">T09 Earth Atelier / ナチュラル・オーガニック</option><option value="editorial">T10 Editorial Mono / モノクロ・エディトリアル</option></select><span class="hint">基本レイアウトはテンプレートの形で固定します。<a href="website-templates.html" target="_blank" rel="noopener" style="color:var(--gold)">デザインを見直す →</a></span></label></div>
 <label>希望するサイト内容・雰囲気<textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。TOPに活動内容と次回イベントを目立たせたい。予約・問い合わせへ迷わず進める構成にしたい。"></textarea><span class="hint">デザインの雰囲気だけでなく、載せたい内容・見せ方・導線・「こうしてほしい」も自由に書いてください。</span></label>
 <label>参考にしたいサイトURL（あれば）<input name="reference_url" type="url" placeholder="https://..."><span class="hint">任意です。入力された場合は、AI制作時に実際のページを確認し、構成・雰囲気・見せ方の参考にします。内容やデザインをそのままコピーすることはありません。</span></label>
@@ -145,15 +145,30 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <nav class="site-legal-nav" aria-label="法務・ポリシー"><a href="website-legal.html">特商法表記</a><a href="website-terms.html">利用条件</a><a href="website-privacy.html">プライバシー</a></nav>
 
 <script type="module">
-import { requireWebsiteSession, uploadWebsiteFile, websiteApi } from './website-client.js';
+import { requireWebsiteSession, uploadWebsiteFile, websiteApi, websiteSupabase } from './website-client.js';
 (async()=>{
-const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO',prodMode=params.get('prod')==='1',requestedPlan=params.get('plan')||'',requestedTemplate=params.get('template')||'';
+const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO',prodMode=params.get('prod')==='1',accessKey=params.get('key')||'',secureMode=prodMode&&!!accessKey,requestedPlan=params.get('plan')||'',requestedTemplate=params.get('template')||'';
 document.getElementById('siteId').textContent=siteId;
-if(prodMode)document.getElementById('fileNote').textContent='入力内容はSITE IDに紐づけて保存されます。別の端末やブラウザでも、同じアカウントで続きから入力できます。';
+if(prodMode)document.getElementById('fileNote').textContent=secureMode?'入力内容は自動保存されます。LINEで届いた同じ専用URLなら、別の端末やブラウザでも続きから入力できます。':'入力内容はSITE IDに紐づけて保存されます。別の端末やブラウザでも、同じアカウントで続きから入力できます。';
 const lineMessage='SITE ID '+siteId+'です。ホームページ制作について相談したいです。';
 document.getElementById('lineConsult').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(lineMessage);
 const lineUrl=document.getElementById('lineConsult').href;
 if(window.QRCode&&document.getElementById('lineQr'))new QRCode(document.getElementById('lineQr'),{text:lineUrl,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
+async function secureApi(action,payload={}){
+ const r=await fetch('https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-customer-access',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({action,site_id:siteId,key:accessKey,...payload})
+ });
+ const d=await r.json().catch(()=>({}));
+ if(!r.ok||d?.error)throw new Error(d?.error||'処理に失敗しました。');
+ return d;
+}
+async function secureUpload(file,folder){
+ const ticket=await secureApi('signed_upload',{folder,file_name:file.name});
+ const {error}=await websiteSupabase.storage.from('website-intake-files').uploadToSignedUrl(ticket.path,ticket.token,file);
+ if(error)throw error;
+ return ticket.path;
+}
 const form=document.getElementById('intake'),key='sho-intake-v3-'+siteId,status=document.getElementById('status');
 const members=document.getElementById('members'),liveBlocks=document.getElementById('liveBlocks'),contactLinks=document.getElementById('contactLinks');
 let memberCount=0,liveCount=0,contactCount=0,timer,lastSaved='',uploadedFiles={top_photos:[],gallery_photos:[],logo_file:[]};
@@ -245,7 +260,7 @@ async function performSave(manual=false){
   if(prodMode&&manual)await uploadSelectedFiles();
   if(prodMode){
    const payload=serialize();
-   const result=await websiteApi('save_draft',{site_id:siteId,payload});
+   const result=secureMode?await secureApi('save_draft',{payload}):await websiteApi('save_draft',{site_id:siteId,payload});
    lastSaved=result?.last_saved_at?new Date(result.last_saved_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):now();
   }else{
    if(manual)lastSaved=now();
@@ -280,10 +295,17 @@ function applyData(data={}){
 async function restore(){
  if(prodMode){
   try{
-   const result=await websiteApi('load_site',{site_id:siteId});
+   const result=secureMode?await secureApi('load'):await websiteApi('load_site',{site_id:siteId});
    const data=result?.intake?.payload||{};
    if(result?.intake?.last_saved_at&&!data.meta?.lastSaved)data.meta={...(data.meta||{}),lastSaved:new Date(result.intake.last_saved_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-')};
-   applyData(data);return;
+   applyData(data);
+   if(secureMode&&result?.order){
+     const bp=document.getElementById('buildPlan'),ts=document.getElementById('templateStyle');
+     if(bp){bp.value=result.order.plan||bp.value;bp.disabled=true;bp.title='ご注文時のプランで固定されています';}
+     if(ts&&result.order.plan==='semi'){ts.value=result.order.template_style||ts.value;ts.disabled=true;ts.title='ご注文時に選んだテンプレートです';}
+     toggleConditional();
+   }
+   return;
   }catch(error){console.error(error);status.textContent='保存済みデータを読み込めませんでした。';addMember();addLive();toggleConditional();return}
  }
  const raw=localStorage.getItem(key);
@@ -302,7 +324,7 @@ async function uploadSelectedFiles(){
   for(const file of files){
    const exists=uploadedFiles[field].some(x=>x.name===file.name&&Number(x.size||0)===Number(file.size||0));
    if(exists)continue;
-   const path=await uploadWebsiteFile(siteId,file,field);
+   const path=secureMode?await secureUpload(file,field):await uploadWebsiteFile(siteId,file,field);
    uploadedFiles[field].push({name:file.name,size:file.size,type:file.type,path});
   }
   if(files.length)input.value='';
@@ -343,7 +365,7 @@ async function submitIntake(){
    status.textContent='写真と入力内容を送信しています…';
    await uploadSelectedFiles();
    const payload=serialize();
-   const result=await websiteApi('submit_intake',{site_id:siteId,payload});
+   const result=secureMode?await secureApi('submit_intake',{payload}):await websiteApi('submit_intake',{site_id:siteId,payload});
    lastSaved=result?.submitted_at?new Date(result.submitted_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):now();
    updateSavedLabels();
    status.textContent='送信しました';
@@ -359,7 +381,7 @@ async function submitIntake(){
 }
 document.getElementById('previewBtn').onclick=async()=>{await saveDraft(true);const p=document.getElementById('preview');p.innerHTML=renderPreview();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('confirmSend')?.addEventListener('click',submitIntake)};
 
-if(prodMode)await requireWebsiteSession(location.href);
+if(prodMode&&!secureMode)await requireWebsiteSession(location.href);
 await restore();
 if(requestedPlan&&document.getElementById('buildPlan'))document.getElementById('buildPlan').value=requestedPlan==='multi'?'full':requestedPlan;
 if(requestedTemplate&&document.getElementById('templateStyle'))document.getElementById('templateStyle').value=requestedTemplate;
