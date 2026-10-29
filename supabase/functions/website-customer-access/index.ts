@@ -60,10 +60,34 @@ Deno.serve(async(req)=>{
   const key=String(body?.key||'');
   const admin=adminClient();
 
-  if(action==='admin_list_orders' || action==='admin_activate_order'){
+  if(action==='admin_list_orders' || action==='admin_activate_order' || action==='admin_send_review'){
     const user=await getUser(req,admin);
     if(!user)return json({error:'ログインが必要です。'},401);
     if(!(await isAdmin(admin,user.id)))return json({error:'管理者権限が必要です。'},403);
+
+    if(action==='admin_send_review'){
+      const targetSite=String(body?.site_id||'');
+      const {data:site,error:siteError}=await admin.from('website_sites')
+        .select('site_id,status')
+        .eq('site_id',targetSite)
+        .maybeSingle();
+      if(siteError)throw siteError;
+      if(!site||site.status!=='customer_review')return json({error:'現在はお客様最終確認の状態ではありません。'},409);
+      const {data:link,error:linkError}=await admin.from('website_line_links')
+        .select('line_user_id')
+        .eq('site_id',targetSite)
+        .maybeSingle();
+      if(linkError)throw linkError;
+      if(!link?.line_user_id)return json({error:'お客様のLINEが紐付いていません。'},409);
+      const reviewKey=randomAccessKey();
+      const {error:updateError}=await admin.from('website_sites')
+        .update({review_access_token_hash:await sha256Hex(reviewKey)})
+        .eq('site_id',targetSite);
+      if(updateError)throw updateError;
+      const reviewUrl='https://sho-support.github.io/website-customer-review.html?id='+encodeURIComponent(targetSite)+'&prod=1&key='+encodeURIComponent(reviewKey);
+      await linePush(link.line_user_id,'ホームページの最終確認ができる状態になりました。\n\n下の専用URLからサイトをご確認ください。修正がある場合はそのまま送信できます。問題なければ「この内容でOK」を押してください。\n\n'+reviewUrl);
+      return json({ok:true,review_url:reviewUrl});
+    }
 
     if(action==='admin_list_orders'){
       const {data,error}=await admin.from('website_orders')
@@ -121,6 +145,48 @@ Deno.serve(async(req)=>{
     await linePush(target.line_user_id,`SITE ID ${newSiteId}`);
     await notifyOwner(`【案件作成】\n注文ID ${orderCode}\nSITE ID ${newSiteId}\nヒアリングURL送信済み`);
     return json({ok:true,site_id:newSiteId});
+  }
+
+  if(action==='review_load' || action==='review_revision' || action==='review_approve'){
+    if(!/^[A-Za-z0-9_-]{3,32}$/.test(siteId)||key.length<20)return json({error:'確認URLが無効です。'},403);
+    const {data:reviewSite,error:reviewError}=await admin.from('website_sites')
+      .select('site_id,site_name,status,preview_url,customer_approved,review_access_token_hash')
+      .eq('site_id',siteId)
+      .maybeSingle();
+    if(reviewError)throw reviewError;
+    if(!reviewSite?.review_access_token_hash||await sha256Hex(key)!==reviewSite.review_access_token_hash){
+      return json({error:'確認URLが無効です。LINEで届いた最新のURLをご利用ください。'},403);
+    }
+    if(action==='review_load'){
+      return json({ok:true,site:reviewSite});
+    }
+    if(reviewSite.status!=='customer_review')return json({error:'現在は最終確認を受け付ける状態ではありません。'},409);
+    if(action==='review_revision'){
+      const detail=String(body?.detail||'').trim();
+      if(!detail)return json({error:'修正内容を入力してください。'},400);
+      await admin.from('website_sites').update({
+        status:'building',customer_approved:false,current_note:'お客様から修正依頼。再作成中。',review_access_token_hash:null
+      }).eq('site_id',siteId);
+      await admin.from('website_activity').insert({
+        site_id:siteId,actor_type:'customer_line',action:'customer_revision_requested',detail
+      });
+      await admin.from('website_jobs').insert({
+        site_id:siteId,kind:'customer_revision',status:'queued',instruction:detail,payload:{source:'secure_review'}
+      });
+      EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch(e=>console.error('worker trigger',e)));
+      await notifyOwner('【修正依頼】SITE ID '+siteId+'\n'+detail.slice(0,1200));
+      return json({ok:true,status:'building'});
+    }
+    if(action==='review_approve'){
+      await admin.from('website_sites').update({
+        customer_approved:true,current_note:'お客様が内容承認。SHO公開待ち。',review_access_token_hash:null
+      }).eq('site_id',siteId);
+      await admin.from('website_activity').insert({
+        site_id:siteId,actor_type:'customer_line',action:'customer_approved',detail:'サイト内容を承認。SHO公開待ち。'
+      });
+      await notifyOwner('【お客様確認OK】SITE ID '+siteId+'\n公開操作を行ってください。');
+      return json({ok:true,customer_approved:true});
+    }
   }
 
   const order=await resolveAccess(admin,siteId,key);
