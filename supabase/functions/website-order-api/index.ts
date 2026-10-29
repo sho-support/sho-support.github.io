@@ -2,6 +2,15 @@ import { adminClient, json, notifyOwner } from '../_shared/website.ts';
 
 const allowedOrigin = 'https://sho-support.github.io';
 
+async function requestHash(req:Request){
+  const ip=req.headers.get('cf-connecting-ip')||req.headers.get('x-forwarded-for')||'';
+  const ua=req.headers.get('user-agent')||'';
+  const raw=(ip.split(',')[0].trim()+'|'+ua.slice(0,160));
+  const bytes=new TextEncoder().encode(raw);
+  const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));
+  return [...hash].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 function validBody(body:any){
   const plan=String(body?.plan||'');
   if(!['one','semi','full'].includes(plan)) return null;
@@ -47,6 +56,14 @@ Deno.serve(async(req)=>{
 
   const amount=v.plan==='one'?15000:v.plan==='semi'?22000:30000;
   const admin=adminClient();
+  const reqHash=await requestHash(req);
+  const since=new Date(Date.now()-60*60*1000).toISOString();
+  const {count:recentCount,error:limitError}=await admin.from('website_orders')
+    .select('id',{count:'exact',head:true})
+    .eq('request_hash',reqHash)
+    .gte('created_at',since);
+  if(limitError)throw limitError;
+  if((recentCount||0)>=5)return json({error:'短時間に注文操作が繰り返されています。時間を置いてお試しください。'},429);
   const orderCode=await code(admin,v.plan);
   const selections={
     plan:v.plan,
@@ -66,6 +83,7 @@ Deno.serve(async(req)=>{
     custom_domain:v.custom_domain,
     custom_domain_note:v.custom_domain_note||null,
     amount_from:amount,
+    request_hash:reqHash,
     selections,
   }).select('order_code,status,plan,template_style,update_plan,custom_domain,amount_from,created_at').single();
   if(error) throw error;
