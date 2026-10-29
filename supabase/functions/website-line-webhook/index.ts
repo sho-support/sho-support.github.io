@@ -25,13 +25,14 @@ async function verifySignature(rawBody: string, signature: string, secret: strin
   return diff === 0;
 }
 
-async function reply(replyToken: string | undefined, text: string) {
+async function reply(replyToken: string | undefined, text: string | string[]) {
   const token = await getLineMessagingToken();
   if (!token || !replyToken) return;
+  const texts = (Array.isArray(text) ? text : [text]).filter(Boolean).slice(0, 5);
   const response = await fetch('https://api.line.me/v2/bot/message/reply', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ replyToken, messages: [{ type: 'text', text: text.slice(0, 5000) }] }),
+    body: JSON.stringify({ replyToken, messages: texts.map((t) => ({ type: 'text', text: String(t).slice(0, 5000) })) }),
   });
   if (!response.ok) console.error('LINE reply failed', response.status, await response.text());
 }
@@ -109,10 +110,24 @@ Deno.serve(async (req) => {
 
           const planLabel = order.plan === 'one' ? '1ページサイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
           const templateLine = order.template_style ? `\nテンプレート: ${order.template_style}` : '';
-          await reply(
-            event.replyToken,
-            `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n振込先はこのLINEでご案内します。入金確認後、正式なSITE IDと制作ヒアリングURLをお送りします。`,
-          );
+          const { data: bankSetting } = await admin
+            .from('website_settings')
+            .select('value')
+            .eq('key', 'bank_transfer')
+            .maybeSingle();
+          const bankMessage = String(bankSetting?.value?.message || '').trim();
+
+          if (bankMessage) {
+            await reply(event.replyToken, [
+              `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n【お振込先】\n${bankMessage}\n\nお振込みの際は、振込人名義の前に下記の注文IDを入力してください。必要に応じて、次のメッセージを長押ししてコピーしてお使いください。\n\n入金確認後、正式なSITE IDと制作ヒアリングURLをお送りします。`,
+              order.order_code,
+            ]);
+          } else {
+            await reply(
+              event.replyToken,
+              `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n振込先はこのLINEでご案内します。入金確認後、正式なSITE IDと制作ヒアリングURLをお送りします。`,
+            );
+          }
           await notifyOwner(`【注文LINE紐付け】\n${order.order_code}\n${p?.displayName || 'お客様'}\n入金案内待ち`);
           continue;
         }
