@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
             .eq('id', order.id);
           if (orderUpdateError) throw orderUpdateError;
 
-          const planLabel = order.plan === 'one' ? '1ページサイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
+          const planLabel = order.plan === 'one' ? '1ページ完結サイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
           const templateLine = order.template_style ? `\nテンプレート: ${order.template_style}` : '';
           const { data: bankSetting } = await admin
             .from('website_settings')
