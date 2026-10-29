@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const orderMatch = text.match(/注文ID\s*[:：]?\s*(ORD-[A-Z0-9-]{8,40})/i) || text.match(/(ORD-\d{8}-[A-Z0-9]{4,12})/i);
+      const orderMatch = text.match(/注文ID\s*[:：]?\s*([FSP]\d{4,6})/i) || text.match(/\b([FSP]\d{4,6})\b/i);
       if (orderMatch) {
         const orderCode = String(orderMatch[1] || orderMatch[0]).toUpperCase();
         const { data: order, error: orderError } = await admin
