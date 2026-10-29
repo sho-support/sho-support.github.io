@@ -16,7 +16,28 @@ type Body = {
   offline_path?: '/' | '/docs';
   custom_domain?: string | null;
   review_action?: 'revision' | 'approve' | 'publish';
+  order_code?: string;
 };
+
+
+function randomAccessKey() {
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  let raw = '';
+  for (const b of bytes) raw += String.fromCharCode(b);
+  return btoa(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function sha256Hex(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  return [...hash].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function adminAllowed(admin: ReturnType<typeof adminClient>, userId: string) {
+  const { data, error } = await admin.from('website_admins').select('user_id').eq('user_id', userId).maybeSingle();
+  if (error) throw error;
+  return Boolean(data);
+}
 
 function validSiteId(value: unknown) {
   return typeof value === 'string' && /^[A-Za-z0-9_-]{3,32}$/.test(value);
@@ -79,6 +100,110 @@ Deno.serve(async (req) => {
         .order('updated_at', { ascending: false });
       if (siteError) throw siteError;
       return json({ sites: sites || [], memberships: memberships || [], admin: false });
+    }
+
+
+    if (action === 'list_orders') {
+      if (!(await adminAllowed(admin, user.id))) return json({ error: '管理者権限が必要です。' }, 403);
+      const { data, error } = await admin
+        .from('website_orders')
+        .select('order_code,status,plan,template_style,update_plan,custom_domain,amount_from,line_user_id,line_display_name,line_linked_at,site_id,created_at,updated_at')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return json({ orders: data || [] });
+    }
+
+    if (action === 'mark_order_paid') {
+      if (!(await adminAllowed(admin, user.id))) return json({ error: '管理者権限が必要です。' }, 403);
+      const orderCode = String(body.order_code || '').trim().toUpperCase();
+      if (!/^[FSP]\d{4,6}$/.test(orderCode)) return json({ error: '注文IDが不正です。' }, 400);
+
+      const { data: order, error: orderError } = await admin
+        .from('website_orders')
+        .select('*')
+        .eq('order_code', orderCode)
+        .maybeSingle();
+      if (orderError) throw orderError;
+      if (!order) return json({ error: '注文が見つかりません。' }, 404);
+      if (!order.line_user_id) return json({ error: '先にお客様からLINEで注文内容を送信してもらってください。' }, 409);
+
+      const numeric = orderCode.replace(/^[FSP]/, '');
+      const siteId = numeric;
+      const accessKey = randomAccessKey();
+      const accessHash = await sha256Hex(accessKey);
+      const planLabel = order.plan === 'one' ? '1ページ完結サイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
+
+      const { data: existingSite, error: existingError } = await admin
+        .from('website_sites')
+        .select('site_id')
+        .eq('site_id', siteId)
+        .maybeSingle();
+      if (existingError) throw existingError;
+
+      if (!existingSite) {
+        const { error: siteError } = await admin.from('website_sites').insert({
+          site_id: siteId,
+          site_name: planLabel,
+          status: 'request_waiting',
+          current_note: '入金確認済み。ヒアリング入力待ち。',
+          customer_approved: false,
+          publish_branch: 'main',
+          live_path: '/',
+          offline_path: '/docs',
+        });
+        if (siteError) throw siteError;
+
+        const initialPayload = {
+          fields: {
+            build_plan: order.plan,
+            template_style: order.template_style || '',
+          },
+          checks: {},
+          members: [],
+          lives: [],
+          contacts: [],
+          files: { top_photos: [], gallery_photos: [], logo_file: [] },
+          meta: {},
+        };
+        const { error: intakeError } = await admin.from('website_intakes').insert({
+          site_id: siteId,
+          payload: initialPayload,
+        });
+        if (intakeError) throw intakeError;
+
+        await admin.from('website_activity').insert({
+          site_id: siteId,
+          actor_type: 'admin',
+          actor_user_id: user.id,
+          action: 'site_created',
+          detail: `注文 ${orderCode} の入金確認後に案件を作成。`,
+        });
+      }
+
+      const { error: linkError } = await admin.from('website_line_links').upsert({
+        site_id: siteId,
+        line_user_id: order.line_user_id,
+        line_display_name: order.line_display_name || null,
+      }, { onConflict: 'site_id' });
+      if (linkError) throw linkError;
+
+      const { error: updateError } = await admin.from('website_orders').update({
+        status: 'site_created',
+        site_id: siteId,
+        customer_access_token_hash: accessHash,
+        access_token_created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq('order_code', orderCode);
+      if (updateError) throw updateError;
+
+      const intakeUrl = `https://sho-support.github.io/website-intake.html?id=${encodeURIComponent(siteId)}&prod=1&key=${encodeURIComponent(accessKey)}`;
+      await linePush(order.line_user_id,
+        `ご入金を確認しました。ありがとうございます。\n\n正式なSITE IDは ${siteId} です。\n下の専用URLから制作内容・写真をご入力ください。入力途中でも自動保存され、同じURLなら別端末・別ブラウザから続けられます。\n\n${intakeUrl}`
+      );
+      await linePush(order.line_user_id, `SITE ID ${siteId}`);
+      await notifyOwner(`【入金確認・案件作成】\n注文ID ${orderCode}\nSITE ID ${siteId}\nヒアリングURL送信済み`);
+      return json({ ok: true, order_code: orderCode, site_id: siteId, intake_url: intakeUrl });
     }
 
     if (action === 'create_site') {
