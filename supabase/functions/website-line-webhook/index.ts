@@ -83,6 +83,41 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      const orderMatch = text.match(/注文ID\s*[:：]?\s*(ORD-[A-Z0-9-]{8,40})/i) || text.match(/(ORD-\d{8}-[A-Z0-9]{4,12})/i);
+      if (orderMatch) {
+        const orderCode = String(orderMatch[1] || orderMatch[0]).toUpperCase();
+        const { data: order, error: orderError } = await admin
+          .from('website_orders')
+          .select('id,order_code,status,plan,template_style,update_plan,custom_domain,amount_from')
+          .eq('order_code', orderCode)
+          .maybeSingle();
+        if (orderError) throw orderError;
+
+        if (order) {
+          const p = await profile(lineUserId);
+          const { error: orderUpdateError } = await admin
+            .from('website_orders')
+            .update({
+              status: order.status === 'pending_line' ? 'pending_payment' : order.status,
+              line_user_id: lineUserId,
+              line_display_name: p?.displayName || null,
+              line_linked_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', order.id);
+          if (orderUpdateError) throw orderUpdateError;
+
+          const planLabel = order.plan === 'one' ? '1ページサイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
+          const templateLine = order.template_style ? `\nテンプレート: ${order.template_style}` : '';
+          await reply(
+            event.replyToken,
+            `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n振込先はこのLINEでご案内します。入金確認後、正式なSITE IDと制作ヒアリングURLをお送りします。`,
+          );
+          await notifyOwner(`【注文LINE紐付け】\n${order.order_code}\n${p?.displayName || 'お客様'}\n入金案内待ち`);
+          continue;
+        }
+      }
+
       const idMatch = text.match(/SITE\s*ID\s*[:：]?\s*([A-Za-z0-9_-]{3,32})/i);
 
       let siteId: string | null = null;
