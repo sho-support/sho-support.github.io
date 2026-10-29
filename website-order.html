@@ -75,9 +75,9 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 </div></div>
 </section>
 
-<section class="section">
+<section class="section" id="updateSection" hidden>
 <div class="section-head"><h2>更新プランの選択</h2><span class="section-check" id="updateCheck">✓ 選択済み</span></div>
-<p class="helper">セミオーダー / フルオーダーは、公開後3か月間の定型更新使い放題が自動で付きます。</p>
+<p class="helper">1ページサイトは、公開後の更新方法をここで選べます。</p>
 <div id="updateArea"></div>
 </section>
 
@@ -142,14 +142,12 @@ document.querySelectorAll('.preview-link').forEach(a=>a.addEventListener('click'
 
 function updateArea(){
  const area=document.getElementById('updateArea');
- if(state.plan==='semi'||state.plan==='full'){
-  area.innerHTML='<div class="update-card"><div class="update-selected"><strong>定型更新使い放題</strong><b>通常 ¥7,000 / 月 → 公開後3か月無料</b><p>無料期間終了後に自動課金されることはありません。</p></div><details class="update-details"><summary>＋ 更新できる内容を見る</summary><div class="update-copy"><ul><li>LIVE / EVENT情報</li><li>写真・文章</li><li>プロフィール</li><li>SNS・YouTube等のリンク</li><li>その他、既存ページ内の定型的な差し替え</li></ul>新規ページ追加や大幅なデザイン変更、特殊機能追加は別途相談となります。</div></details></div>';
- }else if(state.plan==='one'){
+ if(state.plan==='one'){
   const opts=[['none','更新プランなし','必要になった時に都度相談'],['live','LIVE更新 ¥1,000 / 回','LIVE・EVENT情報のみ'],['standard','通常更新 ¥2,500 / 回','写真・文章・リンクなど'],['unlimited','定型更新使い放題 ¥7,000 / 月','対象の定型更新を回数を気にせず依頼']];
   area.innerHTML='<div class="update-options">'+opts.map(([v,t,s])=>'<button class="update-option '+(state.update===v?'selected':'')+'" data-update="'+v+'" type="button"><small>'+s+'</small><b>'+t+'</b><span class="dot">✓</span></button>').join('')+'</div>';
   area.querySelectorAll('.update-option').forEach(b=>b.addEventListener('click',()=>{state.update=b.dataset.update;persist();render()}));
  }else{
-  area.innerHTML='<div class="update-card"><div class="update-selected"><p>先に制作プランを選択してください。</p></div></div>';
+  area.innerHTML='';
  }
 }
 
@@ -161,8 +159,10 @@ function render(){
  document.getElementById('planCheck').classList.toggle('show',!!state.plan);
  templates.classList.toggle('show',state.plan==='semi');
  document.querySelectorAll('.template').forEach(el=>el.classList.toggle('selected',el.dataset.template===state.template));
+ const updateSection=document.getElementById('updateSection');
+ updateSection.hidden=state.plan!=='one';
  updateArea();
- document.getElementById('updateCheck').classList.toggle('show',!!state.update);
+ document.getElementById('updateCheck').classList.toggle('show',state.plan==='one'&&!!state.update);
  document.getElementById('domainBox').classList.toggle('on',state.domain);
  document.getElementById('sumPlan').textContent=state.plan?labels[state.plan]:'未選択';
  const tr=document.getElementById('sumTemplateRow');tr.hidden=state.plan!=='semi';
