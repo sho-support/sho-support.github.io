@@ -201,8 +201,8 @@ function render(){
 }
 
 if(prodMode){
- document.querySelector('.demo').textContent='PRODUCTION / SUPABASE';
- document.querySelector('.warning').innerHTML='<strong>本番管理モード。</strong> 顧客情報・ヒアリング・履歴は認証されたSupabaseデータから取得します。';
+ document.getElementById('modeBadge').textContent='PRODUCTION / SUPABASE';
+ document.getElementById('modeWarning').hidden=true;
  document.getElementById('resetDemo').style.display='none';
  try{state=await loadProduction()}catch(error){
   console.error(error);
