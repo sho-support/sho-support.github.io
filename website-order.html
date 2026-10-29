@@ -82,7 +82,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.95);border-bottom
 <script>
 (()=>{
  const plans=document.querySelectorAll('.plan'),sumPlan=document.getElementById('sumPlan'),sumCampaign=document.getElementById('sumCampaign'),sumAfter=document.getElementById('sumAfter'),domainOption=document.getElementById('domainOption'),sumDomain=document.getElementById('sumDomain'),templateBox=document.getElementById('templateBox'),sumTemplate=document.getElementById('sumTemplate'),selectedTemplate=document.getElementById('selectedTemplate');
- const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',minimal:'T04 Minimal Grid',premium:'T05 Premium Noir',pop:'T06 Pop Studio'};
+ const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',minimal:'T04 Minimal Grid',premium:'T05 Premium Noir',pop:'T06 Pop Studio',vintage:'T07 Vintage Poster',cyber:'T08 Neon Circuit',organic:'T09 Earth Atelier',editorial:'T10 Editorial Mono'};
  const params=new URLSearchParams(location.search);
  let chosenTemplate=params.get('template')||'';
  function selectPlan(p){
