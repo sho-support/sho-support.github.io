@@ -18,11 +18,12 @@ function validBody(body:any){
   };
 }
 
-function code(){
-  const d=new Date();
-  const date=d.toISOString().slice(0,10).replaceAll('-','');
-  const rand=crypto.randomUUID().replaceAll('-','').slice(0,6).toUpperCase();
-  return `ORD-${date}-${rand}`;
+async function code(admin: ReturnType<typeof adminClient>, plan: string){
+  const { data, error } = await admin.rpc('next_website_order_number');
+  if(error) throw error;
+  const n=String(Number(data)).padStart(4,'0');
+  const prefix=plan==='full'?'F':plan==='semi'?'S':'P';
+  return prefix+n;
 }
 
 Deno.serve(async(req)=>{
@@ -45,7 +46,8 @@ Deno.serve(async(req)=>{
   if(!v) return json({error:'注文内容を確認してください。'},400);
 
   const amount=v.plan==='one'?15000:v.plan==='semi'?22000:30000;
-  const orderCode=code();
+  const admin=adminClient();
+  const orderCode=await code(admin,v.plan);
   const selections={
     plan:v.plan,
     template_style:v.template_style,
@@ -55,7 +57,6 @@ Deno.serve(async(req)=>{
     source:'website-order',
   };
 
-  const admin=adminClient();
   const {data,error}=await admin.from('website_orders').insert({
     order_code:orderCode,
     status:'pending_line',
