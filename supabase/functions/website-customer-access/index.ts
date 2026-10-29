@@ -1,4 +1,4 @@
-import { adminClient, json, notifyOwner, triggerWebsiteWorker } from '../_shared/website.ts';
+import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker } from '../_shared/website.ts';
 
 const allowedOrigin = 'https://sho-support.github.io';
 
@@ -6,6 +6,18 @@ async function sha256Hex(value: string) {
   const bytes = new TextEncoder().encode(value);
   const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
   return [...hash].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function isAdmin(admin:any,userId:string){
+  const {data,error}=await admin.from('website_admins').select('user_id').eq('user_id',userId).maybeSingle();
+  if(error)throw error;
+  return Boolean(data);
+}
+
+function randomAccessKey(){
+  const bytes=crypto.getRandomValues(new Uint8Array(24));
+  let raw=''; for(const b of bytes)raw+=String.fromCharCode(b);
+  return btoa(raw).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,'');
 }
 
 async function resolveAccess(admin:any, siteId:string, key:string) {
@@ -47,6 +59,70 @@ Deno.serve(async(req)=>{
   const siteId=String(body?.site_id||'');
   const key=String(body?.key||'');
   const admin=adminClient();
+
+  if(action==='admin_list_orders' || action==='admin_activate_order'){
+    const user=await getUser(req,admin);
+    if(!user)return json({error:'ログインが必要です。'},401);
+    if(!(await isAdmin(admin,user.id)))return json({error:'管理者権限が必要です。'},403);
+
+    if(action==='admin_list_orders'){
+      const {data,error}=await admin.from('website_orders')
+        .select('order_code,status,plan,template_style,update_plan,custom_domain,amount_from,line_user_id,line_display_name,line_linked_at,site_id,created_at,updated_at')
+        .order('created_at',{ascending:false}).limit(200);
+      if(error)throw error;
+      return json({orders:data||[]});
+    }
+
+    const orderCode=String(body?.order_code||'').trim().toUpperCase();
+    if(!/^[FSP]\d{4,6}$/.test(orderCode))return json({error:'注文IDが不正です。'},400);
+    const {data:target,error:orderError}=await admin.from('website_orders').select('*').eq('order_code',orderCode).maybeSingle();
+    if(orderError)throw orderError;
+    if(!target)return json({error:'注文が見つかりません。'},404);
+    if(!target.line_user_id)return json({error:'お客様のLINE送信がまだ確認できません。'},409);
+
+    const newSiteId=orderCode.replace(/^[FSP]/,'');
+    const newKey=randomAccessKey();
+    const newHash=await sha256Hex(newKey);
+    const planLabel=target.plan==='one'?'1ページ完結サイト':target.plan==='semi'?'セミオーダーサイト':'フルオーダーサイト';
+
+    const {data:existing,error:siteReadError}=await admin.from('website_sites').select('site_id').eq('site_id',newSiteId).maybeSingle();
+    if(siteReadError)throw siteReadError;
+    if(!existing){
+      const {error:siteError}=await admin.from('website_sites').insert({
+        site_id:newSiteId,site_name:planLabel,status:'request_waiting',
+        current_note:'ヒアリング入力待ち。',customer_approved:false,
+        publish_branch:'main',live_path:'/',offline_path:'/docs'
+      });
+      if(siteError)throw siteError;
+      const {error:intakeError}=await admin.from('website_intakes').insert({
+        site_id:newSiteId,
+        payload:{fields:{build_plan:target.plan,template_style:target.template_style||''},checks:{},members:[],lives:[],contacts:[],files:{top_photos:[],gallery_photos:[],logo_file:[]},meta:{}}
+      });
+      if(intakeError)throw intakeError;
+      await admin.from('website_activity').insert({
+        site_id:newSiteId,actor_type:'admin',actor_user_id:user.id,action:'site_created',
+        detail:`注文 ${orderCode} から案件を作成。`
+      });
+    }
+
+    const {error:linkError}=await admin.from('website_line_links').upsert({
+      site_id:newSiteId,line_user_id:target.line_user_id,line_display_name:target.line_display_name||null
+    },{onConflict:'site_id'});
+    if(linkError)throw linkError;
+
+    const {error:updateError}=await admin.from('website_orders').update({
+      status:'site_created',site_id:newSiteId,customer_access_token_hash:newHash,
+      access_token_created_at:new Date().toISOString(),updated_at:new Date().toISOString()
+    }).eq('order_code',orderCode);
+    if(updateError)throw updateError;
+
+    const url=`https://sho-support.github.io/website-intake.html?id=${encodeURIComponent(newSiteId)}&prod=1&key=${encodeURIComponent(newKey)}`;
+    await linePush(target.line_user_id,`ご確認ありがとうございます。\n\n正式なSITE IDは ${newSiteId} です。\n下の専用URLから制作内容・写真をご入力ください。入力途中でも自動保存され、同じURLなら別端末・別ブラウザから続けられます。\n\n${url}`);
+    await linePush(target.line_user_id,`SITE ID ${newSiteId}`);
+    await notifyOwner(`【案件作成】\n注文ID ${orderCode}\nSITE ID ${newSiteId}\nヒアリングURL送信済み`);
+    return json({ok:true,site_id:newSiteId});
+  }
+
   const order=await resolveAccess(admin,siteId,key);
   if(!order) return json({error:'専用URLが無効です。LINEで届いた最新のURLをご利用ください。'},403);
 
