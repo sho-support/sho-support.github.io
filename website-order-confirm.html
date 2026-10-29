@@ -38,14 +38,14 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <button class="secondary" id="copyBtn" type="button">注文内容をコピー</button>
 <button class="secondary" id="downloadBtn" type="button">注文内容を画像で保存</button>
 </div>
-<div class="notice"><strong>このあと</strong><br>注文を確定すると仮注文IDを発行します。その後、公式LINEに注文IDと内容が入力された状態で移動します。入力済みのメッセージをそのまま送信してください。</div>
+<div class="notice"><strong>このあと</strong><br>注文を確定すると注文IDを発行します。その後、公式LINEに注文IDと内容が入力された状態で移動します。入力済みのメッセージをそのまま送信してください。</div>
 <button class="primary" id="orderBtn" type="button">この内容で注文を確定する</button>
 <a class="edit" href="website-order.html">← 選択内容を変更する</a>
 <div class="error" id="error"></div>
 
 <section class="done" id="done">
 <div class="done-label">ORDER CREATED</div><h2>ご注文ありがとうございます。</h2>
-<p>仮注文IDを発行しました。このIDでLINEの注文と紐づけます。</p>
+<p>注文IDを発行しました。このIDでLINEの注文と紐づけます。</p>
 <div class="order-id" id="orderId">—</div>
 <p><strong style="color:#fff">次に公式LINEへ進んでください。</strong><br>ボタンを押すと、注文IDと注文内容が入力済みのトーク画面が開きます。内容は変更せず、そのまま送信してください。</p>
 <a class="line-btn" id="lineBtn" href="#">公式LINEで注文内容を送信 →</a>
@@ -139,7 +139,10 @@ function showDone(order){
 }
 try{
  const receipt=JSON.parse(localStorage.getItem(RECEIPT)||'null');
- if(receipt&&receipt.state_key===JSON.stringify(state)&&receipt.order?.order_code)showDone(receipt.order);
+ const created=receipt?.order?.created_at?new Date(receipt.order.created_at).getTime():0;
+ const fresh=created&&Date.now()-created<48*60*60*1000;
+ if(receipt&&fresh&&receipt.state_key===JSON.stringify(state)&&receipt.order?.order_code)showDone(receipt.order);
+ else if(receipt&&!fresh)localStorage.removeItem(RECEIPT);
 }catch{}
 
 document.getElementById('orderBtn').onclick=async()=>{
