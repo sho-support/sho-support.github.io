@@ -36,7 +36,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 
 <div class="actions">
 <button class="secondary" id="copyBtn" type="button">注文内容をコピー</button>
-<button class="secondary" id="downloadBtn" type="button">注文内容を保存</button>
+<button class="secondary" id="downloadBtn" type="button">注文内容を画像で保存</button>
 </div>
 <div class="notice"><strong>このあと</strong><br>注文を確定すると仮注文IDを発行します。その後、公式LINEに注文IDと内容が入力された状態で移動します。入力済みのメッセージをそのまま送信してください。</div>
 <button class="primary" id="orderBtn" type="button">この内容で注文を確定する</button>
@@ -55,7 +55,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <footer><div class="wrap">© 2026 SHO WEB SUPPORT</div></footer>
 <script>
 (()=>{
-const STORE='sho_web_order_v3', RECEIPT='sho_web_order_receipt_v1';
+const STORE='sho_web_order_v3', RECEIPT='sho_web_order_receipt_v2';
 const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',minimal:'T04 Minimal Grid',premium:'T05 Premium Noir',pop:'T06 Pop Studio',vintage:'T07 Vintage Poster',cyber:'T08 Neon Circuit',organic:'T09 Earth Atelier',editorial:'T10 Editorial Mono'};
 const planLabels={one:'1ページサイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'},prices={one:15000,semi:22000,full:30000};
 const updateLabels={none:'更新プランなし',live:'LIVE更新 ¥1,000 / 回',standard:'通常更新 ¥2,500 / 回',unlimited:'定型更新使い放題 ¥7,000 / 月',free3:'定型更新使い放題 / 公開後3か月無料（通常 ¥7,000 / 月）'};
@@ -76,7 +76,48 @@ document.getElementById('domain').textContent=state.domain?'希望する / ¥5,0
 document.getElementById('amount').textContent='¥'+prices[state.plan].toLocaleString()+'〜';
 
 document.getElementById('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(summaryText());alert('注文内容をコピーしました。')}catch{alert('コピーできませんでした。')}};
-document.getElementById('downloadBtn').onclick=()=>{const blob=new Blob([summaryText()+'\n'],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SHO_WEB_SUPPORT_注文内容.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+document.getElementById('downloadBtn').onclick=()=>{
+ const lines=[
+  'SHO WEB SUPPORT',
+  'ホームページ制作 ご注文内容',
+  '',
+  '制作プラン：'+planLabels[state.plan],
+  state.plan==='semi'?'デザイン：'+names[state.template]:null,
+  '更新：'+updateLabels[state.update],
+  '独自ドメイン：'+(state.domain?'希望する':'希望しない'),
+  '',
+  '制作料金：¥'+prices[state.plan].toLocaleString()+'〜',
+  '',
+  '※正式な金額・振込先は公式LINEでご案内します。'
+ ].filter(v=>v!==null);
+ const scale=2,w=900,pad=64,lineH=48,headH=150,h=headH+pad*2+lines.length*lineH;
+ const canvas=document.createElement('canvas');canvas.width=w*scale;canvas.height=h*scale;
+ const ctx=canvas.getContext('2d');ctx.scale(scale,scale);
+ ctx.fillStyle='#f4f0e9';ctx.fillRect(0,0,w,h);
+ ctx.fillStyle='#111';ctx.fillRect(0,0,w,headH);
+ ctx.fillStyle='#e0b66b';ctx.font='700 24px sans-serif';ctx.fillText('SHO WEB SUPPORT',pad,58);
+ ctx.fillStyle='#fff';ctx.font='700 34px sans-serif';ctx.fillText('ORDER DETAILS',pad,105);
+ ctx.fillStyle='#171717';ctx.font='600 28px sans-serif';
+ let y=headH+pad;
+ for(const line of lines){
+   if(line===''){y+=18;continue}
+   if(line.startsWith('制作料金：')){ctx.font='700 34px sans-serif';ctx.fillStyle='#7b5421';}
+   else if(line.startsWith('※')){ctx.font='500 20px sans-serif';ctx.fillStyle='#69645d';}
+   else{ctx.font='600 28px sans-serif';ctx.fillStyle='#171717';}
+   const max=w-pad*2;
+   const chars=[...line];let row='';
+   for(const ch of chars){
+     const test=row+ch;
+     if(ctx.measureText(test).width>max&&row){ctx.fillText(row,pad,y);y+=lineH;row=ch}else row=test;
+   }
+   if(row){ctx.fillText(row,pad,y);y+=lineH;}
+ }
+ canvas.toBlob(blob=>{
+   if(!blob)return alert('画像を作成できませんでした。');
+   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SHO_WEB_SUPPORT_注文内容.png';a.click();
+   setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+ },'image/png');
+};
 
 function showDone(order){
  const msg=[
