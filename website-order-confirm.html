@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080808">
+<meta name="robots" content="noindex,nofollow"><title>注文最終確認 | SHO WEB SUPPORT</title>
+<link rel="stylesheet" href="website-theme.css">
+<style>
+:root{--bg:#080808;--panel:#111;--soft:#c5c5c5;--muted:#858585;--gold:#e0b66b;--line:rgba(255,255,255,.13);--ok:#64d990}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,rgba(173,29,50,.11),transparent 32%),var(--bg);color:#fff;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.7}.wrap{width:min(calc(100% - 28px),760px);margin:auto}a{color:inherit;text-decoration:none}button{font:inherit}
+header{position:sticky;top:0;z-index:20;background:rgba(8,8,8,.95);border-bottom:1px solid var(--line)}.head{min-height:62px;display:flex;align-items:center;justify-content:space-between}.brand{font-size:.86rem;font-weight:950;letter-spacing:.08em}.back{font-size:.74rem;color:#aaa}
+.hero{padding:32px 0 20px}.hero small{color:var(--gold);font-size:.64rem;font-weight:950;letter-spacing:.16em}.hero h1{margin:5px 0 8px;font-size:clamp(1.8rem,6vw,2.7rem)}.hero p{margin:0;color:var(--soft);font-size:.76rem}
+.review{border:1px solid rgba(224,182,107,.55);border-radius:16px;background:#f2eee7;color:#181818;overflow:hidden}.review-head{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.12);display:flex;justify-content:space-between;gap:10px}.review-head span{color:#7b6441;font-size:.62rem;font-weight:950;letter-spacing:.13em}.review-head b{font-size:.9rem}.rows{padding:7px 16px 13px}.row{display:grid;grid-template-columns:120px 1fr;gap:9px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.09);font-size:.72rem}.row:last-child{border-bottom:0}.row span{color:#6f6a63}.row strong{text-align:right}.total{display:flex;justify-content:space-between;align-items:end;margin-top:10px;padding-top:11px;border-top:2px solid #181818}.total span{font-size:.72rem}.total b{font-size:1.45rem}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.secondary{min-height:43px;border:1px solid var(--line);border-radius:10px;background:#111;color:#fff;font-size:.7rem;font-weight:900}.primary{width:100%;min-height:53px;margin-top:10px;border:0;border-radius:11px;background:#fff;color:#111;font-weight:950}.primary:disabled{opacity:.45}.edit{display:flex;justify-content:center;align-items:center;min-height:42px;margin-top:8px;color:#aaa;font-size:.7rem;text-decoration:underline}
+.notice{margin-top:14px;padding:13px;border:1px solid var(--line);border-radius:13px;background:#0e0e0e;color:var(--soft);font-size:.69rem}.notice strong{color:#fff}
+.done{display:none;margin-top:15px;padding:18px;border:1px solid rgba(100,217,144,.45);border-radius:16px;background:rgba(100,217,144,.05)}.done.show{display:block}.done-label{color:var(--ok);font-size:.66rem;font-weight:950;letter-spacing:.12em}.done h2{margin:5px 0 7px;font-size:1.25rem}.order-id{margin:10px 0;padding:11px;border-radius:9px;background:#fff;color:#111;font-weight:950;letter-spacing:.06em;text-align:center}.done p{margin:6px 0;color:var(--soft);font-size:.72rem}.line-btn{display:flex;align-items:center;justify-content:center;min-height:52px;margin-top:13px;border-radius:11px;background:#06c755;color:#041607;font-weight:950}.line-note{text-align:center;color:#8e8e8e;font-size:.62rem;margin-top:6px}
+.error{display:none;margin-top:10px;padding:10px;border:1px solid rgba(220,70,88,.4);border-radius:9px;color:#f0b4bc;font-size:.68rem}.error.show{display:block}
+footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--line);margin-top:30px}
+@media(max-width:500px){.row{grid-template-columns:100px 1fr}.actions{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap head"><div class="brand">SHO WEB SUPPORT / CONFIRM</div><a class="back" href="website-order.html">← 内容を変更</a></div></header>
+<main class="wrap">
+<section class="hero"><small>FINAL REVIEW</small><h1>注文最終確認</h1><p>内容を確認してから注文を確定してください。注文確定だけではまだ入金は発生しません。</p></section>
+
+<section class="review" id="review">
+<div class="review-head"><span>ORDER DETAILS</span><b>ご注文内容</b></div>
+<div class="rows">
+<div class="row"><span>制作プラン</span><strong id="plan">—</strong></div>
+<div class="row" id="templateRow"><span>デザイン</span><strong id="template">—</strong></div>
+<div class="row"><span>更新プラン</span><strong id="update">—</strong></div>
+<div class="row"><span>独自ドメイン</span><strong id="domain">—</strong></div>
+<div class="total"><span>制作料金</span><b id="amount">—</b></div>
+</div>
+</section>
+
+<div class="actions">
+<button class="secondary" id="copyBtn" type="button">注文内容をコピー</button>
+<button class="secondary" id="downloadBtn" type="button">注文内容を保存</button>
+</div>
+<div class="notice"><strong>このあと</strong><br>注文を確定すると仮注文IDを発行します。その後、公式LINEに注文IDと内容が入力された状態で移動します。入力済みのメッセージをそのまま送信してください。</div>
+<button class="primary" id="orderBtn" type="button">この内容で注文を確定する</button>
+<a class="edit" href="website-order.html">← 選択内容を変更する</a>
+<div class="error" id="error"></div>
+
+<section class="done" id="done">
+<div class="done-label">ORDER CREATED</div><h2>ご注文ありがとうございます。</h2>
+<p>仮注文IDを発行しました。このIDでLINEの注文と紐づけます。</p>
+<div class="order-id" id="orderId">—</div>
+<p><strong style="color:#fff">次に公式LINEへ進んでください。</strong><br>ボタンを押すと、注文IDと注文内容が入力済みのトーク画面が開きます。内容は変更せず、そのまま送信してください。</p>
+<a class="line-btn" id="lineBtn" href="#">公式LINEで注文内容を送信 →</a>
+<div class="line-note">LINE送信後、振込先をご案内します。入金確認後に正式なSITE IDと制作ヒアリングURLをお送りします。</div>
+</section>
+</main>
+<footer><div class="wrap">© 2026 SHO WEB SUPPORT</div></footer>
+<script>
+(()=>{
+const STORE='sho_web_order_v3', RECEIPT='sho_web_order_receipt_v1';
+const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',minimal:'T04 Minimal Grid',premium:'T05 Premium Noir',pop:'T06 Pop Studio',vintage:'T07 Vintage Poster',cyber:'T08 Neon Circuit',organic:'T09 Earth Atelier',editorial:'T10 Editorial Mono'};
+const planLabels={one:'1ページサイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'},prices={one:15000,semi:22000,full:30000};
+const updateLabels={none:'更新プランなし',live:'LIVE更新 ¥1,000 / 回',standard:'通常更新 ¥2,500 / 回',unlimited:'定型更新使い放題 ¥7,000 / 月',free3:'定型更新使い放題 / 公開後3か月無料（通常 ¥7,000 / 月）'};
+let state={};try{state=JSON.parse(localStorage.getItem(STORE)||'{}')}catch{}
+if(!['one','semi','full'].includes(state.plan)||!state.update||(state.plan==='semi'&&!names[state.template])){location.replace('website-order.html');return}
+const summaryText=()=>[
+ 'SHO WEB SUPPORT ホームページ制作注文',
+ '制作プラン: '+planLabels[state.plan]+' ¥'+prices[state.plan].toLocaleString()+'〜',
+ state.plan==='semi'?'デザイン: '+names[state.template]:null,
+ '更新: '+updateLabels[state.update],
+ '独自ドメイン: '+(state.domain?'希望する（設定代行 ¥5,000〜＋実費）':'希望しない')
+].filter(Boolean).join('\n');
+document.getElementById('plan').textContent=planLabels[state.plan];
+document.getElementById('templateRow').hidden=state.plan!=='semi';
+document.getElementById('template').textContent=state.plan==='semi'?names[state.template]:'—';
+document.getElementById('update').textContent=updateLabels[state.update]||state.update;
+document.getElementById('domain').textContent=state.domain?'希望する / ¥5,000〜＋実費':'希望しない';
+document.getElementById('amount').textContent='¥'+prices[state.plan].toLocaleString()+'〜';
+
+document.getElementById('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(summaryText());alert('注文内容をコピーしました。')}catch{alert('コピーできませんでした。')}};
+document.getElementById('downloadBtn').onclick=()=>{const blob=new Blob([summaryText()+'\n'],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SHO_WEB_SUPPORT_注文内容.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+
+function showDone(order){
+ const msg=[
+  'SHO WEB SUPPORT 注文',
+  '注文ID: '+order.order_code,
+  '制作プラン: '+planLabels[state.plan]+' ¥'+prices[state.plan].toLocaleString()+'〜',
+  state.plan==='semi'?'デザイン: '+names[state.template]:null,
+  '更新: '+updateLabels[state.update],
+  '独自ドメイン: '+(state.domain?'希望する':'希望しない'),
+  '',
+  'この内容で注文します。'
+ ].filter(v=>v!==null).join('\n');
+ document.getElementById('orderId').textContent=order.order_code;
+ document.getElementById('lineBtn').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(msg);
+ document.getElementById('done').classList.add('show');
+ document.getElementById('orderBtn').disabled=true;
+ document.getElementById('orderBtn').textContent='注文ID発行済み';
+ document.getElementById('done').scrollIntoView({behavior:'smooth',block:'start'});
+}
+try{
+ const receipt=JSON.parse(localStorage.getItem(RECEIPT)||'null');
+ if(receipt&&receipt.state_key===JSON.stringify(state)&&receipt.order?.order_code)showDone(receipt.order);
+}catch{}
+
+document.getElementById('orderBtn').onclick=async()=>{
+ const btn=document.getElementById('orderBtn'),err=document.getElementById('error');
+ if(btn.disabled)return; btn.disabled=true;btn.textContent='注文IDを発行中…';err.classList.remove('show');
+ try{
+  const r=await fetch('https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-order-api',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({plan:state.plan,template_style:state.template||'',update_plan:state.update,custom_domain:!!state.domain,custom_domain_note:'',website:''})
+  });
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||!d?.order?.order_code)throw new Error(d?.error||'注文IDを発行できませんでした。');
+  localStorage.setItem(RECEIPT,JSON.stringify({state_key:JSON.stringify(state),order:d.order}));
+  showDone(d.order);
+ }catch(e){
+  btn.disabled=false;btn.textContent='この内容で注文を確定する';err.textContent=e.message||'処理に失敗しました。';err.classList.add('show');
+ }
+};
+})();
+</script>
+</body></html>
