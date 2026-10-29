@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080808">
-<meta name="robots" content="noindex,nofollow"><title>注文最終確認 | SHO WEB SUPPORT</title>
+<meta name="robots" content="noindex,nofollow"><title>制作申込み内容の確認 | SHO WEB SUPPORT</title>
 <link rel="stylesheet" href="website-theme.css">
 <style>
 :root{--bg:#080808;--panel:#111;--soft:#c5c5c5;--muted:#858585;--gold:#e0b66b;--line:rgba(255,255,255,.13);--ok:#64d990}
@@ -21,7 +21,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <body>
 <header><div class="wrap head"><div class="brand">SHO WEB SUPPORT / CONFIRM</div><a class="back" href="website-order.html">← 内容を変更</a></div></header>
 <main class="wrap">
-<section class="hero"><small>FINAL REVIEW</small><h1>注文最終確認</h1><p>内容を確認してから注文を確定してください。注文確定だけではまだ入金は発生しません。</p></section>
+<section class="hero"><small>FINAL REVIEW</small><h1>制作申込み内容の確認</h1><p>この画面では制作内容を申し込みます。最終金額・制作時期はLINEで確認後にご案内し、入金確認後に制作を開始します。</p></section>
 
 <section class="review" id="review">
 <div class="review-head"><span>ORDER DETAILS</span><b>ご注文内容</b></div>
@@ -38,8 +38,16 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <button class="secondary" id="copyBtn" type="button">注文内容をコピー</button>
 <button class="secondary" id="downloadBtn" type="button">注文内容を画像で保存</button>
 </div>
-<div class="notice"><strong>このあと</strong><br>注文を確定すると注文IDを発行します。その後、公式LINEに注文IDと内容が入力された状態で移動します。入力済みのメッセージをそのまま送信してください。</div>
-<button class="primary" id="orderBtn" type="button">この内容で注文を確定する</button>
+<div class="notice"><strong>お申込み前にご確認ください</strong><br>
+・表示金額は基本料金です。追加機能・独自ドメイン等がある場合はLINEで最終金額をご案内します。<br>
+・お支払いは銀行振込です。最終金額と制作時期をご確認後、制作開始前にお振込みください。<br>
+・入金前は無料でキャンセルできます。入金後のキャンセル条件は特商法表記・利用条件をご確認ください。<br>
+・入金確認と必要素材の受領後に制作を開始します。</div>
+<label style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0e0e0e;color:#d7d7d7;font-size:.69rem">
+<input id="termsCheck" type="checkbox" style="margin-top:4px">
+<span><a href="website-legal.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">特定商取引法に基づく表記</a>・<a href="website-terms.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">利用条件</a>・<a href="website-privacy.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">プライバシーポリシー</a>を確認しました。</span></label>
+<div class="notice"><strong>このあと</strong><br>申込みボタンを押すと注文IDを発行します。その後、公式LINEに注文IDと内容が入力された状態で移動します。入力済みのメッセージをそのまま送信してください。</div>
+<button class="primary" id="orderBtn" type="button" disabled>この内容で制作を申し込む</button>
 <a class="edit" href="website-order.html">← 選択内容を変更する</a>
 <div class="error" id="error"></div>
 
@@ -62,7 +70,7 @@ const updateLabels={none:'更新プランなし',live:'LIVE更新 ¥1,000 / 回'
 let state={};try{state=JSON.parse(localStorage.getItem(STORE)||'{}')}catch{}
 if(!['one','semi','full'].includes(state.plan)||!state.update||(state.plan==='semi'&&!names[state.template])){location.replace('website-order.html');return}
 const summaryText=()=>[
- 'SHO WEB SUPPORT ホームページ制作注文',
+ 'SHO WEB SUPPORT ホームページ制作申込み',
  '制作プラン: '+planLabels[state.plan]+' ¥'+prices[state.plan].toLocaleString()+'〜',
  state.plan==='semi'?'デザイン: '+names[state.template]:null,
  '更新: '+updateLabels[state.update],
@@ -121,14 +129,14 @@ document.getElementById('downloadBtn').onclick=()=>{
 
 function showDone(order){
  const msg=[
-  'SHO WEB SUPPORT 注文',
+  'SHO WEB SUPPORT 制作申込み',
   '注文ID: '+order.order_code,
   '制作プラン: '+planLabels[state.plan]+' ¥'+prices[state.plan].toLocaleString()+'〜',
   state.plan==='semi'?'デザイン: '+names[state.template]:null,
   '更新: '+updateLabels[state.update],
   '独自ドメイン: '+(state.domain?'希望する':'希望しない'),
   '',
-  'この内容で注文します。'
+  'この内容で制作を申し込みます。'
  ].filter(v=>v!==null).join('\n');
  document.getElementById('orderId').textContent=order.order_code;
  document.getElementById('lineBtn').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(msg);
@@ -141,10 +149,12 @@ try{
  const receipt=JSON.parse(localStorage.getItem(RECEIPT)||'null');
  const created=receipt?.order?.created_at?new Date(receipt.order.created_at).getTime():0;
  const fresh=created&&Date.now()-created<48*60*60*1000;
- if(receipt&&fresh&&receipt.state_key===JSON.stringify(state)&&receipt.order?.order_code)showDone(receipt.order);
+ if(receipt&&fresh&&receipt.state_key===JSON.stringify(state)&&receipt.order?.order_code){termsCheck.checked=true;showDone(receipt.order);}
  else if(receipt&&!fresh)localStorage.removeItem(RECEIPT);
 }catch{}
 
+const termsCheck=document.getElementById('termsCheck');
+termsCheck.addEventListener('change',()=>{document.getElementById('orderBtn').disabled=!termsCheck.checked;});
 document.getElementById('orderBtn').onclick=async()=>{
  const btn=document.getElementById('orderBtn'),err=document.getElementById('error');
  if(btn.disabled)return; btn.disabled=true;btn.textContent='注文IDを発行中…';err.classList.remove('show');
@@ -158,7 +168,7 @@ document.getElementById('orderBtn').onclick=async()=>{
   localStorage.setItem(RECEIPT,JSON.stringify({state_key:JSON.stringify(state),order:d.order}));
   showDone(d.order);
  }catch(e){
-  btn.disabled=false;btn.textContent='この内容で注文を確定する';err.textContent=e.message||'処理に失敗しました。';err.classList.add('show');
+  btn.disabled=false;btn.textContent='この内容で制作を申し込む';err.textContent=e.message||'処理に失敗しました。';err.classList.add('show');
  }
 };
 })();
