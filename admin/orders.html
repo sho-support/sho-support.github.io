@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#070707">
+<title>注文管理 | SHO WEB SUPPORT</title>
+<link rel="stylesheet" href="../website-theme.css">
+<style>
+:root{--bg:#070707;--panel:#0e0e10;--text:#fff;--soft:#c8c8cc;--muted:#85858c;--red:#c61f38;--gold:#d9ae5c;--line:rgba(255,255,255,.12);--green:#55d68a;--warn:#f0a64b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 12% 0,rgba(198,31,56,.13),transparent 28%),var(--bg);color:#fff;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.65}a{color:inherit;text-decoration:none}button{font:inherit}.wrap{width:min(calc(100% - 22px),900px);margin:auto}
+header{position:sticky;top:0;z-index:20;background:rgba(5,5,6,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}.head{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{font-weight:950;letter-spacing:.04em}.back{font-size:.7rem;color:#bbb}
+.hero{padding:28px 0 14px}.hero small{color:var(--gold);font-size:.64rem;font-weight:950;letter-spacing:.15em}.hero h1{margin:5px 0 7px;font-size:1.65rem}.hero p{margin:0;color:var(--soft);font-size:.76rem}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:13px 0}.stat{padding:10px;border:1px solid var(--line);border-radius:11px;background:#101012}.stat small{display:block;color:var(--muted);font-size:.6rem}.stat b{display:block;margin-top:2px;font-size:1.05rem}
+.list{display:grid;gap:9px;padding:8px 0 38px}.card{border:1px solid rgba(217,174,92,.22);border-radius:15px;background:linear-gradient(145deg,#121214,#09090a);overflow:hidden}.top{display:grid;grid-template-columns:1fr auto;gap:9px;padding:13px}.id{color:var(--gold);font-weight:950;font-size:.85rem}.name{font-weight:900;margin-top:2px}.meta{color:var(--muted);font-size:.65rem;margin-top:3px}.badge{align-self:start;padding:5px 7px;border:1px solid var(--line);border-radius:999px;font-size:.59rem;font-weight:950;white-space:nowrap}.pending_line{color:#bfc9ff}.pending_payment{color:#ffd49b;border-color:rgba(240,166,75,.45)}.site_created{color:#9aefbe;border-color:rgba(85,214,138,.42)}.cancelled{color:#aaa}.body{padding:0 13px 13px;border-top:1px solid var(--line)}.kv{display:grid;grid-template-columns:100px 1fr;gap:6px 8px;padding:10px 0;font-size:.69rem}.kv span:nth-child(odd){color:var(--muted)}.kv b{text-align:right;overflow-wrap:anywhere}.btn{width:100%;min-height:44px;border:1px solid var(--line);border-radius:9px;background:#161618;color:#fff;font-weight:950;font-size:.72rem}.btn.activate{background:#153523;border-color:rgba(85,214,138,.45);color:#baf2d1}.btn:disabled{opacity:.45}.note{margin-top:8px;color:#888;font-size:.62rem;text-align:center}.empty{padding:30px;text-align:center;color:#888}.error{margin:10px 0;padding:10px;border-left:3px solid var(--red);background:#100b0c;color:#efb7bf;font-size:.7rem}
+@media(max-width:520px){.summary{grid-template-columns:repeat(3,1fr)}.stat{padding:8px}.kv{grid-template-columns:1fr;gap:1px}.kv b{text-align:left;margin-bottom:5px}.top{padding:12px}}
+</style>
+</head>
+<body>
+<header><div class="wrap head"><div class="brand">SHO WEB SUPPORT / ORDERS</div><a class="back" href="index.html">← 制作管理</a></div></header>
+<main class="wrap">
+<section class="hero"><small>ORDER MANAGEMENT</small><h1>注文管理</h1><p>LINE紐付けと入金確認後の案件作成を管理します。</p></section>
+<div class="summary"><div class="stat"><small>LINE待ち</small><b id="nLine">0</b></div><div class="stat"><small>入金待ち</small><b id="nPay">0</b></div><div class="stat"><small>案件作成済み</small><b id="nDone">0</b></div></div>
+<div id="message"></div><div class="list" id="list"><div class="empty">読み込み中…</div></div>
+</main>
+<script type="module">
+import { requireWebsiteSession, websiteSupabase } from '../website-client.js';
+(async()=>{
+ await requireWebsiteSession(location.href);
+ const list=document.getElementById('list'),msg=document.getElementById('message');
+ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+ const labels={pending_line:'LINE送信待ち',pending_payment:'入金待ち',site_created:'案件作成済み',cancelled:'キャンセル'};
+ const plans={one:'1ページ完結サイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'};
+ async function api(action,payload={}){
+   const {data,error}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action,...payload}});
+   if(error)throw error;if(data?.error)throw new Error(data.error);return data;
+ }
+ const fmt=d=>d?new Date(d).toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+ async function load(){
+   msg.innerHTML='';
+   try{
+     const r=await api('admin_list_orders'),orders=Array.isArray(r.orders)?r.orders:[];
+     document.getElementById('nLine').textContent=orders.filter(x=>x.status==='pending_line').length;
+     document.getElementById('nPay').textContent=orders.filter(x=>x.status==='pending_payment').length;
+     document.getElementById('nDone').textContent=orders.filter(x=>x.status==='site_created').length;
+     if(!orders.length){list.innerHTML='<div class="empty">注文はまだありません。</div>';return}
+     list.innerHTML=orders.map(o=>{
+       const can=o.status==='pending_payment';
+       const line=o.line_display_name|| (o.line_user_id?'LINE連携済み':'未連携');
+       return '<article class="card"><div class="top"><div><div class="id">'+esc(o.order_code)+'</div><div class="name">'+esc(plans[o.plan]||o.plan)+'</div><div class="meta">'+esc(fmt(o.created_at))+'</div></div><span class="badge '+esc(o.status)+'">'+esc(labels[o.status]||o.status)+'</span></div><div class="body"><div class="kv"><span>お客様</span><b>'+esc(line)+'</b><span>テンプレート</span><b>'+esc(o.template_style||'—')+'</b><span>制作料金</span><b>¥'+Number(o.amount_from||0).toLocaleString()+'〜</b><span>SITE ID</span><b>'+esc(o.site_id||'未発行')+'</b></div>'+
+       (can?'<button class="btn activate" data-activate="'+esc(o.order_code)+'" type="button">入金確認済み → 案件作成・URL送信</button><div class="note">実際の入金を確認してから押してください。</div>':
+       o.status==='pending_line'?'<button class="btn" disabled>お客様のLINE送信待ち</button>':
+       o.status==='site_created'?'<button class="btn" disabled>SITE ID '+esc(o.site_id||'')+' / ヒアリングURL送信済み</button>':'')+
+       '</div></article>';
+     }).join('');
+     document.querySelectorAll('[data-activate]').forEach(btn=>btn.onclick=async()=>{
+       const code=btn.dataset.activate;
+       if(!confirm(code+' の入金を確認済みとして、SITE IDを発行しヒアリングURLを送信しますか？'))return;
+       btn.disabled=true;btn.textContent='処理中…';
+       try{const r=await api('admin_activate_order',{order_code:code});alert('SITE ID '+r.site_id+' を発行し、LINEへヒアリングURLを送りました。');await load()}
+       catch(e){alert(e.message||'処理に失敗しました。');btn.disabled=false;btn.textContent='入金確認済み → 案件作成・URL送信'}
+     });
+   }catch(e){list.innerHTML='<div class="empty">読み込めませんでした。</div>';msg.innerHTML='<div class="error">'+esc(e.message||e)+'</div>'}
+ }
+ await load();
+})();
+</script>
+</body></html>
