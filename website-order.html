@@ -54,7 +54,7 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 <div class="section-head"><h2>制作プランを選択</h2><span class="section-check" id="planCheck">✓ 選択済み</span></div>
 <details class="business"><summary>店舗・飲食店・企業の方へ ＋詳細</summary><div class="business-body">店舗・企業も、通常の紹介サイトであれば下記3プランから選べます。EC、会員機能、大規模予約システム、多数ページなど特殊な構成は個別見積りです。迷う場合は上の「LINEで相談する」から先にご相談ください。</div></details>
 <div class="plan-list">
-<div class="plan" data-plan="one"><button class="plan-select" type="button"><span><span class="plan-kicker">ONE PAGE</span><span class="plan-title">1ページサイト</span></span><span class="plan-price">¥15,000〜</span></button><span class="check-dot">✓</span><details class="plan-more"><summary>＋ 詳細</summary><div class="plan-copy">プロフィール、サービス、SNS、問い合わせなど必要な情報を1ページに整理。公開後30日間は、1ページ内の配置・色・写真・文章・リンクなどを無料調整できます。</div></details></div>
+<div class="plan" data-plan="one"><button class="plan-select" type="button"><span><span class="plan-kicker">ONE PAGE</span><span class="plan-title">1ページ完結サイト</span></span><span class="plan-price">¥15,000〜</span></button><span class="check-dot">✓</span><details class="plan-more"><summary>＋ 詳細</summary><div class="plan-copy">プロフィール、サービス、SNS、問い合わせなど必要な情報を1ページに整理。公開後30日間は、1ページ内の配置・色・写真・文章・リンクなどを無料調整できます。</div></details></div>
 <div class="plan" data-plan="semi"><button class="plan-select" type="button"><span><span class="plan-kicker">SEMI ORDER</span><span class="plan-title">セミオーダーサイト</span></span><span class="plan-price">¥22,000〜</span></button><span class="check-dot">✓</span><details class="plan-more"><summary>＋ 詳細</summary><div class="plan-copy">テンプレートから骨格を選び、写真・文章・ロゴ・色・リンクを差し替えます。骨格自体は固定ですが、公開後30日間は骨格内の色・写真・文章・リンクなどを無料調整できます。</div></details></div>
 <div class="plan" data-plan="full"><button class="plan-select" type="button"><span><span class="plan-kicker">FULL ORDER</span><span class="plan-title">フルオーダーサイト</span></span><span class="plan-price">¥30,000〜</span></button><span class="check-dot">✓</span><details class="plan-more"><summary>＋ 詳細</summary><div class="plan-copy">骨格・ページ構成・写真の見せ方・導線・デザインから自由に設計。公開後30日間は、当初の制作範囲内なら骨格の再調整や、入れ忘れていたページの追加相談まで無料で対応します。</div></details></div>
 </div>
@@ -77,7 +77,7 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 
 <section class="section" id="updateSection" hidden>
 <div class="section-head"><h2>更新プランの選択</h2><span class="section-check" id="updateCheck">✓ 選択済み</span></div>
-<p class="helper">1ページサイトは、公開後の更新方法をここで選べます。</p>
+<p class="helper">1ページ完結サイトは、公開後の更新方法をここで選べます。</p>
 <div id="updateArea"></div>
 </section>
 
@@ -110,7 +110,7 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 (()=>{
 const STORE='sho_web_order_v3';
 const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',minimal:'T04 Minimal Grid',premium:'T05 Premium Noir',pop:'T06 Pop Studio',vintage:'T07 Vintage Poster',cyber:'T08 Neon Circuit',organic:'T09 Earth Atelier',editorial:'T10 Editorial Mono'};
-const labels={one:'1ページサイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'};
+const labels={one:'1ページ完結サイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'};
 const prices={one:15000,semi:22000,full:30000};
 let state={plan:'',template:'',update:'',domain:false};
 try{state={...state,...JSON.parse(localStorage.getItem(STORE)||'{}')}}catch{}
