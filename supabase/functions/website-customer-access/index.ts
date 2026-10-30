@@ -1,4 +1,4 @@
-import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource } from './_shared/website.ts';
+import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource, publishApprovedStagedBranch } from './_shared/website.ts';
 
 const allowedOrigin = 'https://sho-support.github.io';
 
@@ -152,7 +152,7 @@ Deno.serve(async(req)=>{
   if(action==='review_load' || action==='review_revision' || action==='review_approve' || action==='review_publish'){
     if(!/^[A-Za-z0-9_-]{3,32}$/.test(siteId)||key.length<20)return json({error:'確認URLが無効です。'},403);
     const {data:reviewSite,error:reviewError}=await admin.from('website_sites')
-      .select('site_id,site_name,status,preview_url,customer_approved,review_access_token_hash,repo_full_name,publish_branch,live_path,custom_domain')
+      .select('site_id,site_name,status,preview_url,customer_approved,review_access_token_hash,repo_full_name,publish_branch,preview_branch,live_path,custom_domain')
       .eq('site_id',siteId)
       .maybeSingle();
     if(reviewError)throw reviewError;
@@ -196,6 +196,7 @@ Deno.serve(async(req)=>{
       const repo=String(reviewSite.repo_full_name).split('/');
       if(repo.length!==2)return json({error:'公開先の設定が不正です。'},409);
       const publicUrl=reviewSite.custom_domain?'https://'+String(reviewSite.custom_domain).replace(/^https?:\/\//,'').replace(/\/$/,'')+'/':'https://'+repo[0]+'.github.io/'+repo[1]+'/';
+      await publishApprovedStagedBranch(reviewSite.repo_full_name,reviewSite.publish_branch||'main',reviewSite.preview_branch);
       await setGithubPagesSource(reviewSite.repo_full_name,reviewSite.publish_branch||'main',reviewSite.live_path||'/');
       const now=new Date(),published=now.toISOString();
       const {data:oldSiteDates,error:oldSiteDatesError}=await admin.from('website_sites').select('published_at,adjustment_free_until,update_free_until').eq('site_id',siteId).single();if(oldSiteDatesError)throw oldSiteDatesError;
@@ -206,7 +207,7 @@ Deno.serve(async(req)=>{
         adjustment_free_until:firstPublication?new Date(now.getTime()+30*86400000).toISOString():oldSiteDates.adjustment_free_until,
         update_free_until:firstPublication&&publishingOrder&&['semi','full'].includes(publishingOrder.plan)?afterMonths(now,3):oldSiteDates.update_free_until,
         current_note:'お客様確認・公開完了。',customer_approved:false,
-        review_access_token_hash:null,preview_access_token_hash:null
+        review_access_token_hash:null,preview_access_token_hash:null,preview_branch:null
       }).eq('site_id',siteId);
       if(siteUpdateError)throw siteUpdateError;
       const updateKey=randomAccessKey();
