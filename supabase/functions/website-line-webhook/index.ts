@@ -1,5 +1,7 @@
 import { adminClient, json, linePush, notifyOwner, getLineMessagingToken } from './_shared/website.ts';
 
+async function sha256Hex(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');}
+
 function base64Bytes(value: string) {
   try {
     const raw = atob(value);
@@ -89,12 +91,19 @@ Deno.serve(async (req) => {
         const orderCode = String(orderMatch[1] || orderMatch[0]).toUpperCase();
         const { data: order, error: orderError } = await admin
           .from('website_orders')
-          .select('id,order_code,status,plan,template_style,update_plan,custom_domain,amount_from,line_user_id')
+          .select('id,order_code,status,plan,template_style,update_plan,custom_domain,amount_from,line_user_id,line_link_token_hash')
           .eq('order_code', orderCode)
           .maybeSingle();
         if (orderError) throw orderError;
 
         if (order) {
+          if(order.status==='pending_line'){
+            const match=text.match(/連携コード\s*[:：]\s*([a-f0-9]{40})/i);
+            if(!match||!order.line_link_token_hash||(await sha256Hex(match[1].toLowerCase()))!==order.line_link_token_hash){
+              await reply(event.replyToken,'注文IDと連携コードを確認できませんでした。お申込み完了画面の「公式LINEで注文内容を送信」から送り直してください。');
+              continue;
+            }
+          }
           if(order.line_user_id&&order.line_user_id!==lineUserId){await reply(event.replyToken,'この注文IDは別のLINEアカウントに紐づいています。ご本人確認が必要な場合は管理者へご相談ください。');continue;}
           const p = await profile(lineUserId);
           const { error: orderUpdateError } = await admin
