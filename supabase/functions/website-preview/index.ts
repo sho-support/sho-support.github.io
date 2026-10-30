@@ -36,7 +36,7 @@ Deno.serve(async(req)=>{
   const u=new URL(req.url),id=u.searchParams.get('id')||'',key=u.searchParams.get('key')||'',path=u.searchParams.get('path')||'index.html';
   if(!/^[A-Za-z0-9_-]{3,32}$/.test(id)||!/^[A-Za-z0-9_-]{20,200}$/.test(key)||!validPath(path))return error('Invalid preview URL',403);
   const db=createClient(Deno.env.get('SUPABASE_URL')||'',Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'',{auth:{persistSession:false}});
-  const {data:site,error:dbError}=await db.from('website_sites').select('repo_full_name,publish_branch,status,preview_access_token_hash,review_access_token_hash').eq('site_id',id).maybeSingle();
+  const {data:site,error:dbError}=await db.from('website_sites').select('repo_full_name,publish_branch,preview_branch,status,preview_access_token_hash,review_access_token_hash').eq('site_id',id).maybeSingle();
   if(dbError)throw dbError;
   const hash=await sha256(key);
   if(!site?.repo_full_name||(hash!==site.preview_access_token_hash&&hash!==site.review_access_token_hash))return error('Preview link expired',403);
@@ -45,7 +45,7 @@ Deno.serve(async(req)=>{
   if(!m)return error('Missing preview repository',404);
   const token=Deno.env.get('GITHUB_PAGES_TOKEN')||'';
   if(!token)return error('Preview unavailable',503);
-  const endpoint='https://api.github.com/repos/'+m[1]+'/'+m[2]+'/contents/'+path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(site.publish_branch||'main');
+  const endpoint='https://api.github.com/repos/'+m[1]+'/'+m[2]+'/contents/'+path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(site.preview_branch||site.publish_branch||'main');
   const github=await fetch(endpoint,{headers:{Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28',Accept:'application/vnd.github.raw+json'}});
   if(!github.ok)return error('Preview file unavailable',github.status===404?404:502);
   const limit=8_000_000;
