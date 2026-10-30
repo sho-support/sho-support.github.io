@@ -61,7 +61,7 @@ Deno.serve(async(req)=>{
   const key=String(body?.key||'');
   const admin=adminClient();
 
-  if(action==='admin_list_orders' || action==='admin_activate_order' || action==='admin_send_review'){
+  if(action==='admin_list_orders' || action==='admin_activate_order' || action==='admin_send_review' || action==='admin_resend_intake'){
     const user=await getUser(req,admin);
     if(!user)return json({error:'ログインが必要です。'},401);
     if(!(await isAdmin(admin,user.id)))return json({error:'管理者権限が必要です。'},403);
@@ -86,7 +86,8 @@ Deno.serve(async(req)=>{
         .eq('site_id',targetSite);
       if(updateError)throw updateError;
       const reviewUrl='https://sho-support.github.io/website-customer-review.html?id='+encodeURIComponent(targetSite)+'&prod=1&key='+encodeURIComponent(reviewKey);
-      await linePush(link.line_user_id,'ホームページの最終確認ができる状態になりました。\n\n下の専用URLからサイトをご確認ください。修正がある場合はそのまま送信できます。問題なければ「この内容でOK」を押してください。\n\n'+reviewUrl);
+      const delivered=await linePush(link.line_user_id,'ホームページの最終確認ができる状態になりました。\n\n下の専用URLからサイトをご確認ください。修正がある場合はそのまま送信できます。問題なければ「この内容でOK」を押してください。\n\n'+reviewUrl);
+      if(delivered.skipped||delivered.ok===false)return json({error:'LINEへ確認URLを送信できませんでした。再送してください。'},502);
       return json({ok:true,review_url:reviewUrl});
     }
 
@@ -95,7 +96,32 @@ Deno.serve(async(req)=>{
         .select('order_code,status,plan,template_style,update_plan,custom_domain,amount_from,line_user_id,line_display_name,line_linked_at,site_id,created_at,updated_at')
         .order('created_at',{ascending:false}).limit(200);
       if(error)throw error;
-      return json({orders:data||[]});
+      const ids=[...new Set((data||[]).map((o:any)=>o.site_id).filter(Boolean))];
+      let states:Record<string,string>={};
+      if(ids.length){
+        const {data:related,error:relatedError}=await admin.from('website_sites').select('site_id,status').in('site_id',ids);
+        if(relatedError)throw relatedError;
+        states=Object.fromEntries((related||[]).map((item:any)=>[item.site_id,item.status]));
+      }
+      return json({orders:(data||[]).map((item:any)=>({...item,site_status:item.site_id?states[item.site_id]||null:null}))});
+    }
+
+    if(action==='admin_resend_intake'){
+      const resendCode=String(body?.order_code||'').trim().toUpperCase();
+      if(!/^[FSP]\d{4,6}$/.test(resendCode))return json({error:'注文IDが不正です。'},400);
+      const {data:target,error:targetErr}=await admin.from('website_orders').select('order_code,status,site_id,line_user_id').eq('order_code',resendCode).maybeSingle();
+      if(targetErr)throw targetErr;
+      if(!target||target.status!=='site_created'||!target.site_id||!target.line_user_id)return json({error:'ヒアリングURLを再送できる注文ではありません。'},409);
+      const {data:site,error:siteErr}=await admin.from('website_sites').select('status').eq('site_id',target.site_id).single();
+      if(siteErr)throw siteErr;
+      if(site.status!=='request_waiting')return json({error:'初回ヒアリングはすでに受付終了です。公開後の更新フォームをご利用ください。'},409);
+      const key=randomAccessKey(),url='https://sho-support.github.io/website-intake.html?id='+encodeURIComponent(target.site_id)+'&prod=1&key='+encodeURIComponent(key);
+      const {error:keyErr}=await admin.from('website_orders').update({customer_access_token_hash:await sha256Hex(key),access_token_created_at:new Date().toISOString()}).eq('order_code',resendCode);
+      if(keyErr)throw keyErr;
+      const sent=await linePush(target.line_user_id,'制作内容・写真の入力URLを再送します。最新のURLから入力してください。\n\n'+url);
+      if(sent.skipped||sent.ok===false)return json({error:'LINE送信に失敗しました。設定・ブロック状態を確認して再送してください。'},502);
+      await notifyOwner('【制作ヒアリングURL再送】注文 '+resendCode);
+      return json({ok:true,site_id:target.site_id,resent:true});
     }
 
     const orderCode=String(body?.order_code||'').trim().toUpperCase();
@@ -143,10 +169,11 @@ Deno.serve(async(req)=>{
     if(updateError)throw updateError;
 
     const url=`https://sho-support.github.io/website-intake.html?id=${encodeURIComponent(newSiteId)}&prod=1&key=${encodeURIComponent(newKey)}`;
-    await linePush(target.line_user_id,`ご確認ありがとうございます。\n\n正式なSITE IDは ${newSiteId} です。\n下の専用URLから制作内容・写真をご入力ください。入力途中でも自動保存され、同じURLなら別端末・別ブラウザから続けられます。\n\n${url}`);
-    await linePush(target.line_user_id,`SITE ID ${newSiteId}`);
-    await notifyOwner(`【案件作成】\n注文ID ${orderCode}\nSITE ID ${newSiteId}\nヒアリングURL送信済み`);
-    return json({ok:true,site_id:newSiteId});
+    const delivered=await linePush(target.line_user_id,'ご確認ありがとうございます。\n\n正式なSITE IDは '+newSiteId+' です。\n下の専用URLから制作内容・写真をご入力ください。入力途中でも自動保存できます。\n\n'+url);
+    if(!delivered.skipped&&delivered.ok!==false)await linePush(target.line_user_id,'SITE ID '+newSiteId);
+    const warning=delivered.skipped||delivered.ok===false?'LINE送信に失敗しました。注文管理画面からヒアリングURLを再送してください。':null;
+    await notifyOwner('【案件作成】注文ID '+orderCode+' / SITE ID '+newSiteId+' / '+(warning||'ヒアリングURL送信済み'));
+    return json({ok:true,site_id:newSiteId,...(warning?{warning}:{})});
   }
 
   if(action==='review_load' || action==='review_revision' || action==='review_approve' || action==='review_publish'){
