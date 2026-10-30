@@ -1,4 +1,4 @@
-import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker } from '../_shared/website.ts';
+import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource } from './_shared/website.ts';
 
 const allowedOrigin = 'https://sho-support.github.io';
 
@@ -8,6 +8,7 @@ async function sha256Hex(value: string) {
   return [...hash].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+function afterMonths(base:Date,months:number){const d=new Date(base),day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+months);const end=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,end));return d.toISOString();}
 async function isAdmin(admin:any,userId:string){
   const {data,error}=await admin.from('website_admins').select('user_id').eq('user_id',userId).maybeSingle();
   if(error)throw error;
@@ -102,6 +103,7 @@ Deno.serve(async(req)=>{
     const {data:target,error:orderError}=await admin.from('website_orders').select('*').eq('order_code',orderCode).maybeSingle();
     if(orderError)throw orderError;
     if(!target)return json({error:'注文が見つかりません。'},404);
+    if(target.status!=='pending_payment')return json({error:'この注文は入金確認待ちではありません。'},409);
     if(!target.line_user_id)return json({error:'お客様のLINE送信がまだ確認できません。'},409);
 
     const newSiteId=orderCode.replace(/^[FSP]/,'');
@@ -147,10 +149,10 @@ Deno.serve(async(req)=>{
     return json({ok:true,site_id:newSiteId});
   }
 
-  if(action==='review_load' || action==='review_revision' || action==='review_approve'){
+  if(action==='review_load' || action==='review_revision' || action==='review_approve' || action==='review_publish'){
     if(!/^[A-Za-z0-9_-]{3,32}$/.test(siteId)||key.length<20)return json({error:'確認URLが無効です。'},403);
     const {data:reviewSite,error:reviewError}=await admin.from('website_sites')
-      .select('site_id,site_name,status,preview_url,customer_approved,review_access_token_hash')
+      .select('site_id,site_name,status,preview_url,customer_approved,review_access_token_hash,repo_full_name,publish_branch,live_path,custom_domain')
       .eq('site_id',siteId)
       .maybeSingle();
     if(reviewError)throw reviewError;
@@ -158,7 +160,8 @@ Deno.serve(async(req)=>{
       return json({error:'確認URLが無効です。LINEで届いた最新のURLをご利用ください。'},403);
     }
     if(action==='review_load'){
-      return json({ok:true,site:reviewSite});
+      const {review_access_token_hash, ...publicReview}=reviewSite;
+      return json({ok:true,site:publicReview});
     }
     if(reviewSite.status!=='customer_review')return json({error:'現在は最終確認を受け付ける状態ではありません。'},409);
     if(action==='review_revision'){
@@ -179,13 +182,43 @@ Deno.serve(async(req)=>{
     }
     if(action==='review_approve'){
       await admin.from('website_sites').update({
-        customer_approved:true,current_note:'お客様が内容承認。SHO公開待ち。',review_access_token_hash:null
+        customer_approved:true,current_note:'お客様が内容承認。公開操作待ち。'
       }).eq('site_id',siteId);
       await admin.from('website_activity').insert({
         site_id:siteId,actor_type:'customer_line',action:'customer_approved',detail:'サイト内容を承認。SHO公開待ち。'
       });
       await notifyOwner('【お客様確認OK】SITE ID '+siteId+'\n公開操作を行ってください。');
       return json({ok:true,customer_approved:true});
+    }
+    if(action==='review_publish'){
+      if(!reviewSite.customer_approved)return json({error:'先にサイト内容を承認してください。'},409);
+      if(!reviewSite.repo_full_name)return json({error:'公開先がまだ設定されていません。'},409);
+      const repo=String(reviewSite.repo_full_name).split('/');
+      if(repo.length!==2)return json({error:'公開先の設定が不正です。'},409);
+      const publicUrl=reviewSite.custom_domain?'https://'+String(reviewSite.custom_domain).replace(/^https?:\/\//,'').replace(/\/$/,'')+'/':'https://'+repo[0]+'.github.io/'+repo[1]+'/';
+      await setGithubPagesSource(reviewSite.repo_full_name,reviewSite.publish_branch||'main',reviewSite.live_path||'/');
+      const now=new Date(),published=now.toISOString();
+      const {data:oldSiteDates,error:oldSiteDatesError}=await admin.from('website_sites').select('published_at,adjustment_free_until,update_free_until').eq('site_id',siteId).single();if(oldSiteDatesError)throw oldSiteDatesError;
+      const firstPublication=!oldSiteDates.published_at;
+      const {data:publishingOrder,error:publishingOrderError}=await admin.from('website_orders').select('plan').eq('site_id',siteId).maybeSingle();if(publishingOrderError)throw publishingOrderError;
+      const {error:siteUpdateError}=await admin.from('website_sites').update({
+        status:'live',public_url:publicUrl,preview_url:publicUrl,published_at:oldSiteDates.published_at||published,
+        adjustment_free_until:firstPublication?new Date(now.getTime()+30*86400000).toISOString():oldSiteDates.adjustment_free_until,
+        update_free_until:firstPublication&&publishingOrder&&['semi','full'].includes(publishingOrder.plan)?afterMonths(now,3):oldSiteDates.update_free_until,
+        current_note:'お客様確認・公開完了。',customer_approved:false,
+        review_access_token_hash:null,preview_access_token_hash:null
+      }).eq('site_id',siteId);
+      if(siteUpdateError)throw siteUpdateError;
+      const updateKey=randomAccessKey();
+      const {error:orderUpdateError}=await admin.from('website_orders').update({customer_access_token_hash:await sha256Hex(updateKey),access_token_created_at:published,update_free_until:firstPublication&&publishingOrder&&['semi','full'].includes(publishingOrder.plan)?afterMonths(now,3):oldSiteDates.update_free_until}).eq('site_id',siteId);
+      if(orderUpdateError)console.error('Failed to set free update period',String(orderUpdateError));
+      await admin.from('website_update_requests').update({status:'completed'}).eq('site_id',siteId).eq('status','building');
+      await admin.from('website_activity').insert({site_id:siteId,actor_type:'customer_line',action:'published',detail:'お客様の承認を受けてサイトを公開。'});
+      await notifyOwner('【サイト公開】SITE ID '+siteId+'\\n'+publicUrl);
+      const {data:lineLink}=await admin.from('website_line_links').select('line_user_id').eq('site_id',siteId).maybeSingle();
+      const updateUrl='https://sho-support.github.io/website-update.html?id='+encodeURIComponent(siteId)+'&key='+updateKey;
+      await linePush(lineLink?.line_user_id,'ホームページを公開しました。\\n'+publicUrl+'\\n\\n公開後の更新・修正依頼はこちらから送れます。\\n'+updateUrl);
+      return json({ok:true,status:'live',public_url:publicUrl});
     }
   }
 
@@ -194,7 +227,7 @@ Deno.serve(async(req)=>{
 
   const { data: site, error: siteError } = await admin
     .from('website_sites')
-    .select('site_id,site_name,status,updated_at')
+    .select('site_id,site_name,status,updated_at,adjustment_free_until,update_free_until')
     .eq('site_id',siteId)
     .single();
   if(siteError) throw siteError;
@@ -210,8 +243,53 @@ Deno.serve(async(req)=>{
     }),{status:200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':allowedOrigin}});
   }
 
-  if(site.status!=='request_waiting'){
-    return json({error:'このヒアリングは送信済みです。追加のご相談はLINEからお送りください。'},409);
+  if(action==='update_status')return json({ok:true,site,plan:order.plan});
+  if(action==='request_update'){
+    if(site.status!=='live')return json({error:'公開中のサイトのみ更新を受け付けています。'},409);
+    const detail=String(body?.detail||'').trim();
+    if(detail.length<3||detail.length>5000)return json({error:'更新内容を3〜5000文字で入力してください。'},400);
+    const uploaded=body?.files&&typeof body.files==='object'&&!Array.isArray(body.files)?body.files:{};
+    const folders=['top_photos','gallery_photos','logo_file','member_photos'];
+    const safeFiles:any={};
+    for(const f of folders){
+      const list=Array.isArray(uploaded[f])?uploaded[f]:[];
+      if(list.length>25)return json({error:'1回の添付枚数が多すぎます。'},400);
+      safeFiles[f]=[];
+      for(const item of list){
+        const path=String(item?.path||''),name=String(item?.name||'').slice(0,120);
+        if(!path.startsWith(siteId+'/secure-intake/'+f+'/')||path.includes('..')||!name)return json({error:'添付ファイルを確認してください。'},400);
+        safeFiles[f].push({path,name});
+      }
+    }
+    const now=new Date(),jst=new Date(now.getTime()+9*3600000),start=new Date(Date.UTC(jst.getUTCFullYear(),jst.getUTCMonth(),1,-9,0,0));
+    const {count,error:countError}=await admin.from('website_update_requests').select('id',{count:'exact',head:true}).eq('site_id',siteId).eq('billing_category','free_monthly').neq('status','cancelled').gte('created_at',start.toISOString());
+    if(countError)throw countError;
+    let category='estimate_required';
+    if(site.update_free_until&&new Date(site.update_free_until)>now&&(count||0)<8)category='free_monthly';
+    else if(site.adjustment_free_until&&new Date(site.adjustment_free_until)>now)category='free_adjustment_review';
+    const {data:recent,error:recentErr}=await admin.from('website_update_requests').select('id').eq('site_id',siteId).gte('created_at',new Date(now.getTime()-3600000).toISOString()).limit(10);
+    if(recentErr)throw recentErr;
+    if((recent||[]).length>=5)return json({error:'短時間に更新依頼が続いています。時間をおいてご連絡ください。'},429);
+    const {data:ticket,error:ticketErr}=await admin.from('website_update_requests').insert({site_id:siteId,request_note:detail,files:safeFiles,billing_category:category,status:'pending_sho'}).select('id').single();
+    if(ticketErr)throw ticketErr;
+    const {data:intake,error:intakeErr}=await admin.from('website_intakes').select('payload').eq('site_id',siteId).maybeSingle();
+    if(intakeErr)throw intakeErr;
+    if(intake){
+      const payload=structuredClone(intake.payload||{});payload.files=payload.files||{};
+      for(const f of folders){
+        const existing=Array.isArray(payload.files[f])?payload.files[f]:[];
+        const paths=new Set(existing.map((x:any)=>x.path));
+        payload.files[f]=[...existing,...safeFiles[f].filter((x:any)=>!paths.has(x.path))];
+      }
+      const {error:upErr}=await admin.from('website_intakes').update({payload}).eq('site_id',siteId);
+      if(upErr)throw upErr;
+    }
+    await admin.from('website_activity').insert({site_id:siteId,actor_type:'customer_line',action:'update_requested',detail:'更新依頼 #'+ticket.id+' / '+detail.slice(0,1800),payload:{update_request_id:ticket.id,billing_category:category}});
+    await notifyOwner('【更新依頼】SITE ID '+siteId+' / #'+ticket.id+' / 区分: '+category+' / '+detail.slice(0,1200));
+    return json({ok:true,request_id:ticket.id,category,status:'pending_sho'});
+  }
+  if(site.status!=='request_waiting'&&!(action==='signed_upload'&&site.status==='live')){
+    return json({error:'初回ヒアリングは送信済みです。更新は専用フォームからお願いします。'},409);
   }
 
   if(action==='save_draft'){
@@ -228,7 +306,7 @@ Deno.serve(async(req)=>{
 
   if(action==='signed_upload'){
     const folder=String(body?.folder||'');
-    if(!['top_photos','gallery_photos','logo_file'].includes(folder)) return json({error:'アップロード先が不正です。'},400);
+    if(!['top_photos','gallery_photos','logo_file','member_photos'].includes(folder)) return json({error:'アップロード先が不正です。'},400);
     const safeName=String(body?.file_name||'file').replace(/[^A-Za-z0-9._-]+/g,'_').slice(-100)||'file';
     const path=`${siteId}/secure-intake/${folder}/${crypto.randomUUID()}-${safeName}`;
     const {data,error}=await admin.storage.from('website-intake-files').createSignedUploadUrl(path);
