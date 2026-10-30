@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#070707">
+<title>制作サイトの確認 | SHO WEB SUPPORT</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#080808;color:#eee;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 17px;background:#101013;border-bottom:1px solid #333}.top strong{font-size:.81rem;letter-spacing:.06em}.top span{font-size:.72rem;color:#bbb}.top a{margin-left:auto;color:#f0b87c;font-size:.78rem}.state{padding:26px;text-align:center;color:#ccc;font-size:.83rem}.error{color:#ffd0d4}iframe{display:block;border:0;width:100%;height:calc(100dvh - 58px);background:#fff}#view[hidden]{display:none}@media(max-width:600px){.top{gap:6px}.top strong{font-size:.72rem}.top span{font-size:.65rem}iframe{height:calc(100dvh - 65px)}} 
+</style>
+</head>
+<body>
+<div class="top"><strong>SHO WEB SUPPORT / PREVIEW</strong><span>公開前の制作確認画面</span><a href="website-support.html" target="_blank" rel="noopener noreferrer">制作サービス</a></div>
+<div class="state" id="status" role="status" aria-live="polite">制作ページを読み込み中です…</div>
+<iframe id="view" title="制作サイトのプレビュー" sandbox="allow-scripts allow-forms allow-popups" referrerpolicy="no-referrer" hidden></iframe>
+<script>
+(async()=>{
+const state=document.getElementById('status'),frame=document.getElementById('view');
+const u=new URL(location.href),id=u.searchParams.get('id')||'',key=u.searchParams.get('key')||'';
+const path=u.searchParams.get('path')||'index.html';
+try{
+ if(!/^[A-Za-z0-9_-]{3,32}$/.test(id)||!/^[-_A-Za-z0-9]{20,200}$/.test(key))throw Error('プレビューURLが無効です。LINEで届いた最新のURLから開いてください。');
+ const api='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-preview?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key)+'&path='+encodeURIComponent(path);
+ const r=await fetch(api,{cache:'no-store',referrerPolicy:'no-referrer'});
+ const d=await r.json().catch(()=>null);
+ if(!r.ok||typeof d?.html!=='string')throw Error('制作ページを読み込めませんでした。URLの期限、公開状態、または通信環境をご確認ください。');
+ frame.srcdoc=d.html;
+ frame.hidden=false;state.hidden=true;
+}catch(e){state.classList.add('error');state.textContent=e.message||'プレビューを表示できませんでした。';}
+})();
+</script>
+</body></html>
