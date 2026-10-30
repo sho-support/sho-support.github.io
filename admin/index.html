@@ -109,7 +109,7 @@ function normalizeProduction(detail){
    dislikes:Array.isArray(prefs.dislikes)?prefs.dislikes:[],
   },
   current:site.current_note||'',
-  history,notes:[],customerApproved:Boolean(site.customer_approved),jobs:detail.jobs||[],
+  history,notes:[],customerApproved:Boolean(site.customer_approved),jobs:detail.jobs||[],updates:detail.updates||[],freeAdjustmentUntil:site.adjustment_free_until||'',freeUpdatesUntil:site.update_free_until||'',
   repoFullName:site.repo_full_name||'',publishBranch:site.publish_branch||'main',
   livePath:site.live_path||'/',offlinePath:site.offline_path||'/docs',
   customDomain:site.custom_domain||'',publicUrl:site.public_url||''
@@ -143,6 +143,13 @@ function latestJob(p){
  const err=j.error_message?' / '+j.error_message:'';
  return '<span>'+esc(jobLabel(j.kind))+' / '+esc(jobStatus(j.status))+esc(err)+'</span>';
 }
+function updateRequestHtml(p){
+ if(!prodMode)return '';
+ const updates=p.updates||[];
+ const dates='<dl class="kv"><dt>公開後30日調整</dt><dd>'+(p.freeAdjustmentUntil?esc(new Date(p.freeAdjustmentUntil).toLocaleDateString('ja-JP'))+'まで':'未開始')+'</dd><dt>無料更新3か月</dt><dd>'+(p.freeUpdatesUntil?esc(new Date(p.freeUpdatesUntil).toLocaleDateString('ja-JP'))+'まで':'対象外・未開始')+'</dd></dl>';
+ const rows=updates.length?updates.map(x=>'<div class="event" style="margin-top:10px"><time>依頼 #'+esc(x.id)+' / '+esc(new Date(x.created_at).toLocaleString('ja-JP'))+'</time><strong>'+esc(x.status==='pending_sho'?'SHO確認待ち':x.status)+' / '+esc(x.billing_category==='free_monthly'?'無料更新枠':x.billing_category==='free_adjustment_review'?'30日調整の確認':'料金見積り')+'</strong><p>'+esc(x.request_note)+'</p>'+(x.status==='pending_sho'?'<button class="btn primary" type="button" data-start-update="'+esc(x.id)+'" data-billing="'+esc(x.billing_category)+'">内容・入金確認済み → AI制作開始</button>':'')+'</div>').join(''):'<span class="meta">更新依頼はありません。</span>';
+ return '<details class="fold" open><summary>無料期間・更新依頼 ('+updates.length+')</summary><div class="inside">'+dates+'<div class="timeline">'+rows+'</div></div></details>';
+}
 function actionHtml(p){
  if(p.status==='request_waiting')return prodMode?'<div class="warning" style="margin-top:0">お客様のヒアリング・要望入力待ちです。送信されると自動で作成中へ進みます。</div>':'<div class="warning" style="margin-top:0">ヒアリングや追加要望の入力待ちです。</div><button class="btn primary full" id="startBuild" type="button" style="margin-top:8px">デモ：要望受信 → 作成開始</button>';
  if(p.status==='building')return prodMode?'<div class="warning" style="margin-top:0">AIが制作・修正を処理中です。通常は自動で進み、完了するとSHO確認待ちへ移動してLINE通知します。</div><button class="btn primary full" id="runWorker" type="button" style="margin-top:8px">AI制作を実行 / 再実行</button>':'<div class="warning" style="margin-top:0">AI制作キューまたは修正作業中です。</div><button class="btn primary full" id="buildDone" type="button" style="margin-top:8px">デモ：作成完了 → SHO確認へ</button>';
@@ -159,6 +166,7 @@ function card(p){
  return '<details class="project-card" data-id="'+esc(p.id)+'"><summary><div class="sum-main"><div class="siteid">SITE ID '+esc(p.id)+'</div><div class="site-name">'+esc(p.name)+'</div><div class="meta">'+esc(p.customer)+' / 更新 '+esc(p.updated)+'</div></div><div class="sum-side"><span class="badge '+s.className+'">'+esc(s.label)+'</span><span class="chev">＋</span></div></summary>'+
  '<div class="project-body"><div class="top-actions">'+(p.status==='sho_review'?'':preview)+'<a class="btn" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様確認画面</a></div>'+workflow(p)+
  '<details class="fold" open><summary>現在の依頼・状態</summary><div class="inside"><dl class="kv"><dt>状態</dt><dd>'+esc(s.label)+'</dd><dt>現在</dt><dd>'+esc(p.current)+'</dd><dt>AIジョブ</dt><dd>'+latestJob(p)+'</dd><dt>顧客確認URL</dt><dd>'+esc(p.customerReview)+'</dd></dl></div></details>'+
+ updateRequestHtml(p)+
  '<details class="fold" open><summary>今回の操作</summary><div class="inside">'+actionHtml(p)+'</div></details>'+
  '<details class="fold"><summary>顧客カルテ</summary><div class="inside"><dl class="kv"><dt>業種</dt><dd>'+esc(p.profile.industry)+'</dd><dt>雰囲気・要望</dt><dd><div class="chips">'+fmt(p.profile.mood)+'</div></dd><dt>色</dt><dd><div class="chips">'+fmt(p.profile.colors)+'</div></dd><dt>希望機能</dt><dd><div class="chips">'+fmt(p.profile.likes)+'</div></dd><dt>避けたいもの</dt><dd><div class="chips">'+fmt(p.profile.dislikes)+'</div></dd></dl></div></details>'+
  '<details class="fold"><summary>要望・承認履歴</summary><div class="inside"><div class="timeline">'+historyHtml(p)+'</div></div></details>'+
@@ -168,14 +176,21 @@ function card(p){
 
 async function prodMove(p,status,current,detail=''){
  try{
-  await websiteApi('admin_transition',{site_id:p.id,status,current_note:current,detail});
+  const response=await websiteApi('admin_transition',{site_id:p.id,status,current_note:current,detail});
   state=await loadProduction();render();
+  if(response?.warning)alert(response.warning);
  }catch(error){alert(error.message||'更新できませんでした。')}
 }
 function demoMove(p,status,current,title,text){p.status=status;p.current=current;p.updated=now();p.customerApproved=false;p.notes=p.notes||[];p.notes.unshift({at:p.updated,title,text});saveDemo();render()}
 
 function bind(p,root){
  const q=id=>root.querySelector('#'+id);
+ root.querySelectorAll('[data-start-update]').forEach(btn=>btn.addEventListener('click',async()=>{
+  const paid=btn.dataset.billing==='estimate_required';
+  if(!confirm(paid?'入金確認済みですか？ 制作を開始すると確認完了まで一時非公開になります。':'この更新をAIで制作しますか？ 確認完了まで一時非公開になります。'))return;
+  btn.disabled=true;btn.textContent='処理中…';
+  try{await websiteApi('admin_start_update',{site_id:p.id,update_request_id:Number(btn.dataset.startUpdate),payment_confirmed:paid});state=await loadProduction();render();}catch(error){alert(error.message||'更新を開始できませんでした。');btn.disabled=false;btn.textContent='内容・入金確認済み → AI制作開始'}
+ }));
  q('startBuild')?.addEventListener('click',()=>demoMove(p,'building','要望を受信。AIがサイトを作成中。','作成開始','受信した要望から制作を開始。'));
  q('buildDone')?.addEventListener('click',()=>demoMove(p,'sho_review','AI制作完了。SHOが内容を確認中。','AI制作完了','SHO確認へ移行。'));
  q('runWorker')?.addEventListener('click',async()=>{try{await websiteApi('admin_run_worker',{site_id:p.id});state=await loadProduction();render()}catch(error){alert(error.message||'AI制作を開始できませんでした。')}});
