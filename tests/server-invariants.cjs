@@ -7,6 +7,9 @@ const customer=read('supabase/functions/website-customer-access/index.ts');
 const preview=read('supabase/functions/website-preview/index.ts');
 const sql=read('supabase/migrations/20261031_allow_customer_update_kind.sql');
 const site=read('website-support.html');
+const order=read('supabase/functions/website-order-api/index.ts');
+const webhook=read('supabase/functions/website-line-webhook/index.ts');
+const orderSql=read('supabase/migrations/20261031_secure_order_line_pairing.sql');
 const checks={
  'New draft repos private':(worker.match(/private:true,auto_init:true/g)||[]).length===2,
  'No new public draft repos':!worker.includes('private:false,auto_init:true'),
@@ -19,6 +22,9 @@ const checks={
  'Review uses secure client token':customer.includes("action==='review_publish'"),
  'Public update requests require owner approval':api.includes("action==='admin_start_update'"),
  'DB supports customer update jobs':sql.includes("'customer_update'"),
+ 'Order creation stores hashed pairing code':order.includes('line_link_token_hash:linkHash'),
+ 'LINE checks pairing code hash':webhook.includes('await sha256Hex(match[1].toLowerCase())'),
+ 'Order pairing schema recorded':orderSql.includes('line_link_token_hash'),
  'Plans are neutral':(site.match(/<details class="plan-drop">/g)||[]).length===3&&!site.includes('<details class="plan-drop reco">'),
 };
 for(const [label,pass] of Object.entries(checks)){assert.ok(pass,label);console.log('PASS '+label)}
