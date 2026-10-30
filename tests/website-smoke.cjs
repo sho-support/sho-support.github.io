@@ -14,7 +14,7 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  try{
-  for(const width of [390,1280]){
+  for(const width of [320,390,768,1280]){
    const context=await browser.newContext({viewport:{width,height:850},serviceWorkers:'block'});
    await context.route('**/*',route=>{
     const u=route.request().url();
