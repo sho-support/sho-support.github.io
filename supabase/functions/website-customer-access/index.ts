@@ -212,6 +212,7 @@ Deno.serve(async(req)=>{
       const updateKey=randomAccessKey();
       const {error:orderUpdateError}=await admin.from('website_orders').update({customer_access_token_hash:await sha256Hex(updateKey),access_token_created_at:published,update_free_until:firstPublication&&publishingOrder&&['semi','full'].includes(publishingOrder.plan)?afterMonths(now,3):oldSiteDates.update_free_until}).eq('site_id',siteId);
       if(orderUpdateError)console.error('Failed to set free update period',String(orderUpdateError));
+      await admin.from('website_jobs').update({status:'done'}).eq('site_id',siteId).eq('status','sho_review');
       await admin.from('website_update_requests').update({status:'completed'}).eq('site_id',siteId).eq('status','building');
       await admin.from('website_activity').insert({site_id:siteId,actor_type:'customer_line',action:'published',detail:'お客様の承認を受けてサイトを公開。'});
       await notifyOwner('【サイト公開】SITE ID '+siteId+'\\n'+publicUrl);
