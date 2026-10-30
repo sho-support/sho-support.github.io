@@ -1,0 +1,21 @@
+name: One-time visual review
+on:
+  push:
+    branches: [main]
+    paths: ['qa-trigger/visual-*.txt']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Capture and inspect public pages
+        run: node tests/visual-audit-live.cjs
