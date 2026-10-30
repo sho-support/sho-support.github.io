@@ -201,6 +201,7 @@ function addSocial(container,data={}){
 }
 function addMember(data={}){
  memberCount++;const n=memberCount,d=document.createElement('div');d.className='member';
+ d.dataset.photoPath=String(data.photo?.path||'');d.dataset.photoName=String(data.photo?.name||'');
  d.innerHTML='<div class="blockhead"><h4>MEMBER '+n+'</h4>'+(n>1?'<button type="button" class="remove member-remove">削除</button>':'')+'</div><label>名前<input type="text" data-mf="name" value="'+esc(data.name||'')+'"></label><label>パート / 役割<input type="text" data-mf="part" value="'+esc(data.part||'')+'"></label><label>紹介文<textarea data-mf="bio">'+esc(data.bio||'')+'</textarea></label><div class="member-socials"></div><button type="button" class="addbtn add-social">＋ SNS・リンクを追加</button><label>写真<input type="file" accept="image/*"></label>';
  const socials=d.querySelector('.member-socials');(data.socials||[]).forEach(x=>addSocial(socials,x));if(data.sns&&!data.socials?.length)addSocial(socials,{url:data.sns});
  d.querySelector('.add-social').onclick=()=>{addSocial(socials);saveSoon()};d.querySelector('.member-remove')?.addEventListener('click',()=>{d.remove();saveSoon()});members.appendChild(d);
@@ -249,9 +250,10 @@ function serialize(){
   if(!el.name||el.type==='file')return;
   if(el.type==='checkbox'){if(!data.checks[el.name])data.checks[el.name]=[];if(el.checked)data.checks[el.name].push(el.value||'yes')}else data.fields[el.name]=el.value;
  });
- document.querySelectorAll('.member').forEach(block=>{const m={socials:[]};block.querySelectorAll('[data-mf]').forEach(el=>m[el.dataset.mf]=el.value);block.querySelectorAll('.member-social').forEach(s=>{const url=s.querySelector('[data-ms="url"]').value;if(url.trim())m.socials.push({url})});data.members.push(m)});
+ document.querySelectorAll('.member').forEach(block=>{const m={socials:[]};block.querySelectorAll('[data-mf]').forEach(el=>m[el.dataset.mf]=el.value);block.querySelectorAll('.member-social').forEach(s=>{const url=s.querySelector('[data-ms="url"]').value;if(url.trim())m.socials.push({url})});if(block.dataset.photoPath)m.photo={path:block.dataset.photoPath,name:block.dataset.photoName||'member-photo'};data.members.push(m)});
  document.querySelectorAll('.liveblock').forEach(block=>{const l={};block.querySelectorAll('[data-lf]').forEach(el=>l[el.dataset.lf]=el.value);data.lives.push(l)});
  document.querySelectorAll('.contactlink').forEach(block=>{const x={};block.querySelectorAll('[data-cf]').forEach(el=>x[el.dataset.cf]=el.value);x.type=detectType(x.value);data.contacts.push(x)});
+ data.files={...uploadedFiles,member_photos:data.members.filter(m=>m.photo?.path).map(m=>({path:m.photo.path,name:m.photo.name}))};
  return data;
 }
 async function performSave(manual=false){
@@ -333,6 +335,14 @@ async function uploadSelectedFiles(){
   }
   if(files.length)input.value='';
  }
+ for(const block of document.querySelectorAll('.member')){
+  const input=block.querySelector('input[type="file"]'),file=input?.files?.[0];
+  if(!file)continue;
+  if(file.size>7_000_000)throw new Error(file.name+' は7MBを超えています。');
+  if(!file.type.startsWith('image/'))throw new Error(file.name+' は画像ファイルを選択してください。');
+  const path=secureMode?await secureUpload(file,'member_photos'):await uploadWebsiteFile(siteId,file,'member_photos');
+  block.dataset.photoPath=path;block.dataset.photoName=file.name;input.value='';
+ }
 }
 function fileNames(name){
  const saved=(uploadedFiles[name]||[]).map(x=>x.name);
@@ -346,7 +356,7 @@ function renderPreview(){
  parts.push('<section class="preview-section"><h4>01 基本情報</h4>'+row('サイト名',f.site_name)+row('担当者名',f.contact_name)+row('連絡用メール',f.contact_email)+row('目的',f.purpose)+row('制作プラン',f.build_plan)+row('テンプレート',f.template_style)+row('希望するサイト内容・雰囲気',f.image_text)+row('参考URL（任意）',f.reference_url)+row('希望カラー',f.colors)+'</section>');
  parts.push('<section class="preview-section"><h4>02 使用する写真</h4>'+row('TOP写真',filesHtml(fileNames('top_photos')),true)+row('ギャラリー',filesHtml(fileNames('gallery_photos')),true)+row('並び順',f.gallery_order)+row('ロゴ',filesHtml(fileNames('logo_file')),true)+row('写真補足',f.photo_notes)+'</section>');
  parts.push('<section class="preview-section"><h4>03 ページ・機能</h4>'+row('希望機能',(d.checks.features||[]).join(' / '))+row('LIVE配置',(d.checks.live_all_page||[]).length?'LIVE関連をすべて別ページ':'標準：これからのLIVEはTOP・過去LIVEは別ページ')+row('その他機能',f.other_features)+'</section>');
- if(d.members.some(m=>m.name||m.part||m.bio||m.socials.length))parts.push('<section class="preview-section"><h4>04 メンバー情報</h4>'+d.members.map((m,i)=>row('MEMBER '+(i+1),[m.name,m.part,m.bio,m.socials.map(s=>s.url).join(', ')].filter(Boolean).join(' / '))).join('')+'</section>');
+ if(d.members.some(m=>m.name||m.part||m.bio||m.socials.length))parts.push('<section class="preview-section"><h4>04 メンバー情報</h4>'+d.members.map((m,i)=>row('MEMBER '+(i+1),[m.name,m.part,m.bio,m.socials.map(s=>s.url).join(', '),m.photo?.name||''].filter(Boolean).join(' / '))).join('')+'</section>');
  if(d.lives.some(l=>Object.values(l).some(v=>String(v||'').trim())))parts.push('<section class="preview-section"><h4>05 LIVE情報</h4>'+d.lives.map((l,i)=>row('LIVE '+(i+1)+' / '+(classifyLive(l.date)||'日付未入力'),[l.date,l.time,l.name,l.venue,l.detail].filter(Boolean).join(' / '))).join('')+'</section>');
  if(d.contacts.some(x=>String(x.value||'').trim()))parts.push('<section class="preview-section"><h4>公開する連絡先</h4>'+d.contacts.filter(x=>String(x.value||'').trim()).map((x,i)=>row('CONTACT '+(i+1),[x.type,x.label||defaultButton(x.type),x.value].filter(Boolean).join(' / '))).join('')+'</section>');
  parts.push('<section class="preview-section"><h4>06 公開URL</h4>'+row('公開方法',(d.checks.custom_domain||[]).length?'独自ドメインを希望':'無料URLでOK')+row('独自ドメイン区分',f.domain_type)+row('希望・所有ドメイン',f.domain_name)+'</section>');
