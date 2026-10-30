@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#070707">
+<meta name="referrer" content="no-referrer">
 <title>Website Review | SHO WEB SUPPORT</title>
 <link rel="stylesheet" href="website-theme.css">
 <style>
@@ -39,12 +40,18 @@ const KEY='sho-web-admin-demo-v2';
 const params=new URLSearchParams(location.search);
 const id=params.get('id')||'1042';
 const prodMode=params.get('prod')==='1';
+const accessKey=params.get('key')||'';
+const secureMode=prodMode&&!!accessKey;
 document.getElementById('siteId').textContent=id;
 if(prodMode){
-  document.querySelector('.demo').textContent='ログイン中のお客様専用画面です。SITE IDに紐づく制作状況を表示しています。';
-  await requireWebsiteSession(location.href);
+  document.querySelector('.demo').textContent=secureMode?'LINEで届いた専用URLから内容を確認できます。':'ログイン中のお客様専用画面です。SITE IDに紐づく制作状況を表示しています。';
+  if(!secureMode)await requireWebsiteSession(location.href);
 }
 
+async function secureApi(action,payload={}){
+ const r=await fetch('https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-customer-access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,site_id:id,key:accessKey,...payload})});
+ const d=await r.json().catch(()=>({}));if(!r.ok||d?.error)throw new Error(d?.error||'処理に失敗しました。');return d;
+}
 const lineMessage='SITE ID '+id+'です。ホームページについて相談したいです。';
 document.getElementById('lineConsult').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(lineMessage);
 const lineUrl=document.getElementById('lineConsult').href;
@@ -74,7 +81,7 @@ function action(p){
 
 async function loadProject(){
  if(prodMode){
-  const result=await websiteApi('load_site',{site_id:id});
+  const result=secureMode?await secureApi('review_load'):await websiteApi('load_site',{site_id:id});
   const site=result?.site;
   if(!site)return null;
   return {
@@ -119,7 +126,7 @@ function bind(p){
   if(!t)return alert('修正内容を入力してください。');
   if(btn.disabled)return;btn.disabled=true;btn.textContent='送信中…';
   if(prodMode){
-   try{await websiteApi('review_action',{site_id:id,review_action:'revision',detail:t});await render()}catch(error){btn.disabled=false;btn.textContent='修正内容を送信';alert(error.message||'送信できませんでした。')}
+   try{if(secureMode)await secureApi('review_revision',{detail:t});else await websiteApi('review_action',{site_id:id,review_action:'revision',detail:t});await render()}catch(error){btn.disabled=false;btn.textContent='修正内容を送信';alert(error.message||'送信できませんでした。')}
    return;
   }
   const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
@@ -130,7 +137,7 @@ function bind(p){
   if(!confirm('サイト内容を承認しますか？まだ公開はされません。'))return;
   const btn=e.currentTarget;if(btn.disabled)return;btn.disabled=true;btn.textContent='承認中…';
   if(prodMode){
-   try{await websiteApi('review_action',{site_id:id,review_action:'approve'});await render()}catch(error){btn.disabled=false;btn.textContent='この内容でOK';alert(error.message||'承認できませんでした。')}
+   try{if(secureMode)await secureApi('review_approve');else await websiteApi('review_action',{site_id:id,review_action:'approve'});await render()}catch(error){btn.disabled=false;btn.textContent='この内容でOK';alert(error.message||'承認できませんでした。')}
    return;
   }
   const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
@@ -141,7 +148,9 @@ function bind(p){
   if(!confirm('この内容でサイトを公開しますか？'))return;
   const btn=e.currentTarget;if(btn.disabled)return;btn.disabled=true;btn.textContent='公開中…';
   if(prodMode){
-   try{await websiteApi('review_action',{site_id:id,review_action:'publish'});await render()}catch(error){btn.disabled=false;btn.textContent='この内容で公開する';alert(error.message||'公開できませんでした。')}
+   try{const result=secureMode?await secureApi('review_publish'):await websiteApi('review_action',{site_id:id,review_action:'publish'});
+    if(secureMode){document.getElementById('app').innerHTML='<section class="card"><div class="body"><div class="success">サイトの公開が完了しました。</div><div class="actions"><a class="btn primary" target="_blank" rel="noopener noreferrer" href="'+esc(result.public_url||'#')+'">完成サイトを見る</a></div></div></section>';}
+    else await render();}catch(error){btn.disabled=false;btn.textContent='この内容で公開する';alert(error.message||'公開できませんでした。')}
    return;
   }
   const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
