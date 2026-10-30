@@ -1,4 +1,4 @@
-import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, triggerWebsiteWorker } from './_shared/website.ts';
+import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, publishApprovedStagedBranch, triggerWebsiteWorker } from './_shared/website.ts';
 
 type Body = {
   action?: string;
@@ -335,13 +335,14 @@ Deno.serve(async (req) => {
       if (reviewAction === 'publish') {
         const { data: site, error: readError } = await admin
           .from('website_sites')
-          .select('customer_approved,repo_full_name,publish_branch,live_path,custom_domain,published_at,adjustment_free_until,update_free_until')
+          .select('customer_approved,repo_full_name,publish_branch,preview_branch,live_path,custom_domain,published_at,adjustment_free_until,update_free_until')
           .eq('site_id', siteId)
           .single();
         if (readError) throw readError;
         if (!site.customer_approved || !reviewSite.customer_approved) return json({ error: '先にサイト内容の承認が必要です。' }, 409);
         if (!site.repo_full_name) return json({ error: '公開先GitHub Repoがまだ設定されていません。' }, 409);
 
+        await publishApprovedStagedBranch(site.repo_full_name,site.publish_branch||'main',site.preview_branch);
         await setGithubPagesSource(
           site.repo_full_name,
           site.publish_branch || 'main',
@@ -355,7 +356,7 @@ Deno.serve(async (req) => {
           public_url:url,preview_url:url,published_at:site.published_at||when.toISOString(),
           adjustment_free_until:first?new Date(when.getTime()+30*86400000).toISOString():site.adjustment_free_until,
           update_free_until:first&&order&&['semi','full'].includes(order.plan)?addMonths(when,3):site.update_free_until,
-          review_access_token_hash:null,preview_access_token_hash:null,
+          review_access_token_hash:null,preview_access_token_hash:null,preview_branch:null,
         }).eq('site_id',siteId);
         if(!error&&first)await setOrderFreePeriod(admin,siteId,when);
         if (error) throw error;
@@ -377,9 +378,9 @@ Deno.serve(async (req) => {
 
     if(action==='admin_secure_preview'){
       if(role!=='admin')return json({error:'管理者権限が必要です。'},403);
-      const {data:site,error:siteError}=await admin.from('website_sites').select('status,repo_full_name,publish_branch').eq('site_id',siteId).single();
+      const {data:site,error:siteError}=await admin.from('website_sites').select('status,repo_full_name,publish_branch,published_at').eq('site_id',siteId).single();
       if(siteError)throw siteError;
-      if(site.status==='live')return json({error:'公開中のサイトは非公開プレビューへ切り替えられません。'},409);
+      if(site.status==='live'||site.published_at)return json({error:'公開済みサイトの公開元はプレビューへ変更できません。'},409);
       if(!site.repo_full_name)return json({error:'GitHub Repoが未設定です。'},409);
       await setGithubPagesSource(site.repo_full_name,site.publish_branch||'main','/docs');
       const key=randomReviewKey(),hash=await sha256Hex(key);
@@ -469,11 +470,12 @@ Deno.serve(async (req) => {
       if (['live','private','improving_private'].includes(String(body.status))) {
         const { data: site, error: readError } = await admin
           .from('website_sites')
-          .select('repo_full_name,publish_branch,live_path,offline_path,custom_domain')
+          .select('repo_full_name,publish_branch,preview_branch,live_path,offline_path,custom_domain')
           .eq('site_id', siteId)
           .single();
         if (readError) throw readError;
         if (!site.repo_full_name) return json({ error: '公開先GitHub Repoがまだ設定されていません。' }, 409);
+        if(body.status==='live')await publishApprovedStagedBranch(site.repo_full_name,site.publish_branch||'main',site.preview_branch);
         const path = body.status === 'live' ? (site.live_path || '/') : (site.offline_path || '/docs');
         await setGithubPagesSource(
           site.repo_full_name,
@@ -490,7 +492,7 @@ Deno.serve(async (req) => {
         firstPublication=!siteInfo.published_at;
         const {data:order}=await admin.from('website_orders').select('plan').eq('site_id',siteId).maybeSingle();
         const url=githubSiteUrl(siteInfo.repo_full_name,siteInfo.custom_domain);
-        liveData={public_url:url,preview_url:url,published_at:siteInfo.published_at||publishedAt.toISOString(),adjustment_free_until:firstPublication?new Date(publishedAt.getTime()+30*86400000).toISOString():siteInfo.adjustment_free_until,update_free_until:firstPublication&&order&&['semi','full'].includes(order.plan)?addMonths(publishedAt,3):siteInfo.update_free_until,review_access_token_hash:null,preview_access_token_hash:null};
+        liveData={public_url:url,preview_url:url,published_at:siteInfo.published_at||publishedAt.toISOString(),adjustment_free_until:firstPublication?new Date(publishedAt.getTime()+30*86400000).toISOString():siteInfo.adjustment_free_until,update_free_until:firstPublication&&order&&['semi','full'].includes(order.plan)?addMonths(publishedAt,3):siteInfo.update_free_until,review_access_token_hash:null,preview_access_token_hash:null,preview_branch:null};
       }
       const { error } = await admin.from('website_sites').update({
         status:body.status,current_note:String(body.current_note||''),customer_approved:false,...liveData,
