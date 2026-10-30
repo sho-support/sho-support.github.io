@@ -149,7 +149,7 @@ function bind(p){
   const btn=e.currentTarget;if(btn.disabled)return;btn.disabled=true;btn.textContent='公開中…';
   if(prodMode){
    try{const result=secureMode?await secureApi('review_publish'):await websiteApi('review_action',{site_id:id,review_action:'publish'});
-    if(secureMode){document.getElementById('app').innerHTML='<section class="card"><div class="body"><div class="success">サイトの公開が完了しました。</div><div class="actions"><a class="btn primary" target="_blank" rel="noopener noreferrer" href="'+esc(result.public_url||'#')+'">完成サイトを見る</a></div></div></section>';}
+    if(secureMode){document.getElementById('app').innerHTML='<section class="card"><div class="body"><div class="success">公開設定が完了しました。サイトの表示に反映されるまで時間がかかる場合があります。</div><div class="actions"><a class="btn primary" target="_blank" rel="noopener noreferrer" href="'+esc(result.public_url||'#')+'">完成サイトを見る</a></div></div></section>';}
     else await render();}catch(error){btn.disabled=false;btn.textContent='この内容で公開する';alert(error.message||'公開できませんでした。')}
    return;
   }
