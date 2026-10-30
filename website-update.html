@@ -46,7 +46,8 @@ footer{border-top:1px solid var(--line);padding:20px 0 30px;color:#777;font-size
   <p style="margin-top:22px">直接相談したい場合は <a href="https://line.me/R/ti/p/@144dlsxp" rel="noopener noreferrer" target="_blank">公式LINEで相談する</a> こともできます。</p>
 </main>
 <footer><div class="wrap">© 2026 SHO WEB SUPPORT</div></footer>
-<script>
+<script type="module">
+import { websiteSupabase } from './website-client.js';
 (()=>{
 const params=new URLSearchParams(location.search),id=params.get('id')||'',key=params.get('key')||'';
 const account=document.getElementById('account'),form=document.getElementById('updateForm'),result=document.getElementById('result');
@@ -80,8 +81,8 @@ form.addEventListener('submit',async e=>{
   const files={top_photos:[],gallery_photos:[],member_photos:[],logo_file:[]};
   for(const file of photos){
    const ticket=await api('signed_upload',{folder:category,file_name:file.name});
-   const response=await fetch('https://tyhymvgjkoebetyypspj.supabase.co/storage/v1/object/upload/sign/website-intake-files/'+ticket.path+'?token='+encodeURIComponent(ticket.token),{method:'PUT',headers:{'Content-Type':file.type,'Cache-Control':'no-cache'},body:file});
-   if(!response.ok)throw new Error(file.name+' のアップロードに失敗しました。');
+   const {error}=await websiteSupabase.storage.from('website-intake-files').uploadToSignedUrl(ticket.path,ticket.token,file);
+   if(error)throw new Error(file.name+' のアップロードに失敗しました。'+(error.message||''));
    files[category].push({name:file.name,path:ticket.path});
   }
   const r=await api('request_update',{detail,files});
