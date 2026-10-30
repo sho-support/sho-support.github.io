@@ -145,6 +145,7 @@ function showDone(order){
  document.getElementById('orderBtn').textContent='注文ID発行済み';
  document.getElementById('done').scrollIntoView({behavior:'smooth',block:'start'});
 }
+const termsCheck=document.getElementById('termsCheck');
 try{
  const receipt=JSON.parse(localStorage.getItem(RECEIPT)||'null');
  const created=receipt?.order?.created_at?new Date(receipt.order.created_at).getTime():0;
@@ -153,7 +154,6 @@ try{
  else if(receipt&&!fresh)localStorage.removeItem(RECEIPT);
 }catch{}
 
-const termsCheck=document.getElementById('termsCheck');
 termsCheck.addEventListener('change',()=>{document.getElementById('orderBtn').disabled=!termsCheck.checked;});
 document.getElementById('orderBtn').onclick=async()=>{
  const btn=document.getElementById('orderBtn'),err=document.getElementById('error');
