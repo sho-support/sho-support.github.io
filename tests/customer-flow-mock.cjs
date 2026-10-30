@@ -38,7 +38,7 @@ const stub=[
   await page.locator('#approve').click();
   await page.locator('#publish').waitFor({timeout:12000});
   await page.locator('#publish').click();
-  await page.getByText('サイトの公開が完了しました。').waitFor({timeout:12000});
+  await page.getByText('公開設定が完了しました。').waitFor({timeout:12000});
   assert.deepEqual(reviewCalls.slice(0,4),['review_load','review_approve','review_load','review_publish']);
   console.log('PASS secure LINE review approve and publish');
   await page.goto(BASE+'website-update.html?id=TEST-001&key=abcdefghijklmnopqrstuvwxyz',{waitUntil:'domcontentloaded'});
