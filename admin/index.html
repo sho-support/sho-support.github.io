@@ -121,6 +121,11 @@ async function loadProduction(){
  const list=await websiteApi('list_sites');
  if(!list?.admin)throw new Error('SHO管理者として登録されたアカウントでログインしてください。');
  const sites=Array.isArray(list.sites)?list.sites:[];
+ for(const site of sites){
+  if(site.status!=='live'&&/^https:\/\/sho-support\.github\.io\/site-/i.test(site.preview_url||'')){
+   try{await websiteApi('admin_secure_preview',{site_id:site.site_id});}catch(error){console.error('Secure legacy preview failed',error);}
+  }
+ }
  return await Promise.all(sites.map(async s=>normalizeProduction(await websiteApi('load_site',{site_id:s.site_id}))));
 }
 
