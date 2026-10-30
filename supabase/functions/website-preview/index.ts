@@ -46,12 +46,14 @@ Deno.serve(async(req)=>{
   const token=Deno.env.get('GITHUB_PAGES_TOKEN')||'';
   if(!token)return error('Preview unavailable',503);
   const endpoint='https://api.github.com/repos/'+m[1]+'/'+m[2]+'/contents/'+path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(site.publish_branch||'main');
-  const github=await fetch(endpoint,{headers:{Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28',Accept:'application/vnd.github+json'}});
+  const github=await fetch(endpoint,{headers:{Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28',Accept:'application/vnd.github.raw+json'}});
   if(!github.ok)return error('Preview file unavailable',github.status===404?404:502);
-  const data=await github.json();
-  if(data.encoding!=='base64'||!data.content)return error('Invalid preview file',502);
-  const raw=atob(String(data.content).replace(/\s/g,'')),bytes=Uint8Array.from(raw,(c:string)=>c.charCodeAt(0));
-  if(bytes.length>8_000_000)return error('Preview file too large',413);
+  const limit=8_000_000;
+  const declaredSize=Number(github.headers.get('content-length')||0);
+  if(declaredSize>limit)return error('Preview file too large',413);
+  const buffer=await github.arrayBuffer();
+  if(buffer.byteLength>limit)return error('Preview file too large',413);
+  const bytes=new Uint8Array(buffer);
   const ext=(path.match(/\.([A-Za-z0-9]+)$/)?.[1]||'html').toLowerCase(),ct=types[ext]||'application/octet-stream';
   if(ext==='html'||ext==='htm'||ext==='css'){
    const base=u.origin+u.pathname+'?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key);
