@@ -1,4 +1,4 @@
-import { adminClient, json, notifyOwner } from '../_shared/website.ts';
+import { adminClient, json, notifyOwner } from './_shared/website.ts';
 
 const allowedOrigin = 'https://sho-support.github.io';
 
@@ -68,6 +68,8 @@ Deno.serve(async(req)=>{
     if((recentCount||0)>=5)return json({error:'短時間に注文操作が繰り返されています。時間を置いてお試しください。'},429);
   }
   const orderCode=await code(admin,v.plan);
+  const linkToken=Array.from(crypto.getRandomValues(new Uint8Array(20)),b=>b.toString(16).padStart(2,'0')).join('');
+  const linkHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(linkToken))),b=>b.toString(16).padStart(2,'0')).join('');
   const selections={
     plan:v.plan,
     template_style:v.template_style,
@@ -79,6 +81,7 @@ Deno.serve(async(req)=>{
 
   const {data,error}=await admin.from('website_orders').insert({
     order_code:orderCode,
+    line_link_token_hash:linkHash,
     status:'pending_line',
     plan:v.plan,
     template_style:v.template_style,
@@ -92,7 +95,7 @@ Deno.serve(async(req)=>{
   if(error) throw error;
 
   await notifyOwner(`【新規仮注文】\n${orderCode}\nプラン: ${v.plan}\n金額: ¥${amount.toLocaleString()}〜\nLINE送信待ち`);
-  return new Response(JSON.stringify({ok:true,order:data}),{status:201,headers:{
+  return new Response(JSON.stringify({ok:true,order:{...data,link_token:linkToken}}),{status:201,headers:{
     'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':allowedOrigin
   }});
 });
