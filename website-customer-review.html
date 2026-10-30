@@ -126,7 +126,7 @@ function bind(p){
   if(!t)return alert('修正内容を入力してください。');
   if(btn.disabled)return;btn.disabled=true;btn.textContent='送信中…';
   if(prodMode){
-   try{if(secureMode)await secureApi('review_revision',{detail:t});else await websiteApi('review_action',{site_id:id,review_action:'revision',detail:t});await render()}catch(error){btn.disabled=false;btn.textContent='修正内容を送信';alert(error.message||'送信できませんでした。')}
+   try{if(secureMode){await secureApi('review_revision',{detail:t});document.getElementById('app').innerHTML='<section class="card"><div class="body"><div class="success">修正依頼を受け付けました。再制作後に新しい確認URLをLINEでご案内します。</div></div></section>';}else{await websiteApi('review_action',{site_id:id,review_action:'revision',detail:t});await render();}}catch(error){btn.disabled=false;btn.textContent='修正内容を送信';alert(error.message||'送信できませんでした。')}
    return;
   }
   const state=demoLoad(),target=state.find(x=>String(x.id)===String(id));if(!target)return;
