@@ -7,6 +7,7 @@ on:
       - 'website-*.js'
       - 'website-theme.css'
       - 'admin/**'
+      - 'supabase/**'
       - 'tests/**'
       - '.github/workflows/website-smoke.yml'
   workflow_dispatch:
@@ -35,6 +36,8 @@ jobs:
         run: node tests/website-smoke.cjs
       - name: Simulate customer order, review, publication and update
         run: node tests/customer-flow-mock.cjs
+      - name: Check sensitive source invariants
+        run: node tests/server-invariants.cjs
       - name: Verify production API authorization without side effects
         run: node tests/backend-contract.cjs
       - name: Verify live public pages and preview viewer deployment
