@@ -165,6 +165,20 @@ export async function setGithubPagesSource(repoFullName: string, branch = 'main'
   const { owner, repo } = parseRepo(repoFullName);
   const base = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pages`;
   const headers = githubHeaders();
+  // Draft sites are kept in private repositories. Publishing requires a public Pages repository.
+  if (path === '/') {
+    const repoUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+    const infoResponse = await fetch(repoUrl, { headers });
+    if (!infoResponse.ok) throw new Error(`GitHub repository lookup failed: ${infoResponse.status}`);
+    const info = await infoResponse.json();
+    if (info.private) {
+      const visibility = await fetch(repoUrl, {
+        method: 'PATCH', headers,
+        body: JSON.stringify({ private: false }),
+      });
+      if (!visibility.ok) throw new Error(`GitHub repository publish failed: ${visibility.status} ${(await visibility.text()).slice(0,300)}`);
+    }
+  }
   const current = await fetch(base, { headers });
 
   if (current.status === 404) {
