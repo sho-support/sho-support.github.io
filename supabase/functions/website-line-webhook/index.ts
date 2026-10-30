@@ -1,4 +1,4 @@
-import { adminClient, json, linePush, notifyOwner, getLineMessagingToken } from '../_shared/website.ts';
+import { adminClient, json, linePush, notifyOwner, getLineMessagingToken } from './_shared/website.ts';
 
 function base64Bytes(value: string) {
   try {
@@ -89,12 +89,13 @@ Deno.serve(async (req) => {
         const orderCode = String(orderMatch[1] || orderMatch[0]).toUpperCase();
         const { data: order, error: orderError } = await admin
           .from('website_orders')
-          .select('id,order_code,status,plan,template_style,update_plan,custom_domain,amount_from')
+          .select('id,order_code,status,plan,template_style,update_plan,custom_domain,amount_from,line_user_id')
           .eq('order_code', orderCode)
           .maybeSingle();
         if (orderError) throw orderError;
 
         if (order) {
+          if(order.line_user_id&&order.line_user_id!==lineUserId){await reply(event.replyToken,'この注文IDは別のLINEアカウントに紐づいています。ご本人確認が必要な場合は管理者へご相談ください。');continue;}
           const p = await profile(lineUserId);
           const { error: orderUpdateError } = await admin
             .from('website_orders')
@@ -108,7 +109,7 @@ Deno.serve(async (req) => {
             .eq('id', order.id);
           if (orderUpdateError) throw orderUpdateError;
 
-          const planLabel = order.plan === 'one' ? '1ページ完結サイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
+          const planLabel = order.plan === 'one' ? '1ページサイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
           const templateLine = order.template_style ? `\nテンプレート: ${order.template_style}` : '';
           const { data: bankSetting } = await admin
             .from('website_settings')
@@ -156,6 +157,13 @@ Deno.serve(async (req) => {
             .eq('site_id', siteId)
             .maybeSingle();
 
+          const {data:orderOwner,error:orderOwnerError}=await admin.from('website_orders').select('line_user_id').eq('site_id',siteId).maybeSingle();
+          if(orderOwnerError)throw orderOwnerError;
+          if((previous?.line_user_id&&previous.line_user_id!==lineUserId)||(!previous&&orderOwner?.line_user_id!==lineUserId)){
+            await reply(event.replyToken,'このSITE IDは現在のLINEアカウントと紐づけできません。管理者へご相談ください。');
+            siteId=null;
+            continue;
+          }
           const { error: linkError } = await admin.from('website_line_links').upsert({
             site_id: siteId,
             line_user_id: lineUserId,
