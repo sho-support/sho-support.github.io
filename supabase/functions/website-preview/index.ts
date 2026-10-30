@@ -28,7 +28,7 @@ function rewrite(s:string,path:string,base:string,css:boolean){
  }
  return s.replace(/url\(\s*(["']?)([^"')]+)\1\s*\)/gi,(_,q,v)=>'url('+q+proxy(v.trim(),path,base)+q+')');
 }
-const types:Record<string,string>={html:'text/html; charset=utf-8',htm:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',json:'application/json',svg:'image/svg+xml',png:'image/png',webp:'image/webp',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',ico:'image/x-icon',woff:'font/woff',woff2:'font/woff2',mp4:'video/mp4',pdf:'application/pdf',txt:'text/plain; charset=utf-8'};
+const types:Record<string,string>={html:'text/html; charset=utf-8',htm:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',json:'application/json',svg:'image/svg+xml',png:'image/png',webp:'image/webp',avif:'image/avif',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',ico:'image/x-icon',woff:'font/woff',woff2:'font/woff2',mp4:'video/mp4',pdf:'application/pdf',txt:'text/plain; charset=utf-8'};
 Deno.serve(async(req)=>{
  try{
   if(req.method==='OPTIONS')return new Response('ok',{headers:noCache});
