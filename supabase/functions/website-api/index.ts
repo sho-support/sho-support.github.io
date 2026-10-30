@@ -393,13 +393,29 @@ Deno.serve(async (req) => {
       if(role!=='admin')return json({error:'管理者権限が必要です。'},403);
       const requestId=Number((body as any).update_request_id);
       if(!Number.isSafeInteger(requestId)||requestId<1)return json({error:'更新依頼番号が不正です。'},400);
-      const {data:reqItem,error:itemErr}=await admin.from('website_update_requests').select('id,status,billing_category,request_note').eq('id',requestId).eq('site_id',siteId).maybeSingle();
+      const {data:reqItem,error:itemErr}=await admin.from('website_update_requests').select('id,status,billing_category,request_note,files').eq('id',requestId).eq('site_id',siteId).maybeSingle();
       if(itemErr)throw itemErr;
       if(!reqItem||reqItem.status!=='pending_sho')return json({error:'この更新依頼は処理待ちではありません。'},409);
       if(reqItem.billing_category==='estimate_required'&&(body as any).payment_confirmed!==true)return json({error:'有料更新は入金確認が必要です。'},409);
       const {data:siteNow,error:siteErr}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();
       if(siteErr)throw siteErr;
       if(siteNow.status!=='live')return json({error:'現在、別の制作・確認が進行しています。'},409);
+      const approvedFiles=reqItem.files&&typeof reqItem.files==='object'?reqItem.files:{};
+      if(Object.values(approvedFiles).some((v:any)=>Array.isArray(v)&&v.length)){
+        const {data:intake,error:intakeErr}=await admin.from('website_intakes').select('payload').eq('site_id',siteId).single();
+        if(intakeErr)throw intakeErr;
+        const payload=structuredClone(intake.payload||{});
+        payload.files=payload.files||{};
+        for(const folder of ['top_photos','gallery_photos','logo_file','member_photos']){
+          const additions=Array.isArray(approvedFiles[folder])?approvedFiles[folder]:[];
+          if(!additions.length)continue;
+          const existing=Array.isArray(payload.files[folder])?payload.files[folder]:[];
+          const paths=new Set(existing.map((x:any)=>x.path));
+          payload.files[folder]=[...existing,...additions.filter((f:any)=>f?.path&&!paths.has(f.path))];
+        }
+        const {error:mergeErr}=await admin.from('website_intakes').update({payload}).eq('site_id',siteId);
+        if(mergeErr)throw mergeErr;
+      }
       const {error:updateError}=await admin.from('website_update_requests').update({status:'queued',reviewed_at:new Date().toISOString()}).eq('id',requestId).eq('status','pending_sho');
       if(updateError)throw updateError;
       const {error:siteError}=await admin.from('website_sites').update({status:'building',current_note:'更新依頼 #'+requestId+' の制作中。',customer_approved:false}).eq('site_id',siteId);
