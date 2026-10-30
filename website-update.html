@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#070707">
+<title>公開後の更新依頼 | SHO WEB SUPPORT</title>
+<link rel="stylesheet" href="website-theme.css">
+<style>
+:root{--soft:#c9c9cc;--line:rgba(255,255,255,.16);--gold:#e6b973;--red:#bc253d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,rgba(195,35,62,.12),transparent 30%),#070707;color:#fff;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;line-height:1.7}
+.wrap{width:min(100% - 28px,790px);margin:auto}header{padding:18px 0;border-bottom:1px solid var(--line)}.brand{font-size:.81rem;font-weight:950;letter-spacing:.12em}
+main{padding:36px 0 60px}.label{color:var(--gold);font-weight:900;font-size:.73rem;letter-spacing:.12em}h1{font-size:clamp(1.5rem,5vw,2.2rem);line-height:1.35;margin:9px 0 12px}p{color:var(--soft);font-size:.83rem}
+.card{margin-top:18px;border:1px solid var(--line);border-radius:16px;background:#111115;padding:18px}.card h2{font-size:.98rem;margin:0 0 12px}.info{font-size:.75rem;color:#d1c8b8;border-left:3px solid var(--gold);background:#171411;padding:12px;margin:12px 0}
+label{display:block;margin-top:12px;font-size:.8rem;font-weight:800}textarea,input,select{width:100%;background:#0b0b0e;border:1px solid var(--line);border-radius:10px;color:#fff;font:inherit;font-size:16px;padding:12px;margin-top:7px}
+textarea{min-height:165px;resize:vertical}input[type=file]{font-size:.76rem}
+.hint{display:block;color:#999;font-size:.69rem;font-weight:400;margin-top:4px}
+button{display:flex;align-items:center;justify-content:center;width:100%;min-height:49px;margin-top:20px;background:linear-gradient(135deg,#cd2e49,#98203a);border:0;border-radius:11px;color:#fff;font-size:.88rem;font-weight:900;cursor:pointer}button:disabled{opacity:.55;cursor:default}
+a{color:var(--gold)}.notice{padding:12px;color:#fff;font-size:.8rem;border-radius:10px;background:#181516;margin-top:14px}.success{border:1px solid rgba(106,213,151,.5);background:rgba(106,213,151,.09);padding:17px;border-radius:13px}.error{border:1px solid rgba(255,110,125,.5);color:#ffc4cb;background:rgba(255,70,90,.08);padding:13px;border-radius:11px}
+footer{border-top:1px solid var(--line);padding:20px 0 30px;color:#777;font-size:.68rem}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand">SHO WEB SUPPORT / SITE UPDATE</div></div></header>
+<main class="wrap">
+  <div class="label">AFTER SUPPORT / CUSTOMER</div>
+  <h1>公開後の更新・修正依頼</h1>
+  <p>ホームページの写真・文章・LIVE情報・リンクなど、変えたい内容をまとめて送れます。追加料金が必要な場合は、制作前にLINEでお知らせします。</p>
+  <div id="account" class="info">専用ページを確認しています…</div>
+  <form id="updateForm" class="card" hidden>
+    <h2>変更内容を入力</h2>
+    <label for="detail">更新・修正したいところ</label>
+    <textarea id="detail" maxlength="5000" required placeholder="例：11月のLIVEを追加。日程・会場は…／トップ写真を変更したい／メニューの文章を…"></textarea>
+    <span class="hint">できるだけ具体的に書いてください。複数の変更を1回の依頼にまとめられます。</span>
+    <label for="photos">添付写真（任意）</label>
+    <input id="photos" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
+    <span class="hint">1枚7MB以内、最大25枚。画像の掲載場所・順番は文章欄に記入してください。</span>
+    <label for="photoCategory">添付写真の用途</label>
+    <select id="photoCategory"><option value="gallery_photos">ギャラリー／追加写真</option><option value="top_photos">トップの写真</option><option value="member_photos">メンバー・スタッフ</option><option value="logo_file">ロゴの変更</option></select>
+    <div class="info">ご依頼後、SHOが内容・契約範囲を確認します。無料期間・月8回の範囲外や大幅な変更は、制作前に費用を相談します。</div>
+    <button type="submit" id="send">この内容で更新を依頼する</button>
+    <div id="result" role="status" aria-live="polite"></div>
+  </form>
+  <p style="margin-top:22px">直接相談したい場合は <a href="https://line.me/R/ti/p/@144dlsxp" rel="noopener noreferrer" target="_blank">公式LINEで相談する</a> こともできます。</p>
+</main>
+<footer><div class="wrap">© 2026 SHO WEB SUPPORT</div></footer>
+<script>
+(()=>{
+const params=new URLSearchParams(location.search),id=params.get('id')||'',key=params.get('key')||'';
+const account=document.getElementById('account'),form=document.getElementById('updateForm'),result=document.getElementById('result');
+const api=async(action,extra={})=>{
+ const response=await fetch('https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-customer-access',{
+  method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,site_id:id,key,...extra})
+ });
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||data.error)throw new Error(data.error||'処理に失敗しました。');
+ return data;
+};
+const date=v=>v?new Date(v).toLocaleDateString('ja-JP'):'';
+(async()=>{
+ try{
+  if(!id||!key)throw new Error('LINEで届いた専用URLから開いてください。');
+  const r=await api('update_status'),site=r.site;
+  if(site.status!=='live')throw new Error('現在は更新依頼を受け付ける状態ではありません。LINEでご相談ください。');
+  let lines=['SITE ID: '+id,'サイト: '+(site.site_name||'ホームページ')];
+  if(site.adjustment_free_until)lines.push('30日間の無料調整期間: '+date(site.adjustment_free_until)+'まで');
+  if(site.update_free_until)lines.push('3か月無料更新期間: '+date(site.update_free_until)+'まで（月8回まで）');
+  account.textContent=lines.join(' ／ ');form.hidden=false;
+ }catch(e){account.textContent=e.message||'専用URLを確認できませんでした。';}
+})();
+form.addEventListener('submit',async e=>{
+ e.preventDefault();
+ const btn=document.getElementById('send'),detail=document.getElementById('detail').value.trim(),photos=[...document.getElementById('photos').files],category=document.getElementById('photoCategory').value;
+ if(detail.length<3){result.className='error';result.textContent='更新内容を3文字以上入力してください。';return;}
+ if(photos.length>25||photos.some(f=>f.size>7000000||!['image/jpeg','image/png','image/webp','image/gif'].includes(f.type))){result.className='error';result.textContent='添付写真は25枚以内、1枚7MB以内のJPG・PNG・WEBP・GIFにしてください。';return;}
+ btn.disabled=true;btn.textContent='送信中…';result.className='notice';result.textContent='添付ファイルを送信しています…';
+ try{
+  const files={top_photos:[],gallery_photos:[],member_photos:[],logo_file:[]};
+  for(const file of photos){
+   const ticket=await api('signed_upload',{folder:category,file_name:file.name});
+   const response=await fetch('https://tyhymvgjkoebetyypspj.supabase.co/storage/v1/object/upload/sign/website-intake-files/'+ticket.path+'?token='+encodeURIComponent(ticket.token),{method:'PUT',headers:{'Content-Type':file.type,'Cache-Control':'no-cache'},body:file});
+   if(!response.ok)throw new Error(file.name+' のアップロードに失敗しました。');
+   files[category].push({name:file.name,path:ticket.path});
+  }
+  const r=await api('request_update',{detail,files});
+  const desc=r.category==='free_monthly'?'無料更新枠として受付しました（内容確認後に確定）':r.category==='free_adjustment_review'?'公開後30日間の無料調整として内容を確認します':'料金を確認し、必要なら見積りをLINEでご案内します';
+  result.className='success';result.textContent='更新依頼 #'+r.request_id+' を受け付けました。'+desc+'。確認後にLINEでご連絡します。';
+  btn.textContent='依頼を送信しました';
+ }catch(err){result.className='error';result.textContent=err.message||'送信に失敗しました。';btn.disabled=false;btn.textContent='この内容で更新を依頼する';}
+});
+})();
+</script>
+</body>
+</html>
