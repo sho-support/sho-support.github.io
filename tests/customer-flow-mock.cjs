@@ -12,11 +12,11 @@ const stub=[
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  try{
   const context=await browser.newContext({viewport:{width:390,height:850}});
-  await context.route('**/website-client.js',route=>route.fulfill({status:200,contentType:'text/javascript',body:stub}));
   await context.route('**/*',route=>{
    const u=route.request().url();
    return u.startsWith(BASE)||u.startsWith(api)||u.startsWith('data:')?route.continue():route.abort();
   });
+  await context.route('**/website-client.js',route=>route.fulfill({status:200,contentType:'text/javascript',body:stub}));
   const page=await context.newPage();
   const pageErrors=[];page.on('pageerror',e=>pageErrors.push(e.message));
   let approved=false,reviewCalls=[],updateCalls=[];
