@@ -49,6 +49,10 @@ const stub=[
   assert.equal(updateCalls.length,1);
   assert.equal(updateCalls[0].site_id,'TEST-001');
   console.log('PASS secure customer update request without real side effects');
+  await page.route(/\/functions\/v1\/website-preview\?/,route=>route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({html:'<!doctype html><html><body><h1>プレビュー動作確認</h1></body></html>'})}));
+  await page.goto(BASE+'website-preview.html?id=TEST-001&key=abcdefghijklmnopqrstuvwxyz',{waitUntil:'domcontentloaded'});
+  await page.frameLocator('#view').getByText('プレビュー動作確認').waitFor({timeout:12000});
+  console.log('PASS sandboxed private site preview rendering');
   await page.route(api+'website-order-api',route=>route.fulfill({status:201,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({ok:true,order:{order_code:'S99999',link_token:'0123456789abcdef0123456789abcdef01234567',created_at:new Date().toISOString()}})}));
   await page.goto(BASE+'website-order.html',{waitUntil:'domcontentloaded'});
   await page.locator('[data-plan="semi"] .plan-select').click();
