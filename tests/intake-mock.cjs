@@ -31,7 +31,8 @@ const stub=[
    await route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(result)});
   });
   await page.goto(BASE+'website-intake.html?id=9991&prod=1&key=abcdefghijklmnopqrstuvwxyz',{waitUntil:'domcontentloaded'});
-  await page.locator('#members .member').first().waitFor({timeout:15000});
+  await page.locator('#members .member').first().waitFor({state:'attached',timeout:15000});
+  await page.locator('details.card').evaluateAll(list=>list.forEach(detail=>detail.open=true));
   await page.locator('input[name="site_name"]').fill('テストサイト');
   await page.locator('#members .member input[data-mf="name"]').first().fill('テストメンバー');
   await page.locator('#members .member input[data-mf="part"]').first().fill('ギター');
