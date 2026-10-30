@@ -13,7 +13,7 @@ const orderSql=read('supabase/migrations/20261031_secure_order_line_pairing.sql'
 const checks={
  'New draft repos private':(worker.match(/private:true,auto_init:true/g)||[]).length===2,
  'No new public draft repos':!worker.includes('private:false,auto_init:true'),
- 'Private draft skips Pages deployment':worker.includes("if(!ri.isPrivate)await pages"),
+ 'Private draft skips Pages deployment':worker.includes("if(!ri.isPrivate&&!isLiveRevision)await pages"),
  'Only referenced customer assets copied':worker.includes('const referencedAssets=assets.filter'),
  'Untrusted site names are escaped':worker.includes("name=String(name||'').replace"),
  'Publishing changes private repo visibility before Pages':shared.includes('if (info.private)')&&shared.includes('method: \'PATCH\''),
