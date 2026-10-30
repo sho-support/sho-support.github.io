@@ -34,7 +34,7 @@
     <div class="plans">
       <button class="plan" data-plan="live"><b>LIVE更新</b>¥1,000 / 回</button>
       <button class="plan active" data-plan="normal"><b>通常更新</b>¥2,500 / 回</button>
-      <button class="plan" data-plan="unlimited"><b>月10回まで</b>¥7,000 / 月</button>
+      <button class="plan" data-plan="unlimited"><b>月5回まで</b>¥7,000 / 月</button>
     </div>
 
     <div class="request-note" id="requestNote"><strong>通常更新 1回分</strong><span>下の項目を必要なだけまとめて入力できます。LIVE＋写真＋文章を同時に依頼しても1回分です。</span></div>
@@ -88,7 +88,7 @@
  const planData={
    live:['LIVE更新','¥1,000 / 回','LIVE情報のみを1回更新できます。'],
    normal:['通常更新','¥2,500 / 回','LIVE・写真・文章・その他の変更を、まとめて1回の更新依頼として送れます。'],
-   unlimited:['月10回まで','¥7,000 / 月','通常更新と同じ内容を月10回まで依頼できます。1回の依頼に複数項目をまとめられます。']
+   unlimited:['月5回まで','¥7,000 / 月','通常更新と同じ内容を月5回まで依頼できます。1回の依頼に複数項目をまとめられます。']
  };
  const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
  function toast(t){const x=document.getElementById('toast');x.textContent=t;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),1500)}
