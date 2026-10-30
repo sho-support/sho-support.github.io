@@ -131,6 +131,7 @@ function showDone(order){
  const msg=[
   'SHO WEB SUPPORT 制作申込み',
   '注文ID: '+order.order_code,
+  order.link_token?'連携コード: '+order.link_token:null,
   '制作プラン: '+planLabels[state.plan]+' ¥'+prices[state.plan].toLocaleString()+'〜',
   state.plan==='semi'?'デザイン: '+names[state.template]:null,
   '更新: '+updateLabels[state.update],
