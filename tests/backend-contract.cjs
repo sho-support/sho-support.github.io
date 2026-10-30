@@ -8,6 +8,7 @@ const ORIGIN='https://sho-support.github.io';
   {name:'preview rejects invalid key',uri:'website-preview?id='+SITE+'&key='+KEY,init:{method:'GET'},expected:403},
   {name:'customer access rejects invalid key',uri:'website-customer-access',init:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'load',site_id:SITE,key:KEY})},expected:403},
   {name:'customer admin requires login',uri:'website-customer-access',init:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'admin_list_orders'})},expected:401},
+  {name:'intake resend requires admin login',uri:'website-customer-access',init:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'admin_resend_intake',order_code:'S0001'})},expected:401},
   {name:'invalid order does not create an order',uri:'website-order-api',init:{method:'POST',headers:{'Content-Type':'application/json',Origin:ORIGIN},body:JSON.stringify({plan:'invalid',update_plan:'none',website:''})},expected:400},
   {name:'unsigned LINE webhook rejected',uri:'website-line-webhook',init:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({events:[]})},expected:401},
   {name:'authenticated site API rejects anonymous requests',uri:'website-api',init:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list_sites'})},expected:401}
