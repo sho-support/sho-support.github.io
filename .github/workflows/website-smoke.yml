@@ -33,3 +33,5 @@ jobs:
           sleep 2
       - name: Verify public pages on mobile and desktop
         run: node tests/website-smoke.cjs
+      - name: Verify production API authorization without side effects
+        run: node tests/backend-contract.cjs
