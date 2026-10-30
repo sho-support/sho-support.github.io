@@ -66,7 +66,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 const STORE='sho_web_order_v3', RECEIPT='sho_web_order_receipt_v2';
 const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',minimal:'T04 Minimal Grid',premium:'T05 Premium Noir',pop:'T06 Pop Studio',vintage:'T07 Vintage Poster',cyber:'T08 Neon Circuit',organic:'T09 Earth Atelier',editorial:'T10 Editorial Mono'};
 const planLabels={one:'1ページ完結サイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'},prices={one:15000,semi:22000,full:30000};
-const updateLabels={none:'更新プランなし',live:'LIVE更新 ¥1,000 / 回',standard:'通常更新 ¥2,500 / 回',unlimited:'通常更新 月10回まで ¥7,000 / 月',free3:'通常更新 月10回まで / 公開後3か月無料（通常 ¥7,000 / 月）'};
+const updateLabels={none:'更新プランなし',live:'LIVE更新 ¥1,000 / 回',standard:'通常更新 ¥2,500 / 回',unlimited:'通常更新 月5回まで ¥7,000 / 月',free3:'通常更新 月5回まで / 公開後3か月無料（通常 ¥7,000 / 月）'};
 let state={};try{state=JSON.parse(localStorage.getItem(STORE)||'{}')}catch{}
 if(!['one','semi','full'].includes(state.plan)||!state.update||(state.plan==='semi'&&!names[state.template])){location.replace('website-order.html');return}
 const summaryText=()=>[
