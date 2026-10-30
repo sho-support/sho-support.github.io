@@ -15,6 +15,7 @@
     .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}.stat{padding:10px;border:1px solid var(--line);background:#111}.stat small{display:block;color:var(--muted);font-size:.66rem}.stat b{display:block;font-size:1.1rem;margin-top:2px;color:#fff}.stat b.orange{color:var(--orange)}
     .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.plan{padding:10px 7px;border:1px solid var(--line);background:#111;color:#ddd;text-align:center;font-size:.72rem;cursor:pointer}.plan b{display:block;color:#fff;font-size:.86rem}.plan.active{border-color:var(--orange);box-shadow:inset 0 0 0 1px var(--orange);background:rgba(240,138,53,.08)}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.tab{padding:10px;border:1px solid var(--line);background:#111;color:#ddd;font-weight:800;font-size:.72rem;cursor:pointer}.tab.active{background:var(--orange);color:#090909}.tab.locked{opacity:.28;cursor:not-allowed}
     .form{display:none}.form.active{display:block}.field{margin-top:10px}.field label{display:block;font-size:.72rem;font-weight:800;margin-bottom:5px}.field input,.field textarea,.field select{width:100%;border:1px solid var(--line);background:#111;color:#fff;padding:11px;font:inherit}.field input::placeholder,.field textarea::placeholder{color:#737373;opacity:1}.field textarea{min-height:80px;resize:vertical}.fieldrow{display:grid;grid-template-columns:1fr 120px;gap:8px}.fieldrow .field{margin-top:10px}.upload{border:1px dashed rgba(240,138,53,.55);padding:14px;background:#101010}.upload input{border:0;padding:0;background:transparent}.btns{display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:12px}.btn{border:0;background:var(--orange);color:#080808;font-weight:900;padding:12px;cursor:pointer}.btn.secondary{background:#171717;color:#fff;border:1px solid var(--line)}.lockmsg{display:none;margin-top:10px;padding:10px;border:1px solid rgba(240,138,53,.35);background:rgba(240,138,53,.06);color:#ffcfaa;font-size:.72rem}.lockmsg.show{display:block}
+    .request-note{margin:12px 0;padding:11px 12px;border:1px solid rgba(217,174,92,.3);background:#111;color:#d9d2c8;font-size:.72rem}.request-note strong{display:block;color:#f0d598;margin-bottom:3px}.request-note span{display:block;line-height:1.7}.update-block{margin-top:12px;padding:12px;border:1px solid var(--line);background:#0f0f0f}.update-block.disabled{opacity:.38}.update-block-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}.update-block-head small{display:block;color:var(--orange2);font-size:.6rem;font-weight:900;letter-spacing:.12em}.update-block-head b{display:block;margin-top:1px;font-size:.88rem}.mini-add{border:1px solid rgba(217,174,92,.42);background:#17130c;color:#f0d598;padding:7px 9px;font-size:.66rem;font-weight:900;cursor:pointer}.live-entry{position:relative;margin-top:10px;padding:10px;border:1px solid rgba(255,255,255,.09);background:#0b0b0b}.live-entry-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px}.live-entry-head b{font-size:.72rem}.remove-live{border:0;background:transparent;color:#999;font-size:.66rem;cursor:pointer}.other-preview{margin-top:10px;padding:9px;border:1px dashed rgba(217,174,92,.3);color:#c9c0b1;font-size:.7rem;display:none}
     .sitebar{padding:11px 13px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;font-size:.7rem;color:#aaa}.mocksite{background:#090909}.mockhero{min-height:200px;display:flex;align-items:end;padding:18px;background:linear-gradient(180deg,rgba(0,0,0,.15),#090909),radial-gradient(circle at 65% 20%,rgba(240,138,53,.18),transparent 42%);background-size:cover;background-position:center;position:relative}.mockhero h3{font-size:2.2rem;line-height:.95;margin:0}.mockhero p{margin:5px 0 0;color:#ccc;font-size:.76rem}.mockbody{padding:13px}.mocklabel{color:var(--orange);font-size:.65rem;font-weight:900;letter-spacing:.11em}.livecard{margin-top:7px;padding:12px;border:1px solid var(--line);background:#101010}.livecard strong{display:block;font-size:1rem}.livecard span{font-size:.72rem;color:#bbb}.livecard details{margin-top:7px;border-top:1px solid var(--line);padding-top:7px;font-size:.72rem}.livecard summary{cursor:pointer;color:#ddd}.notice{margin-top:10px;padding:10px;border-left:3px solid var(--orange);background:#101010;font-size:.74rem}.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.gallery div{aspect-ratio:1/1;background:#161616;border:1px solid var(--line);overflow:hidden}.gallery img{width:100%;height:100%;object-fit:cover}.changed{animation:flash .6s ease}@keyframes flash{0%{box-shadow:0 0 0 2px var(--orange)}100%{box-shadow:none}}
     .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;background:#fff;color:#111;padding:10px 14px;font-size:.78rem;font-weight:900;transition:.2s;z-index:50}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
     @media(max-width:820px){.layout{grid-template-columns:1fr}.preview{position:static}.preview:before{content:"↓ ここに反映されます";display:block;padding:8px 12px;color:var(--orange);font-size:.72rem;font-weight:900;border-bottom:1px solid var(--line)}}@media(max-width:480px){.hero h1{font-size:1.5rem;line-height:1.3}.plans,.stats{grid-template-columns:1fr 1fr}.plans .plan:last-child,.stats .stat:last-child{grid-column:1/-1}.fieldrow{grid-template-columns:1fr 105px}}
@@ -24,46 +25,43 @@
 <body>
 <header><div class="wrap head"><div class="brand">SHO UPDATE DEMO</div><a class="back" href="website-support.html">← 戻る</a></div></header>
 <main class="wrap">
-<section class="hero"><small>TRY IT</small><h1>実際に触ってみる。</h1><p>プランを選んで、情報を入れて「反映」を押してください。右のサイト見本がその場で変わります。</p><span class="tip">※これはお試し。実際のサイトには送信されません。</span></section>
+<section class="hero"><small>UPDATE DEMO</small><h1>実際の更新画面</h1><p>公開後の更新依頼を試せます。通常更新は、LIVE・写真・文章・その他の変更を1回の依頼にまとめて送れます。</p><span class="tip">※デモ画面です。入力内容は実際のサイトには送信されません。</span></section>
 <section class="layout">
   <div class="panel">
     <div class="sect-title"><h2>ABC BAND / SITE ID 1042</h2><span>DEMO</span></div>
     <div class="stats"><div class="stat"><small>今月の閲覧数</small><b>428</b></div><div class="stat"><small>無料期間</small><b class="orange">残り 47日</b></div><div class="stat"><small>更新</small><b id="planLabel">LIVE</b><small id="priceLabel">¥1,000</small></div></div>
 
     <div class="plans">
-      <button class="plan active" data-plan="live"><b>LIVE更新</b>¥1,000 / 回</button>
-      <button class="plan" data-plan="normal"><b>通常更新</b>¥2,500 / 回</button>
-      <button class="plan" data-plan="unlimited"><b>使い放題</b>¥7,000 / 月</button>
+      <button class="plan" data-plan="live"><b>LIVE更新</b>¥1,000 / 回</button>
+      <button class="plan active" data-plan="normal"><b>通常更新</b>¥2,500 / 回</button>
+      <button class="plan" data-plan="unlimited"><b>月10回まで</b>¥7,000 / 月</button>
     </div>
 
-    <div class="tabs">
-      <button class="tab active" data-tab="live">LIVE</button>
-      <button class="tab locked" data-tab="photo">写真</button>
-      <button class="tab locked" data-tab="text">文章</button>
+    <div class="request-note" id="requestNote"><strong>通常更新 1回分</strong><span>下の項目を必要なだけまとめて入力できます。LIVE＋写真＋文章を同時に依頼しても1回分です。</span></div>
+
+    <div class="update-block">
+      <div class="update-block-head"><div><small>LIVE / EVENT</small><b>LIVE情報</b></div><button class="mini-add" id="addLive" type="button">＋ LIVEを追加</button></div>
+      <div id="liveItems"></div>
     </div>
 
-    <div class="form active" id="form-live">
-      <div class="field"><label>バンド名 <span style="color:var(--muted);font-weight:500">通常は変更不要</span></label><input id="bandName" value="ABC BAND"></div>
-      <div class="fieldrow">
-        <div class="field"><label>開催日</label><input id="liveDate" type="date" value="2027-01-10"></div>
-        <div class="field"><label>時間</label><input id="liveTime" type="time" value="18:30"></div>
-      </div>
-      <div class="field"><label>イベント名</label><input id="liveName" value="ROCK NIGHT 2027"></div>
-      <div class="field"><label>会場</label><input id="livePlace" value="仙台 LIVE HOUSE"></div>
-      <div class="field"><label>イベント詳細</label><textarea id="eventDetail" placeholder="必要ならここにセットリスト、出演者、料金、タイムテーブル、YouTube URLなどを入力"></textarea></div>
-      <div class="btns"><button class="btn" id="applyLive">LIVEを反映</button><button class="btn secondary reset">戻す</button></div>
-    </div>
-
-    <div class="form" id="form-photo">
+    <div class="update-block nonlive">
+      <div class="update-block-head"><div><small>PHOTO</small><b>写真</b></div></div>
       <div class="field"><label>掲載場所</label><select id="photoTarget"><option value="gallery">GALLERY</option><option value="top">TOP</option></select></div>
       <div class="field upload"><label>写真を選択</label><input id="photoFile" type="file" accept="image/*"></div>
-      <div class="field"><label>備考</label><input id="photoNote" placeholder="例：この写真を一番上に"></div>
-      <div class="btns"><button class="btn" id="applyPhoto">写真を反映</button><button class="btn secondary reset">戻す</button></div>
+      <div class="field"><label>写真についての要望</label><input id="photoNote" placeholder="例：この写真を一番上に"></div>
     </div>
 
-    <div class="form" id="form-text">
-      <div class="field"><label>お知らせ・文章</label><textarea id="noticeText">次回ライブの詳細を公開しました！</textarea></div>
-      <div class="btns"><button class="btn" id="applyText">文章を反映</button><button class="btn secondary reset">戻す</button></div>
+    <div class="update-block nonlive">
+      <div class="update-block-head"><div><small>TEXT</small><b>文章</b></div></div>
+      <div class="field"><label>変更したい文章</label><textarea id="noticeText" placeholder="例：TOPのお知らせを「次回ライブの詳細を公開しました！」に変更">次回ライブの詳細を公開しました！</textarea></div>
+    </div>
+
+    <div class="update-block nonlive">
+      <div class="update-block-head"><div><small>OTHER</small><b>その他の更新要望</b></div></div>
+      <div class="field"><label>上記以外の変更内容</label><textarea id="otherRequest" placeholder="例：YouTubeリンクを追加、プロフィールの肩書きを変更、SNSリンクを差し替え など"></textarea></div>
+    </div>
+
+    <div class="btns"><button class="btn" id="applyAll" type="button">まとめて更新を試す</button><button class="btn secondary" id="resetAll" type="button">戻す</button></div>
     </div>
   </div>
 
@@ -73,7 +71,7 @@
       <div class="mockhero" id="mockHero"><div><div class="mocklabel">OFFICIAL WEBSITE</div><h3 id="pBand">ABC BAND</h3><p>Rock / Sendai</p></div></div>
       <div class="mockbody">
         <div class="mocklabel">NEXT LIVE</div>
-        <div class="livecard" id="liveCard"><strong id="pName">ROCK NIGHT 2027</strong><span id="pDate">2027.01.10 / 18:30</span><br><span id="pPlace">仙台 LIVE HOUSE</span><details id="pDetails" style="display:none"><summary>イベント詳細</summary><div id="pSetlist"></div></details></div>
+        <div id="liveList"><div class="livecard"><strong>ROCK NIGHT 2027</strong><span>2027.01.10 / 18:30</span><br><span>仙台 LIVE HOUSE</span></div></div>
         <div class="notice" id="pNotice">次回ライブの詳細を公開しました！</div>
         <div class="mocklabel" style="margin-top:12px">GALLERY</div>
         <div class="gallery" id="gallery"><div></div><div></div><div></div></div>
@@ -85,51 +83,79 @@
 <div class="toast" id="toast">反映しました</div>
 <script>
 (()=>{
- const plans=document.querySelectorAll('.plan'),tabs=document.querySelectorAll('.tab'),forms=document.querySelectorAll('.form');
- let plan='live',current='live',photoUrl=null;
+ const plans=[...document.querySelectorAll('.plan')];
+ let plan='normal',photoUrl=null,liveSeq=0;
  const bandKey='sho-demo-band-name';
- const planData={live:['LIVE','¥1,000'],normal:['通常','¥2,500'],unlimited:['使い放題','¥7,000/月']};
- function toast(t){const x=document.getElementById('toast');x.textContent=t;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),1200)}
+ const planData={
+   live:['LIVE更新','¥1,000 / 回','LIVE情報のみを1回更新できます。'],
+   normal:['通常更新','¥2,500 / 回','LIVE・写真・文章・その他の変更を、まとめて1回の更新依頼として送れます。'],
+   unlimited:['月10回まで','¥7,000 / 月','通常更新と同じ内容を月10回まで依頼できます。1回の依頼に複数項目をまとめられます。']
+ };
+ const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+ function toast(t){const x=document.getElementById('toast');x.textContent=t;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),1500)}
+ function liveTemplate(values={}){
+   const id=++liveSeq;
+   return '<div class="live-entry" data-live="'+id+'"><div class="live-entry-head"><b>LIVE '+id+'</b>'+(id>1?'<button class="remove-live" type="button">削除</button>':'')+'</div>'+
+   '<div class="fieldrow"><div class="field"><label>開催日</label><input class="liveDate" type="date" value="'+esc(values.date||'')+'"></div><div class="field"><label>時間</label><input class="liveTime" type="time" value="'+esc(values.time||'')+'"></div></div>'+
+   '<div class="field"><label>イベント名</label><input class="liveName" value="'+esc(values.name||'')+'" placeholder="イベント名"></div>'+
+   '<div class="field"><label>会場</label><input class="livePlace" value="'+esc(values.place||'')+'" placeholder="会場"></div>'+
+   '<div class="field"><label>イベント詳細</label><textarea class="eventDetail" placeholder="出演者、料金、タイムテーブル、YouTube URLなど">'+esc(values.detail||'')+'</textarea></div></div>';
+ }
+ function bindRemove(){
+   document.querySelectorAll('.remove-live').forEach(b=>b.onclick=()=>b.closest('.live-entry').remove());
+ }
+ function addLive(values={}){document.getElementById('liveItems').insertAdjacentHTML('beforeend',liveTemplate(values));bindRemove()}
  function setPlan(p){
    plan=p;plans.forEach(b=>b.classList.toggle('active',b.dataset.plan===p));
-   document.getElementById('planLabel').textContent=planData[p][0];document.getElementById('priceLabel').textContent=planData[p][1];
-   tabs.forEach(t=>{if(t.dataset.tab!=='live')t.classList.toggle('locked',p==='live')});
-   if(p==='live'&&current!=='live')showTab('live');
+   document.getElementById('planLabel').textContent=planData[p][0];
+   document.getElementById('priceLabel').textContent=planData[p][1];
+   const note=document.getElementById('requestNote');
+   note.innerHTML='<strong>'+planData[p][0]+'</strong><span>'+planData[p][2]+'</span>';
+   document.querySelectorAll('.nonlive').forEach(block=>{
+     const off=p==='live';block.classList.toggle('disabled',off);
+     block.querySelectorAll('input,textarea,select').forEach(el=>el.disabled=off);
+   });
  }
- function showTab(t){current=t;tabs.forEach(b=>b.classList.toggle('active',b.dataset.tab===t));forms.forEach(f=>f.classList.toggle('active',f.id==='form-'+t))}
- plans.forEach(b=>b.onclick=()=>setPlan(b.dataset.plan));
- tabs.forEach(b=>b.onclick=()=>{if(b.classList.contains('locked')){toast('写真・文章は通常更新か使い放題で利用できます');return}showTab(b.dataset.tab)});
- function flash(el){el.classList.remove('changed');void el.offsetWidth;el.classList.add('changed')}
- document.getElementById('applyLive').onclick=()=>{
-   const band=document.getElementById('bandName').value.trim()||'ABC BAND';
-   const date=document.getElementById('liveDate').value,time=document.getElementById('liveTime').value;
-   const n=document.getElementById('liveName').value,p=document.getElementById('livePlace').value,s=document.getElementById('eventDetail').value.trim();
-   localStorage.setItem(bandKey,band);
-   document.getElementById('pBand').textContent=band;
-   document.getElementById('pName').textContent=n||'LIVE EVENT';
-   document.getElementById('pDate').textContent=(date?date.replaceAll('-','.'):'DATE TBD')+(time?' / '+time:'');
-   document.getElementById('pPlace').textContent=p||'詳細後日';
-   const details=document.getElementById('pDetails');
-   if(s){
-     document.getElementById('pSetlist').innerHTML=s.split('\n').map(x=>x.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))).join('<br>');
-     details.style.display='';
-   }else{
-     document.getElementById('pSetlist').innerHTML='';
-     details.style.display='none';
+ function applyLives(){
+   const entries=[...document.querySelectorAll('.live-entry')];
+   const data=entries.map(e=>({
+     date:e.querySelector('.liveDate').value,
+     time:e.querySelector('.liveTime').value,
+     name:e.querySelector('.liveName').value.trim(),
+     place:e.querySelector('.livePlace').value.trim(),
+     detail:e.querySelector('.eventDetail').value.trim()
+   })).filter(x=>x.date||x.time||x.name||x.place||x.detail);
+   const box=document.getElementById('liveList');
+   if(!data.length)return;
+   box.innerHTML=data.map(x=>'<div class="livecard"><strong>'+esc(x.name||'LIVE EVENT')+'</strong><span>'+esc((x.date?x.date.replaceAll('-','.'):'DATE TBD')+(x.time?' / '+x.time:''))+'</span><br><span>'+esc(x.place||'詳細後日')+'</span>'+(x.detail?'<details><summary>イベント詳細</summary><div>'+esc(x.detail).replaceAll('\n','<br>')+'</div></details>':'')+'</div>').join('');
+   flash(box);
+ }
+ function applyOther(){
+   if(plan==='live')return;
+   const text=document.getElementById('noticeText').value.trim();
+   if(text){document.getElementById('pNotice').textContent=text;flash(document.getElementById('pNotice'))}
+   const f=document.getElementById('photoFile').files[0];
+   if(f){
+     if(photoUrl)URL.revokeObjectURL(photoUrl);photoUrl=URL.createObjectURL(f);
+     if(document.getElementById('photoTarget').value==='top'){
+       document.getElementById('mockHero').style.backgroundImage='linear-gradient(180deg,rgba(0,0,0,.1),#090909),url("'+photoUrl+'")';flash(document.getElementById('mockHero'));
+     }else{
+       const d=document.createElement('div'),img=document.createElement('img');img.src=photoUrl;d.appendChild(img);document.getElementById('gallery').prepend(d);flash(document.getElementById('gallery'));
+     }
    }
-   flash(document.getElementById('liveCard'));toast('LIVE情報を反映しました');
- };
- document.getElementById('applyText').onclick=()=>{document.getElementById('pNotice').textContent=document.getElementById('noticeText').value||'';flash(document.getElementById('pNotice'));toast('文章を反映しました')};
- document.getElementById('applyPhoto').onclick=()=>{
-   const f=document.getElementById('photoFile').files[0];if(!f){toast('写真を選んでください');return}
-   if(photoUrl)URL.revokeObjectURL(photoUrl);photoUrl=URL.createObjectURL(f);
-   if(document.getElementById('photoTarget').value==='top'){document.getElementById('mockHero').style.backgroundImage='linear-gradient(180deg,rgba(0,0,0,.1),#090909),url("'+photoUrl+'")';flash(document.getElementById('mockHero'))}
-   else{const d=document.createElement('div'),img=document.createElement('img');img.src=photoUrl;d.appendChild(img);document.getElementById('gallery').prepend(d);flash(document.getElementById('gallery'))}
-   toast('写真を反映しました');
- };
- document.querySelectorAll('.reset').forEach(b=>b.onclick=()=>location.reload());
- const savedBand=localStorage.getItem(bandKey);if(savedBand){document.getElementById('bandName').value=savedBand;document.getElementById('pBand').textContent=savedBand;}
- setPlan('live');
+   const other=document.getElementById('otherRequest').value.trim();
+   let op=document.getElementById('otherPreview');
+   if(!op){op=document.createElement('div');op.id='otherPreview';op.className='other-preview';document.querySelector('.mockbody').appendChild(op)}
+   if(other){op.textContent='更新要望: '+other;op.style.display='block';flash(op)}else op.style.display='none';
+ }
+ function flash(el){el.classList.remove('changed');void el.offsetWidth;el.classList.add('changed')}
+ plans.forEach(b=>b.onclick=()=>setPlan(b.dataset.plan));
+ document.getElementById('addLive').onclick=()=>addLive();
+ document.getElementById('applyAll').onclick=()=>{applyLives();applyOther();toast(plan==='live'?'LIVE更新を1回分として反映しました':'まとめて1回分の更新として反映しました')};
+ document.getElementById('resetAll').onclick=()=>location.reload();
+ addLive({date:'2027-01-10',time:'18:30',name:'ROCK NIGHT 2027',place:'仙台 LIVE HOUSE'});
+ const savedBand=localStorage.getItem(bandKey);
+ setPlan('normal');
 })();
 </script>
 <nav class="site-legal-nav" aria-label="法務・ポリシー"><a href="website-legal.html">特商法表記</a><a href="website-terms.html">利用条件</a><a href="website-privacy.html">プライバシー</a></nav>
