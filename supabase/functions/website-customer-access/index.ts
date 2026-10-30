@@ -273,18 +273,6 @@ Deno.serve(async(req)=>{
     if((recent||[]).length>=5)return json({error:'短時間に更新依頼が続いています。時間をおいてご連絡ください。'},429);
     const {data:ticket,error:ticketErr}=await admin.from('website_update_requests').insert({site_id:siteId,request_note:detail,files:safeFiles,billing_category:category,status:'pending_sho'}).select('id').single();
     if(ticketErr)throw ticketErr;
-    const {data:intake,error:intakeErr}=await admin.from('website_intakes').select('payload').eq('site_id',siteId).maybeSingle();
-    if(intakeErr)throw intakeErr;
-    if(intake){
-      const payload=structuredClone(intake.payload||{});payload.files=payload.files||{};
-      for(const f of folders){
-        const existing=Array.isArray(payload.files[f])?payload.files[f]:[];
-        const paths=new Set(existing.map((x:any)=>x.path));
-        payload.files[f]=[...existing,...safeFiles[f].filter((x:any)=>!paths.has(x.path))];
-      }
-      const {error:upErr}=await admin.from('website_intakes').update({payload}).eq('site_id',siteId);
-      if(upErr)throw upErr;
-    }
     await admin.from('website_activity').insert({site_id:siteId,actor_type:'customer_line',action:'update_requested',detail:'更新依頼 #'+ticket.id+' / '+detail.slice(0,1800),payload:{update_request_id:ticket.id,billing_category:category}});
     await notifyOwner('【更新依頼】SITE ID '+siteId+' / #'+ticket.id+' / 区分: '+category+' / '+detail.slice(0,1200));
     return json({ok:true,request_id:ticket.id,category,status:'pending_sho'});
