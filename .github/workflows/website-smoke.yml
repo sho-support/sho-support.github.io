@@ -36,6 +36,8 @@ jobs:
         run: node tests/website-smoke.cjs
       - name: Simulate customer order, review, publication and update
         run: node tests/customer-flow-mock.cjs
+      - name: Simulate secure intake and member photo submission
+        run: node tests/intake-mock.cjs
       - name: Check sensitive source invariants
         run: node tests/server-invariants.cjs
       - name: Verify production API authorization without side effects
