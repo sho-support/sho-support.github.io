@@ -19,6 +19,8 @@ const checks={
  'Publishing changes private repo visibility before Pages':shared.includes('if (info.private)')&&shared.includes('method: \'PATCH\''),
  'Safe preview returns JSON instead of HTML':preview.includes('JSON.stringify({html:content})'),
  'Safe preview checks hashed keys':preview.includes('hash!==site.preview_access_token_hash'),
+ 'Private preview supports images over 1MB':preview.includes('application/vnd.github.raw+json')&&preview.includes('await github.arrayBuffer()'),
+ 'Photos from unapproved update remain isolated':!customer.includes('payload.files[f]=[...existing')&&api.includes('const approvedFiles=reqItem.files'),
  'Review uses secure client token':customer.includes("action==='review_publish'"),
  'Public update requests require owner approval':api.includes("action==='admin_start_update'"),
  'DB supports customer update jobs':sql.includes("'customer_update'"),
