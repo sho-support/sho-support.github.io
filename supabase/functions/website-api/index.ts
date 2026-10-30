@@ -1,4 +1,4 @@
-import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, triggerWebsiteWorker } from '../_shared/website.ts';
+import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, triggerWebsiteWorker } from './_shared/website.ts';
 
 type Body = {
   action?: string;
@@ -16,33 +16,17 @@ type Body = {
   offline_path?: '/' | '/docs';
   custom_domain?: string | null;
   review_action?: 'revision' | 'approve' | 'publish';
-  order_code?: string;
 };
-
-
-function randomAccessKey() {
-  const bytes = crypto.getRandomValues(new Uint8Array(24));
-  let raw = '';
-  for (const b of bytes) raw += String.fromCharCode(b);
-  return btoa(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-async function sha256Hex(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
-  return [...hash].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function adminAllowed(admin: ReturnType<typeof adminClient>, userId: string) {
-  const { data, error } = await admin.from('website_admins').select('user_id').eq('user_id', userId).maybeSingle();
-  if (error) throw error;
-  return Boolean(data);
-}
 
 function validSiteId(value: unknown) {
   return typeof value === 'string' && /^[A-Za-z0-9_-]{3,32}$/.test(value);
 }
 
+const sha256Hex=async(value:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
+const randomReviewKey=()=>Array.from(crypto.getRandomValues(new Uint8Array(24)),b=>b.toString(16).padStart(2,'0')).join('');
+const addMonths=(base:Date,months:number)=>{const d=new Date(base),day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+months);d.setUTCDate(Math.min(day,new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate()));return d.toISOString();};
+function githubSiteUrl(repo:string,domain?:string|null){const p=repo.split('/');const host=String(domain||'').replace('https://','').replace('http://','').split('/')[0];return host?'https://'+host+'/':'https://'+p[0]+'.github.io/'+p[1]+'/';}
+async function setOrderFreePeriod(admin:ReturnType<typeof adminClient>,siteId:string,now:Date){const {error}=await admin.from('website_orders').update({update_free_until:addMonths(now,3)}).eq('site_id',siteId).in('plan',['semi','full']);if(error)throw error;}
 async function findUserIdByEmail(admin: ReturnType<typeof adminClient>, email: string) {
   const target = email.trim().toLowerCase();
   if (!target) return null;
@@ -100,110 +84,6 @@ Deno.serve(async (req) => {
         .order('updated_at', { ascending: false });
       if (siteError) throw siteError;
       return json({ sites: sites || [], memberships: memberships || [], admin: false });
-    }
-
-
-    if (action === 'list_orders') {
-      if (!(await adminAllowed(admin, user.id))) return json({ error: '管理者権限が必要です。' }, 403);
-      const { data, error } = await admin
-        .from('website_orders')
-        .select('order_code,status,plan,template_style,update_plan,custom_domain,amount_from,line_user_id,line_display_name,line_linked_at,site_id,created_at,updated_at')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      return json({ orders: data || [] });
-    }
-
-    if (action === 'mark_order_paid') {
-      if (!(await adminAllowed(admin, user.id))) return json({ error: '管理者権限が必要です。' }, 403);
-      const orderCode = String(body.order_code || '').trim().toUpperCase();
-      if (!/^[FSP]\d{4,6}$/.test(orderCode)) return json({ error: '注文IDが不正です。' }, 400);
-
-      const { data: order, error: orderError } = await admin
-        .from('website_orders')
-        .select('*')
-        .eq('order_code', orderCode)
-        .maybeSingle();
-      if (orderError) throw orderError;
-      if (!order) return json({ error: '注文が見つかりません。' }, 404);
-      if (!order.line_user_id) return json({ error: '先にお客様からLINEで注文内容を送信してもらってください。' }, 409);
-
-      const numeric = orderCode.replace(/^[FSP]/, '');
-      const siteId = numeric;
-      const accessKey = randomAccessKey();
-      const accessHash = await sha256Hex(accessKey);
-      const planLabel = order.plan === 'one' ? '1ページ完結サイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
-
-      const { data: existingSite, error: existingError } = await admin
-        .from('website_sites')
-        .select('site_id')
-        .eq('site_id', siteId)
-        .maybeSingle();
-      if (existingError) throw existingError;
-
-      if (!existingSite) {
-        const { error: siteError } = await admin.from('website_sites').insert({
-          site_id: siteId,
-          site_name: planLabel,
-          status: 'request_waiting',
-          current_note: '入金確認済み。ヒアリング入力待ち。',
-          customer_approved: false,
-          publish_branch: 'main',
-          live_path: '/',
-          offline_path: '/docs',
-        });
-        if (siteError) throw siteError;
-
-        const initialPayload = {
-          fields: {
-            build_plan: order.plan,
-            template_style: order.template_style || '',
-          },
-          checks: {},
-          members: [],
-          lives: [],
-          contacts: [],
-          files: { top_photos: [], gallery_photos: [], logo_file: [] },
-          meta: {},
-        };
-        const { error: intakeError } = await admin.from('website_intakes').insert({
-          site_id: siteId,
-          payload: initialPayload,
-        });
-        if (intakeError) throw intakeError;
-
-        await admin.from('website_activity').insert({
-          site_id: siteId,
-          actor_type: 'admin',
-          actor_user_id: user.id,
-          action: 'site_created',
-          detail: `注文 ${orderCode} の入金確認後に案件を作成。`,
-        });
-      }
-
-      const { error: linkError } = await admin.from('website_line_links').upsert({
-        site_id: siteId,
-        line_user_id: order.line_user_id,
-        line_display_name: order.line_display_name || null,
-      }, { onConflict: 'site_id' });
-      if (linkError) throw linkError;
-
-      const { error: updateError } = await admin.from('website_orders').update({
-        status: 'site_created',
-        site_id: siteId,
-        customer_access_token_hash: accessHash,
-        access_token_created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }).eq('order_code', orderCode);
-      if (updateError) throw updateError;
-
-      const intakeUrl = `https://sho-support.github.io/website-intake.html?id=${encodeURIComponent(siteId)}&prod=1&key=${encodeURIComponent(accessKey)}`;
-      await linePush(order.line_user_id,
-        `ご入金を確認しました。ありがとうございます。\n\n正式なSITE IDは ${siteId} です。\n下の専用URLから制作内容・写真をご入力ください。入力途中でも自動保存され、同じURLなら別端末・別ブラウザから続けられます。\n\n${intakeUrl}`
-      );
-      await linePush(order.line_user_id, `SITE ID ${siteId}`);
-      await notifyOwner(`【入金確認・案件作成】\n注文ID ${orderCode}\nSITE ID ${siteId}\nヒアリングURL送信済み`);
-      return json({ ok: true, order_code: orderCode, site_id: siteId, intake_url: intakeUrl });
     }
 
     if (action === 'create_site') {
@@ -299,23 +179,28 @@ Deno.serve(async (req) => {
         { data: activity, error: activityError },
         { data: jobs, error: jobsError },
         { data: profile, error: profileError },
+        { data: updates, error: updatesError },
       ] = await Promise.all([
         admin.from('website_sites').select('*').eq('site_id', siteId).single(),
         admin.from('website_intakes').select('*').eq('site_id', siteId).maybeSingle(),
         admin.from('website_activity').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(100),
         admin.from('website_jobs').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(20),
         admin.from('website_profiles').select('*').eq('site_id', siteId).maybeSingle(),
+        admin.from('website_update_requests').select('id,status,request_note,billing_category,created_at,files').eq('site_id',siteId).order('created_at',{ascending:false}).limit(30),
       ]);
       if (siteError) throw siteError;
       if (intakeError) throw intakeError;
       if (activityError) throw activityError;
       if (jobsError) throw jobsError;
       if (profileError) throw profileError;
-      return json({ site, intake, activity: activity || [], jobs: jobs || [], profile, role });
+      if (updatesError) throw updatesError;
+      return json({site,intake,activity:activity||[],jobs:jobs||[],profile,updates:updates||[],role});
     }
 
     if (action === 'save_draft') {
       if (!canEdit) return json({ error: '編集権限がありません。' }, 403);
+      const {data:currentSite,error:stateErr}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();if(stateErr)throw stateErr;
+      if(currentSite.status!=='request_waiting')return json({error:'初回ヒアリングは受付終了です。更新依頼は専用の窓口からお願いします。'},409);
       const savedAt = new Date().toISOString();
       const { error } = await admin.from('website_intakes').upsert({
         site_id: siteId,
@@ -328,6 +213,8 @@ Deno.serve(async (req) => {
 
     if (action === 'submit_intake') {
       if (!canEdit) return json({ error: '編集権限がありません。' }, 403);
+      const {data:currentSite,error:stateErr}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();if(stateErr)throw stateErr;
+      if(currentSite.status!=='request_waiting')return json({error:'初回ヒアリングは送信済みです。更新依頼は専用の窓口からお願いします。'},409);
       const submittedAt = new Date().toISOString();
       const { error: intakeError } = await admin.from('website_intakes').upsert({
         site_id: siteId,
@@ -448,7 +335,7 @@ Deno.serve(async (req) => {
       if (reviewAction === 'publish') {
         const { data: site, error: readError } = await admin
           .from('website_sites')
-          .select('customer_approved,repo_full_name,publish_branch,live_path')
+          .select('customer_approved,repo_full_name,publish_branch,live_path,custom_domain,published_at,adjustment_free_until,update_free_until')
           .eq('site_id', siteId)
           .single();
         if (readError) throw readError;
@@ -461,12 +348,18 @@ Deno.serve(async (req) => {
           (site.live_path || '/') as '/' | '/docs',
         );
 
+        const when=new Date(),url=githubSiteUrl(site.repo_full_name,site.custom_domain),first=!site.published_at;
+        const {data:order}=await admin.from('website_orders').select('plan').eq('site_id',siteId).maybeSingle();
         const { error } = await admin.from('website_sites').update({
-          status: 'live',
-          current_note: 'サイト公開中。',
-          customer_approved: false,
-        }).eq('site_id', siteId);
+          status:'live',current_note:'サイト公開中。',customer_approved:false,
+          public_url:url,preview_url:url,published_at:site.published_at||when.toISOString(),
+          adjustment_free_until:first?new Date(when.getTime()+30*86400000).toISOString():site.adjustment_free_until,
+          update_free_until:first&&order&&['semi','full'].includes(order.plan)?addMonths(when,3):site.update_free_until,
+          review_access_token_hash:null,preview_access_token_hash:null,
+        }).eq('site_id',siteId);
+        if(!error&&first)await setOrderFreePeriod(admin,siteId,when);
         if (error) throw error;
+        await admin.from('website_update_requests').update({status:'completed'}).eq('site_id',siteId).eq('status','building');
         await admin.from('website_activity').insert({
           site_id: siteId, actor_type: 'customer', actor_user_id: user.id,
           action: 'published', detail: 'お客様が公開操作。',
@@ -479,6 +372,42 @@ Deno.serve(async (req) => {
       }
 
       return json({ error: 'review_actionが不正です。' }, 400);
+    }
+
+    if(action==='admin_secure_preview'){
+      if(role!=='admin')return json({error:'管理者権限が必要です。'},403);
+      const {data:site,error:siteError}=await admin.from('website_sites').select('status,repo_full_name,publish_branch').eq('site_id',siteId).single();
+      if(siteError)throw siteError;
+      if(site.status==='live')return json({error:'公開中のサイトは非公開プレビューへ切り替えられません。'},409);
+      if(!site.repo_full_name)return json({error:'GitHub Repoが未設定です。'},409);
+      await setGithubPagesSource(site.repo_full_name,site.publish_branch||'main','/docs');
+      const key=randomReviewKey(),hash=await sha256Hex(key);
+      const url='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(siteId)+'&key='+key;
+      const {error:updateError}=await admin.from('website_sites').update({preview_url:url,preview_access_token_hash:hash,preview_token_issued_at:new Date().toISOString()}).eq('site_id',siteId);
+      if(updateError)throw updateError;
+      return json({ok:true,preview_url:url,status:'secure_preview'});
+    }
+
+    if(action==='admin_start_update'){
+      if(role!=='admin')return json({error:'管理者権限が必要です。'},403);
+      const requestId=Number((body as any).update_request_id);
+      if(!Number.isSafeInteger(requestId)||requestId<1)return json({error:'更新依頼番号が不正です。'},400);
+      const {data:reqItem,error:itemErr}=await admin.from('website_update_requests').select('id,status,billing_category,request_note').eq('id',requestId).eq('site_id',siteId).maybeSingle();
+      if(itemErr)throw itemErr;
+      if(!reqItem||reqItem.status!=='pending_sho')return json({error:'この更新依頼は処理待ちではありません。'},409);
+      if(reqItem.billing_category==='estimate_required'&&(body as any).payment_confirmed!==true)return json({error:'有料更新は入金確認が必要です。'},409);
+      const {data:siteNow,error:siteErr}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();
+      if(siteErr)throw siteErr;
+      if(siteNow.status!=='live')return json({error:'現在、別の制作・確認が進行しています。'},409);
+      const {error:updateError}=await admin.from('website_update_requests').update({status:'queued',reviewed_at:new Date().toISOString()}).eq('id',requestId).eq('status','pending_sho');
+      if(updateError)throw updateError;
+      const {error:siteError}=await admin.from('website_sites').update({status:'building',current_note:'更新依頼 #'+requestId+' の制作中。',customer_approved:false}).eq('site_id',siteId);
+      if(siteError)throw siteError;
+      const {error:jobError}=await admin.from('website_jobs').insert({site_id:siteId,kind:'customer_update',status:'queued',instruction:reqItem.request_note,payload:{source:'customer_update',update_request_id:requestId}});
+      if(jobError)throw jobError;
+      await admin.from('website_activity').insert({site_id:siteId,actor_type:'admin',actor_user_id:user.id,action:'update_approved',detail:'更新依頼 #'+requestId+' をAI制作に送信。'});
+      EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch(e=>console.error('worker trigger failed',e)));
+      return json({ok:true,request_id:requestId,status:'queued'});
     }
 
     if (action === 'admin_repo_config') {
@@ -523,7 +452,7 @@ Deno.serve(async (req) => {
       if (['live','private','improving_private'].includes(String(body.status))) {
         const { data: site, error: readError } = await admin
           .from('website_sites')
-          .select('repo_full_name,publish_branch,live_path,offline_path')
+          .select('repo_full_name,publish_branch,live_path,offline_path,custom_domain')
           .eq('site_id', siteId)
           .single();
         if (readError) throw readError;
@@ -536,12 +465,22 @@ Deno.serve(async (req) => {
         );
       }
 
+      const newState=String(body.status);
+      const publishedAt=new Date();
+      let liveData:Record<string,unknown>={};let firstPublication=false;
+      if(newState==='live'){
+        const {data:siteInfo,error:infoError}=await admin.from('website_sites').select('repo_full_name,custom_domain,published_at,adjustment_free_until,update_free_until').eq('site_id',siteId).single();if(infoError)throw infoError;
+        firstPublication=!siteInfo.published_at;
+        const {data:order}=await admin.from('website_orders').select('plan').eq('site_id',siteId).maybeSingle();
+        const url=githubSiteUrl(siteInfo.repo_full_name,siteInfo.custom_domain);
+        liveData={public_url:url,preview_url:url,published_at:siteInfo.published_at||publishedAt.toISOString(),adjustment_free_until:firstPublication?new Date(publishedAt.getTime()+30*86400000).toISOString():siteInfo.adjustment_free_until,update_free_until:firstPublication&&order&&['semi','full'].includes(order.plan)?addMonths(publishedAt,3):siteInfo.update_free_until,review_access_token_hash:null,preview_access_token_hash:null};
+      }
       const { error } = await admin.from('website_sites').update({
-        status: body.status,
-        current_note: String(body.current_note || ''),
-        customer_approved: false,
-      }).eq('site_id', siteId);
+        status:body.status,current_note:String(body.current_note||''),customer_approved:false,...liveData,
+      }).eq('site_id',siteId);
+      if(!error&&newState==='live'&&firstPublication)await setOrderFreePeriod(admin,siteId,publishedAt);
       if (error) throw error;
+      if(newState==='live')await admin.from('website_update_requests').update({status:'completed'}).eq('site_id',siteId).eq('status','building');
       await admin.from('website_activity').insert({
         site_id: siteId, actor_type: 'admin', actor_user_id: user.id,
         action: 'admin_transition', detail: String(body.detail || body.current_note || body.status),
@@ -558,11 +497,17 @@ Deno.serve(async (req) => {
         EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch((error) => console.error('website-worker trigger error', error)));
       }
 
-      if (body.status === 'customer_review') {
-        const { data: link } = await admin.from('website_line_links').select('line_user_id').eq('site_id', siteId).maybeSingle();
-        await linePush(link?.line_user_id, `SITE ID ${siteId} のホームページが最終確認できる状態になりました。お客様確認画面からご確認ください。`);
+      if(body.status==='customer_review'){
+        const {data:link}=await admin.from('website_line_links').select('line_user_id').eq('site_id',siteId).maybeSingle();
+        if(!link?.line_user_id)return json({ok:true,status:body.status,warning:'お客様のLINEが未連携です。最終確認URLは送信されていません。'});
+        const key=randomReviewKey(),hash=await sha256Hex(key);
+        const {error:tokenError}=await admin.from('website_sites').update({review_access_token_hash:hash}).eq('site_id',siteId);
+        if(tokenError)throw tokenError;
+        const reviewUrl='https://sho-support.github.io/website-customer-review.html?id='+encodeURIComponent(siteId)+'&prod=1&key='+key;
+        const sent=await linePush(link.line_user_id,'ホームページの最終確認をお願いします。修正依頼・承認・公開まで専用URLから操作できます。\n\n'+reviewUrl);
+        if(sent.skipped||sent.ok===false)return json({ok:true,status:body.status,warning:'最終確認URLのLINE送信に失敗しました。再送が必要です。'});
       }
-      return json({ ok: true, status: body.status });
+      return json({ok:true,status:body.status});
     }
 
     return json({ error: 'Unknown action' }, 400);
