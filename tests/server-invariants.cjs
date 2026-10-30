@@ -30,7 +30,7 @@ const checks={
  'GitHub merge is handled before Pages update':shared.includes('/merges')&&shared.includes('publishApprovedStagedBranch'),
  'Intake resend allowed only for initial requests':customer.includes("action==='admin_resend_intake'")&&customer.includes("site.status!=='request_waiting'"),
  'Admin resend button gated by intake state':orderAdmin.includes("o.site_status==='request_waiting'"),
- 'LINE delivery failure is reported to staff':customer.includes('const warning=delivered.skipped'),
+ 'LINE delivery failure is reported to staff':(customer.includes('const warning=delivered.skipped')||customer.includes('const warning=sent.skipped')),
  'Review uses secure client token':customer.includes("action==='review_publish'"),
  'Public update requests require owner approval':api.includes("action==='admin_start_update'"),
  'DB supports customer update jobs':sql.includes("'customer_update'"),
