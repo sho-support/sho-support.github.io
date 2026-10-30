@@ -161,6 +161,18 @@ function parseRepo(repoFullName: string) {
   return { owner: match[1], repo: match[2] };
 }
 
+export async function publishApprovedStagedBranch(repoFullName:string,liveBranch:string,stagedBranch:string|null|undefined) {
+  if(!stagedBranch)return;
+  if(!/^sho-review-[a-f0-9-]{8,50}$/.test(stagedBranch)||stagedBranch===liveBranch)throw new Error('Invalid staged branch.');
+  const {owner,repo}=parseRepo(repoFullName);
+  const response=await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/merges`,{
+    method:'POST',
+    headers:githubHeaders(),
+    body:JSON.stringify({base:liveBranch,head:stagedBranch,commit_message:'Publish customer-approved website update'}),
+  });
+  if(response.status!==201&&response.status!==204)throw new Error(`GitHub staged update merge failed: ${response.status} ${(await response.text()).slice(0,500)}`);
+}
+
 export async function setGithubPagesSource(repoFullName: string, branch = 'main', path: '/' | '/docs' = '/') {
   const { owner, repo } = parseRepo(repoFullName);
   const base = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pages`;
