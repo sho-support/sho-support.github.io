@@ -359,6 +359,7 @@ Deno.serve(async (req) => {
         }).eq('site_id',siteId);
         if(!error&&first)await setOrderFreePeriod(admin,siteId,when);
         if (error) throw error;
+        await admin.from('website_jobs').update({status:'done'}).eq('site_id',siteId).eq('status','sho_review');
         await admin.from('website_update_requests').update({status:'completed'}).eq('site_id',siteId).eq('status','building');
         await admin.from('website_activity').insert({
           site_id: siteId, actor_type: 'customer', actor_user_id: user.id,
@@ -480,7 +481,10 @@ Deno.serve(async (req) => {
       }).eq('site_id',siteId);
       if(!error&&newState==='live'&&firstPublication)await setOrderFreePeriod(admin,siteId,publishedAt);
       if (error) throw error;
-      if(newState==='live')await admin.from('website_update_requests').update({status:'completed'}).eq('site_id',siteId).eq('status','building');
+      if(newState==='live'){
+        await admin.from('website_jobs').update({status:'done'}).eq('site_id',siteId).eq('status','sho_review');
+        await admin.from('website_update_requests').update({status:'completed'}).eq('site_id',siteId).eq('status','building');
+      }
       await admin.from('website_activity').insert({
         site_id: siteId, actor_type: 'admin', actor_user_id: user.id,
         action: 'admin_transition', detail: String(body.detail || body.current_note || body.status),
