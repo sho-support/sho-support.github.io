@@ -32,6 +32,8 @@ jobs:
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/website-http.log 2>&1 &
           sleep 2
+      - name: Parse JavaScript across all HTML screens
+        run: node tests/html-script-parse.cjs
       - name: Verify public pages on mobile and desktop
         run: node tests/website-smoke.cjs
       - name: Simulate customer order, review, publication and update
