@@ -62,10 +62,10 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 </div></details>
 
 <details class="card" data-section="2"><summary><span>02 使用する写真</span><span class="done-mark">✓</span></summary><div class="body">
-<label>TOPに使用する写真<input name="top_photos" type="file" accept="image/*" multiple><span class="hint">複数枚ならTOPでスライド表示にもできます。1ファイル7MB以内で選択してください。</span></label>
-<label>ギャラリーに載せたい写真<input name="gallery_photos" type="file" accept="image/*" multiple><span class="hint">1ファイル7MB以内。</span></label>
+<label>TOPに使用する写真<input name="top_photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple><span class="hint">複数枚ならTOPでスライド表示にもできます。1ファイル7MB以内で選択してください。</span></label>
+<label>ギャラリーに載せたい写真<input name="gallery_photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple><span class="hint">1ファイル7MB以内。</span></label>
 <label>ギャラリーの並び順<select name="gallery_order"><option>おまかせ</option><option>新しい順</option><option>古い順</option><option>ごちゃまぜ</option></select></label>
-<label>ロゴ<input name="logo_file" type="file" accept="image/*,.svg"><span class="hint">1ファイル7MB以内。</span></label>
+<label>ロゴ<input name="logo_file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif"><span class="hint">1ファイル7MB以内。</span></label>
 <label>写真についての補足（任意）<textarea name="photo_notes" placeholder="例：この写真を一番大きくしたい、ライブ写真と宣材写真を分けたい など"></textarea></label>
 </div></details>
 
@@ -202,7 +202,7 @@ function addSocial(container,data={}){
 function addMember(data={}){
  memberCount++;const n=memberCount,d=document.createElement('div');d.className='member';
  d.dataset.photoPath=String(data.photo?.path||'');d.dataset.photoName=String(data.photo?.name||'');
- d.innerHTML='<div class="blockhead"><h4>MEMBER '+n+'</h4>'+(n>1?'<button type="button" class="remove member-remove">削除</button>':'')+'</div><label>名前<input type="text" data-mf="name" value="'+esc(data.name||'')+'"></label><label>パート / 役割<input type="text" data-mf="part" value="'+esc(data.part||'')+'"></label><label>紹介文<textarea data-mf="bio">'+esc(data.bio||'')+'</textarea></label><div class="member-socials"></div><button type="button" class="addbtn add-social">＋ SNS・リンクを追加</button><label>写真<input type="file" accept="image/*"></label>';
+ d.innerHTML='<div class="blockhead"><h4>MEMBER '+n+'</h4>'+(n>1?'<button type="button" class="remove member-remove">削除</button>':'')+'</div><label>名前<input type="text" data-mf="name" value="'+esc(data.name||'')+'"></label><label>パート / 役割<input type="text" data-mf="part" value="'+esc(data.part||'')+'"></label><label>紹介文<textarea data-mf="bio">'+esc(data.bio||'')+'</textarea></label><div class="member-socials"></div><button type="button" class="addbtn add-social">＋ SNS・リンクを追加</button><label>写真<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif"></label>';
  const socials=d.querySelector('.member-socials');(data.socials||[]).forEach(x=>addSocial(socials,x));if(data.sns&&!data.socials?.length)addSocial(socials,{url:data.sns});
  d.querySelector('.add-social').onclick=()=>{addSocial(socials);saveSoon()};d.querySelector('.member-remove')?.addEventListener('click',()=>{d.remove();saveSoon()});members.appendChild(d);
 }
