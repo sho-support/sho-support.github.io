@@ -7,6 +7,7 @@ const customer=read('supabase/functions/website-customer-access/index.ts');
 const preview=read('supabase/functions/website-preview/index.ts');
 const sql=read('supabase/migrations/20261031_allow_customer_update_kind.sql');
 const site=read('website-support.html');
+const orderAdmin=read('admin/orders.html');
 const order=read('supabase/functions/website-order-api/index.ts');
 const webhook=read('supabase/functions/website-line-webhook/index.ts');
 const orderSql=read('supabase/migrations/20261031_secure_order_line_pairing.sql');
@@ -27,6 +28,9 @@ const checks={
  'Customer publication promotes the approved staging branch':customer.includes('await publishApprovedStagedBranch(reviewSite.repo_full_name'),
  'Legacy approval also promotes staged updates':api.includes('await publishApprovedStagedBranch(site.repo_full_name'),
  'GitHub merge is handled before Pages update':shared.includes('/merges')&&shared.includes('publishApprovedStagedBranch'),
+ 'Intake resend allowed only for initial requests':customer.includes("action==='admin_resend_intake'")&&customer.includes("site.status!=='request_waiting'"),
+ 'Admin resend button gated by intake state':orderAdmin.includes("o.site_status==='request_waiting'"),
+ 'LINE delivery failure is reported to staff':customer.includes('const warning=delivered.skipped'),
  'Review uses secure client token':customer.includes("action==='review_publish'"),
  'Public update requests require owner approval':api.includes("action==='admin_start_update'"),
  'DB supports customer update jobs':sql.includes("'customer_update'"),
