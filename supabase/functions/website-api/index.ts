@@ -194,7 +194,13 @@ Deno.serve(async (req) => {
       if (jobsError) throw jobsError;
       if (profileError) throw profileError;
       if (updatesError) throw updatesError;
-      return json({site,intake,activity:activity||[],jobs:jobs||[],profile,updates:updates||[],role});
+      let reviewIssues:any[]=[];
+      if(role==='admin'){
+        const {data:found,error:reviewError}=await admin.from('website_review_issues').select('id,note,status,created_at,updated_at,confirmed_at,job_id').eq('site_id',siteId).order('created_at',{ascending:false}).limit(80);
+        if(reviewError)throw reviewError;
+        reviewIssues=found||[];
+      }
+      return json({site,intake,activity:activity||[],jobs:jobs||[],profile,updates:updates||[],reviewIssues,role});
     }
 
     if (action === 'save_draft') {
@@ -462,10 +468,56 @@ Deno.serve(async (req) => {
       return json({ ok: true, custom_domain: domain });
     }
 
+    if(action==='admin_request_review_fix'){
+      if(role!=='admin')return json({error:'管理者権限が必要です。'},403);
+      const note=String(body.detail||'').trim();
+      if(note.length<5||note.length>5000)return json({error:'修正箇所・希望内容を5〜5000文字で入力してください。'},400);
+      const {data:siteNow,error:siteError}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();
+      if(siteError)throw siteError;
+      if(siteNow.status!=='sho_review')return json({error:'現在は運営によるサイト確認中ではありません。'},409);
+      const {data:issue,error:issueError}=await admin.from('website_review_issues').insert({site_id:siteId,note,status:'fixing'}).select('id').single();
+      if(issueError)throw issueError;
+      const {data:job,error:jobError}=await admin.from('website_jobs').insert({
+        site_id:siteId,kind:'sho_revision',status:'queued',instruction:note,
+        payload:{source:'admin_review_issue',review_issue_id:issue.id}
+      }).select('id').single();
+      if(jobError)throw jobError;
+      await admin.from('website_review_issues').update({job_id:job.id}).eq('id',issue.id);
+      const {error:updateError}=await admin.from('website_sites').update({status:'building',current_note:'運営の修正依頼を反映中。',customer_approved:false}).eq('site_id',siteId);
+      if(updateError)throw updateError;
+      await admin.from('website_activity').insert({site_id:siteId,actor_type:'admin',actor_user_id:user.id,action:'review_issue_requested',detail:note,payload:{review_issue_id:issue.id,job_id:job.id}});
+      EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch(e=>console.error('review worker trigger failed',e)));
+      return json({ok:true,status:'building',review_issue_id:issue.id});
+    }
+
+    if(action==='admin_confirm_review_fix'){
+      if(role!=='admin')return json({error:'管理者権限が必要です。'},403);
+      const issueId=Number((body as any).review_issue_id);
+      if(!Number.isSafeInteger(issueId)||issueId<=0)return json({error:'確認項目のIDが不正です。'},400);
+      const {data:siteNow,error:siteError}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();
+      if(siteError)throw siteError;
+      if(siteNow.status!=='sho_review')return json({error:'制作案の確認待ちでのみチェックできます。'},409);
+      const {data:issue,error:issueError}=await admin.from('website_review_issues').update({
+        status:'confirmed',confirmed_at:new Date().toISOString(),updated_at:new Date().toISOString()
+      }).eq('id',issueId).eq('site_id',siteId).eq('status','ready_for_check').select('id').maybeSingle();
+      if(issueError)throw issueError;
+      if(!issue)return json({error:'まだ修正完了していないか、既に確認済みです。'},409);
+      await admin.from('website_activity').insert({site_id:siteId,actor_type:'admin',actor_user_id:user.id,action:'review_issue_confirmed',detail:'修正項目 #'+issueId+' を確認済み。'});
+      return json({ok:true,review_issue_id:issueId});
+    }
+
     if (action === 'admin_transition') {
       if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
       const allowed = ['request_waiting','building','sho_review','customer_review','live','private','improving_private'];
       if (!allowed.includes(String(body.status))) return json({ error: 'ステータスが不正です。' }, 400);
+      if(body.status==='customer_review'){
+        const {data:checkSite,error:checkError}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();
+        if(checkError)throw checkError;
+        if(checkSite.status!=='sho_review')return json({error:'先に運営が制作案を確認してください。'},409);
+        const {count,error:issuesError}=await admin.from('website_review_issues').select('id',{count:'exact',head:true}).eq('site_id',siteId).neq('status','confirmed');
+        if(issuesError)throw issuesError;
+        if(count)return json({error:'修正項目に未確認が残っています。修正後のチェックを完了してください。'},409);
+      }
 
       if (['live','private','improving_private'].includes(String(body.status))) {
         const { data: site, error: readError } = await admin
