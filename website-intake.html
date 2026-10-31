@@ -385,17 +385,17 @@ function fileNames(name){
 function filesHtml(names){return names.length?'<div class="preview-files">'+names.map(n=>'<span class="preview-file">'+esc(n)+'</span>').join('')+'</div>':'<span class="preview-empty">未選択</span>'}
 function row(k,v,html=false){const empty=v===undefined||v===null||String(v).trim()==='';return '<div class="preview-row"><div class="preview-key">'+esc(k)+'</div><div class="preview-val">'+(empty?'<span class="preview-empty">未入力</span>':html?v:esc(v))+'</div></div>'}
 function renderPreview(){
- const d=serialize(),f=d.fields,parts=['<h3 class="preview-title">入力内容の確認</h3>'];
- parts.push('<section class="preview-section"><h4>01 基本情報</h4>'+row('サイト名',f.site_name)+row('担当者名',f.contact_name)+row('連絡用メール',f.contact_email)+row('目的',f.purpose)+row('制作プラン',f.build_plan)+row('テンプレート',f.template_style)+row('希望するサイト内容・雰囲気',f.image_text)+row('参考URL（任意）',f.reference_url)+row('希望カラー',f.colors)+'</section>');
- parts.push('<section class="preview-section"><h4>02 使用する写真</h4>'+row('TOP写真',filesHtml(fileNames('top_photos')),true)+row('ギャラリー',filesHtml(fileNames('gallery_photos')),true)+row('並び順',f.gallery_order)+row('ロゴ',filesHtml(fileNames('logo_file')),true)+row('写真補足',f.photo_notes)+'</section>');
- parts.push('<section class="preview-section"><h4>03 ページ・機能</h4>'+row('希望機能',(d.checks.features||[]).join(' / '))+row('LIVE配置',(d.checks.live_all_page||[]).length?'LIVE関連をすべて別ページ':'標準：これからのLIVEはTOP・過去LIVEは別ページ')+row('その他機能',f.other_features)+'</section>');
+ const d=serialize(),f=d.fields,semi=f.build_plan==='semi',planLabels={one:'1ページ完結',semi:'セミオーダー',full:'フルオーダー'},parts=['<h3 class="preview-title">入力内容の確認</h3>'];
+ parts.push('<section class="preview-section"><h4>01 基本情報</h4>'+row('サイト名',f.site_name)+row('担当者名',f.contact_name)+row('連絡用メール',f.contact_email)+row('目的',f.purpose)+row('制作プラン',planLabels[f.build_plan]||f.build_plan)+row('テンプレート',f.template_style)+row(semi?'掲載したい内容・伝えたいこと':'希望するサイト内容・雰囲気',f.image_text)+row('参考URL（任意）',f.reference_url)+(semi?'':row('希望カラー',f.colors))+'</section>');
+ parts.push('<section class="preview-section"><h4>02 使用する写真</h4>'+row('TOP写真',filesHtml(fileNames('top_photos')),true)+row('ギャラリー',filesHtml(fileNames('gallery_photos')),true)+row('並び順',f.gallery_order)+row('ロゴ',fileNames('logo_file').length?filesHtml(fileNames('logo_file')):'<span class="preview-val">画像なし：サイト名を文字でデザイン</span>',true)+row('写真補足',f.photo_notes)+'</section>');
+ parts.push(semi?'<section class="preview-section"><h4>03 SNS・連絡先</h4>'+row('YouTube',f.youtube)+row('Instagram',f.instagram)+row('X',f.x_url)+row('TikTok',f.tiktok)+row('Facebook',f.facebook)+'</section>':'<section class="preview-section"><h4>03 ページ・機能</h4>'+row('希望機能',(d.checks.features||[]).join(' / '))+row('LIVE配置',(d.checks.live_all_page||[]).length?'LIVE関連をすべて別ページ':'標準：LIVE告知はTOP・過去LIVEは別ページ')+row('その他機能',f.other_features)+'</section>');
  if(d.members.some(m=>m.name||m.part||m.bio||m.socials.length))parts.push('<section class="preview-section"><h4>04 メンバー情報</h4>'+d.members.map((m,i)=>row('MEMBER '+(i+1),[m.name,m.part,m.bio,m.socials.map(s=>s.url).join(', '),m.photo?.name||''].filter(Boolean).join(' / '))).join('')+'</section>');
  if(d.lives.some(l=>Object.values(l).some(v=>String(v||'').trim())))parts.push('<section class="preview-section"><h4>05 LIVE情報</h4>'+d.lives.map((l,i)=>row('LIVE '+(i+1)+' / '+(classifyLive(l.date)||'日付未入力'),[l.date,l.time,l.name,l.venue,l.detail].filter(Boolean).join(' / '))).join('')+'</section>');
  if(d.contacts.some(x=>String(x.value||'').trim()))parts.push('<section class="preview-section"><h4>公開する連絡先</h4>'+d.contacts.filter(x=>String(x.value||'').trim()).map((x,i)=>row('CONTACT '+(i+1),[x.type,x.label||defaultButton(x.type),x.value].filter(Boolean).join(' / '))).join('')+'</section>');
- parts.push('<section class="preview-section"><h4>06 公開URL</h4>'+row('公開方法',(d.checks.custom_domain||[]).length?'独自ドメインを希望':'無料URLでOK')+row('独自ドメイン区分',f.domain_type)+row('希望・所有ドメイン',f.domain_name)+'</section>');
+ parts.push('<section class="preview-section"><h4>06 ドメイン指定（ある方のみ）</h4>'+row('ドメイン',(d.checks.custom_domain||[]).length?'独自ドメインを希望':'無料URLでOK')+row('独自ドメイン区分',f.domain_type)+row('希望・所有ドメイン',f.domain_name)+'</section>');
  parts.push('<section class="preview-section"><h4>07 最終確認</h4>'+row('掲載権利確認',(d.checks.rights||[]).length?'確認済み':'未チェック')+row('公開用連絡先の掲載許可',(d.checks.privacy||[]).length?'確認済み':'未チェック')+row('その他・細かい要望',f.final_notes)+row('紹介コード',f.referral)+'</section>');
- const sendNote=prodMode?'送信するとSITE IDに紐づけて本番データとして保存され、SHO側へ自動通知されます。':'現在は動作確認用のローカル送信です。本番版ではSITE IDに紐づけて保存します。';
- parts.push('<div class="preview-send"><button type="button" class="btn" id="confirmSend">この内容で送信</button><p class="preview-send-note">'+sendNote+'</p></div>');
+ const sendNote=prodMode?'送信内容は運営へ届き、制作準備を開始します。':'現在は画面確認用のデモです。';
+ parts.push('<button type="button" class="save-image" id="savePreviewImage">入力内容を画像で保存する</button><div class="preview-send"><button type="button" class="btn" id="confirmSend">この内容で送信</button><p class="preview-send-note">'+sendNote+'</p></div>');
  return parts.join('');
 }
 async function submitIntake(){
@@ -416,7 +416,7 @@ async function submitIntake(){
    lastSaved=result?.submitted_at?new Date(result.submitted_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):now();
    updateSavedLabels();
    status.textContent='送信しました';
-   const p=document.getElementById('preview'),done=document.createElement('div');done.className='file-note';done.innerHTML='<strong>送信しました。</strong><br>SITE ID '+esc(siteId)+' の制作依頼として受け付けました。SHO側へ自動通知されます。';p.appendChild(done);document.getElementById('confirmSend')?.setAttribute('disabled','disabled');return;
+   const p=document.getElementById('preview'),done=document.createElement('div');done.className='file-note';done.innerHTML='<strong>運営へ送信しました。</strong><br>制作内容を受け付けました。制作案を作成し、運営による確認後にご案内します。';p.appendChild(done);document.getElementById('confirmSend')?.setAttribute('disabled','disabled');if(submitBtn)submitBtn.textContent='運営へ送信しました';return;
   }catch(error){console.error(error);status.textContent='送信できませんでした。時間を置いて再度お試しください。';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='この内容で送信';}return}
  }
 
@@ -426,7 +426,43 @@ async function submitIntake(){
  const project={id:String(siteId),name:f.site_name,customer:f.contact_name||'顧客',status:'building',updated:time,preview:'../index.html',customerReview:'../website-customer-review.html?id='+encodeURIComponent(siteId),profile:{industry:f.purpose||'未設定',mood:f.image_text?[f.image_text]:['未整理'],colors:f.colors?[f.colors]:['おまかせ'],likes:f.image_text?[f.image_text]:[],dislikes:existing?.profile?.dislikes||[]},current:'ヒアリング内容を受信。サイト作成中。',history:[{at:time,title:'ヒアリング受付',text:request||'初回ヒアリングを受け付けました。'}].concat(existing?.history||[]),notes:existing?.notes||[],customerApproved:false};
  if(existing)projects[projects.indexOf(existing)]=project;else projects.unshift(project);localStorage.setItem(adminKey,JSON.stringify(projects));status.textContent='送信しました（デモ）';const p=document.getElementById('preview');const done=document.createElement('div');done.className='file-note';done.innerHTML='<strong>送信しました。</strong><br>SITE ID '+esc(siteId)+' の案件として管理画面デモへ追加しました。';p.appendChild(done);document.getElementById('confirmSend')?.setAttribute('disabled','disabled');
 }
-document.getElementById('previewBtn').onclick=async()=>{await saveDraft(true);const p=document.getElementById('preview');p.innerHTML=renderPreview();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('confirmSend')?.addEventListener('click',submitIntake)};
+async function savePreviewAsImage(){
+ const root=document.getElementById('preview'),rows=[{kind:'title',text:'制作内容の確認'}];
+ for(const section of root.querySelectorAll('.preview-section')){
+  const heading=section.querySelector('h4');if(heading)rows.push({kind:'heading',text:heading.textContent.trim()});
+  for(const row of section.querySelectorAll('.preview-row')){
+   rows.push({kind:'label',text:row.querySelector('.preview-key')?.innerText||''});
+   rows.push({kind:'value',text:row.querySelector('.preview-val')?.innerText||'未入力'});
+  }
+ }
+ const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
+ if(!ctx)throw Error('画像保存に対応していないブラウザです。');
+ const width=920,margin=55,maxText=width-margin*2,layout=[],size={title:28,heading:21,label:17,value:20};
+ ctx.font='20px sans-serif';
+ for(const item of rows){
+  const font=size[item.kind]||20;ctx.font=(item.kind==='title'||item.kind==='heading'?'bold ':'')+font+'px "Noto Sans JP",sans-serif';
+  const text=String(item.text||'未入力').replace(/\r/g,'');
+  let line='';
+  for(const ch of text){
+   if(ch==='\n'){layout.push({...item,text:line||' '});line='';continue}
+   if(ctx.measureText(line+ch).width>maxText&&line){layout.push({...item,text:line});line=ch}else line+=ch;
+  }
+  layout.push({...item,text:line||' '});
+ }
+ const lineHeight=34;
+ canvas.width=width;canvas.height=Math.min(16000,Math.max(720,130+layout.length*lineHeight));
+ ctx.fillStyle='#f5f1e9';ctx.fillRect(0,0,canvas.width,canvas.height);
+ let y=78;
+ for(const item of layout){
+  if(y>canvas.height-40)break;
+  const font=size[item.kind]||20;ctx.font=(item.kind==='title'||item.kind==='heading'?'bold ':'')+font+'px "Noto Sans JP",sans-serif';
+  ctx.fillStyle=item.kind==='heading'?'#936525':item.kind==='label'?'#736b61':'#1d1b18';
+  ctx.fillText(item.text,margin,y);y+=lineHeight;
+ }
+ const filename='SHO-WEB-SUPPORT-入力内容-'+siteId+'.png';
+ const a=document.createElement('a');a.download=filename;a.href=canvas.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();
+}
+document.getElementById('previewBtn').onclick=async()=>{await saveDraft(true);const p=document.getElementById('preview');p.innerHTML=renderPreview();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('confirmSend')?.addEventListener('click',submitIntake);document.getElementById('savePreviewImage')?.addEventListener('click',()=>savePreviewAsImage().catch(e=>alert(e.message||'画像を保存できませんでした。')))};
 
 if(prodMode&&!secureMode)await requireWebsiteSession(location.href);
 await restore();
