@@ -33,6 +33,15 @@ const stub=[
   await page.goto(BASE+'website-intake.html?id=9991&prod=1&key=abcdefghijklmnopqrstuvwxyz',{waitUntil:'domcontentloaded'});
   await page.locator('#members .member').first().waitFor({state:'attached',timeout:15000});
   await page.locator('details.card').evaluateAll(list=>list.forEach(detail=>detail.open=true));
+  assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('semi-mode')),true,'Semi order mode is active');
+  assert.equal(await page.locator('#colorPrefWrap').isVisible(),false,'Semi-order colors are fixed to the template');
+  assert.equal(await page.locator('#liveSection').isVisible(),true,'LIVE section is enabled by default');
+  assert.equal(await page.locator('#memberSection').isVisible(),false,'Optional member pages are initially hidden');
+  assert.equal(await page.locator('#featureSectionLabel').textContent(),'03 SNS・連絡先','Semi-order suppresses structural changes');
+  assert.ok((await page.locator('input[name="gallery_photos"]').getAttribute('multiple'))!==null,'Gallery permits multiple photos');
+  await page.locator('input[name="gallery_photos"]').setInputFiles({name:'gallery.png',mimeType:'image/png',buffer:Buffer.from([137,80,78,71,13,10,26,10])});
+  assert.equal(await page.locator('[name="features"][value="写真ギャラリー"]').isChecked(),true,'Gallery auto-enables when photo selected');
+
   await page.locator('#memberPages').check();
   await page.locator('#memberSection').evaluate(el=>{el.open=true;});
   await page.locator('input[name="site_name"]').fill('テストサイト');
@@ -42,8 +51,13 @@ const stub=[
   await page.locator('#members .member input[type="file"]').first().setInputFiles(fakePng);
   await page.locator('input[name="rights"]').check();
   await page.locator('input[name="privacy"]').check();
+  const section1=page.locator('[data-section="1"]');
+  await section1.locator('[name="section_complete"]').check();
+  assert.equal(await section1.evaluate(el=>el.open),false,'Completed accordion automatically closes');
+  await page.locator('[data-section="1"] summary').click();
   await page.locator('#previewBtn').click();
   await page.locator('#confirmSend').waitFor({timeout:15000});
+  assert.equal(await page.locator('#savePreviewImage').count(),1,'Confirmation can be saved as an image');
   const fileReq=records.find(x=>x.action==='signed_upload'&&x.folder==='member_photos');
   assert.ok(fileReq,'Member photo signed upload was requested');
   const saved=records.filter(x=>x.action==='save_draft').slice(-1)[0];
@@ -54,7 +68,8 @@ const stub=[
   assert.equal(saved.payload.members[0].photo?.path,'9991/secure-intake/member_photos/mock-portrait.png','Uploaded photo attached to member');
   assert.equal(saved.payload.files.member_photos[0].name,'portrait.png','Member photo passed into worker payload');
   await page.locator('#confirmSend').click();
-  await page.getByText('送信しました。').waitFor({timeout:15000});
+  await page.getByText('運営へ送信しました。').waitFor({timeout:15000});
+  assert.equal(await page.locator('#confirmSend').innerText(),'運営へ送信しました','Submit button shows confirmed state');
   const submitted=records.find(x=>x.action==='submit_intake');
   assert.ok(submitted,'Intake submission called');
   assert.equal(submitted.payload.members[0].photo.name,'portrait.png');
