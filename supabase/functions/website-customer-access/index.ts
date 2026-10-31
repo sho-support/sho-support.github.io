@@ -169,10 +169,9 @@ Deno.serve(async(req)=>{
     if(updateError)throw updateError;
 
     const url=`https://sho-support.github.io/website-intake.html?id=${encodeURIComponent(newSiteId)}&prod=1&key=${encodeURIComponent(newKey)}`;
-    const sent=await linePush(target.line_user_id,`ご確認ありがとうございます。\n\n正式なSITE IDは ${newSiteId} です。\n下の専用URLから制作内容・写真をご入力ください。入力途中でも自動保存され、同じURLなら別端末・別ブラウザから続けられます。\n\n${url}`);
-    if(!sent.skipped&&sent.ok!==false)await linePush(target.line_user_id,`SITE ID ${newSiteId}`);
+    const sent=await linePush(target.line_user_id,`お振込みによるご入金を確認いたしました。\nこのたびは正式にご注文いただき、ありがとうございます。\n\nSITE ID：${newSiteId}\n\n下の専用URLから制作内容・写真をご入力ください。入力途中でも自動保存され、同じURLなら別端末・別ブラウザから続けられます。\n\n${url}`);
     const warning=sent.skipped||sent.ok===false?'お客様へのLINE送信に失敗しました。注文管理画面からURLを再送してください。':null;
-    await notifyOwner(`【案件作成】\n注文ID ${orderCode}\nSITE ID ${newSiteId}\n${warning||'ヒアリングURL送信済み'}`);
+    if(warning)await notifyOwner(`【要対応：制作案内LINE送信失敗】\n注文ID ${orderCode}\nSITE ID ${newSiteId}\n${warning}`);
     return json({ok:true,site_id:newSiteId,...(warning?{warning}:{})});
   }
 
