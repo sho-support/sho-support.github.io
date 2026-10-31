@@ -64,7 +64,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <label>サイト名 / バンド名 / 店名 <span class="required">*</span><input name="site_name" type="text" placeholder="HPトップに表示される名前（例：ABC BAND）"><span class="hint">ホームページのメイン表示に使います。</span></label>
 <div class="row"><label>担当者名<input name="contact_name" type="text"></label><label>連絡用メール<input name="contact_email" type="email"></label></div>
 <label>サイトの目的<select name="purpose"><option value="">選択してください</option><option>バンド・アーティスト公式サイト</option><option>店舗・サービス紹介</option><option>個人活動・ポートフォリオ</option><option>イベント・団体</option><option>企業・事業サイト</option><option>その他</option></select></label>
-<label>制作プラン<select name="build_plan" id="buildPlan"><option value="one">1ページ完結サイト ¥15,000〜</option><option value="semi">セミオーダーサイト ¥22,000〜</option><option value="full">フルオーダーサイト ¥30,000〜</option></select><span class="hint">ご注文内容に合わせて選択してください。</span></label>
+<label>制作プラン<select name="build_plan" id="buildPlan"><option value="one">1ページ完結サイト ¥15,000〜</option><option value="semi">セミオーダーサイト ¥22,000〜</option><option value="full">フルオーダーサイト ¥30,000〜</option></select><span class="hint" id="planSelectHint">ご注文内容に合わせて選択してください。</span></label>
 <div id="templateSelectWrap" class="conditional"><label>セミオーダーのテンプレート<select name="template_style" id="templateStyle"><option value="">選択してください</option><option value="rock">T01 Rock Stage / かっこいい・ダーク</option><option value="cafe">T02 Cafe Linen / カフェ・ナチュラル</option><option value="cute">T03 Sweet Bloom / かわいい・やわらかい</option><option value="minimal">T04 Minimal Grid / シンプル</option><option value="premium">T05 Premium Noir / 高級感</option><option value="pop">T06 Pop Studio / ポップ</option><option value="vintage">T07 Vintage Poster / レトロ・クラシック</option><option value="cyber">T08 Neon Circuit / サイバー・ネオン</option><option value="organic">T09 Earth Atelier / ナチュラル・オーガニック</option><option value="editorial">T10 Editorial Mono / モノクロ・エディトリアル</option></select><span class="hint">基本レイアウトはテンプレートの形で固定します。<a href="website-templates.html" target="_blank" rel="noopener" style="color:var(--gold)">デザインを見直す →</a></span></label></div>
 <label><span id="contentMoodLabel">希望するサイト内容・雰囲気</span><textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。TOPに活動内容と次回イベントを目立たせたい。予約・問い合わせへ迷わず進める構成にしたい。"></textarea><span class="hint"><span id="contentMoodHint">デザインの雰囲気だけでなく、載せたい内容・見せ方・導線・「こうしてほしい」も自由に書いてください。</span></span></label>
 <label>参考にしたいサイトURL（あれば）<input name="reference_url" type="url" placeholder="https://..."><span class="hint">任意です。入力された場合は、制作時に実際のページを確認し、構成・雰囲気・見せ方の参考にします。内容やデザインをそのままコピーすることはありません。</span></label>
@@ -249,6 +249,8 @@ function toggleConditional(){
  const semi=document.getElementById('buildPlan').value==='semi';
  document.body.classList.toggle('semi-mode',semi);
  document.getElementById('contentMoodLabel').textContent=semi?'掲載したい内容・伝えたいこと（任意）':'希望するサイト内容・雰囲気';
+ document.querySelector('[name="image_text"]').placeholder=semi?'例：TOPには活動紹介と次回ライブを目立たせたい。紹介文ではこんなことを伝えたい。':'例：写真を大きく、温かみのある雰囲気にしたい。TOPに予約・問い合わせを配置したい。';
+ document.getElementById('planSelectHint').textContent=prodMode?'ご注文時に選んだ制作プランで固定されています。':'デモでは自由にプランを変更できます。';
  document.getElementById('contentMoodHint').textContent=semi?'デザイン・配色・基本構成は選んだテンプレートが基準です。載せたい文章、強調したい情報、紹介文などを入力してください。':'デザインの雰囲気だけでなく、載せたい内容・見せ方・導線・「こうしてほしい」も自由に書いてください。';
  document.getElementById('featureSectionLabel').textContent=semi?'03 SNS・連絡先':'03 ページ・機能';
  document.getElementById('featureSectionHelp').textContent=semi?'リンクを掲載するSNS・連絡先だけ入力してください。':'TOPページは必ず作成します。追加したいページ・表示・リンクにチェックしてください。';
