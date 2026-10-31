@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
           if(order.status==='pending_line'){
             const match=text.match(/連携コード\s*[:：]\s*([a-f0-9]{40})/i);
             if(!match||!order.line_link_token_hash||(await sha256Hex(match[1].toLowerCase()))!==order.line_link_token_hash){
-              await reply(event.replyToken,'注文IDと連携コードを確認できませんでした。お申込み完了画面の「公式LINEで注文内容を送信」から送り直してください。');
+              await reply(event.replyToken,'注文IDと連携コードを確認できませんでした。お申込み完了画面の「公式LINEを開く」から送り直してください。');
               continue;
             }
           }
@@ -138,7 +138,6 @@ Deno.serve(async (req) => {
               `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n振込先はこのLINEでご案内します。入金確認後、正式なSITE IDと制作ヒアリングURLをお送りします。`,
             );
           }
-          await notifyOwner(`【注文LINE紐付け】\n${order.order_code}\n${p?.displayName || 'お客様'}\n入金案内待ち`);
           continue;
         }
       }
