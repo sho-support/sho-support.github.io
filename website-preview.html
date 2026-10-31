@@ -20,14 +20,92 @@
 const state=document.getElementById('status'),frame=document.getElementById('view');
 const u=new URL(location.href),id=u.searchParams.get('id')||'',key=u.searchParams.get('key')||'';
 const path=u.searchParams.get('path')||'index.html';
+const edge='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-preview';
+const api=(file)=>edge+'?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key)+'&path='+encodeURIComponent(file);
+function safeLocal(raw){
+ try{
+  const target=new URL(raw,location.href),base=new URL(edge);
+  return target.origin===base.origin&&target.pathname===base.pathname&&target.searchParams.get('id')===id&&target.searchParams.get('key')===key;
+ }catch{return false}
+}
+function sourcePath(raw){
+ if(!raw||/^(?:data:|blob:|#|javascript:|mailto:|tel:)/i.test(raw))return null;
+ if(safeLocal(raw))return raw;
+ if(/^(?:https?:|\/\/)/i.test(raw))return null;
+ try{
+  const target=new URL(raw,'https://preview.local/'+path);
+  if(target.origin!=='https://preview.local')return null;
+  const file=decodeURIComponent(target.pathname.slice(1));
+  if(!file||file.includes('..')||file.startsWith('docs/'))return null;
+  return api(file);
+ }catch{return null}
+}
+async function getAsset(url){
+ const response=await fetch(url,{cache:'no-store',referrerPolicy:'no-referrer'});
+ if(!response.ok)throw Error('HTTP '+response.status+' '+(new URL(url)).searchParams.get('path'));
+ return response;
+}
+async function asDataURL(response){
+ const blob=await response.blob();
+ if(blob.size>8_000_000)throw Error('画像サイズが上限を超えています。');
+ return new Promise((resolve,reject)=>{
+  const fr=new FileReader();fr.onload=()=>resolve(String(fr.result));fr.onerror=()=>reject(fr.error);fr.readAsDataURL(blob);
+ });
+}
 try{
  if(!/^[A-Za-z0-9_-]{3,32}$/.test(id)||!/^[-_A-Za-z0-9]{20,200}$/.test(key))throw Error('プレビューURLが無効です。LINEで届いた最新のURLから開いてください。');
- const api='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-preview?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key)+'&path='+encodeURIComponent(path);
- const r=await fetch(api,{cache:'no-store',referrerPolicy:'no-referrer'});
- const d=await r.json().catch(()=>null);
- if(!r.ok||typeof d?.html!=='string')throw Error('制作ページを読み込めませんでした。URLの期限、公開状態、または通信環境をご確認ください。');
- frame.srcdoc=d.html;
+ const response=await getAsset(api(path));
+ const data=await response.json().catch(()=>null);
+ if(typeof data?.html!=='string')throw Error('制作ページを読み込めませんでした。URLの期限か通信環境を確認してください。');
+ const doc=new DOMParser().parseFromString(data.html,'text/html');
+ for(const el of doc.querySelectorAll('base'))el.remove();
+ const issues=[];
+ const styles=[...doc.querySelectorAll('link[rel~="stylesheet"][href]')];
+ for(const el of styles){
+  const raw=el.getAttribute('href'),target=sourcePath(raw);
+  if(!target)continue;
+  try{
+   const asset=await getAsset(target),css=await asset.text();
+   if(css.trim().startsWith('<!doctype')||css.trim().startsWith('<html'))throw Error('CSSではなくHTMLが返されました。');
+   const style=doc.createElement('style');
+   style.textContent=css;
+   el.replaceWith(style);
+  }catch(err){issues.push('スタイル: '+(raw||'')+' ('+String(err.message||err)+')');}
+ }
+ const images=[...doc.querySelectorAll('img[src],source[src],video[poster],link[rel~="icon"][href]')];
+ for(const el of images){
+  const attr=el.hasAttribute('src')?'src':el.hasAttribute('poster')?'poster':'href';
+  const raw=el.getAttribute(attr),target=sourcePath(raw);
+  if(!target)continue;
+  try{el.setAttribute(attr,await asDataURL(await getAsset(target)));}
+  catch(err){issues.push('画像: '+(raw||'')+' ('+String(err.message||err)+')');}
+ }
+ // Use the fallback <img> instead of source sets that may be blocked by opaque iframe origins.
+ for(const el of doc.querySelectorAll('source[srcset]'))el.removeAttribute('srcset');
+ for(const el of doc.querySelectorAll('img[srcset]'))el.removeAttribute('srcset');
+ const scripts=[...doc.querySelectorAll('script[src]')];
+ for(const el of scripts){
+  const raw=el.getAttribute('src'),target=sourcePath(raw);
+  if(!target)continue;
+  try{
+   const source=await (await getAsset(target)).text();
+   const inline=doc.createElement('script');
+   for(const attr of el.attributes){if(attr.name!=='src'&&attr.name!=='integrity'&&attr.name!=='crossorigin')inline.setAttribute(attr.name,attr.value);}
+   inline.textContent=source.replace(/<\/script/gi,'<\\/script');
+   el.replaceWith(inline);
+  }catch(err){issues.push('動作ファイル: '+(raw||'')+' ('+String(err.message||err)+')');}
+ }
+ const html='<!doctype html>\n'+doc.documentElement.outerHTML;
+ frame.srcdoc=html;
  frame.hidden=false;state.hidden=true;
+ if(issues.length){
+   const warning=document.createElement('div');
+   warning.className='state error';
+   warning.style.cssText='border-bottom:1px solid #793640;text-align:left;font-size:13px;padding:12px 17px';
+   warning.textContent='制作ページの一部を読み込めません。運営へ修正を依頼してください。('+issues.length+'件)';
+   document.querySelector('.top').after(warning);
+   console.warn('Preview assets failed:',issues);
+ }
 }catch(e){state.classList.add('error');state.textContent=e.message||'プレビューを表示できませんでした。';}
 })();
 </script>
