@@ -1,0 +1,1 @@
+Verify final campaign heading line wrapping on mobile after responsive copy update. No order submission.
