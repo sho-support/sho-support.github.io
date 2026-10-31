@@ -33,6 +33,8 @@ const stub=[
   await page.goto(BASE+'website-intake.html?id=9991&prod=1&key=abcdefghijklmnopqrstuvwxyz',{waitUntil:'domcontentloaded'});
   await page.locator('#members .member').first().waitFor({state:'attached',timeout:15000});
   await page.locator('details.card').evaluateAll(list=>list.forEach(detail=>detail.open=true));
+  await page.locator('#memberPages').check();
+  await page.locator('#memberSection').evaluate(el=>{el.open=true;});
   await page.locator('input[name="site_name"]').fill('テストサイト');
   await page.locator('#members .member input[data-mf="name"]').first().fill('テストメンバー');
   await page.locator('#members .member input[data-mf="part"]').first().fill('ギター');
@@ -48,6 +50,7 @@ const stub=[
   assert.ok(saved,'Draft was saved');
   assert.equal(saved.payload.fields.build_plan,'semi','Order plan is locked for customer');
   assert.equal(saved.payload.fields.template_style,'rock','Ordered template locked');
+  assert.deepEqual(saved.payload.checks.member_pages,['yes'],'Member pages explicitly opted in');
   assert.equal(saved.payload.members[0].photo?.path,'9991/secure-intake/member_photos/mock-portrait.png','Uploaded photo attached to member');
   assert.equal(saved.payload.files.member_photos[0].name,'portrait.png','Member photo passed into worker payload');
   await page.locator('#confirmSend').click();
