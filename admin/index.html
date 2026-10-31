@@ -32,7 +32,7 @@ header{position:sticky;top:0;z-index:30;background:rgba(5,5,6,.95);border-bottom
 <div class="project-list" id="projectList"></div>
 </main>
 <script type="module">
-import { requireWebsiteSession, websiteApi } from '../website-client.js';
+import { requireWebsiteSession, websiteApi, websiteSupabase } from '../website-client.js';
 
 (async()=>{
 const KEY='sho-web-admin-demo-v2';
@@ -170,7 +170,7 @@ function actionHtml(p){
  '<div class="actionbar"><button class="btn" id="openReviewFix" type="button">② 修正を依頼する</button><button class="btn green" id="approveSho" type="button" '+(unresolved?'disabled title="未確認の修正項目が残っています"':'')+'>③ 確認OK → お客様へ送る</button></div>'+
  '<div class="review-panel" id="shoRevisionPanel" hidden><p class="review-help">修正する場所と内容を具体的に入力してください。</p><textarea class="note" id="reviewNote" placeholder="例：TOPの画像が表示されていない。写真を修正し、他は変更しない。"></textarea><div class="actionbar"><button class="btn" id="closeReviewFix" type="button">戻る</button><button class="btn primary" id="requestFix" type="button">修正内容を送信・再制作</button></div></div>';
 }
-if(p.status==='customer_review')return '<div class="warning" style="margin-top:0">お客様の最終確認中です。修正が来れば作成中へ戻り、OKならお客様自身が公開します。</div><a class="btn gold full" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener" style="margin-top:8px">お客様確認画面を開く</a>';
+if(p.status==='customer_review')return '<div class="warning" style="margin-top:0">お客様の最終確認待ちです。必要に応じて確認URLをLINEで再送できます。内容承認後はお客様が公開を選びます。</div><button class="btn gold full" id="resendCustomerReview" type="button" style="margin-top:8px">お客様へサイト確認URLをLINEで再送</button>';
  if(p.status==='live')return '<div class="warning" style="margin-top:0;border-left-color:var(--ok)">サイトは公開中です。</div><div class="actionbar"><button class="btn" id="makePrivate" type="button">一時非公開</button><button class="btn gold" id="makeImproving" type="button">改良中・一時非公開</button></div>';
  if(p.status==='private')return '<div class="warning" style="margin-top:0">サイトを一時的に非公開にしている状態です。</div><button class="btn green full" data-action="resumeLive" type="button" style="margin-top:8px">公開を再開</button>';
  if(p.status==='improving_private')return '<div class="warning" style="margin-top:0">改良のため一時非公開です。改良内容を入力して制作へ戻せます。</div><textarea class="note" id="improveNote" placeholder="改良したい内容"></textarea><div class="actionbar"><button class="btn primary" id="startImprove" type="button">AIへ改良依頼</button><button class="btn green" data-action="resumeLive" type="button">そのまま再公開</button></div>';
@@ -214,6 +214,7 @@ function bind(p,root){
  q('openReviewFix')?.addEventListener('click',()=>{if(shoRevisionPanel){shoRevisionPanel.hidden=false;q('reviewNote')?.focus();}});
  q('closeReviewFix')?.addEventListener('click',()=>{if(shoRevisionPanel)shoRevisionPanel.hidden=true;});
  q('approveSho')?.addEventListener('click',()=>{if(!confirm('SHO確認を完了し、お客様の最終確認へ送りますか？\nLINE連携済みの場合はお客様へ通知されます。'))return;prodMode?prodMove(p,'customer_review','SHO確認済み。お客様の最終確認中。','SHO確認OK。お客様最終確認へ。'):demoMove(p,'customer_review','SHO確認済み。お客様の最終確認中。','SHO確認OK','お客様最終確認へ移行。')});
+ q('resendCustomerReview')?.addEventListener('click',async()=>{if(!confirm('お客様へ新しいサイト確認URLを送信しますか？以前のURLは使えなくなります。'))return;const btn=q('resendCustomerReview');btn.disabled=true;try{const {data,error}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action:'admin_send_review',site_id:p.id}});if(error||data?.error)throw new Error(data?.error||'LINEへ送信できませんでした。');alert('サイト確認URLをLINEへ再送しました。');}catch(e){alert(e.message||'再送に失敗しました。')}finally{btn.disabled=false}});
  q('requestFix')?.addEventListener('click',async()=>{const note=q('reviewNote').value.trim();if(!note)return alert('修正内容を入力してください。');if(prodMode){try{q('requestFix').disabled=true;await websiteApi('admin_request_review_fix',{site_id:p.id,detail:note});state=await loadProduction();render()}catch(e){alert(e.message||'修正を依頼できませんでした。');q('requestFix').disabled=false}}else demoMove(p,'building','修正内容をもとに作成中。','修正依頼',note)});
  root.querySelectorAll('[data-confirm-issue]').forEach(btn=>btn.addEventListener('click',async()=>{btn.disabled=true;try{await websiteApi('admin_confirm_review_fix',{site_id:p.id,review_issue_id:Number(btn.dataset.confirmIssue)});state=await loadProduction();render()}catch(e){alert(e.message||'確認を登録できませんでした。');btn.disabled=false}}));
  q('makePrivate')?.addEventListener('click',()=>prodMode?prodMove(p,'private','サイトを一時非公開中。','一時非公開。'):demoMove(p,'private','サイトを一時非公開中。','一時非公開','SHO操作で一時非公開。'));
