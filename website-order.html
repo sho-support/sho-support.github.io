@@ -89,6 +89,17 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 </div>
 </section>
 
+<section class="section" id="extraSection" hidden>
+<div class="section-head"><h2>追加ページ・機能のご相談</h2><span class="section-check show">任意</span></div>
+<div class="domain" style="padding:16px 17px">
+<p style="margin:0 0 8px;font-size:.82rem;font-weight:900">セミオーダーの標準構成</p>
+<p id="extraIncluded" style="margin:0 0 13px;color:#c9c9c9;font-size:.76rem;line-height:1.85">TOP / LIVE告知 / ギャラリー / プロフィール / 動画 / SNS・お問い合わせ。不要な項目は非表示にできます。</p>
+<p style="margin:0 0 8px;color:#b8b8b8;font-size:.75rem">個別メンバーページ・追加ページ・予約機能など、標準にないものを希望する場合は下にご記入ください。</p>
+<textarea id="extraRequest" maxlength="1500" placeholder="例：メンバー5名の個別紹介ページを追加したい。追加費用を事前に知りたい。" style="width:100%;min-height:100px;padding:12px;background:#101010;border:1px solid rgba(217,174,92,.3);color:#fff;border-radius:9px;font:inherit;font-size:16px"></textarea>
+<p style="margin:10px 0 0;color:#e6cd9f;font-size:.75rem">追加費用は内容に応じてお見積り。<strong>振込前に合計金額をご案内するため、追加分だけ再振込する必要はありません。</strong> ご相談の入力だけで費用は発生しません。</p>
+</div>
+</section>
+
 <section class="section">
 <div class="summary-box">
 <div class="summary-head"><span>ORDER REVIEW</span><strong>ご注文内容</strong></div>
@@ -96,7 +107,7 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 <div class="sum-row"><span>制作プラン</span><b id="sumPlan">未選択</b></div>
 <div class="sum-row" id="sumTemplateRow" hidden><span>デザイン</span><b id="sumTemplate">未選択</b></div>
 <div class="sum-row"><span>更新</span><b id="sumUpdate">未選択</b></div>
-<div class="sum-row"><span>独自ドメイン</span><b id="sumDomain">希望しない</b></div>
+<div class="sum-row"><span>独自ドメイン</span><b id="sumDomain">希望しない</b></div><div class="sum-row" id="sumExtraRow" hidden><span>追加のご相談</span><b id="sumExtra" style="overflow-wrap:anywhere;white-space:pre-wrap">—</b></div>
 <div class="summary-total"><span>制作料金</span><strong id="sumTotal">—</strong></div>
 </div>
 </div>
@@ -112,7 +123,7 @@ const STORE='sho_web_order_v3';
 const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',minimal:'T04 Minimal Grid',premium:'T05 Premium Noir',pop:'T06 Pop Studio',vintage:'T07 Vintage Poster',cyber:'T08 Neon Circuit',organic:'T09 Earth Atelier',editorial:'T10 Editorial Mono'};
 const labels={one:'1ページ完結サイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'};
 const prices={one:15000,semi:22000,full:30000};
-let state={plan:'',template:'',update:'',domain:false};
+let state={plan:'',template:'',update:'',domain:false,extraRequest:''};
 try{state={...state,...JSON.parse(localStorage.getItem(STORE)||'{}')}}catch{}
 const params=new URLSearchParams(location.search);
 if(['one','semi','full'].includes(params.get('plan')))state.plan=params.get('plan');
@@ -152,6 +163,8 @@ function updateArea(){
 }
 
 document.getElementById('domainSelect').addEventListener('click',()=>{state.domain=!state.domain;persist();render()});
+document.getElementById('extraRequest').value=state.extraRequest||'';
+document.getElementById('extraRequest').addEventListener('input',e=>{state.extraRequest=e.target.value.slice(0,1500);persist();const extra=document.getElementById('sumExtraRow');extra.hidden=!state.extraRequest.trim();document.getElementById('sumExtra').textContent=state.extraRequest.trim()});
 document.querySelectorAll('.close-detail').forEach(btn=>btn.addEventListener('click',()=>{btn.closest('details').open=false}));
 
 function render(){
@@ -164,6 +177,8 @@ function render(){
  updateArea();
  document.getElementById('updateCheck').classList.toggle('show',state.plan==='one'&&!!state.update);
  document.getElementById('domainBox').classList.toggle('on',state.domain);
+ document.getElementById('extraSection').hidden=!state.plan;
+ document.getElementById('extraIncluded').textContent=state.plan==='semi'?'TOP / LIVE告知 / ギャラリー / プロフィール / 動画 / SNS・お問い合わせ。テンプレートの配置・配色は固定です。':state.plan==='one'?'基本は1ページ内で完結します。追加ページが必要なら見積り前にご相談ください。':'自由設計の範囲は相談して決定します。追加したい機能・ページがあればお知らせください。';
  document.getElementById('sumPlan').textContent=state.plan?labels[state.plan]:'未選択';
  const tr=document.getElementById('sumTemplateRow');tr.hidden=state.plan!=='semi';
  document.getElementById('sumTemplate').textContent=state.template?(names[state.template]||state.template):'未選択';
@@ -175,6 +190,8 @@ function render(){
  if(state.update==='unlimited')ul='通常更新 月8回まで ¥7,000 / 月';
  document.getElementById('sumUpdate').textContent=ul;
  document.getElementById('sumDomain').textContent=state.domain?'希望する / ¥5,000〜＋実費':'希望しない';
+ document.getElementById('sumExtraRow').hidden=!String(state.extraRequest||'').trim();
+ document.getElementById('sumExtra').textContent=String(state.extraRequest||'').trim();
  document.getElementById('sumTotal').textContent=state.plan?'¥'+prices[state.plan].toLocaleString()+'〜':'—';
  const valid=!!state.plan&&!!state.update&&(state.plan!=='semi'||!!state.template);
  document.getElementById('finalBtn').disabled=!valid;
