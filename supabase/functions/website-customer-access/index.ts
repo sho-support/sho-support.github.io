@@ -86,14 +86,15 @@ Deno.serve(async(req)=>{
         .eq('site_id',targetSite);
       if(updateError)throw updateError;
       const reviewUrl='https://sho-support.github.io/website-customer-review.html?id='+encodeURIComponent(targetSite)+'&prod=1&key='+encodeURIComponent(reviewKey);
-      const delivered=await linePush(link.line_user_id,'ホームページの最終確認ができる状態になりました。\n\n下の専用URLからサイトをご確認ください。修正がある場合はそのまま送信できます。問題なければ「この内容でOK」を押してください。\n\n'+reviewUrl);
+      const previewUrl='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(targetSite)+'&key='+encodeURIComponent(reviewKey);
+      const delivered=await linePush(link.line_user_id,'ホームページの制作案ができました。\n\n【サイトを確認する】\n'+previewUrl+'\n\n【修正依頼・内容承認・公開する】\n'+reviewUrl+'\n\nサイトを確認し、修正がなければ確認画面から承認後、公開をお選びください。');
       if(delivered.skipped||delivered.ok===false)return json({error:'LINEへ確認URLを送信できませんでした。LINE設定やブロック状態を確認し、再送してください。'},502);
       return json({ok:true,review_url:reviewUrl});
     }
 
     if(action==='admin_list_orders'){
       const {data,error}=await admin.from('website_orders')
-        .select('order_code,status,plan,template_style,update_plan,custom_domain,amount_from,line_user_id,line_display_name,line_linked_at,site_id,created_at,updated_at')
+        .select('order_code,status,plan,template_style,update_plan,custom_domain,extra_request,amount_from,line_user_id,line_display_name,line_linked_at,site_id,created_at,updated_at')
         .order('created_at',{ascending:false}).limit(200);
       if(error)throw error;
       const ids=[...new Set((data||[]).map((o:any)=>o.site_id).filter(Boolean))];
@@ -187,6 +188,7 @@ Deno.serve(async(req)=>{
     }
     if(action==='review_load'){
       const {review_access_token_hash, ...publicReview}=reviewSite;
+      publicReview.preview_url='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(siteId)+'&key='+encodeURIComponent(key);
       return json({ok:true,site:publicReview});
     }
     if(reviewSite.status!=='customer_review')return json({error:'現在は最終確認を受け付ける状態ではありません。'},409);
@@ -271,7 +273,18 @@ Deno.serve(async(req)=>{
     }),{status:200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':allowedOrigin}});
   }
 
-  if(action==='update_status')return json({ok:true,site,plan:order.plan});
+  if(action==='update_status'){
+    let viewsTotal=0,viewsToday=0;
+    if(site.status==='live'&&site.published_at){
+      const {data:rows,error:statsError}=await admin.from('website_pageviews').select('view_date,views').eq('site_id',siteId);
+      if(!statsError){
+        viewsTotal=(rows||[]).reduce((sum:number,r:any)=>sum+Number(r.views||0),0);
+        const day=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+        viewsToday=Number((rows||[]).find((r:any)=>r.view_date===day)?.views||0);
+      }
+    }
+    return json({ok:true,site,plan:order.plan,views_total:viewsTotal,views_today:viewsToday});
+  }
   if(action==='request_update'){
     if(site.status!=='live')return json({error:'公開中のサイトのみ更新を受け付けています。'},409);
     const detail=String(body?.detail||'').trim();
@@ -378,7 +391,12 @@ Deno.serve(async(req)=>{
       payload:{source:'secure_intake'}
     });
     EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch((e)=>console.error('worker trigger',e)));
-    await notifyOwner(`【SHO WEB SUPPORT】\nSITE ID ${siteId}\nヒアリング送信済み。制作を開始します。\n${String(f.site_name||'')}`);
+    const {data:orderLine}=await admin.from('website_orders').select('line_user_id').eq('site_id',siteId).maybeSingle();
+    if(orderLine?.line_user_id){
+      const result=await linePush(orderLine.line_user_id,'ホームページの制作内容を受け付けました。ご入力ありがとうございます。\n\n制作を開始します。制作案の準備が整い、運営による確認が完了しましたら、こちらのLINEへ改めてご案内します。');
+      if(result.skipped||result.ok===false)await notifyOwner('【要対応】制作内容受付のLINE送信に失敗しました。SITE ID '+siteId);
+    }
+
     return json({ok:true,submitted_at:submittedAt});
   }
 
