@@ -25,6 +25,7 @@ function validBody(body:any){
     update_plan: plan==='semi'||plan==='full'?'free3':updatePlan,
     custom_domain:Boolean(body?.custom_domain),
     custom_domain_note:String(body?.custom_domain_note||'').slice(0,300),
+    extra_request:String(body?.extra_request||'').trim().slice(0,1500),
   };
 }
 
@@ -76,6 +77,7 @@ Deno.serve(async(req)=>{
     update_plan:v.update_plan,
     custom_domain:v.custom_domain,
     custom_domain_note:v.custom_domain_note,
+    extra_request:v.extra_request,
     source:'website-order',
   };
 
@@ -88,6 +90,7 @@ Deno.serve(async(req)=>{
     update_plan:v.update_plan,
     custom_domain:v.custom_domain,
     custom_domain_note:v.custom_domain_note||null,
+    extra_request:v.extra_request||null,
     amount_from:amount,
     request_hash:reqHash,
     selections,
