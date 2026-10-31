@@ -68,7 +68,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <div id="templateSelectWrap" class="conditional"><label>セミオーダーのテンプレート<select name="template_style" id="templateStyle"><option value="">選択してください</option><option value="rock">T01 Rock Stage / かっこいい・ダーク</option><option value="cafe">T02 Cafe Linen / カフェ・ナチュラル</option><option value="cute">T03 Sweet Bloom / かわいい・やわらかい</option><option value="minimal">T04 Minimal Grid / シンプル</option><option value="premium">T05 Premium Noir / 高級感</option><option value="pop">T06 Pop Studio / ポップ</option><option value="vintage">T07 Vintage Poster / レトロ・クラシック</option><option value="cyber">T08 Neon Circuit / サイバー・ネオン</option><option value="organic">T09 Earth Atelier / ナチュラル・オーガニック</option><option value="editorial">T10 Editorial Mono / モノクロ・エディトリアル</option></select><span class="hint">基本レイアウトはテンプレートの形で固定します。<a href="website-templates.html" target="_blank" rel="noopener" style="color:var(--gold)">デザインを見直す →</a></span></label></div>
 <label><span id="contentMoodLabel">希望するサイト内容・雰囲気</span><textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。TOPに活動内容と次回イベントを目立たせたい。予約・問い合わせへ迷わず進める構成にしたい。"></textarea><span class="hint"><span id="contentMoodHint">デザインの雰囲気だけでなく、載せたい内容・見せ方・導線・「こうしてほしい」も自由に書いてください。</span></span></label>
 <label>参考にしたいサイトURL（あれば）<input name="reference_url" type="url" placeholder="https://..."><span class="hint">任意です。入力された場合は、制作時に実際のページを確認し、構成・雰囲気・見せ方の参考にします。内容やデザインをそのままコピーすることはありません。</span></label>
-<label id="colorPrefWrap">HPの希望イメージカラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label>
+<label id="colorPrefWrap">HPの希望イメージカラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label><div class="row" style="margin-top:13px"><label class="check"><input type="checkbox" id="liveAnnouncement" name="live_announcement" value="yes" checked> LIVE告知を掲載する</label><label class="check"><input type="checkbox" id="memberPages" name="member_pages" value="yes"> メンバー個別ページを相談する（別途見積り）</label></div>
 </div></details>
 
 <details class="card" data-section="2"><summary><span>02 使用する写真</span><span class="done-mark">✓</span></summary><div class="body">
@@ -237,22 +237,40 @@ document.getElementById('addContact').onclick=()=>{addContact();saveSoon()};
 
 document.querySelectorAll('.card').forEach(card=>{
  const body=card.querySelector('.body'),section=card.dataset.section;
+ if(section==='6'||section==='7')return;
  const footer=document.createElement('div');footer.className='section-footer';
  footer.innerHTML='<label class="section-complete"><input type="checkbox" name="section_complete" value="'+section+'">この項目の入力を完了</label><button type="button" class="close-section">− 閉じる</button>';
  body.appendChild(footer);
  footer.querySelector('.close-section').onclick=()=>{card.open=false;card.scrollIntoView({behavior:'smooth',block:'center'})};
- footer.querySelector('[name="section_complete"]').addEventListener('change',()=>{updateCompletion();saveSoon()});
+ footer.querySelector('[name="section_complete"]').addEventListener('change',e=>{updateCompletion();saveSoon();if(e.target.checked){card.open=false;const next=[...document.querySelectorAll('.card')].find(c=>Number(c.dataset.section)>Number(section)&&!c.hidden);if(next)next.scrollIntoView({behavior:'smooth',block:'center'});}});
 });
 
 function toggleConditional(){
- document.querySelectorAll('[data-url-target]').forEach(box=>document.getElementById(box.dataset.urlTarget)?.classList.toggle('show',box.checked));
- const contact=[...document.querySelectorAll('[name="features"]:checked')].some(x=>x.value==='問い合わせ・連絡先');
+ const semi=document.getElementById('buildPlan').value==='semi';
+ document.body.classList.toggle('semi-mode',semi);
+ document.getElementById('contentMoodLabel').textContent=semi?'掲載したい内容・伝えたいこと（任意）':'希望するサイト内容・雰囲気';
+ document.getElementById('contentMoodHint').textContent=semi?'デザイン・配色・基本構成は選んだテンプレートが基準です。載せたい文章、強調したい情報、紹介文などを入力してください。':'デザインの雰囲気だけでなく、載せたい内容・見せ方・導線・「こうしてほしい」も自由に書いてください。';
+ document.getElementById('featureSectionLabel').textContent=semi?'03 SNS・連絡先':'03 ページ・機能';
+ document.getElementById('featureSectionHelp').textContent=semi?'リンクを掲載するSNS・連絡先だけ入力してください。':'TOPページは必ず作成します。追加したいページ・表示・リンクにチェックしてください。';
+ document.querySelectorAll('[data-url-target]').forEach(box=>{
+  const target=document.getElementById(box.dataset.urlTarget);
+  if(semi){const input=target?.querySelector('input');box.checked=!!input?.value.trim();}
+  target?.classList.toggle('show',semi||box.checked);
+ });
+ const contact=semi||[...document.querySelectorAll('[name="features"]:checked')].some(x=>x.value==='問い合わせ・連絡先');
  document.getElementById('contactInline').classList.toggle('show',contact);if(contact&&!document.querySelector('.contactlink'))addContact();
+ document.getElementById('memberSection').hidden=!document.getElementById('memberPages').checked;
+ const live=document.getElementById('liveAnnouncement').checked;
+ document.getElementById('liveSection').hidden=!live;
+ const gallery=document.querySelector('[name="features"][value="写真ギャラリー"]');
+ if(gallery&&((uploadedFiles.gallery_photos||[]).length||form.elements.gallery_photos.files?.length))gallery.checked=true;
+ if(live){const feature=document.querySelector('[name="features"][value="これからのLIVE表示"]');if(feature)feature.checked=true;}
  document.getElementById('domainDetail').classList.toggle('show',document.getElementById('customDomain').checked);
- document.getElementById('templateSelectWrap').classList.toggle('show',document.getElementById('buildPlan').value==='semi');
+ document.getElementById('templateSelectWrap').classList.toggle('show',semi);
+ updateCompletion();
 }
-form.addEventListener('change',e=>{if(e.target.name==='features'||e.target.id==='customDomain'||e.target.id==='buildPlan')toggleConditional();saveSoon()});
-form.addEventListener('input',saveSoon);
+form.addEventListener('change',e=>{if(e.target.name==='features'||['customDomain','buildPlan','liveAnnouncement','memberPages'].includes(e.target.id)||e.target.type==='file')toggleConditional();saveSoon()});
+form.addEventListener('input',e=>{if(document.body.classList.contains('semi-mode')&&e.target.closest('.feature-url'))toggleConditional();saveSoon();});
 
 function serialize(){
  const data={siteId,fields:{},checks:{},members:[],lives:[],contacts:[],files:uploadedFiles,meta:{lastSaved}};
@@ -263,6 +281,9 @@ function serialize(){
  document.querySelectorAll('.member').forEach(block=>{const m={socials:[]};block.querySelectorAll('[data-mf]').forEach(el=>m[el.dataset.mf]=el.value);block.querySelectorAll('.member-social').forEach(s=>{const url=s.querySelector('[data-ms="url"]').value;if(url.trim())m.socials.push({url})});if(block.dataset.photoPath)m.photo={path:block.dataset.photoPath,name:block.dataset.photoName||'member-photo'};data.members.push(m)});
  document.querySelectorAll('.liveblock').forEach(block=>{const l={};block.querySelectorAll('[data-lf]').forEach(el=>l[el.dataset.lf]=el.value);data.lives.push(l)});
  document.querySelectorAll('.contactlink').forEach(block=>{const x={};block.querySelectorAll('[data-cf]').forEach(el=>x[el.dataset.cf]=el.value);x.type=detectType(x.value);data.contacts.push(x)});
+ if(!document.getElementById('memberPages').checked)data.members=[];
+ if(!document.getElementById('liveAnnouncement').checked)data.lives=[];
+ if(data.fields.build_plan==='semi')data.checks.features=(data.checks.features||[]).filter(v=>!['過去LIVEページ','メンバー個別ページ'].includes(v));
  data.files={...uploadedFiles,member_photos:data.members.filter(m=>m.photo?.path).map(m=>({path:m.photo.path,name:m.photo.name}))};
  return data;
 }
@@ -289,9 +310,11 @@ function saveDraft(manual=false){saveQueue=saveQueue.then(()=>performSave(manual
 function saveSoon(){clearTimeout(timer);timer=setTimeout(()=>saveDraft(false),650)}
 function updateSavedLabels(){const t=lastSaved?'最終保存：'+lastSaved:'最終保存：まだありません';document.getElementById('savedTop').textContent=t;document.getElementById('savedBottom').textContent=t;document.getElementById('savedFooter').textContent=t}
 function updateCompletion(){
- const done=[...document.querySelectorAll('[name="section_complete"]:checked')].map(x=>x.value);
- document.querySelectorAll('.card').forEach(c=>c.classList.toggle('done',done.includes(c.dataset.section)));
- document.getElementById('progressText').textContent='入力完了 '+done.length+' / 7';document.getElementById('bar').style.width=(done.length/7*100)+'%';
+ const visible=[...document.querySelectorAll('.card[data-section]')].filter(c=>!c.hidden&&Number(c.dataset.section)<6);
+ const done=visible.filter(c=>c.querySelector('[name="section_complete"]:checked'));
+ document.querySelectorAll('.card').forEach(c=>c.classList.toggle('done',!!c.querySelector('[name="section_complete"]:checked')));
+ document.getElementById('progressText').textContent='入力完了 '+done.length+' / '+visible.length;
+ document.getElementById('bar').style.width=(visible.length?done.length/visible.length*100:100)+'%';
 }
 function applyData(data={}){
  lastSaved=data.meta?.lastSaved||'';
