@@ -31,6 +31,7 @@ const sleep=(t)=>new Promise(resolve=>setTimeout(resolve,t));
       await page.locator('[data-section="2"] summary').click();
     }
     if(config.name==='intake-review'){
+      await page.locator('[data-section="1"] summary').click();
       await page.locator('input[name="site_name"]').fill('サイト入力の視覚確認');
       await page.locator('input[name="rights"]').check();
       await page.locator('input[name="privacy"]').check();
