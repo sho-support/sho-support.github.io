@@ -41,7 +41,7 @@ const prodMode=params.get('demo')!=='1';
 const statuses=[
  {id:'request_waiting',label:'要望待ち',className:'s-request'},
  {id:'building',label:'作成中',className:'s-building'},
- {id:'sho_review',label:'SHO確認中',className:'s-sho'},
+ {id:'sho_review',label:'運営確認中',className:'s-sho'},
  {id:'customer_review',label:'お客様最終確認中',className:'s-customer'},
  {id:'live',label:'公開中',className:'s-live'},
  {id:'private',label:'一時非公開',className:'s-private'},
@@ -109,7 +109,7 @@ function normalizeProduction(detail){
    dislikes:Array.isArray(prefs.dislikes)?prefs.dislikes:[],
   },
   current:site.current_note||'',
-  history,notes:[],customerApproved:Boolean(site.customer_approved),jobs:detail.jobs||[],updates:detail.updates||[],freeAdjustmentUntil:site.adjustment_free_until||'',freeUpdatesUntil:site.update_free_until||'',
+  history,notes:[],customerApproved:Boolean(site.customer_approved),jobs:detail.jobs||[],updates:detail.updates||[],reviewIssues:detail.reviewIssues||[],freeAdjustmentUntil:site.adjustment_free_until||'',freeUpdatesUntil:site.update_free_until||'',
   repoFullName:site.repo_full_name||'',publishBranch:site.publish_branch||'main',
   livePath:site.live_path||'/',offlinePath:site.offline_path||'/docs',
   customDomain:site.custom_domain||'',publicUrl:site.public_url||''
@@ -155,11 +155,22 @@ function updateRequestHtml(p){
  const rows=updates.length?updates.map(x=>'<div class="event" style="margin-top:10px"><time>依頼 #'+esc(x.id)+' / '+esc(new Date(x.created_at).toLocaleString('ja-JP'))+'</time><strong>'+esc(x.status==='pending_sho'?'SHO確認待ち':x.status)+' / '+esc(x.billing_category==='free_monthly'?'無料更新枠':x.billing_category==='free_adjustment_review'?'30日調整の確認':'料金見積り')+'</strong><p>'+esc(x.request_note)+'</p>'+(x.status==='pending_sho'?'<button class="btn primary" type="button" data-start-update="'+esc(x.id)+'" data-billing="'+esc(x.billing_category)+'">内容・入金確認済み → AI制作開始</button>':'')+'</div>').join(''):'<span class="meta">更新依頼はありません。</span>';
  return '<details class="fold" open><summary>無料期間・更新依頼 ('+updates.length+')</summary><div class="inside">'+dates+'<div class="timeline">'+rows+'</div></div></details>';
 }
+function reviewIssuesHtml(p){
+ const issues=p.reviewIssues||[],unresolved=issues.filter(x=>x.status!=='confirmed').length;
+ if(!issues.length)return '<div class="history-note" style="margin-top:10px">修正項目はまだありません。プレビューで不具合があれば修正内容を入力してください。</div>';
+ return '<div class="review-panel"><strong>修正項目（'+(issues.length-unresolved)+' / '+issues.length+' 確認済み）</strong><div class="timeline" style="margin-top:11px">'+issues.map(x=>'<div class="event"><time>修正 #'+esc(x.id)+' / '+esc(formatDate(x.created_at))+'</time><p>'+esc(x.note)+'</p><p style="margin-top:5px">'+(x.status==='confirmed'?'<span style="color:var(--ok)">✓ 確認済み</span>':x.status==='ready_for_check'?'<span style="color:var(--warn)">修正案ができました。プレビューを確認してください。</span>':'修正中')+'</p>'+(x.status==='ready_for_check'?'<button type="button" class="btn green" data-confirm-issue="'+esc(x.id)+'" style="margin-top:8px">修正を確認した ✓</button>':'')+'</div>').join('')+'</div></div>';
+}
 function actionHtml(p){
  if(p.status==='request_waiting')return prodMode?'<div class="warning" style="margin-top:0">お客様のヒアリング・要望入力待ちです。送信されると自動で作成中へ進みます。</div>':'<div class="warning" style="margin-top:0">ヒアリングや追加要望の入力待ちです。</div><button class="btn primary full" id="startBuild" type="button" style="margin-top:8px">デモ：要望受信 → 作成開始</button>';
  if(p.status==='building')return prodMode?'<div class="warning" style="margin-top:0">AIが制作・修正を処理中です。通常は自動で進み、完了するとSHO確認待ちへ移動してLINE通知します。</div><button class="btn primary full" id="runWorker" type="button" style="margin-top:8px">AI制作を実行 / 再実行</button>':'<div class="warning" style="margin-top:0">AI制作キューまたは修正作業中です。</div><button class="btn primary full" id="buildDone" type="button" style="margin-top:8px">デモ：作成完了 → SHO確認へ</button>';
- if(p.status==='sho_review')return '<div class="warning" style="margin-top:0;border-left-color:var(--ok)">AI制作・修正が完了しています。まずプレビューを確認し、問題なければお客様の最終確認へ送ります。</div>'+(p.preview?'<a class="btn primary full" href="'+esc(p.preview)+'" target="_blank" rel="noopener" style="margin-top:8px">① プレビューを確認する</a>':'<div class="warning">プレビュー準備中です。</div>')+'<div class="actionbar"><button class="btn" id="openReviewFix" type="button">② 修正する</button><button class="btn green" id="approveSho" type="button">③ お客様へ最終確認を送る</button></div><div class="review-panel" id="shoRevisionPanel" hidden><p class="review-help">直したい場所だけ書けばOKです。現在のデザインを維持したい場合も、そのまま指示できます。</p><textarea class="note" id="reviewNote" placeholder="例：TOP写真を2枚目に変更。その他のデザインは変更しない。"></textarea><div class="actionbar"><button class="btn" id="closeReviewFix" type="button">戻る</button><button class="btn primary" id="requestFix" type="button">修正を実行</button></div></div>';
- if(p.status==='customer_review')return '<div class="warning" style="margin-top:0">お客様の最終確認中です。修正が来れば作成中へ戻り、OKならお客様自身が公開します。</div><a class="btn gold full" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener" style="margin-top:8px">お客様確認画面を開く</a>';
+ if(p.status==='sho_review'){
+ const unresolved=(p.reviewIssues||[]).filter(x=>x.status!=='confirmed').length;
+ return '<div class="warning" style="margin-top:0;border-left-color:var(--ok)">制作案を確認してください。問題があれば修正内容を送信できます。運営が確認OKにするまでお客様へURLは送られません。</div>'+
+ (p.preview?'<a class="btn primary full" href="'+esc(p.preview)+'" target="_blank" rel="noopener" style="margin-top:8px">① プレビューを確認</a>':'<div class="warning">プレビューの準備中です。</div>')+reviewIssuesHtml(p)+
+ '<div class="actionbar"><button class="btn" id="openReviewFix" type="button">② 修正を依頼する</button><button class="btn green" id="approveSho" type="button" '+(unresolved?'disabled title="未確認の修正項目が残っています"':'')+'>③ 確認OK → お客様へ送る</button></div>'+
+ '<div class="review-panel" id="shoRevisionPanel" hidden><p class="review-help">修正する場所と内容を具体的に入力してください。</p><textarea class="note" id="reviewNote" placeholder="例：TOPの画像が表示されていない。写真を修正し、他は変更しない。"></textarea><div class="actionbar"><button class="btn" id="closeReviewFix" type="button">戻る</button><button class="btn primary" id="requestFix" type="button">修正内容を送信・再制作</button></div></div>';
+}
+if(p.status==='customer_review')return '<div class="warning" style="margin-top:0">お客様の最終確認中です。修正が来れば作成中へ戻り、OKならお客様自身が公開します。</div><a class="btn gold full" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener" style="margin-top:8px">お客様確認画面を開く</a>';
  if(p.status==='live')return '<div class="warning" style="margin-top:0;border-left-color:var(--ok)">サイトは公開中です。</div><div class="actionbar"><button class="btn" id="makePrivate" type="button">一時非公開</button><button class="btn gold" id="makeImproving" type="button">改良中・一時非公開</button></div>';
  if(p.status==='private')return '<div class="warning" style="margin-top:0">サイトを一時的に非公開にしている状態です。</div><button class="btn green full" data-action="resumeLive" type="button" style="margin-top:8px">公開を再開</button>';
  if(p.status==='improving_private')return '<div class="warning" style="margin-top:0">改良のため一時非公開です。改良内容を入力して制作へ戻せます。</div><textarea class="note" id="improveNote" placeholder="改良したい内容"></textarea><div class="actionbar"><button class="btn primary" id="startImprove" type="button">AIへ改良依頼</button><button class="btn green" data-action="resumeLive" type="button">そのまま再公開</button></div>';
@@ -169,7 +180,7 @@ function card(p){
  const s=sdef(p.status);
  const preview=p.preview?'<a class="btn primary" href="'+esc(p.preview)+'" target="_blank" rel="noopener">プレビューを開く</a>':'<span class="btn" style="opacity:.45;pointer-events:none">プレビュー準備中</span>';
  return '<details class="project-card" data-id="'+esc(p.id)+'"><summary><div class="sum-main"><div class="siteid">SITE ID '+esc(p.id)+'</div><div class="site-name">'+esc(p.name)+'</div><div class="meta">'+esc(p.customer)+' / 更新 '+esc(p.updated)+'</div></div><div class="sum-side"><span class="badge '+s.className+'">'+esc(s.label)+'</span><span class="chev">＋</span></div></summary>'+
- '<div class="project-body"><div class="top-actions">'+(p.status==='sho_review'?'':preview)+'<a class="btn" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様確認画面</a></div>'+workflow(p)+
+ '<div class="project-body"><div class="top-actions">'+(p.status==='sho_review'?'':preview)+(p.status==='customer_review'||p.status==='live'?'<a class="btn" href="'+esc(p.customerReview)+'" target="_blank" rel="noopener">お客様確認画面</a>':'')+'</div>'+workflow(p)+
  '<details class="fold" open><summary>現在の依頼・状態</summary><div class="inside"><dl class="kv"><dt>状態</dt><dd>'+esc(s.label)+'</dd><dt>現在</dt><dd>'+esc(p.current)+'</dd><dt>AIジョブ</dt><dd>'+latestJob(p)+'</dd><dt>顧客確認URL</dt><dd>'+esc(p.customerReview)+'</dd></dl></div></details>'+
  updateRequestHtml(p)+
  '<details class="fold" open><summary>今回の操作</summary><div class="inside">'+actionHtml(p)+'</div></details>'+
@@ -203,7 +214,8 @@ function bind(p,root){
  q('openReviewFix')?.addEventListener('click',()=>{if(shoRevisionPanel){shoRevisionPanel.hidden=false;q('reviewNote')?.focus();}});
  q('closeReviewFix')?.addEventListener('click',()=>{if(shoRevisionPanel)shoRevisionPanel.hidden=true;});
  q('approveSho')?.addEventListener('click',()=>{if(!confirm('SHO確認を完了し、お客様の最終確認へ送りますか？\nLINE連携済みの場合はお客様へ通知されます。'))return;prodMode?prodMove(p,'customer_review','SHO確認済み。お客様の最終確認中。','SHO確認OK。お客様最終確認へ。'):demoMove(p,'customer_review','SHO確認済み。お客様の最終確認中。','SHO確認OK','お客様最終確認へ移行。')});
- q('requestFix')?.addEventListener('click',()=>{const t=q('reviewNote').value.trim();if(!t)return alert('修正内容を入力してください。');prodMode?prodMove(p,'building','SHOの修正指示を受けて作成中。',t):demoMove(p,'building','SHOの修正指示を受けて作成中。','SHOから修正依頼',t)});
+ q('requestFix')?.addEventListener('click',async()=>{const note=q('reviewNote').value.trim();if(!note)return alert('修正内容を入力してください。');if(prodMode){try{q('requestFix').disabled=true;await websiteApi('admin_request_review_fix',{site_id:p.id,detail:note});state=await loadProduction();render()}catch(e){alert(e.message||'修正を依頼できませんでした。');q('requestFix').disabled=false}}else demoMove(p,'building','修正内容をもとに作成中。','修正依頼',note)});
+ root.querySelectorAll('[data-confirm-issue]').forEach(btn=>btn.addEventListener('click',async()=>{btn.disabled=true;try{await websiteApi('admin_confirm_review_fix',{site_id:p.id,review_issue_id:Number(btn.dataset.confirmIssue)});state=await loadProduction();render()}catch(e){alert(e.message||'確認を登録できませんでした。');btn.disabled=false}}));
  q('makePrivate')?.addEventListener('click',()=>prodMode?prodMove(p,'private','サイトを一時非公開中。','一時非公開。'):demoMove(p,'private','サイトを一時非公開中。','一時非公開','SHO操作で一時非公開。'));
  q('makeImproving')?.addEventListener('click',()=>prodMode?prodMove(p,'improving_private','改良のため一時非公開中。','改良準備のため一時非公開。'):demoMove(p,'improving_private','改良のため一時非公開中。','改良中・一時非公開','改良準備のため一時非公開。'));
  el.querySelector('[data-action="resumeLive"]')?.addEventListener('click',()=>prodMode?prodMove(p,'live','サイト公開中。','公開を再開。'):demoMove(p,'live','サイト公開中。','公開再開','サイトを再公開。'));
@@ -218,6 +230,7 @@ function render(){
  const box=document.getElementById('projectList');
  box.innerHTML=list.length?list.map(card).join(''):'<div class="empty">該当案件はありません。</div>';
  box.querySelectorAll('.project-card').forEach(root=>{const p=state.find(x=>String(x.id)===String(root.dataset.id));if(p)bind(p,root)});
+ const focus=params.get('site');if(focus){const target=[...box.querySelectorAll('.project-card')].find(x=>x.dataset.id===focus);if(target){target.open=true;target.scrollIntoView({block:'start'});}}
 }
 
 if(prodMode){
