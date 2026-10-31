@@ -68,6 +68,7 @@ const date=v=>v?new Date(v).toLocaleDateString('ja-JP'):'';
   let lines=['SITE ID: '+id,'サイト: '+(site.site_name||'ホームページ')];
   if(site.adjustment_free_until)lines.push('30日間の無料調整期間: '+date(site.adjustment_free_until)+'まで');
   if(site.update_free_until)lines.push('3か月無料更新期間: '+date(site.update_free_until)+'まで（月8回まで）');
+  lines.push('公開後のページ表示：累計 '+Number(r.views_total||0).toLocaleString()+' 回・本日 '+Number(r.views_today||0).toLocaleString()+' 回（同じ人の複数閲覧を含む）');
   account.textContent=lines.join(' ／ ');form.hidden=false;
  }catch(e){account.textContent=e.message||'専用URLを確認できませんでした。';}
 })();
