@@ -62,7 +62,10 @@ const stub=[
   await page.locator('#orderBtn').click();
   await page.getByText('S99999').waitFor({timeout:12000});
   const line=await page.locator('#lineBtn').getAttribute('href');
-  assert.ok(line.includes('S99999'),'LINE order message carries the order code');
+  assert.ok(line.includes('S99999'),'LINE contact registration carries the order code');
+  assert.ok(decodeURIComponent(line).includes('制作案内の連絡先登録'),'LINE message is a short contact registration');
+  assert.ok(!decodeURIComponent(line).includes('制作プラン:'),'LINE no longer resends complete order details');
+  assert.equal((await page.locator('#done h2').innerText()).trim(),'お申し込みを受け付けました。');
   assert.ok(decodeURIComponent(line).includes('連携コード: 0123456789abcdef0123456789abcdef01234567'),'LINE order pairing includes unpredictable token');
   await page.reload({waitUntil:'domcontentloaded'});
   assert.equal((await page.locator('#orderId').textContent()).trim(),'S99999');
