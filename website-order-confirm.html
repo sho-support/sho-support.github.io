@@ -29,7 +29,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <div class="row"><span>制作プラン</span><strong id="plan">—</strong></div>
 <div class="row" id="templateRow"><span>デザイン</span><strong id="template">—</strong></div>
 <div class="row"><span>更新プラン</span><strong id="update">—</strong></div>
-<div class="row"><span>独自ドメイン</span><strong id="domain">—</strong></div>
+<div class="row"><span>独自ドメイン</span><strong id="domain">—</strong></div><div class="row" id="extraRow" hidden><span>追加ページ・機能の相談</span><strong id="extra" style="white-space:pre-wrap;overflow-wrap:anywhere">—</strong></div>
 <div class="total"><span>制作料金</span><b id="amount">—</b></div>
 </div>
 </section>
@@ -74,13 +74,16 @@ const summaryText=()=>[
  '制作プラン: '+planLabels[state.plan]+' ¥'+prices[state.plan].toLocaleString()+'〜',
  state.plan==='semi'?'デザイン: '+names[state.template]:null,
  '更新: '+updateLabels[state.update],
- '独自ドメイン: '+(state.domain?'希望する（設定代行 ¥5,000〜＋実費）':'希望しない')
+ '独自ドメイン: '+(state.domain?'希望する（設定代行 ¥5,000〜＋実費）':'希望しない'),
+ state.extraRequest?.trim()?'追加ページ・機能の相談: '+state.extraRequest.trim():null
 ].filter(Boolean).join('\n');
 document.getElementById('plan').textContent=planLabels[state.plan];
 document.getElementById('templateRow').hidden=state.plan!=='semi';
 document.getElementById('template').textContent=state.plan==='semi'?names[state.template]:'—';
 document.getElementById('update').textContent=updateLabels[state.update]||state.update;
 document.getElementById('domain').textContent=state.domain?'希望する / ¥5,000〜＋実費':'希望しない';
+document.getElementById('extraRow').hidden=!String(state.extraRequest||'').trim();
+document.getElementById('extra').textContent=String(state.extraRequest||'').trim();
 document.getElementById('amount').textContent='¥'+prices[state.plan].toLocaleString()+'〜';
 
 document.getElementById('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(summaryText());alert('注文内容をコピーしました。')}catch{alert('コピーできませんでした。')}};
@@ -93,6 +96,7 @@ document.getElementById('downloadBtn').onclick=()=>{
   state.plan==='semi'?'デザイン：'+names[state.template]:null,
   '更新：'+updateLabels[state.update],
   '独自ドメイン：'+(state.domain?'希望する':'希望しない'),
+  state.extraRequest?.trim()?'追加相談：'+state.extraRequest.trim():null,
   '',
   '制作料金：¥'+prices[state.plan].toLocaleString()+'〜',
   '',
@@ -158,7 +162,7 @@ document.getElementById('orderBtn').onclick=async()=>{
  try{
   const r=await fetch('https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-order-api',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({plan:state.plan,template_style:state.template||'',update_plan:state.update,custom_domain:!!state.domain,custom_domain_note:'',website:''})
+    body:JSON.stringify({plan:state.plan,template_style:state.template||'',update_plan:state.update,custom_domain:!!state.domain,custom_domain_note:'',extra_request:String(state.extraRequest||'').slice(0,1500),website:''})
   });
   const d=await r.json().catch(()=>({}));
   if(!r.ok||!d?.order?.order_code)throw new Error(d?.error||'注文IDを発行できませんでした。');
