@@ -50,6 +50,8 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
    await plans.nth(1).locator('.close-plan').click();
    check(!await plans.nth(1).evaluate(el=>el.open),'Semi order plan closes');
    await page.goto(BASE+'website-order.html',{waitUntil:'domcontentloaded'});
+   check(await page.locator('.promo-benefit').innerText()==='公開後30日間調整無料','First promo benefit is explicitly on second line');
+   check((await page.locator('.promo .promo-main').nth(1).innerText()).includes('月8回まで'),'Campaign visibly states 8 monthly updates');
    await page.locator('[data-plan="full"] .plan-select').click();
    check(await page.locator('#finalBtn').isEnabled(),'Full order enables confirmation');
    await page.locator('[data-plan="semi"] .plan-select').click();
