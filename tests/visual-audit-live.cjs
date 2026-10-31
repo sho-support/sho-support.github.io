@@ -7,7 +7,10 @@ const PAGES=[
  {name:'landing-example',path:'website-support.html',selector:'.site-shot'},
  {name:'templates',path:'website-templates.html',selector:'.template-grid'},
  {name:'order-plans',path:'website-order.html',selector:'.plan-grid'},
- {name:'faq',path:'website-faq.html',selector:null}
+ {name:'faq',path:'website-faq.html',selector:null},
+ {name:'intake-basic',path:'website-intake.html?id=VISUALQA2026&plan=semi&template=cyber',selector:'[data-section="1"]'},
+ {name:'intake-photos',path:'website-intake.html?id=VISUALQA2026&plan=semi&template=cyber',selector:'[data-section="2"]'},
+ {name:'intake-review',path:'website-intake.html?id=VISUALQA2026&plan=semi&template=cyber',selector:'#preview'}
 ];
 const stats=[];
 const sleep=(t)=>new Promise(resolve=>setTimeout(resolve,t));
@@ -21,6 +24,19 @@ const sleep=(t)=>new Promise(resolve=>setTimeout(resolve,t));
    for(const config of PAGES){
     const r=await page.goto(BASE+config.path,{waitUntil:'domcontentloaded',timeout:30000});
     await sleep(900);
+    if(config.name==='intake-basic'){
+      await page.locator('[data-section="1"] summary').click();
+    }
+    if(config.name==='intake-photos'){
+      await page.locator('[data-section="2"] summary').click();
+    }
+    if(config.name==='intake-review'){
+      await page.locator('input[name="site_name"]').fill('サイト入力の視覚確認');
+      await page.locator('input[name="rights"]').check();
+      await page.locator('input[name="privacy"]').check();
+      await page.locator('#previewBtn').click();
+      await page.locator('#preview').waitFor({state:'visible',timeout:14000});
+    }
     const status=r?.status()||0;
     const inspected=await page.evaluate(()=>{
      const boxes=[...document.querySelectorAll('h1,h2,h3,button,a,input,summary')].filter(e=>{
