@@ -172,6 +172,18 @@ Deno.serve(async (req) => {
       return json({ ok: true, status: 'queued', job_id: jobId });
     }
 
+    if(action==='site_view_stats'){
+      const {data:site,error:siteError}=await admin.from('website_sites').select('status,published_at').eq('site_id',siteId).single();
+      if(siteError)throw siteError;
+      if(site.status!=='live'||!site.published_at)return json({site_id:siteId,views_total:0,views_today:0,published:false});
+      const {data:rows,error:countError}=await admin.from('website_pageviews').select('view_date,views').eq('site_id',siteId);
+      if(countError)throw countError;
+      const today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+      return json({site_id:siteId,published:true,
+        views_total:(rows||[]).reduce((n:number,x:any)=>n+Number(x.views||0),0),
+        views_today:Number((rows||[]).find((x:any)=>x.view_date===today)?.views||0)});
+    }
+
     if (action === 'load_site') {
       const [
         { data: site, error: siteError },
@@ -578,7 +590,8 @@ Deno.serve(async (req) => {
         const {error:tokenError}=await admin.from('website_sites').update({review_access_token_hash:hash}).eq('site_id',siteId);
         if(tokenError)throw tokenError;
         const reviewUrl='https://sho-support.github.io/website-customer-review.html?id='+encodeURIComponent(siteId)+'&prod=1&key='+key;
-        const sent=await linePush(link.line_user_id,'ホームページの最終確認をお願いします。修正依頼・承認・公開まで専用URLから操作できます。\n\n'+reviewUrl);
+        const previewUrl='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(siteId)+'&key='+key;
+        const sent=await linePush(link.line_user_id,'ホームページの制作案ができました。\n\n【サイトを見る】\n'+previewUrl+'\n\n【確認・修正依頼・公開画面】\n'+reviewUrl+'\n\nサイトを確認して問題なければ、確認画面で承認してから公開をお選びください。');
         if(sent.skipped||sent.ok===false)return json({ok:true,status:body.status,warning:'最終確認URLのLINE送信に失敗しました。再送が必要です。'});
       }
       return json({ok:true,status:body.status});
