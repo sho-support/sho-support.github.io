@@ -25,6 +25,16 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 .section-footer{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:17px;padding-top:13px;border-top:1px solid rgba(255,255,255,.08)}.section-complete{display:flex;align-items:center;gap:8px;margin:0;padding:9px 10px;border:1px solid rgba(85,214,138,.24);border-radius:9px;background:rgba(85,214,138,.04);color:#cdebd9;font-size:.72rem}.section-complete input{margin:0}.close-section{padding:10px 12px;border:1px solid rgba(217,174,92,.3);border-radius:9px;background:#0b0b0b;color:#ddd;font-weight:900;font-size:.74rem}
 .domain-more{margin-top:10px;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#0b0b0b}.domain-more summary{cursor:pointer;list-style:none;padding:10px 11px;font-size:.73rem;font-weight:900}.domain-more summary::-webkit-details-marker{display:none}.domain-more summary:after{content:"＋";float:right;color:#e8ca87}.domain-more[open] summary:after{content:"−"}.domain-more-copy{padding:0 11px 11px;color:var(--soft);font-size:.7rem}.domain-more-copy strong{color:#fff}.domain-more-copy ul{margin:6px 0 0;padding-left:1.2em}.domain-more-copy li+li{margin-top:3px}.referral{margin:14px 0;padding:13px;border:1px solid rgba(217,174,92,.22);border-radius:13px;background:#0d0d0f}.referral label{margin:0}.bottom-save{margin-top:14px}.buttons{display:grid;grid-template-columns:1fr;gap:8px;margin-top:11px}.btn{border:0;border-radius:11px;padding:13px 12px;font-weight:950;background:var(--red);color:#fff}.status{text-align:center;color:var(--muted);font-size:.68rem;margin-top:8px}
 .preview{margin-top:13px;padding:13px;border:1px solid rgba(217,174,92,.28);border-radius:13px;background:#0b0b0b;font-size:.8rem;color:#ddd;display:none}.preview-title{margin:0 0 10px;font-size:1rem}.preview-section{padding:11px 0;border-top:1px solid rgba(255,255,255,.08)}.preview-section h4{margin:0 0 7px;color:#e8ca87;font-size:.79rem}.preview-row{display:grid;grid-template-columns:minmax(105px,30%) 1fr;gap:8px;padding:4px 0}.preview-key{color:#9b958d;font-weight:850}.preview-val{color:#fff;overflow-wrap:anywhere}.preview-empty{color:#666}.preview-files{display:flex;flex-wrap:wrap;gap:5px}.preview-file{padding:3px 6px;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:#111;font-size:.72rem}.preview-send{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.09)}.preview-send .btn{width:100%}.preview-send-note{text-align:center;color:var(--muted);font-size:.68rem}
+
+.semi-mode .plan-custom-option,.semi-mode #otherFeaturesWrap,.semi-mode #colorPrefWrap{display:none!important}
+.semi-mode .feature-option:not(.plan-custom-option)>label.check{display:none!important}
+.semi-mode .feature-option:not(.plan-custom-option) .feature-url{display:block!important}
+.semi-mode #semiFeatureInfo{display:block!important}
+.card[hidden]{display:none!important}.final-heading{font-size:1.05rem;font-weight:900;margin:0;padding:17px;color:#fff}
+.preview{background:#f5f1e9!important;color:#24221f!important;border-color:#d7caaa!important;padding:18px!important}
+.preview-title{color:#171715!important}.preview-section{border-color:#d5cdc0!important}.preview-section h4{color:#8b622c!important}.preview-key{color:#69645e!important}.preview-val{color:#211d18!important}.preview-empty{color:#77716b!important}.preview-file{background:#e8e2d7!important;border-color:#cfc5b5!important;color:#28241e!important}
+.preview-send{border-color:#d4ccbf!important}.preview-send-note{color:#746b60!important}.preview .file-note{color:#333!important;background:#fff!important;border-color:#d2c1a3!important}
+.save-image{width:100%;margin-top:8px;padding:12px;border:1px solid #b69d78;border-radius:9px;background:#fff;color:#24211b;font-size:.78rem;font-weight:900}
 @media(max-width:640px){.row,.checkgrid{grid-template-columns:1fr}.savebar{grid-template-columns:1fr}.progressline{flex-direction:column;gap:2px}.section-footer{grid-template-columns:1fr}.close-section{width:100%}.preview-row{grid-template-columns:1fr;gap:1px}.hero{padding-top:27px}}
 
 .line-consult-wrap{margin-top:12px;padding:13px;border:1px solid rgba(217,174,92,.22);border-radius:12px;background:#0d0d0f;text-align:center}
@@ -56,26 +66,26 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <label>サイトの目的<select name="purpose"><option value="">選択してください</option><option>バンド・アーティスト公式サイト</option><option>店舗・サービス紹介</option><option>個人活動・ポートフォリオ</option><option>イベント・団体</option><option>企業・事業サイト</option><option>その他</option></select></label>
 <label>制作プラン<select name="build_plan" id="buildPlan"><option value="one">1ページ完結サイト ¥15,000〜</option><option value="semi">セミオーダーサイト ¥22,000〜</option><option value="full">フルオーダーサイト ¥30,000〜</option></select><span class="hint">ご注文内容に合わせて選択してください。</span></label>
 <div id="templateSelectWrap" class="conditional"><label>セミオーダーのテンプレート<select name="template_style" id="templateStyle"><option value="">選択してください</option><option value="rock">T01 Rock Stage / かっこいい・ダーク</option><option value="cafe">T02 Cafe Linen / カフェ・ナチュラル</option><option value="cute">T03 Sweet Bloom / かわいい・やわらかい</option><option value="minimal">T04 Minimal Grid / シンプル</option><option value="premium">T05 Premium Noir / 高級感</option><option value="pop">T06 Pop Studio / ポップ</option><option value="vintage">T07 Vintage Poster / レトロ・クラシック</option><option value="cyber">T08 Neon Circuit / サイバー・ネオン</option><option value="organic">T09 Earth Atelier / ナチュラル・オーガニック</option><option value="editorial">T10 Editorial Mono / モノクロ・エディトリアル</option></select><span class="hint">基本レイアウトはテンプレートの形で固定します。<a href="website-templates.html" target="_blank" rel="noopener" style="color:var(--gold)">デザインを見直す →</a></span></label></div>
-<label>希望するサイト内容・雰囲気<textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。TOPに活動内容と次回イベントを目立たせたい。予約・問い合わせへ迷わず進める構成にしたい。"></textarea><span class="hint">デザインの雰囲気だけでなく、載せたい内容・見せ方・導線・「こうしてほしい」も自由に書いてください。</span></label>
+<label><span id="contentMoodLabel">希望するサイト内容・雰囲気</span><textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。TOPに活動内容と次回イベントを目立たせたい。予約・問い合わせへ迷わず進める構成にしたい。"></textarea><span class="hint"><span id="contentMoodHint">デザインの雰囲気だけでなく、載せたい内容・見せ方・導線・「こうしてほしい」も自由に書いてください。</span></span></label>
 <label>参考にしたいサイトURL（あれば）<input name="reference_url" type="url" placeholder="https://..."><span class="hint">任意です。入力された場合は、制作時に実際のページを確認し、構成・雰囲気・見せ方の参考にします。内容やデザインをそのままコピーすることはありません。</span></label>
-<label>HPの希望イメージカラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label>
+<label id="colorPrefWrap">HPの希望イメージカラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label>
 </div></details>
 
 <details class="card" data-section="2"><summary><span>02 使用する写真</span><span class="done-mark">✓</span></summary><div class="body">
-<label>TOPに使用する写真<input name="top_photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple><span class="hint">複数枚ならTOPでスライド表示にもできます。1ファイル7MB以内で選択してください。</span></label>
-<label>ギャラリーに載せたい写真<input name="gallery_photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple><span class="hint">1ファイル7MB以内。</span></label>
+<label>TOPに使用する写真（複数選択可）<input name="top_photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple><span class="hint">複数枚をまとめて選択できます。TOPでスライド表示にもできます。各7MB以内。</span></label>
+<label>ギャラリーに載せたい写真（複数選択可）<input name="gallery_photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple><span class="hint">1ファイル7MB以内。</span></label>
 <label>ギャラリーの並び順<select name="gallery_order"><option>おまかせ</option><option>新しい順</option><option>古い順</option><option>ごちゃまぜ</option></select></label>
-<label>ロゴ<input name="logo_file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif"><span class="hint">1ファイル7MB以内。</span></label>
+<label>ロゴ画像（お持ちの方のみ）<input name="logo_file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif"><span class="hint">ロゴ画像がなくても大丈夫。サイト名やバンド名をトップにおしゃれな文字で表示します。画像は7MB以内。</span></label>
 <label>写真についての補足（任意）<textarea name="photo_notes" placeholder="例：この写真を一番大きくしたい、ライブ写真と宣材写真を分けたい など"></textarea></label>
 </div></details>
 
-<details class="card" data-section="3"><summary><span>03 ページ・機能</span><span class="done-mark">✓</span></summary><div class="body">
-<span class="hint" style="margin-top:12px">TOPページは必ず作成します。追加したいページ・表示・リンクにチェックしてください。</span>
+<details class="card" data-section="3"><summary><span id="featureSectionLabel">03 ページ・機能</span><span class="done-mark">✓</span></summary><div class="body">
+<span id="featureSectionHelp" class="hint" style="margin-top:12px">TOPページは必ず作成します。追加したいページ・表示・リンクにチェックしてください。</span><div class="history-note" id="semiFeatureInfo" hidden>テンプレートの基本構成・配色は固定です。ここではSNSやお問い合わせ先だけ入力できます。追加ページや新しい機能は別途お見積りとなります。</div>
 <div class="checkgrid">
-<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="写真ギャラリー">写真ギャラリー</label></div>
-<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="これからのLIVE表示">これからのLIVE表示</label></div>
-<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="過去LIVEページ">過去LIVEページ</label></div>
-<div class="feature-option"><label class="check"><input type="checkbox" name="features" value="メンバー個別ページ">メンバー個別ページ</label></div>
+<div class="feature-option plan-custom-option"><label class="check"><input type="checkbox" name="features" value="写真ギャラリー">写真ギャラリー</label></div>
+<div class="feature-option plan-custom-option"><label class="check"><input type="checkbox" name="features" value="これからのLIVE表示">LIVE告知</label></div>
+<div class="feature-option plan-custom-option"><label class="check"><input type="checkbox" name="features" value="過去LIVEページ">過去LIVEページ</label></div>
+<div class="feature-option plan-custom-option"><label class="check"><input type="checkbox" name="features" value="メンバー個別ページ">メンバー個別ページ</label></div>
 
 <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="YouTubeリンクボタン" data-url-target="youtubeInline">YouTubeリンクボタン</label><div class="feature-url" id="youtubeInline"><label>YouTube URL<input name="youtube" type="url" placeholder="https://youtube.com/..."></label></div></div>
 <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="Instagramリンクボタン" data-url-target="instagramInline">Instagram</label><div class="feature-url" id="instagramInline"><label>Instagram URL<input name="instagram" type="url" placeholder="https://instagram.com/..."></label></div></div>
@@ -88,27 +98,27 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <div class="contact-inline conditional" id="contactInline"><span class="mini-title">公開する連絡先</span><span class="hint">LINE・Instagram・X・メール等はURLから自動判定します。</span><div id="contactLinks"></div><button type="button" class="addbtn" id="addContact">＋ 連絡先を追加</button></div></div>
 </div>
 
-<div class="live-layout"><span class="mini-title">LIVEの標準配置</span><span class="hint">標準では「これからのLIVE」はTOPへ表示し、「過去LIVE」は別ページへ掲載します。</span><label class="check" style="margin-top:8px"><input type="checkbox" name="live_all_page" value="yes">LIVE関連をすべて別ページにまとめたい</label></div>
+<div class="live-layout plan-custom-option"><span class="mini-title">LIVEの標準配置</span><span class="hint">標準では「これからのLIVE」はTOPへ表示し、「過去LIVE」は別ページへ掲載します。</span><label class="check" style="margin-top:8px"><input type="checkbox" name="live_all_page" value="yes">LIVE関連をすべて別ページにまとめたい</label></div>
 
-<label>その他ほしい機能<textarea name="other_features" placeholder="例：FAQ、予約導線、応援ページ、機材紹介など"></textarea></label>
-<div class="notice">決済、会員制、予約、EC、6名を超える個別メンバーページ、大規模な追加機能は別途相談・追加費用となる場合があります。</div>
+<label id="otherFeaturesWrap">その他ほしい機能<textarea name="other_features" placeholder="例：FAQ、予約導線、応援ページ、機材紹介など"></textarea></label>
+<div class="notice">追加ページ・新機能・決済・会員制・予約・ECなどは別途お見積りです。金額に同意いただいてから追加制作します。</div>
 </div></details>
 
-<details class="card" data-section="4"><summary><span>04 メンバー情報（必要な場合）</span><span class="done-mark">✓</span></summary><div class="body">
+<details class="card" data-section="4" id="memberSection"><summary><span>04 メンバー情報（メンバー個別ページ作成の場合）</span><span class="done-mark">✓</span></summary><div class="body">
 <span class="hint" style="margin-top:12px">メンバー個別ページを希望する場合に入力してください。SNSリンクは1人につき複数追加できます。</span>
 <div id="members"></div>
 <button type="button" class="addbtn" id="addMember">＋ メンバーを追加</button>
-<div class="notice">複数ページサイトプランは個別メンバーページ5名まで標準。6名以上は要相談です。</div>
+<div class="notice">個別メンバーページは追加見積りとなる場合があります。事前に料金を確認してから制作します。</div>
 </div></details>
 
-<details class="card" data-section="5"><summary><span>05 LIVE情報</span><span class="done-mark">✓</span></summary><div class="body">
+<details class="card" data-section="5" id="liveSection"><summary><span>05 LIVE告知</span><span class="done-mark">✓</span></summary><div class="body">
 <div id="liveBlocks"></div>
 <button type="button" class="addbtn" id="addLive">＋ LIVE情報を追加</button>
 <div class="history-note"><strong>日付で自動振り分けします。</strong><br>日付で「過去LIVE一覧」と「これからのLIVE一覧」へ自動で振り分けられます。</div>
 <div class="notice">LIVEごとに日付・時間・イベント名・会場・イベント詳細を追加できます。イベント詳細は出演者、料金、タイムテーブル、セットリスト、YouTube URLなど必要な内容だけでOKです。</div>
 </div></details>
 
-<details class="card" data-section="6"><summary><span>06 公開URL</span><span class="done-mark">✓</span></summary><div class="body">
+<details class="card" data-section="6"><summary><span>06 ドメイン指定（ある方のみ）</span><span class="done-mark">✓</span></summary><div class="body">
 <div class="history-note"><strong>基本は無料URLで問題ありません。</strong><br>個人・バンド等はSHO WEB SUPPORT側で用意する無料URLから始められます。店舗・企業などで公式サイトらしい専用URLを重視する場合は、独自ドメイン（例：abcband.com）も選べます。</div>
 <label class="check"><input type="checkbox" name="custom_domain" value="yes" id="customDomain">独自ドメインを希望する / すでに持っている</label>
 <details class="domain-more"><summary>独自ドメインのメリット・費用を見る</summary><div class="domain-more-copy">
@@ -126,12 +136,12 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 
 <div class="savebar bottom-save"><button type="button" class="savebtn" id="saveBottom">入力内容を一時保存</button><div class="save-meta"><strong id="savedBottom">最終保存：まだありません</strong><span id="status">入力内容はこの端末に自動保存されます</span></div></div>
 
-<details class="card" data-section="7"><summary><span>07 最終確認</span><span class="done-mark">✓</span></summary><div class="body">
+<section class="card final-card" data-section="7"><h2 class="final-heading">07 最終確認</h2><div class="body">
 <label class="check"><input type="checkbox" name="rights" value="yes">掲載する写真・ロゴ・文章について、サイト掲載に必要な権利・許可を確認しています。</label>
 <div class="notice" style="margin-bottom:9px">送信前に <a href="website-privacy.html" target="_blank" rel="noopener" style="color:#e8ca87;font-weight:900">プライバシーポリシーを確認</a> してください。</div>
 <label class="check"><input type="checkbox" name="privacy" value="yes">入力した公開用連絡先やSNS URLをホームページへ掲載して問題ありません。</label>
 <label>その他・伝えておきたいこと<textarea name="final_notes" placeholder="細かい要望、迷っていること、こうしてほしい等を自由に入力してください。箇条書きでも、なぐり書きでも大丈夫です。"></textarea></label>
-</div></details>
+</div></section>
 
 <div class="referral"><label>紹介コード（ある場合）<input name="referral" type="text" placeholder="紹介者からコードを受け取っている場合のみ"></label></div>
 
