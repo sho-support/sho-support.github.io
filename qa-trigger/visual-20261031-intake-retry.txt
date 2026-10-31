@@ -1,0 +1,1 @@
+Repeat static visual audit with the input section opened in the demo. No production operations.
