@@ -92,11 +92,11 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 <section class="section" id="extraSection" hidden>
 <div class="section-head"><h2>追加ページ・機能のご相談</h2><span class="section-check show">任意</span></div>
 <div class="domain" style="padding:16px 17px">
-<p style="margin:0 0 8px;font-size:.82rem;font-weight:900">セミオーダーの標準構成</p>
+<p id="extraSectionTitle" style="margin:0 0 8px;font-size:.82rem;font-weight:900">セミオーダーの標準構成</p>
 <p id="extraIncluded" style="margin:0 0 13px;color:#c9c9c9;font-size:.76rem;line-height:1.85">TOP / LIVE告知 / ギャラリー / プロフィール / 動画 / SNS・お問い合わせ。不要な項目は非表示にできます。</p>
 <p style="margin:0 0 8px;color:#b8b8b8;font-size:.75rem">個別メンバーページ・追加ページ・予約機能など、標準にないものを希望する場合は下にご記入ください。</p>
 <textarea id="extraRequest" maxlength="1500" placeholder="例：メンバー5名の個別紹介ページを追加したい。追加費用を事前に知りたい。" style="width:100%;min-height:100px;padding:12px;background:#101010;border:1px solid rgba(217,174,92,.3);color:#fff;border-radius:9px;font:inherit;font-size:16px"></textarea>
-<p style="margin:10px 0 0;color:#e6cd9f;font-size:.75rem">追加費用は内容に応じてお見積り。<strong>振込前に合計金額をご案内するため、追加分だけ再振込する必要はありません。</strong> ご相談の入力だけで費用は発生しません。</p>
+<p style="margin:10px 0 0;color:#e6cd9f;font-size:.75rem">追加ページや独自機能は内容に応じてお見積り。セミオーダーの標準構成を超える場合は、フルオーダーへの変更をご案内することがあります。<strong>振込前に合計金額をご案内するため、追加分だけ再振込する必要はありません。</strong> ご相談の入力だけで費用は発生しません。</p>
 </div>
 </section>
 
@@ -178,6 +178,7 @@ function render(){
  document.getElementById('updateCheck').classList.toggle('show',state.plan==='one'&&!!state.update);
  document.getElementById('domainBox').classList.toggle('on',state.domain);
  document.getElementById('extraSection').hidden=!state.plan;
+ document.getElementById('extraSectionTitle').textContent=state.plan==='semi'?'セミオーダーの標準構成':state.plan==='one'?'1ページ完結の標準範囲':'フルオーダーのご相談範囲';
  document.getElementById('extraIncluded').textContent=state.plan==='semi'?'TOP / LIVE告知 / ギャラリー / プロフィール / 動画 / SNS・お問い合わせ。テンプレートの配置・配色は固定です。':state.plan==='one'?'基本は1ページ内で完結します。追加ページが必要なら見積り前にご相談ください。':'自由設計の範囲は相談して決定します。追加したい機能・ページがあればお知らせください。';
  document.getElementById('sumPlan').textContent=state.plan?labels[state.plan]:'未選択';
  const tr=document.getElementById('sumTemplateRow');tr.hidden=state.plan!=='semi';
