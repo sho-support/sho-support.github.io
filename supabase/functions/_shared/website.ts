@@ -161,6 +161,58 @@ function parseRepo(repoFullName: string) {
   return { owner: match[1], repo: match[2] };
 }
 
+
+export async function verifyWebsiteBeforeDelivery(repoFullName: string, branch = 'main', expectedSemiTheme = '') {
+  const {owner,repo}=parseRepo(repoFullName);
+  const base='https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo);
+  const headers=githubHeaders();
+  const [treeResponse,htmlResponse]=await Promise.all([
+    fetch(base+'/git/trees/'+encodeURIComponent(branch)+'?recursive=1',{headers}),
+    fetch(base+'/contents/index.html?ref='+encodeURIComponent(branch),{
+      headers:{...headers,Accept:'application/vnd.github.raw+json'}
+    })
+  ]);
+  if(!treeResponse.ok||!htmlResponse.ok)throw new Error('公開前検査：GitHubの制作ファイルを取得できません。');
+  const tree=await treeResponse.json();
+  if(tree.truncated)throw new Error('公開前検査：ファイル一覧が多すぎるため確認できません。');
+  const files=new Map<string,number>((tree.tree||[]).filter((x:any)=>x.type==='blob').map((x:any)=>[x.path,Number(x.size||0)]));
+  if(!files.has('index.html'))throw new Error('公開前検査：index.html がありません。');
+  const html=await htmlResponse.text();
+  if(!/<html\b/i.test(html)||!/<body\b/i.test(html)||html.length<350)throw new Error('公開前検査：ホームページのHTMLが不正です。');
+  if(!/name\s*=\s*["']viewport["']/i.test(html))throw new Error('公開前検査：スマホ表示の指定がありません。');
+  if(expectedSemiTheme&&!html.includes('data-theme="'+expectedSemiTheme+'"'))throw new Error('公開前検査：選択したテンプレートのデザインと一致しません。');
+  const missing:string[]=[];
+  let cssFound=/<style\b/i.test(html);
+  const verify=(ref:string,kind:string)=>{
+    if(!ref.trim()){missing.push(kind+' の参照が空です');return}
+    if(/^(?:https?:|data:|blob:|mailto:|tel:|#|\/\/)/i.test(ref))return;
+    try{
+      const parsed=new URL(ref,'https://local.invalid/');
+      if(parsed.origin!=='https://local.invalid')return;
+      const path=decodeURIComponent(parsed.pathname.slice(1));
+      if(!path||path.includes('..')||!files.has(path)||files.get(path)===0)missing.push(kind+': '+path);
+    }catch{missing.push(kind+' のパスが不正です');}
+  };
+  for(const match of html.matchAll(/<img\b[^>]*>/gi)){
+    const ref=match[0].match(/\bsrc\s*=\s*["']([^"']*)["']/i)?.[1];
+    if(ref===undefined)missing.push('画像の参照がありません');else verify(ref,'画像');
+  }
+  for(const match of html.matchAll(/<script\b[^>]*>/gi)){
+    const ref=match[0].match(/\bsrc\s*=\s*["']([^"']*)["']/i)?.[1];
+    if(ref!==undefined)verify(ref,'動作ファイル');
+  }
+  for(const match of html.matchAll(/<link\b[^>]*>/gi)){
+    const tag=match[0];
+    if(!/\brel\s*=\s*["'][^"']*\bstylesheet\b/i.test(tag))continue;
+    cssFound=true;
+    const ref=tag.match(/\bhref\s*=\s*["']([^"']*)["']/i)?.[1];
+    if(ref===undefined)missing.push('CSSの参照がありません');else verify(ref,'CSS');
+  }
+  if(!cssFound)missing.push('スタイルシートがありません');
+  if(missing.length)throw new Error('公開前検査で不足が見つかりました：'+missing.slice(0,8).join(' / '));
+  return {ok:true,files:files.size,inline_css:/<style\b/i.test(html)};
+}
+
 export async function publishApprovedStagedBranch(repoFullName:string,liveBranch:string,stagedBranch:string|null|undefined) {
   if(!stagedBranch)return;
   if(!/^sho-review-[a-f0-9-]{8,50}$/.test(stagedBranch)||stagedBranch===liveBranch)throw new Error('Invalid staged branch.');
