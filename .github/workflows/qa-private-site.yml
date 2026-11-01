@@ -21,4 +21,5 @@ jobs:
       - name: Rebuild then check actual private site with cryptographic GitHub OIDC
         env:
           REBUILD_QA_SITE: 'true'
+          QA_ACTION: ${{ contains(github.event.head_commit.message, '[QA-REVISION]') && 'revision' || 'rebuild' }}
         run: node tests/qa-private-site.cjs
