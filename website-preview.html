@@ -77,6 +77,18 @@ try{
  if(typeof data?.html!=='string')throw Error('制作ページを読み込めませんでした。URLの期限か通信環境を確認してください。');
  const doc=new DOMParser().parseFromString(data.html,'text/html');
  for(const el of doc.querySelectorAll('base'))el.remove();
+ // Open other generated HTML pages in a separate signed preview tab.
+ // Otherwise they would nest a second preview shell inside this sandboxed iframe.
+ for(const a of doc.querySelectorAll('a[href]')){
+  try{
+   const link=new URL(a.getAttribute('href')||'',location.href);
+   if(link.origin===location.origin && link.pathname==='/website-preview.html' &&
+      link.searchParams.get('id')===id && link.searchParams.get('key')===key){
+     a.setAttribute('target','_blank');
+     a.setAttribute('rel','noopener noreferrer');
+   }
+  }catch{}
+ }
  const issues=[];
  const styles=[...doc.querySelectorAll('link[rel~="stylesheet"][href]')];
  for(const el of styles){
