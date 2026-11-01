@@ -1,4 +1,4 @@
-import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource, publishApprovedStagedBranch } from './_shared/website.ts';
+import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery } from './_shared/website.ts';
 
 const allowedOrigin = 'https://sho-support.github.io';
 
@@ -223,6 +223,9 @@ Deno.serve(async(req)=>{
       const repo=String(reviewSite.repo_full_name).split('/');
       if(repo.length!==2)return json({error:'公開先の設定が不正です。'},409);
       const publicUrl=reviewSite.custom_domain?'https://'+String(reviewSite.custom_domain).replace(/^https?:\/\//,'').replace(/\/$/,'')+'/':'https://'+repo[0]+'.github.io/'+repo[1]+'/';
+      const {data:preflightOrder,error:preflightOrderError}=await admin.from('website_orders').select('plan,template_style').eq('site_id',siteId).maybeSingle();
+      if(preflightOrderError)throw preflightOrderError;
+      await verifyWebsiteBeforeDelivery(reviewSite.repo_full_name,reviewSite.preview_branch||reviewSite.publish_branch||'main',preflightOrder?.plan==='semi'?String(preflightOrder.template_style||''):'');
       await publishApprovedStagedBranch(reviewSite.repo_full_name,reviewSite.publish_branch||'main',reviewSite.preview_branch);
       await setGithubPagesSource(reviewSite.repo_full_name,reviewSite.publish_branch||'main',reviewSite.live_path||'/');
       const now=new Date(),published=now.toISOString();
