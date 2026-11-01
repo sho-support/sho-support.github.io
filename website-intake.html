@@ -43,6 +43,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 .line-qr>div{padding:10px;background:#fff;border-radius:10px}
 .line-qr canvas,.line-qr img{display:block;max-width:170px;height:auto}
 @media(min-width:760px){.line-qr{display:flex}.line-mobile-note{display:none}}
+.prod-mode #buildPlan{display:none!important}.fixed-plan{display:none;margin-top:7px;padding:12px;border:1px solid rgba(217,174,92,.32);border-radius:10px;background:#18140e;color:#f0d598;font-size:1rem;font-weight:900}.prod-mode .fixed-plan{display:block}.semi-mode #contentMoodWrap{display:none!important}.admin-after-send{display:block;margin:11px 0 0;padding:12px;border:1px solid #b69d78;border-radius:9px;background:#fff;color:#171717!important;text-align:center;font-size:.8rem;font-weight:900;text-decoration:none}.admin-after-send[hidden]{display:none!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
@@ -64,9 +65,9 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <label>サイト名 / バンド名 / 店名 <span class="required">*</span><input name="site_name" type="text" placeholder="HPトップに表示される名前（例：ABC BAND）"><span class="hint">ホームページのメイン表示に使います。</span></label>
 <div class="row"><label>担当者名<input name="contact_name" type="text"></label><label>連絡用メール<input name="contact_email" type="email"></label></div>
 <label>サイトの目的<select name="purpose"><option value="">選択してください</option><option>バンド・アーティスト公式サイト</option><option>店舗・サービス紹介</option><option>個人活動・ポートフォリオ</option><option>イベント・団体</option><option>企業・事業サイト</option><option>その他</option></select></label>
-<label>制作プラン<select name="build_plan" id="buildPlan"><option value="one">1ページ完結サイト ¥15,000〜</option><option value="semi">セミオーダーサイト ¥22,000〜</option><option value="full">フルオーダーサイト ¥30,000〜</option></select><span class="hint" id="planSelectHint">ご注文内容に合わせて選択してください。</span></label>
-<div id="templateSelectWrap" class="conditional"><label>セミオーダーのテンプレート<select name="template_style" id="templateStyle"><option value="">選択してください</option><option value="rock">T01 Rock Stage / かっこいい・ダーク</option><option value="cafe">T02 Cafe Linen / カフェ・ナチュラル</option><option value="cute">T03 Sweet Bloom / かわいい・やわらかい</option><option value="minimal">T04 Minimal Grid / シンプル</option><option value="premium">T05 Premium Noir / 高級感</option><option value="pop">T06 Pop Studio / ポップ</option><option value="vintage">T07 Vintage Poster / レトロ・クラシック</option><option value="cyber">T08 Neon Circuit / サイバー・ネオン</option><option value="organic">T09 Earth Atelier / ナチュラル・オーガニック</option><option value="editorial">T10 Editorial Mono / モノクロ・エディトリアル</option></select><span class="hint">基本レイアウトはテンプレートの形で固定します。<a href="website-templates.html" target="_blank" rel="noopener" style="color:var(--gold)">デザインを見直す →</a></span></label></div>
-<label><span id="contentMoodLabel">希望するサイト内容・雰囲気</span><textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。TOPに活動内容と次回イベントを目立たせたい。予約・問い合わせへ迷わず進める構成にしたい。"></textarea><span class="hint"><span id="contentMoodHint">デザインの雰囲気だけでなく、載せたい内容・見せ方・導線・「こうしてほしい」も自由に書いてください。</span></span></label>
+<label>制作プラン<span class="fixed-plan" id="planDisplay"></span><select name="build_plan" id="buildPlan"><option value="one">1ページ完結サイト ¥15,000〜</option><option value="semi">セミオーダーサイト ¥22,000〜</option><option value="full">フルオーダーサイト ¥30,000〜</option></select><span class="hint" id="planSelectHint">ご注文内容に合わせて選択してください。</span></label>
+<div id="templateSelectWrap" class="conditional"><label>セミオーダーのテンプレート<select name="template_style" id="templateStyle"><option value="">選択してください</option><option value="rock">T01 Rock Stage / かっこいい・ダーク</option><option value="cafe">T02 Cafe Linen / カフェ・ナチュラル</option><option value="cute">T03 Sweet Bloom / かわいい・やわらかい</option><option value="minimal">T04 Minimal Grid / シンプル</option><option value="premium">T05 Premium Noir / 高級感</option><option value="pop">T06 Pop Studio / ポップ</option><option value="vintage">T07 Vintage Poster / レトロ・クラシック</option><option value="cyber">T08 Neon Circuit / サイバー・ネオン</option><option value="organic">T09 Earth Atelier / ナチュラル・オーガニック</option><option value="editorial">T10 Editorial Mono / モノクロ・エディトリアル</option></select><span class="hint">基本レイアウトと配色は選んだテンプレートを使用します。ここで別のテンプレートに変更できます。<a id="viewSamples" href="website-templates.html?mode=sample" target="_blank" rel="noopener" style="color:var(--gold)">デザインのサンプルだけを見る →</a></span></label></div>
+<label id="contentMoodWrap"><span id="contentMoodLabel">希望するサイト内容・雰囲気</span><textarea name="image_text" placeholder="例：黒ベースでロックっぽく。写真を大きく見せたい。TOPに活動内容と次回イベントを目立たせたい。予約・問い合わせへ迷わず進める構成にしたい。"></textarea><span class="hint"><span id="contentMoodHint">デザインの雰囲気だけでなく、載せたい内容・見せ方・導線・「こうしてほしい」も自由に書いてください。</span></span></label>
 <label>参考にしたいサイトURL（あれば）<input name="reference_url" type="url" placeholder="https://..."><span class="hint">任意です。入力された場合は、制作時に実際のページを確認し、構成・雰囲気・見せ方の参考にします。内容やデザインをそのままコピーすることはありません。</span></label>
 <label id="colorPrefWrap">HPの希望イメージカラー<input name="colors" type="text" placeholder="例：黒＋赤 / 白＋青 / おまかせ"></label><div class="row" style="margin-top:13px"><label class="check"><input type="checkbox" id="liveAnnouncement" name="live_announcement" value="yes" checked> LIVE告知を掲載する</label><label class="check"><input type="checkbox" id="memberPages" name="member_pages" value="yes"> メンバー個別ページを相談する（別途見積り）</label></div>
 </div></details>
@@ -75,7 +76,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <label>TOPに使用する写真（複数選択可）<input name="top_photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple><span class="hint">複数枚をまとめて選択できます。TOPでスライド表示にもできます。各7MB以内。</span></label>
 <label>ギャラリーに載せたい写真（複数選択可）<input name="gallery_photos" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple><span class="hint">1ファイル7MB以内。</span></label>
 <label>ギャラリーの並び順<select name="gallery_order"><option>おまかせ</option><option>新しい順</option><option>古い順</option><option>ごちゃまぜ</option></select></label>
-<label>ロゴ画像（お持ちの方のみ）<input name="logo_file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif"><span class="hint">ロゴ画像がなくても大丈夫。サイト名やバンド名をトップにおしゃれな文字で表示します。画像は7MB以内。</span></label>
+<label>ロゴ画像（お持ちの方のみ）<input name="logo_file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif"><span class="hint">ロゴ画像がなくても大丈夫です。サイト名やバンド名をトップにおしゃれな文字で表示します。画像は7MB以内。</span></label>
 <label>写真についての補足（任意）<textarea name="photo_notes" placeholder="例：この写真を一番大きくしたい、ライブ写真と宣材写真を分けたい など"></textarea></label>
 </div></details>
 
@@ -95,7 +96,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="その他SNSリンクボタン" data-url-target="otherSnsInline">その他SNS</label><div class="feature-url" id="otherSnsInline"><label>SNS名<input name="other_sns_name" type="text" placeholder="例：Threads"></label><label>URL<input name="other_sns" type="url" placeholder="https://..."></label></div></div>
 
 <div class="feature-option"><label class="check"><input type="checkbox" name="features" value="問い合わせ・連絡先" id="contactFeature">問い合わせ・連絡先</label>
-<div class="contact-inline conditional" id="contactInline"><span class="mini-title">公開する連絡先</span><span class="hint">LINE・Instagram・X・メール等はURLから自動判定します。</span><div id="contactLinks"></div><button type="button" class="addbtn" id="addContact">＋ 連絡先を追加</button></div></div>
+<div class="contact-inline conditional" id="contactInline"><span class="mini-title">公開する連絡先</span><span class="hint">指定がなければLINE・Instagram・X・メール等はURLから自動判定します。個別にボタン名を指定する場合は「ボタン名」にご記入ください。標準では「LINEで問い合わせ」等と表示します。</span><div id="contactLinks"></div><button type="button" class="addbtn" id="addContact">＋ 連絡先を追加</button></div></div>
 </div>
 
 <div class="live-layout plan-custom-option"><span class="mini-title">LIVEの標準配置</span><span class="hint">標準では「これからのLIVE」はTOPへ表示し、「過去LIVE」は別ページへ掲載します。</span><label class="check" style="margin-top:8px"><input type="checkbox" name="live_all_page" value="yes">LIVE関連をすべて別ページにまとめたい</label></div>
@@ -112,9 +113,9 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 </div></details>
 
 <details class="card" data-section="5" id="liveSection"><summary><span>05 LIVE告知</span><span class="done-mark">✓</span></summary><div class="body">
+<div class="history-note"><strong>日付で自動振り分けします。</strong><br>日付をもとに「過去LIVE一覧」と「これからのLIVE一覧」へ自動で振り分けられます。</div>
 <div id="liveBlocks"></div>
 <button type="button" class="addbtn" id="addLive">＋ LIVE情報を追加</button>
-<div class="history-note"><strong>日付で自動振り分けします。</strong><br>日付で「過去LIVE一覧」と「これからのLIVE一覧」へ自動で振り分けられます。</div>
 <div class="notice">LIVEごとに日付・時間・イベント名・会場・イベント詳細を追加できます。イベント詳細は出演者、料金、タイムテーブル、セットリスト、YouTube URLなど必要な内容だけでOKです。</div>
 </div></details>
 
@@ -158,7 +159,8 @@ import { requireWebsiteSession, uploadWebsiteFile, websiteApi, websiteSupabase }
 (async()=>{
 const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO',prodMode=params.get('prod')==='1',accessKey=params.get('key')||'',secureMode=prodMode&&!!accessKey,requestedPlan=params.get('plan')||'',requestedTemplate=params.get('template')||'';
 document.getElementById('siteId').textContent=siteId;
-if(prodMode)document.getElementById('fileNote').textContent=secureMode?'入力内容は自動保存されます。LINEで届いた同じ専用URLなら、別の端末やブラウザでも続きから入力できます。':'入力内容はSITE IDに紐づけて保存されます。別の端末やブラウザでも、同じアカウントで続きから入力できます。';
+if(prodMode)document.body.classList.add('prod-mode');
+ if(prodMode)document.getElementById('fileNote').textContent=secureMode?'入力内容は自動保存されます。LINEで届いた同じ専用URLなら、別の端末やブラウザでも続きから入力できます。':'入力内容はSITE IDに紐づけて保存されます。別の端末やブラウザでも、同じアカウントで続きから入力できます。';
 const lineMessage='SITE ID '+siteId+'です。ホームページ制作について相談したいです。';
 document.getElementById('lineConsult').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(lineMessage);
 const lineUrl=document.getElementById('lineConsult').href;
@@ -200,7 +202,7 @@ function detectType(value=''){
  if(/^https?:\/\//.test(v))return 'Webリンク';
  return 'その他';
 }
-function defaultButton(type){return {LINE:'LINEで問い合わせ',Instagram:'Instagram',X:'Xを見る',Facebook:'Facebook',TikTok:'TikTok',YouTube:'YouTubeを見る','メール':'メールで問い合わせ','電話':'電話する','Webリンク':'リンクを開く'}[type]||'お問い合わせ'}
+function defaultButton(type){return {LINE:'LINEで問い合わせ',Instagram:'Instagramで問い合わせ',X:'Xで問い合わせ',Facebook:'Facebookで問い合わせ',TikTok:'TikTokで問い合わせ',YouTube:'YouTubeを見る','メール':'メールで問い合わせ','電話':'電話で問い合わせ','Webリンク':'Webサイトを見る'}[type]||'お問い合わせ'}
 
 function addSocial(container,data={}){
  const d=document.createElement('div');d.className='social-row member-social';
@@ -246,7 +248,9 @@ document.querySelectorAll('.card').forEach(card=>{
 });
 
 function toggleConditional(){
- const semi=document.getElementById('buildPlan').value==='semi';
+ const planEl=document.getElementById('buildPlan');
+  const semi=planEl.value==='semi';
+  document.getElementById('planDisplay').textContent=planEl.selectedOptions[0]?.textContent||'';
  document.body.classList.toggle('semi-mode',semi);
  document.getElementById('contentMoodLabel').textContent=semi?'掲載したい内容・伝えたいこと（任意）':'希望するサイト内容・雰囲気';
  document.querySelector('[name="image_text"]').placeholder=semi?'例：TOPには活動紹介と次回ライブを目立たせたい。紹介文ではこんなことを伝えたい。':'例：写真を大きく、温かみのある雰囲気にしたい。TOPに予約・問い合わせを配置したい。';
@@ -338,7 +342,7 @@ async function restore(){
    if(secureMode&&result?.order){
      const bp=document.getElementById('buildPlan'),ts=document.getElementById('templateStyle');
      if(bp){bp.value=result.order.plan||bp.value;bp.disabled=true;bp.title='ご注文時のプランで固定されています';}
-     if(ts&&result.order.plan==='semi'){ts.value=result.order.template_style||ts.value;ts.disabled=true;ts.title='ご注文時に選んだテンプレートです';}
+     if(ts&&result.order.plan==='semi'){ts.value=data.fields?.template_style||result.order.template_style||ts.value;ts.disabled=false;ts.title='制作依頼の送信前であればテンプレートを変更できます';}
      toggleConditional();
    }
    return;
@@ -388,7 +392,7 @@ function filesHtml(names){return names.length?'<div class="preview-files">'+name
 function row(k,v,html=false){const empty=v===undefined||v===null||String(v).trim()==='';return '<div class="preview-row"><div class="preview-key">'+esc(k)+'</div><div class="preview-val">'+(empty?'<span class="preview-empty">未入力</span>':html?v:esc(v))+'</div></div>'}
 function renderPreview(){
  const d=serialize(),f=d.fields,semi=f.build_plan==='semi',planLabels={one:'1ページ完結',semi:'セミオーダー',full:'フルオーダー'},parts=['<h3 class="preview-title">入力内容の確認</h3>'];
- parts.push('<section class="preview-section"><h4>01 基本情報</h4>'+row('サイト名',f.site_name)+row('担当者名',f.contact_name)+row('連絡用メール',f.contact_email)+row('目的',f.purpose)+row('制作プラン',planLabels[f.build_plan]||f.build_plan)+row('テンプレート',f.template_style)+row(semi?'掲載したい内容・伝えたいこと':'希望するサイト内容・雰囲気',f.image_text)+row('参考URL（任意）',f.reference_url)+(semi?'':row('希望カラー',f.colors))+'</section>');
+ parts.push('<section class="preview-section"><h4>01 基本情報</h4>'+row('サイト名',f.site_name)+row('担当者名',f.contact_name)+row('連絡用メール',f.contact_email)+row('目的',f.purpose)+row('制作プラン',planLabels[f.build_plan]||f.build_plan)+row('テンプレート',f.template_style)+(semi?'':row('希望するサイト内容・雰囲気',f.image_text))+row('参考URL（任意）',f.reference_url)+(semi?'':row('希望カラー',f.colors))+'</section>');
  parts.push('<section class="preview-section"><h4>02 使用する写真</h4>'+row('TOP写真',filesHtml(fileNames('top_photos')),true)+row('ギャラリー',filesHtml(fileNames('gallery_photos')),true)+row('並び順',f.gallery_order)+row('ロゴ',fileNames('logo_file').length?filesHtml(fileNames('logo_file')):'<span class="preview-val">画像なし：サイト名を文字でデザイン</span>',true)+row('写真補足',f.photo_notes)+'</section>');
  parts.push(semi?'<section class="preview-section"><h4>03 SNS・連絡先</h4>'+([['YouTube',f.youtube],['Instagram',f.instagram],['X',f.x_url],['TikTok',f.tiktok],['Facebook',f.facebook]].filter(([_,v])=>String(v||'').trim()).map(([k,v])=>row(k,v)).join('')||'<p class="preview-empty">SNSリンクの登録なし</p>')+'</section>':'<section class="preview-section"><h4>03 ページ・機能</h4>'+row('希望機能',(d.checks.features||[]).join(' / '))+row('LIVE配置',(d.checks.live_all_page||[]).length?'LIVE関連をすべて別ページ':'標準：LIVE告知はTOP・過去LIVEは別ページ')+row('その他機能',f.other_features)+'</section>');
  if(d.members.some(m=>m.name||m.part||m.bio||m.socials.length))parts.push('<section class="preview-section"><h4>04 メンバー情報</h4>'+d.members.map((m,i)=>row('MEMBER '+(i+1),[m.name,m.part,m.bio,m.socials.map(s=>s.url).join(', '),m.photo?.name||''].filter(Boolean).join(' / '))).join('')+'</section>');
@@ -418,7 +422,18 @@ async function submitIntake(){
    lastSaved=result?.submitted_at?new Date(result.submitted_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):now();
    updateSavedLabels();
    status.textContent='送信しました';
-   const p=document.getElementById('preview'),done=document.createElement('div');done.className='file-note';done.innerHTML='<strong>運営へ送信しました。</strong><br>制作内容を受け付けました。制作案を作成し、運営による確認後にご案内します。';p.appendChild(done);document.getElementById('confirmSend')?.setAttribute('disabled','disabled');if(submitBtn)submitBtn.textContent='運営へ送信しました';return;
+   const p=document.getElementById('preview'),done=document.createElement('div');done.className='file-note';done.innerHTML='<strong>制作のご依頼を受け付けました。</strong><br>制作案を作成し、確認ができ次第、LINEでご案内します。';p.appendChild(done);document.getElementById('confirmSend')?.setAttribute('disabled','disabled');if(submitBtn)submitBtn.textContent='送信しました';
+    // Only show the operator's dashboard to authenticated administrators.
+    try {
+      const {data:sessionData}=await websiteSupabase.auth.getSession();
+      if(sessionData?.session){
+        const {data:adminData,error:adminError}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action:'admin_list_orders'}});
+        if(!adminError&&!adminData?.error){
+          const adminLink=document.createElement('a');adminLink.className='admin-after-send';adminLink.textContent='制作管理画面を開く（運営者専用）';adminLink.href='admin/index.html?site='+encodeURIComponent(siteId);done.after(adminLink);
+        }
+      }
+    }catch(e){console.warn('Admin button check unavailable',e)}
+    return;
   }catch(error){console.error(error);status.textContent='送信できませんでした。時間を置いて再度お試しください。';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='この内容で送信';}return}
  }
 
