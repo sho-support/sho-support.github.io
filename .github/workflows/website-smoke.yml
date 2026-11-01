@@ -34,6 +34,8 @@ jobs:
           sleep 2
       - name: Parse JavaScript across all HTML screens
         run: node tests/html-script-parse.cjs
+      - name: Verify fixed-design semi-order output across all themes
+        run: node tests/semi-render.cjs
       - name: Verify public pages on mobile and desktop
         run: node tests/website-smoke.cjs
       - name: Simulate customer order, review, publication and update
