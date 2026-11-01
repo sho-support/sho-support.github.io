@@ -373,13 +373,14 @@ Deno.serve(async(req)=>{
     },{onConflict:'site_id'});
     if(intakeError) throw intakeError;
 
-    const {error:updateSiteError}=await admin.from('website_sites').update({
+    const {data:updatedSite,error:updateSiteError}=await admin.from('website_sites').update({
       site_name:String(f.site_name||'').trim(),
       status:'building',
       current_note:'ヒアリング内容を受信。サイト作成中。',
       customer_approved:false,
-    }).eq('site_id',siteId).eq('status','request_waiting');
+    }).eq('site_id',siteId).eq('status','request_waiting').select('site_id').maybeSingle();
     if(updateSiteError) throw updateSiteError;
+    if(!updatedSite)return json({error:'制作依頼はすでに送信されています。二重受付は行いません。'},409);
 
     await admin.from('website_profiles').upsert({
       site_id:siteId,
