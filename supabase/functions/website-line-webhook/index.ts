@@ -126,12 +126,28 @@ Deno.serve(async (req) => {
             .eq('key', 'bank_transfer')
             .maybeSingle();
           const bankMessage = String(bankSetting?.value?.message || '').trim();
+          // When no real bank account is configured, show fictional bank details
+          // only for explicitly allowlisted test orders. Never show them to real buyers.
+          const { data: bankTestSetting } = bankMessage
+            ? { data: null }
+            : await admin.from('website_settings').select('value').eq('key', 'bank_transfer_test').maybeSingle();
+          const testOrderCodes = Array.isArray(bankTestSetting?.value?.order_codes)
+            ? bankTestSetting.value.order_codes
+            : [];
+          const testBankMessage = testOrderCodes.includes(order.order_code)
+            ? String(bankTestSetting?.value?.message || '').trim()
+            : '';
 
           if (bankMessage) {
             await reply(event.replyToken, [
               `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n【お振込先】\n${bankMessage}\n\nお振込みの際は、振込人名義の前に下記の注文IDを入力してください。必要に応じて、次のメッセージを長押ししてコピーしてお使いください。\n\n入金確認後、正式なSITE IDと制作ヒアリングURLをお送りします。`,
               order.order_code,
             ]);
+          } else if (testBankMessage) {
+            await reply(
+              event.replyToken,
+              `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n【振込先（テスト用・架空口座）】\n${testBankMessage}\n\n※これは動作テスト用の架空口座です。実際に振り込まないでください。\n本番ではこの位置に正式な振込先を表示します。`,
+            );
           } else {
             await reply(
               event.replyToken,
