@@ -9,7 +9,7 @@ const endpoint='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-qa
  assert.equal(auth.status,200,'GitHub signed OIDC token');
  const jwt=(await auth.json()).value;assert.ok(jwt&&jwt.length>500);
  if(process.env.REBUILD_QA_SITE==='true'){
-  const started=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+jwt,'Content-Type':'application/json'},body:JSON.stringify({action:'qa-rebuild'})});
+  const started=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+jwt,'Content-Type':'application/json'},body:JSON.stringify({action:process.env.QA_ACTION==='revision'?'qa-dispatch-existing':'qa-rebuild'})});
   if(started.status!==202)throw Error('Signed QA rebuild was not accepted: HTTP '+started.status);
   const queued=await started.json();
   assert.ok(queued.job_id,'Worker job identifier was returned');
@@ -32,6 +32,7 @@ const endpoint='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-qa
  }
  const html=(await read('index.html')).toString('utf8');
  assert.ok(html.includes('data-theme="cyber"')&&html.includes('body[data-theme="cyber"]'),'actual site preserves cyber CSS');
+ if(process.env.QA_ACTION==='revision')assert.ok(html.includes('制作テストのご案内を掲載しています。'),'Requested copy revision was applied');
  assert.ok(html.includes('<style>'),'actual site ships real CSS');
  assert.ok(!html.includes('SHO WEB SUPPORT'),'customer page has no vendor branding');
  const refs=[...new Set([...html.matchAll(/(?:src|poster)=["'](assets\/[^"']+)["']/g)].map(m=>m[1]))];
