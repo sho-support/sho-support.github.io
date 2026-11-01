@@ -5,7 +5,41 @@ const themeIds=['rock','cafe','cute','minimal','premium','pop','vintage','cyber'
 function url(v){try{const u=new URL(str(v));return ['https:','http:'].includes(u.protocol)?u.toString():''}catch{return ''}}
 function asset(a){return a&&/^assets\/[a-z0-9_-]+\/[a-zA-Z0-9._-]+$/.test(a.path||'')?a.path:''}
 function img(a,alt){return '<img src="'+esc(asset(a))+'" alt="'+esc(alt)+'" loading="lazy" decoding="async">'}
-function link(label,v){const href=url(v);return href?'<a class="btn sub" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>':''}
+function contactHref(v){
+ const raw=str(v);
+ if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw))return 'mailto:'+raw;
+ if(/^mailto:[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(raw))return raw;
+ if(/^tel:\+?[\d -]{7,20}$/i.test(raw))return raw.replace(/[ -]/g,'');
+ if(/^0[\d -]{8,15}$/.test(raw))return 'tel:'+raw.replace(/[ -]/g,'');
+ return url(raw);
+}
+function defaultContactLabel(type,v){
+ const a=str(v).toLowerCase(),t=str(type).toLowerCase();
+ if(t==='line'||a.includes('line.me/')||a.includes('lin.ee/'))return 'LINEで問い合わせ';
+ if(t==='instagram'||a.includes('instagram.com/'))return 'Instagramで問い合わせ';
+ if(t==='x'||a.includes('x.com/')||a.includes('twitter.com/'))return 'Xで問い合わせ';
+ if(t==='facebook'||a.includes('facebook.com/'))return 'Facebookで問い合わせ';
+ if(t==='tiktok'||a.includes('tiktok.com/'))return 'TikTokで問い合わせ';
+ if(t==='youtube'||a.includes('youtube.com/')||a.includes('youtu.be/'))return 'YouTubeを見る';
+ if(t==='メール'||a.includes('mailto:')||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a))return 'メールで問い合わせ';
+ if(t==='電話'||a.startsWith('tel:')||/^0[\d -]{8,15}$/.test(a))return '電話で問い合わせ';
+ return 'Webサイトを見る';
+}
+function link(label,v){const href=contactHref(v);return href?'<a class="btn sub" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>':''}
+function explicitCopy(notes,location){
+ const lines=String(notes||'').replace(/\r/g,'').split(/[\n。]/).map(v=>v.trim()).filter(Boolean);
+ const place=location==='top'?'(?:トップ|TOP|一番上|上部)':'(?:下部|一番下|フッター)';
+ for(const sentence of lines){
+  if(!new RegExp(place,'i').test(sentence))continue;
+  const quote=sentence.match(/[「『“]([^」』”]{1,120})[」』”]/);
+  if(quote)return quote[1].trim();
+  const after=new RegExp(place+'(?:の方)?に(.{2,120}?)(?:って|と)?(?:書いて|載せて|表示)','i').exec(sentence);
+  const before=new RegExp('(.{2,120}?)(?:って|と)'+place+'(?:の方)?に(?:書いて|載せて|表示)','i').exec(sentence);
+  const value=(after?.[1]||before?.[1]||'').replace(/(?:って|と)$/,'').trim();
+  if(value)return value;
+ }
+ return '';
+}
 function section(code,name,body,id){return '<section class="section" id="'+esc(id)+'"><div class="wrap section-head"><div class="section-no">'+esc(code)+'</div><div><h2>'+esc(name)+'</h2>'+body+'</div></div></section>'}
 function youtubeId(v){try{const u=new URL(v),id=u.hostname==='youtu.be'?u.pathname.slice(1):u.searchParams.get('v')||u.pathname.match(/\/(?:embed|shorts|live)\/([^/?]+)/)?.[1]||'';return /^[\w-]{11}$/.test(id)&&(/(^|\.)youtube\.com$/.test(u.hostname)||u.hostname==='youtu.be')?id:''}catch{return ''}}
 export function renderSemiTemplate(ctx){
@@ -50,13 +84,16 @@ export function renderSemiTemplate(ctx){
   sections.push(section('04 / MOVIE','MOVIE / YouTube',vid?'<div class="video video-frame"><iframe src="https://www.youtube-nocookie.com/embed/'+vid+'" title="'+esc(name+'の動画')+'" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>':'<div class="video">'+link('YouTubeを見る',yt)+'</div>','movie'));
   nav.push(['MOVIE','#movie']);
  }
- const social=[['YouTube',f.youtube],['Instagram',f.instagram],['X',f.x_url],['TikTok',f.tiktok],['Facebook',f.facebook],[str(f.other_sns_name||'SNS'),f.other_sns]];
- const contacts=Array.isArray(data.contacts)?data.contacts.filter(x=>x?.value).map(x=>[str(x.label||'お問い合わせ'),x.value]):[];
+ const social=[['YouTubeを見る',f.youtube],['Instagramで問い合わせ',f.instagram],['Xで問い合わせ',f.x_url],['TikTokで問い合わせ',f.tiktok],['Facebookで問い合わせ',f.facebook],[str(f.other_sns_name||'SNS'),f.other_sns]];
+ const contacts=Array.isArray(data.contacts)?data.contacts.filter(x=>x?.value).map(x=>[str(x.label||defaultContactLabel(x.type,x.value)),x.value]):[];
  const buttons=[...social,...contacts].map(x=>link(x[0],x[1])).filter(Boolean);
  if(buttons.length){
   sections.push('<section class="section" id="contact"><div class="wrap contact"><div><div class="section-no">05 / CONTACT</div><h2>SNS / CONTACT</h2><p class="lead">最新情報やお問い合わせはこちらから。</p></div><div class="contact-links">'+buttons.join('')+'</div></div></section>');
   nav.push(['CONTACT','#contact']);
  }
+ const requestNotes=[str(f.image_text),str(f.final_notes)].filter(Boolean).join('\n');
+ const topCopy=explicitCopy(requestNotes,'top');
+ const bottomCopy=explicitCopy(requestNotes,'bottom');
  const brand=logo?'<span class="brand-logo">'+img(logo,name+'のロゴ')+'</span><span class="brand-name">'+esc(name)+'</span>':'<span class="brand-name">'+esc(name)+'</span>';
  const hero=top[0]?'<div class="photo photo-live">'+img(top[0],name+' メイン写真')+'</div>':'<div class="photo photo-title">'+esc(name)+'</div>';
  const first=nav[0]||null;
@@ -68,12 +105,12 @@ export function renderSemiTemplate(ctx){
  '.shot{position:relative;margin:0;overflow:hidden}.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.gallery{grid-auto-rows:minmax(155px,1fr)}.gallery-count-1{display:block;max-width:650px}.gallery-count-1 .shot{height:370px}.gallery-count-2{grid-template-columns:1fr 1fr;grid-template-rows:310px}.gallery-count-2 .shot:first-child{grid-row:auto;grid-column:auto}',
  '.member .avatar{overflow:hidden}.member .avatar img{width:100%;height:100%;object-fit:cover}.initial{font-size:2rem;color:var(--accent);font-weight:900}',
  '.member p{font-size:.84rem;color:var(--soft)}.minor-title{margin:25px 0 12px;font-size:1rem}.video-frame{min-height:0;aspect-ratio:16/9;overflow:hidden}.video-frame iframe{width:100%;height:100%;border:0}',
- '.contact-links .btn{overflow-wrap:anywhere}@media(max-width:760px){.event{grid-template-columns:85px 1fr 30px}.event .go{width:30px;height:30px}.gallery-count-1 .shot{height:285px}.gallery-count-2{grid-template-columns:1fr 1fr;grid-template-rows:190px}}'
+ '.customer-footer-note{font-size:1.05rem;font-weight:800;margin:0 0 14px;color:var(--accent)}.contact-links .btn{overflow-wrap:anywhere}@media(max-width:760px){.event{grid-template-columns:85px 1fr 30px}.event .go{width:30px;height:30px}.gallery-count-1 .shot{height:285px}.gallery-count-2{grid-template-columns:1fr 1fr;grid-template-rows:190px}}'
  ].join('');
  let html='<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="'+esc(name+' 公式サイト')+'"><title>'+esc(name)+' | OFFICIAL WEBSITE</title><style>'+style+customCSS+'</style></head>'+
  '<body data-theme="'+theme+'"><header><div class="wrap head"><a class="brand" href="#top">'+brand+'</a><nav class="nav">'+nav.map(x=>'<a href="'+x[1]+'">'+esc(x[0])+'</a>').join('')+'</nav></div></header>'+
- '<main id="top"><section class="hero"><div class="wrap hero-grid"><div><div class="kicker">OFFICIAL WEBSITE</div><h1>'+esc(name)+'</h1><p>'+esc(str(latest.hero_message||'ライブ情報や写真、最新のお知らせをお届けします。'))+'</p>'+action+'</div>'+hero+'</div></section>'+
- sections.join('')+'</main><footer><div class="wrap">&copy; '+new Date().getUTCFullYear()+' '+esc(name)+'</div></footer></body></html>';
+ '<main id="top"><section class="hero"><div class="wrap hero-grid"><div><div class="kicker">OFFICIAL WEBSITE</div><h1>'+esc(name)+'</h1><p>'+esc(str(latest.hero_message||topCopy||'ライブ情報や写真、最新のお知らせをお届けします。'))+'</p>'+action+'</div>'+hero+'</div></section>'+
+ sections.join('')+'</main><footer><div class="wrap">'+(bottomCopy?'<p class="customer-footer-note">'+esc(bottomCopy)+'</p>':'')+'&copy; '+new Date().getUTCFullYear()+' '+esc(name)+'</div></footer></body></html>';
  // Apply content-only revisions inside visible text nodes. Never rewrite the fixed CSS.
  const boundary=html.indexOf('</head>')+'</head>'.length;
  let rest=html.slice(boundary);
