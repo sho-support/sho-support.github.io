@@ -8,6 +8,23 @@ const endpoint='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-qa
  const auth=await fetch(oidcURL+delimiter+'audience=sho-private-qa',{headers:{Authorization:'bearer '+boot}});
  assert.equal(auth.status,200,'GitHub signed OIDC token');
  const jwt=(await auth.json()).value;assert.ok(jwt&&jwt.length>500);
+ if(process.env.REBUILD_QA_SITE==='true'){
+  const started=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+jwt,'Content-Type':'application/json'},body:JSON.stringify({action:'qa-rebuild'})});
+  if(started.status!==202)throw Error('Signed QA rebuild was not accepted: HTTP '+started.status);
+  const queued=await started.json();
+  assert.ok(queued.job_id,'Worker job identifier was returned');
+  let finished=false;
+  for(let attempt=0;attempt<90;attempt++){
+    await new Promise(resolve=>setTimeout(resolve,2500));
+    const status=await fetch(endpoint+'?info=job',{headers:{Authorization:'Bearer '+jwt}});
+    if(!status.ok)throw Error('Private status check HTTP '+status.status);
+    const job=(await status.json()).job;
+    if(job?.id===queued.job_id&&job.status==='sho_review'){finished=true;break}
+    if(job?.id===queued.job_id&&job.status==='error')throw Error('QA site regeneration failed');
+  }
+  assert.ok(finished,'QA regeneration did not reach owner-review state');
+  console.log('PRIVATE_SITE_REBUILD_COMPLETED job '+queued.job_id);
+ }
  async function read(file){
   const r=await fetch(endpoint+'?path='+encodeURIComponent(file),{headers:{Authorization:'Bearer '+jwt}});
   if(!r.ok)throw Error('Authenticated private file unavailable: '+file+' HTTP '+r.status);
