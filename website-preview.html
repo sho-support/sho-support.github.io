@@ -52,7 +52,8 @@ function sourcePath(raw){
 }
 async function getAsset(url){
  const response=await fetch(url,{cache:'no-store',referrerPolicy:'no-referrer'});
- if(!response.ok)throw Error('HTTP '+response.status+' '+(new URL(url)).searchParams.get('path'));
+ if(response.status===403)throw Error('このプレビューURLは無効になりました。制作管理画面を再読み込みして最新のプレビューを開いてください。お客様はLINEで届いた最新の確認URLをご利用ください。');
+ if(!response.ok)throw Error('プレビューの読み込みに失敗しました（HTTP '+response.status+'）。');
  return response;
 }
 async function asDataURL(response){
