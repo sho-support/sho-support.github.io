@@ -1,4 +1,4 @@
-import { adminClient, json, notifyOwner } from './_shared/website.ts';
+import { adminClient, json, notifyOwner, verifyWebsiteBeforeDelivery } from './_shared/website.ts';
 import { renderSemiTemplate } from './semi-template.mjs';
 
 const GH_VER='2026-03-10';
@@ -81,7 +81,8 @@ function validateGenerated(files:any[],assets:any[],buildPlan:string){
  const assetPaths=new Set(assets.map((a:any)=>a.path));
  const problems:string[]=[];
  const cssFiles=files.filter((f:any)=>f.path.toLowerCase().endsWith('.css'));
- const htmlFiles=files.filter((f:any)=>/\.html?$/.test(f.path));
+ const htmlFiles=files.filter((f:any)=>/\.html?$/i.test(f.path));
+ if(buildPlan==='one'&&htmlFiles.some((f:any)=>f.path!=='index.html'))problems.push('1ページ完結プランで追加のHTMLページが生成されました。');
  const resolve=(file:string,ref:string)=>{
    let value=String(ref||'').split(/[?#]/)[0].trim();
    if(!value||/^(?:https?:|\/\/|data:|blob:|mailto:|tel:|#)/i.test(value))return null;
@@ -100,6 +101,18 @@ function validateGenerated(files:any[],assets:any[],buildPlan:string){
        const path=resolve(f.path,href||'');
        if(path){hasStyles=true;if(!paths.has(path))problems.push('Missing stylesheet '+path+' referenced from '+f.path)}
      }
+   }
+   // Check navigation as well as images/scripts; a generated link must not lead to a nonexistent local page.
+   for(const tag of f.content.matchAll(/<a\b[^>]*>/gi)){
+     const href=tag[0].match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1]||'';
+     if(!href||/^(?:https?:|mailto:|tel:|javascript:|data:|\/\/)/i.test(href))continue;
+     if(href.startsWith('/')){problems.push('Root-absolute link unsuitable for GitHub Pages: '+href.slice(0,120));continue;}
+     const anchor=href.startsWith('#')?href.slice(1):'';
+     if(/^[a-z0-9_-]+$/i.test(anchor) && anchor&&!f.content.includes('id="'+anchor+'"')&&!f.content.includes("id='"+anchor+"'"))
+       problems.push('Broken in-page link #'+anchor+' in '+f.path);
+     const target=resolve(f.path,href);
+     if(target && /\.html?$/i.test(target) && !paths.has(target))
+       problems.push('Missing linked page '+target+' from '+f.path);
    }
    for(const item of f.content.matchAll(/\b(?:src|poster)\s*=\s*["']([^"']+)["']/gi)){
      const original=item[1],path=resolve(f.path,original);
@@ -164,7 +177,17 @@ async function processJob(siteId=''){
   const tracking='<script defer src="https://sho-support.github.io/website-track.js?site='+encodeURIComponent(site.site_id)+'"></script>';
   files=files.map((f:any)=>/\.html?$/i.test(f.path)&&!f.content.includes('website-track.js')?
     {...f,content:/<\/body>/i.test(f.content)?f.content.replace(/<\/body>/i,tracking+'</body>'):f.content+tracking}:f);
-await putFile(ri.full,branch,'docs/index.html',offline(site.site_name),'Add offline page');if(!ri.isPrivate&&!isLiveRevision)await pages(ri.full,publishBranch,'/docs');for(const f of files)await putFile(ri.full,branch,f.path,f.content,'SHO WEB SUPPORT AI update');const referencedAssets=assets.filter((a:any)=>files.some((f:any)=>f.content.includes(a.path)));await copyAssets(admin,ri.full,branch,referencedAssets);const previewKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');const previewHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(previewKey))),b=>b.toString(16).padStart(2,'0')).join('');const preview='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(site.site_id)+'&key='+previewKey;const finished=new Date().toISOString(),payload={...(job.payload||{}),ai:{model:ai.model,response_id:ai.response_id,usage:ai.usage},reference:{url:ref.url,ok:ref.ok,note:ref.note},github:{repo:ri.full,branch,preview_url:preview},summary:String(ai.summary||'').slice(0,5000)};
+await putFile(ri.full,branch,'docs/index.html',offline(site.site_name),'Add offline page');if(!ri.isPrivate&&!isLiveRevision)await pages(ri.full,publishBranch,'/docs');for(const f of files)await putFile(ri.full,branch,f.path,f.content,'SHO WEB SUPPORT AI update');const referencedAssets=assets.filter((a:any)=>files.some((f:any)=>f.content.includes(a.path)));await copyAssets(admin,ri.full,branch,referencedAssets);
+   // Read back committed files and asset references before entering SHO review.
+   let preflightError:any=null;
+   for(let check=0;check<3;check++){
+     try{
+       await verifyWebsiteBeforeDelivery(ri.full,branch,semi?String(intake.payload?.fields?.template_style||''):'');
+       preflightError=null;break;
+     }catch(e){preflightError=e;if(check<2)await new Promise(resolve=>setTimeout(resolve,(check+1)*700));}
+   }
+   if(preflightError)throw new Error('制作後のファイル検査に失敗：'+String(preflightError.message||preflightError));
+   const previewKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');const previewHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(previewKey))),b=>b.toString(16).padStart(2,'0')).join('');const preview='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(site.site_id)+'&key='+previewKey;const finished=new Date().toISOString(),payload={...(job.payload||{}),ai:{model:ai.model,response_id:ai.response_id,usage:ai.usage},reference:{url:ref.url,ok:ref.ok,note:ref.note},github:{repo:ri.full,branch,preview_url:preview},summary:String(ai.summary||'').slice(0,5000)};
   await admin.from('website_jobs').update({status:'sho_review',finished_at:finished,payload}).eq('id',job.id);await admin.from('website_sites').update({status:'sho_review',preview_url:preview,preview_access_token_hash:previewHash,preview_token_issued_at:finished,preview_branch:isLiveRevision?branch:null,current_note:'制作案の生成が完了。運営にて確認中。',customer_approved:false}).eq('site_id',site.site_id);
   if(job.payload?.review_issue_id){const{error:issueErr}=await admin.from('website_review_issues').update({status:'ready_for_check',updated_at:finished}).eq('id',job.payload.review_issue_id).eq('site_id',site.site_id).eq('status','fixing');if(issueErr)throw issueErr;}await admin.from('website_activity').insert({site_id:site.site_id,actor_type:'ai',action:'ai_build_completed',detail:String(ai.summary||'AI制作完了').slice(0,5000),payload:{job_id:job.id,reference_ok:ref.ok}});if(!job.payload?.qa_rebuild)await notifyOwner(`【運営者向け：制作案完成】\nSITE ID ${site.site_id}\n${site.site_name}\n制作案の確認はこちら：\nhttps://sho-support.github.io/admin/index.html?site=${encodeURIComponent(site.site_id)}`)
  }catch(e:any){const m=String(e.message||e).slice(0,4000);console.error('website-worker',m);await admin.from('website_jobs').update({status:'error',error_message:m,finished_at:new Date().toISOString()}).eq('id',job.id);await admin.from('website_sites').update({status:'building',current_note:'AI制作でエラー。SHO確認が必要です。'}).eq('site_id',job.site_id);await admin.from('website_activity').insert({site_id:job.site_id,actor_type:'ai',action:'ai_build_error',detail:m,payload:{job_id:job.id}});await notifyOwner(`【AI制作エラー】\nSITE ID ${job.site_id}\n${m.slice(0,1200)}`)}
