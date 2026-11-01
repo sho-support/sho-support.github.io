@@ -28,6 +28,13 @@ const checks={
  'Customer publication promotes the approved staging branch':customer.includes('await publishApprovedStagedBranch(reviewSite.repo_full_name'),
  'Legacy approval also promotes staged updates':api.includes('await publishApprovedStagedBranch(site.repo_full_name'),
  'GitHub merge is handled before Pages update':shared.includes('/merges')&&shared.includes('publishApprovedStagedBranch'),
+ 'GitHub preflight verifies page style and image assets':shared.includes('verifyWebsiteBeforeDelivery')&&shared.includes('missing.push(\'画像\'')&&shared.includes('スタイルシートがありません'),
+ 'Owner handoff requires passing source preflight':api.includes('await verifyWebsiteBeforeDelivery(ready.repo_full_name'),
+ 'Customer publication checks current site files':customer.includes('await verifyWebsiteBeforeDelivery(reviewSite.repo_full_name'),
+ 'Legacy customer publication checks current site files':api.includes('await verifyWebsiteBeforeDelivery(site.repo_full_name'),
+ 'Admin cannot bypass customer publish consent':api.includes('管理画面から公開を省略できません'),
+ 'Private QA report uses existing preview authorization':preview.indexOf("if(u.searchParams.get('qa')==='1')")>preview.indexOf('hash!==site.preview_access_token_hash'),
+
  'Intake resend allowed only for initial requests':customer.includes("action==='admin_resend_intake'")&&customer.includes("site.status!=='request_waiting'"),
  'Admin resend button gated by intake state':orderAdmin.includes("o.site_status==='request_waiting'"),
  'LINE delivery failure is reported to staff':(customer.includes('const warning=delivered.skipped')||customer.includes('const warning=sent.skipped')),
