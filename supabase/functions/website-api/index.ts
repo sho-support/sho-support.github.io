@@ -250,9 +250,11 @@ Deno.serve(async (req) => {
           customer_approved: false,
         })
         .eq('site_id', siteId)
+        .eq('status', 'request_waiting')
         .select('site_name')
-        .single();
+        .maybeSingle();
       if (siteError) throw siteError;
+      if (!site) return json({ error: '制作依頼はすでに送信済みです。二重受付は行いません。' }, 409);
 
       const intakePayload = (body.payload || {}) as Record<string, any>;
       const intakeFields = (intakePayload.fields || {}) as Record<string, any>;
