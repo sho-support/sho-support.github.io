@@ -1,0 +1,1 @@
+Verify SITE ID 1241 actual private static HTML with uploaded images using signed GitHub workflow identity. No publication or LINE notification.
