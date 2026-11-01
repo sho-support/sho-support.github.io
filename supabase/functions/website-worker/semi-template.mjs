@@ -10,13 +10,17 @@ function section(code,name,body,id){return '<section class="section" id="'+esc(i
 function youtubeId(v){try{const u=new URL(v),id=u.hostname==='youtu.be'?u.pathname.slice(1):u.searchParams.get('v')||u.pathname.match(/\/(?:embed|shorts|live)\/([^/?]+)/)?.[1]||'';return /^[\w-]{11}$/.test(id)&&(/(^|\.)youtube\.com$/.test(u.hostname)||u.hostname==='youtu.be')?id:''}catch{return ''}}
 export function renderSemiTemplate(ctx){
  const data=ctx.intake?.payload||{},f=data.fields||{},checks=data.checks||{};
- const theme=str(f.template_style),name=str(f.site_name||ctx.site?.site_name||'OFFICIAL WEBSITE').slice(0,90);
+ const patches=(Array.isArray(data.meta?.semi_patches)?data.meta.semi_patches:[]).slice(-25);
+ const latest=Object.assign({},...patches);
+
+ const theme=str(f.template_style),name=str(latest.name_override||f.site_name||ctx.site?.site_name||'OFFICIAL WEBSITE').slice(0,90);
  if(!themeIds.includes(theme))throw Error('選択済みテンプレートを特定できません。');
  const tpl=String(ctx.templateSource||'');
  const style=tpl.match(/<style>([\s\S]*?)<\/style>/i)?.[1]||'';
  if(style.length<3500||!style.includes('body[data-theme="'+theme+'"]'))throw Error('テンプレートCSSの読み込みに失敗しました。');
  const assets=(ctx.assets||[]).filter(a=>asset(a)),of=k=>assets.filter(a=>a.field===k);
- const top=of('top_photos'),gallery=of('gallery_photos'),logo=of('logo_file')[0];
+ let top=of('top_photos');const gallery=of('gallery_photos'),logo=of('logo_file')[0];
+ if(latest.hero_photo_path){const chosen=top.find(x=>x.path===latest.hero_photo_path);if(chosen)top=[chosen,...top.filter(x=>x.path!==chosen.path)];}
  const nav=[],sections=[];
  const allLives=Array.isArray(data.lives)?data.lives.filter(x=>x&&(x.date||x.name||x.venue)).slice(0,50):[];
  const today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -66,10 +70,21 @@ export function renderSemiTemplate(ctx){
  '.member p{font-size:.84rem;color:var(--soft)}.minor-title{margin:25px 0 12px;font-size:1rem}.video-frame{min-height:0;aspect-ratio:16/9;overflow:hidden}.video-frame iframe{width:100%;height:100%;border:0}',
  '.contact-links .btn{overflow-wrap:anywhere}@media(max-width:760px){.event{grid-template-columns:85px 1fr 30px}.event .go{width:30px;height:30px}.gallery-count-1 .shot{height:285px}.gallery-count-2{grid-template-columns:1fr 1fr;grid-template-rows:190px}}'
  ].join('');
- const html='<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="'+esc(name+' 公式サイト')+'"><title>'+esc(name)+' | OFFICIAL WEBSITE</title><style>'+style+customCSS+'</style></head>'+
+ let html='<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="'+esc(name+' 公式サイト')+'"><title>'+esc(name)+' | OFFICIAL WEBSITE</title><style>'+style+customCSS+'</style></head>'+
  '<body data-theme="'+theme+'"><header><div class="wrap head"><a class="brand" href="#top">'+brand+'</a><nav class="nav">'+nav.map(x=>'<a href="'+x[1]+'">'+esc(x[0])+'</a>').join('')+'</nav></div></header>'+
- '<main id="top"><section class="hero"><div class="wrap hero-grid"><div><div class="kicker">OFFICIAL WEBSITE</div><h1>'+esc(name)+'</h1><p>ライブ情報や写真、最新のお知らせをお届けします。</p>'+action+'</div>'+hero+'</div></section>'+
+ '<main id="top"><section class="hero"><div class="wrap hero-grid"><div><div class="kicker">OFFICIAL WEBSITE</div><h1>'+esc(name)+'</h1><p>'+esc(str(latest.hero_message||'ライブ情報や写真、最新のお知らせをお届けします。'))+'</p>'+action+'</div>'+hero+'</div></section>'+
  sections.join('')+'</main><footer><div class="wrap">&copy; '+new Date().getUTCFullYear()+' '+esc(name)+'</div></footer></body></html>';
+ // Apply content-only revisions inside visible text nodes. Never rewrite the fixed CSS.
+ const boundary=html.indexOf('</head>')+'</head>'.length;
+ let rest=html.slice(boundary);
+ for(const patch of patches){
+  for(const row of Array.isArray(patch?.replacements)?patch.replacements.slice(0,25):[]){
+   const before=esc(str(row?.before)),after=esc(str(row?.after));
+   if(!before||!after||before===after)continue;
+   rest=rest.replace(/>([^<>]*)</g,(whole,node)=>'>'+node.replaceAll(before,after)+'<');
+  }
+ }
+ html=html.slice(0,boundary)+rest;
  if(/SHO WEB SUPPORT|TEMPLATE PREVIEW|MAIN PHOTO AREA|PHOTO 02/.test(html))throw Error('テンプレート見本の不要な文字が残っています。');
  return {summary:'購入済みの「'+theme+'」テンプレートを固定したまま、お客様の素材と情報を反映しました。',files:[{path:'index.html',content:html}],model:'fixed-template',response_id:null,usage:null};
 }
