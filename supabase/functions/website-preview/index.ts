@@ -78,7 +78,11 @@ Deno.serve(async(req)=>{
   if((ext==='jpg'||ext==='jpeg') && !(bytes.length>=3&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255))return error('Preview file is not a JPEG image',502);
   if(ext==='webp' && !(bytes.length>=12&&new TextDecoder().decode(bytes.slice(0,4))==='RIFF'&&new TextDecoder().decode(bytes.slice(8,12))==='WEBP'))return error('Preview file is not a WebP image',502);
   if(ext==='html'||ext==='htm'||ext==='css'){
-   const base=u.origin+u.pathname+'?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key);
+   // req.url is an internal Edge Runtime URL in some deployments (http://.../website-preview).
+   // Never use it for browser-facing asset links: use the public HTTPS Functions URL.
+   const publicRoot=String(Deno.env.get('SUPABASE_URL')||'').replace(/\\/+$/,'');
+   if(!/^https:\/\/[A-Za-z0-9-]+\\.supabase\\.co$/.test(publicRoot))throw new Error('Invalid public Supabase URL');
+   const base=publicRoot+'/functions/v1/website-preview?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key);
    const content=rewrite(new TextDecoder().decode(bytes),path,base,ext==='css');
    return ext==='css'?new Response(content,{status:200,headers:{...noCache,'Content-Type':ct}}):new Response(JSON.stringify({html:content}),{status:200,headers:{...noCache,'Content-Type':'application/json; charset=utf-8'}});
   }
