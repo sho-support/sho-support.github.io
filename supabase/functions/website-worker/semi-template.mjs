@@ -30,7 +30,7 @@ export function renderSemiTemplate(ctx){
  }
  const galleryAssets=[...new Map([...gallery,...top.slice(1)].map(a=>[a.path,a])).values()].slice(0,32);
  if(galleryAssets.length){
-  sections.push(section('02 / PHOTO','GALLERY','<div class="gallery">'+galleryAssets.map((a,i)=>'<figure class="shot">'+img(a,name+'の写真 '+(i+1))+'</figure>').join('')+'</div>','gallery'));
+  sections.push(section('02 / PHOTO','GALLERY','<div class="gallery gallery-count-'+Math.min(galleryAssets.length,3)+'">'+galleryAssets.map((a,i)=>'<figure class="shot">'+img(a,name+'の写真 '+(i+1))+'</figure>').join('')+'</div>','gallery'));
   nav.push(['PHOTO','#gallery']);
  }
  const members=Array.isArray(data.members)?data.members.filter(x=>str(x?.name)).slice(0,30):[];
@@ -53,18 +53,18 @@ export function renderSemiTemplate(ctx){
   sections.push('<section class="section" id="contact"><div class="wrap contact"><div><div class="section-no">05 / CONTACT</div><h2>SNS / CONTACT</h2><p class="lead">最新情報やお問い合わせはこちらから。</p></div><div class="contact-links">'+buttons.join('')+'</div></div></section>');
   nav.push(['CONTACT','#contact']);
  }
- const brand=logo?img(logo,name+'のロゴ'):esc(name);
+ const brand=logo?'<span class="brand-logo">'+img(logo,name+'のロゴ')+'</span><span class="brand-name">'+esc(name)+'</span>':'<span class="brand-name">'+esc(name)+'</span>';
  const hero=top[0]?'<div class="photo photo-live">'+img(top[0],name+' メイン写真')+'</div>':'<div class="photo photo-title">'+esc(name)+'</div>';
  const first=nav[0]||null;
  const action=first?'<div class="hero-actions"><a class="btn" href="'+first[1]+'">'+esc(first[0]==='LIVE'?'ライブ情報を見る':first[0]==='PHOTO'?'写真を見る':first[0]==='CONTACT'?'お問い合わせ':'詳しく見る')+'</a></div>':'';
  const customCSS=[
  '.photo{overflow:hidden}.photo-live{display:block}.photo-live img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}',
  '.photo-live:before,.photo-live:after{z-index:0}.photo-title{padding:28px;text-align:center;font-size:clamp(1.6rem,4vw,3rem);font-weight:950;overflow-wrap:anywhere}',
- '.brand img{max-width:170px;max-height:52px;width:auto;height:auto;object-fit:contain}.hero h1{font-size:clamp(2.1rem,7vw,5.1rem);line-height:1.1;overflow-wrap:anywhere}',
- '.shot{position:relative;margin:0;overflow:hidden}.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.gallery{grid-auto-rows:minmax(155px,1fr)}',
+ '.brand{display:flex;align-items:center;gap:12px}.brand-logo img{max-height:49px;max-width:70px;width:auto;height:auto;object-fit:contain}.brand-name{font-weight:950;font-size:clamp(.9rem,2vw,1.12rem);line-height:1.35;overflow-wrap:anywhere}.hero h1{font-size:clamp(2.1rem,5vw,4rem);line-height:1.14;overflow-wrap:anywhere;text-wrap:balance}',
+ '.shot{position:relative;margin:0;overflow:hidden}.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.gallery{grid-auto-rows:minmax(155px,1fr)}.gallery-count-1{display:block;max-width:650px}.gallery-count-1 .shot{height:370px}.gallery-count-2{grid-template-columns:1fr 1fr;grid-template-rows:310px}.gallery-count-2 .shot:first-child{grid-row:auto;grid-column:auto}',
  '.member .avatar{overflow:hidden}.member .avatar img{width:100%;height:100%;object-fit:cover}.initial{font-size:2rem;color:var(--accent);font-weight:900}',
  '.member p{font-size:.84rem;color:var(--soft)}.minor-title{margin:25px 0 12px;font-size:1rem}.video-frame{min-height:0;aspect-ratio:16/9;overflow:hidden}.video-frame iframe{width:100%;height:100%;border:0}',
- '.contact-links .btn{overflow-wrap:anywhere}@media(max-width:760px){.event{grid-template-columns:85px 1fr 30px}.event .go{width:30px;height:30px}}'
+ '.contact-links .btn{overflow-wrap:anywhere}@media(max-width:760px){.event{grid-template-columns:85px 1fr 30px}.event .go{width:30px;height:30px}.gallery-count-1 .shot{height:285px}.gallery-count-2{grid-template-columns:1fr 1fr;grid-template-rows:190px}}'
  ].join('');
  const html='<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="'+esc(name+' 公式サイト')+'"><title>'+esc(name)+' | OFFICIAL WEBSITE</title><style>'+style+customCSS+'</style></head>'+
  '<body data-theme="'+theme+'"><header><div class="wrap head"><a class="brand" href="#top">'+brand+'</a><nav class="nav">'+nav.map(x=>'<a href="'+x[1]+'">'+esc(x[0])+'</a>').join('')+'</nav></div></header>'+
