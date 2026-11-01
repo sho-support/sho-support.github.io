@@ -111,7 +111,7 @@ export function renderSemiTemplate(ctx){
  '<body data-theme="'+theme+'"><header><div class="wrap head"><a class="brand" href="#top">'+brand+'</a><nav class="nav">'+nav.map(x=>'<a href="'+x[1]+'">'+esc(x[0])+'</a>').join('')+'</nav></div></header>'+
  '<main id="top"><section class="hero"><div class="wrap hero-grid"><div><div class="kicker">OFFICIAL WEBSITE</div><h1>'+esc(name)+'</h1><p>'+esc(str(latest.hero_message||topCopy||'ライブ情報や写真、最新のお知らせをお届けします。'))+'</p>'+action+'</div>'+hero+'</div></section>'+
  sections.join('')+'</main><footer><div class="wrap">'+(bottomCopy?'<p class="customer-footer-note">'+esc(bottomCopy)+'</p>':'')+'&copy; '+new Date().getUTCFullYear()+' '+esc(name)+'</div></footer>'+
- '<script>(function(){document.querySelectorAll(".photo-live img,.gallery .shot img").forEach(function(img){function fit(){if(img.naturalWidth&&img.naturalHeight&&img.naturalHeight/img.naturalWidth>1.4){img.classList.add("portrait-upload");}}if(img.complete)fit();else img.addEventListener("load",fit,{once:true});});})();<\\/script></body></html>';
+ '<script>(function(){document.querySelectorAll(".photo-live img,.gallery .shot img").forEach(function(img){function fit(){if(img.naturalWidth&&img.naturalHeight&&img.naturalHeight/img.naturalWidth>1.4){img.classList.add("portrait-upload");}}if(img.complete)fit();else img.addEventListener("load",fit,{once:true});});})();</script></body></html>';
  // Apply content-only revisions inside visible text nodes. Never rewrite the fixed CSS.
  const boundary=html.indexOf('</head>')+'</head>'.length;
  let rest=html.slice(boundary);
