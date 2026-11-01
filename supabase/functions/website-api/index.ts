@@ -483,6 +483,40 @@ Deno.serve(async (req) => {
       return json({ ok: true, custom_domain: domain });
     }
 
+    if(action==='admin_refresh_semi_template'){
+      if(role!=='admin')return json({error:'管理者権限が必要です。'},403);
+      const {data:siteNow,error:siteError}=await admin.from('website_sites')
+        .select('status').eq('site_id',siteId).single();
+      if(siteError)throw siteError;
+      if(siteNow.status!=='sho_review')return json({error:'運営確認待ちの案件だけ再生成できます。'},409);
+      const {data:intake,error:intakeError}=await admin.from('website_intakes')
+        .select('payload').eq('site_id',siteId).single();
+      if(intakeError)throw intakeError;
+      if(intake?.payload?.fields?.build_plan!=='semi')return json({error:'セミオーダーの案件だけ利用できます。'},409);
+      const {data:active,error:activeError}=await admin.from('website_jobs')
+        .select('id').eq('site_id',siteId).in('status',['queued','running']).limit(1);
+      if(activeError)throw activeError;
+      if(active?.length)return json({error:'すでに制作処理が進行中です。'},409);
+      const {data:job,error:jobError}=await admin.from('website_jobs').insert({
+        site_id:siteId,kind:'sho_revision',status:'queued',
+        instruction:'最新の保存済み入力内容とテンプレートで再生成する（文章・写真・レイアウトは入力内容に従う）。',
+        payload:{source:'admin_template_refresh',qa_rebuild:true}
+      }).select('id').single();
+      if(jobError)throw jobError;
+      const {error:updateError}=await admin.from('website_sites').update({
+        status:'building',current_note:'最新のテンプレートで制作案を再生成中。',
+        customer_approved:false
+      }).eq('site_id',siteId);
+      if(updateError)throw updateError;
+      await admin.from('website_activity').insert({
+        site_id:siteId,actor_type:'admin',actor_user_id:user.id,
+        action:'template_refresh_requested',detail:'制作案を最新の入力内容で再生成。',
+        payload:{job_id:job.id}
+      });
+      EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch(e=>console.error('template refresh worker failed',e)));
+      return json({ok:true,status:'building',job_id:job.id});
+    }
+
     if(action==='admin_request_review_fix'){
       if(role!=='admin')return json({error:'管理者権限が必要です。'},403);
       const note=String(body.detail||'').trim();
