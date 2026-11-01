@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import { verifyWebsiteBeforeDelivery } from './_shared/website.ts';
 
 const noCache={'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Robots-Tag':'noindex, nofollow','X-Content-Type-Options':'nosniff','Cross-Origin-Resource-Policy':'cross-origin','Access-Control-Allow-Origin':'https://sho-support.github.io','Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Content-Type'};
 const error=(message:string,status:number)=>new Response(message,{status,headers:{...noCache,'Content-Type':'text/plain; charset=utf-8'}});
@@ -41,6 +42,14 @@ Deno.serve(async(req)=>{
   const hash=await sha256(key);
   if(!site?.repo_full_name||(hash!==site.preview_access_token_hash&&hash!==site.review_access_token_hash))return error('Preview link expired',403);
   if(site.status==='live')return error('Preview ended. Visit the public site.',403);
+  if(u.searchParams.get('qa')==='1'){
+    const {data:order,error:orderError}=await db.from('website_orders').select('plan,template_style').eq('site_id',id).maybeSingle();
+    if(orderError)throw orderError;
+    try{
+      const check=await verifyWebsiteBeforeDelivery(site.repo_full_name,site.preview_branch||site.publish_branch||'main',order?.plan==='semi'?String(order.template_style||''):'');
+      return new Response(JSON.stringify({ok:true,css:check.inline_css,files:check.files}),{status:200,headers:{...noCache,'Content-Type':'application/json; charset=utf-8'}});
+    }catch(e){return new Response(JSON.stringify({ok:false,error:String((e as Error).message||e).slice(0,300)}),{status:422,headers:{...noCache,'Content-Type':'application/json; charset=utf-8'}})}
+  }
   const m=String(site.repo_full_name).match(/^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/);
   if(!m)return error('Missing preview repository',404);
   const token=Deno.env.get('GITHUB_PAGES_TOKEN')||'';
