@@ -183,13 +183,21 @@ Deno.serve(async (req) => {
       }
 
       if (!siteId) {
-        const { data: link, error: linkError } = await admin
+        const { data: links, error: linkError } = await admin
           .from('website_line_links')
           .select('site_id')
           .eq('line_user_id', lineUserId)
-          .maybeSingle();
+          .order('linked_at', { ascending: false })
+          .limit(2);
         if (linkError) throw linkError;
-        siteId = link?.site_id || null;
+        if ((links || []).length > 1) {
+          await reply(
+            event.replyToken,
+            '複数のホームページが登録されています。相談内容に「SITE ID 1242」のように、対象のSITE IDを添えてお送りください。',
+          );
+          continue;
+        }
+        siteId = links?.[0]?.site_id || null;
       }
 
       if (!siteId) continue;
@@ -205,7 +213,7 @@ Deno.serve(async (req) => {
       if (newlyLinked) {
         await reply(
           event.replyToken,
-          `SITE ID ${siteId} とこのLINEを紐づけました。今後のホームページ相談は、このトークからそのまま送っていただけます。`,
+          `SITE ID ${siteId} とこのLINEを紐づけました。ご相談の際は対象のSITE IDを添えてお送りください。`,
         );
       }
 
