@@ -47,7 +47,7 @@ export async function currentSession() {
 export async function requireWebsiteSession(returnUrl=location.href) {
   const session = await currentSession();
   if (session) return session;
-  const login = new URL('website-login.html', location.href);
+  const login = new URL('/website-login.html', location.origin);
   login.searchParams.set('next', returnUrl);
   location.replace(login.href);
   return null;
