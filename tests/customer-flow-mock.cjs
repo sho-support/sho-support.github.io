@@ -25,7 +25,7 @@ const stub=[
    let data={ok:true};
    if(body.action==='review_load')data={ok:true,site:{site_id:'TEST-001',site_name:'テストサイト',status:'customer_review',customer_approved:approved,preview_url:'https://example.com/preview'}};
    else if(body.action==='review_approve'){approved=true;data={ok:true,customer_approved:true};}
-   else if(body.action==='review_publish')data={ok:true,status:'live',public_url:'https://example.com/live'};
+   else if(body.action==='review_publish')data={ok:true,status:'live',public_url:'https://example.com/live',update_url:'https://sho-support.github.io/website-update.html?id=TEST-001&key=abc'};
    else if(body.action==='update_status')data={ok:true,site:{site_id:'TEST-001',site_name:'テストサイト',status:'live',adjustment_free_until:'2026-11-30T00:00:00Z',update_free_until:'2027-01-31T00:00:00Z'},plan:'full'};
    else if(body.action==='request_update'){updateCalls.push(body);data={ok:true,request_id:12,category:'free_monthly',status:'pending_sho'};}
    else throw Error('Unexpected API: '+body.action);
@@ -38,7 +38,9 @@ const stub=[
   await page.locator('#approve').click();
   await page.locator('#publish').waitFor({timeout:12000});
   await page.locator('#publish').click();
-  await page.getByText('公開設定が完了しました。').waitFor({timeout:12000});
+  await page.getByText('公開手続きを受け付けました。',{exact:false}).waitFor({timeout:12000});
+  assert.equal(await page.getByRole('link',{name:'完成したサイトを見る'}).count(),1);
+  assert.equal(await page.getByRole('link',{name:'更新・管理画面を開く'}).count(),1);
   assert.deepEqual(reviewCalls.slice(0,4),['review_load','review_approve','review_load','review_publish']);
   console.log('PASS secure LINE review approve and publish');
   await page.goto(BASE+'website-update.html?id=TEST-001&key=abcdefghijklmnopqrstuvwxyz',{waitUntil:'domcontentloaded'});
