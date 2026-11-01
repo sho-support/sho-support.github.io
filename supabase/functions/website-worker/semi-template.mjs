@@ -61,7 +61,13 @@ export function renderSemiTemplate(ctx){
  const lives=allLives.filter(x=>!x.date||String(x.date)>=today).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
  const oldLives=allLives.filter(x=>x.date&&String(x.date)<today).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
  if((!Array.isArray(checks.live_announcement)||checks.live_announcement.includes('yes'))&&allLives.length){
-  const card=x=>'<article class="event"><div class="date">'+esc(str(x.date||'EVENT').replace(/-/g,'.'))+'</div><div><b>'+esc(str(x.name||'ライブ'))+'</b><span>'+esc([x.time,x.venue,x.detail].map(str).filter(Boolean).join(' / '))+'</span></div><div class="go" aria-hidden="true">↗</div></article>';
+  const card=x=>{
+   const explicit=url(x.event_url||x.url||'');
+   const found=String(x.detail||'').match(/https?:\\/\\/[^\\s<>「」]+/i)?.[0]||'';
+   const destination=explicit||url(found);
+   const arrow=destination?'<a class="go" href="'+esc(destination)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(str(x.name||'ライブ'))+'の詳細を開く">↗</a>':'';
+   return '<article class="event"><div class="date">'+esc(str(x.date||'EVENT').replace(/-/g,'.'))+'</div><div><b>'+esc(str(x.name||'ライブ'))+'</b><span>'+esc([x.time,x.venue,x.detail].map(str).filter(Boolean).join(' / '))+'</span></div>'+arrow+'</article>';
+  };
   const upcoming=lives.length?'<div class="schedule">'+lives.map(card).join('')+'</div>':'';
   const previous=oldLives.length?'<h3 class="minor-title">PAST LIVE</h3><div class="schedule">'+oldLives.slice(0,15).map(card).join('')+'</div>':'';
   sections.push(section('01 / LIVE','LIVE / EVENT',upcoming+previous,'schedule'));nav.push(['LIVE','#schedule']);
