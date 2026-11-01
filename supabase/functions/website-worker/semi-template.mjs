@@ -63,7 +63,7 @@ export function renderSemiTemplate(ctx){
  if((!Array.isArray(checks.live_announcement)||checks.live_announcement.includes('yes'))&&allLives.length){
   const card=x=>{
    const explicit=url(x.event_url||x.url||'');
-   const found=String(x.detail||'').match(/https?:\\/\\/[^\\s<>「」]+/i)?.[0]||'';
+   const found=String(x.detail||'').match(/https?:\/\/[^\s<>「」]+/i)?.[0]||'';
    const destination=explicit||url(found);
    const arrow=destination?'<a class="go" href="'+esc(destination)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(str(x.name||'ライブ'))+'の詳細を開く">↗</a>':'';
    return '<article class="event"><div class="date">'+esc(str(x.date||'EVENT').replace(/-/g,'.'))+'</div><div><b>'+esc(str(x.name||'ライブ'))+'</b><span>'+esc([x.time,x.venue,x.detail].map(str).filter(Boolean).join(' / '))+'</span></div>'+arrow+'</article>';
