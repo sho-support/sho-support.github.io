@@ -29,15 +29,25 @@ function safeLocal(raw){
  }catch{return false}
 }
 function sourcePath(raw){
- if(!raw||/^(?:data:|blob:|#|javascript:|mailto:|tel:)/i.test(raw))return null;
- if(safeLocal(raw))return raw;
- if(/^(?:https?:|\/\/)/i.test(raw))return null;
+ const value=String(raw||'').trim().replaceAll('&amp;','&');
+ if(!value||/^(?:data:|blob:|#|javascript:|mailto:|tel:)/i.test(value))return null;
+ const validFile=file=>Boolean(file)&&file.length<=300&&!file.startsWith('/')&&!file.split('/').some(p=>p==='.'||p==='..'||p.startsWith('.git'))&&!file.startsWith('docs/');
  try{
-  const target=new URL(raw,'https://preview.local/'+path);
+  // The Edge Function rewrites relative asset references to signed, first-party URLs.
+  // Canonicalize these URLs with this viewer's current access key; never leave a
+  // private preview asset pointed at the cross-origin endpoint inside srcdoc.
+  const target=new URL(value,location.href),base=new URL(edge);
+  if(target.origin===base.origin&&target.pathname===base.pathname){
+   const file=target.searchParams.get('path')||'';
+   return validFile(file)?api(file):null;
+  }
+ }catch{return null}
+ if(/^(?:https?:|\/\/)/i.test(value))return null;
+ try{
+  const target=new URL(value,'https://preview.local/'+path);
   if(target.origin!=='https://preview.local')return null;
   const file=decodeURIComponent(target.pathname.slice(1));
-  if(!file||file.includes('..')||file.startsWith('docs/'))return null;
-  return api(file);
+  return validFile(file)?api(file):null;
  }catch{return null}
 }
 async function getAsset(url){
@@ -48,6 +58,13 @@ async function getAsset(url){
 async function asDataURL(response){
  const blob=await response.blob();
  if(blob.size>8_000_000)throw Error('画像サイズが上限を超えています。');
+ // Reject a JSON/error payload incorrectly returned as image/png (HTTP 200 alone
+ // does not prove the bytes are an image).
+ if(blob.type==='image/png'){
+  const b=new Uint8Array(await blob.slice(0,8).arrayBuffer());
+  if(b.length<8||b[0]!==137||b[1]!==80||b[2]!==78||b[3]!==71||b[4]!==13||b[5]!==10||b[6]!==26||b[7]!==10)
+   throw Error('PNG画像ではない応答を受信しました');
+ }
  return new Promise((resolve,reject)=>{
   const fr=new FileReader();fr.onload=()=>resolve(String(fr.result));fr.onerror=()=>reject(fr.error);fr.readAsDataURL(blob);
  });
@@ -76,7 +93,7 @@ try{
  for(const el of images){
   const attr=el.hasAttribute('src')?'src':el.hasAttribute('poster')?'poster':'href';
   const raw=el.getAttribute(attr),target=sourcePath(raw);
-  if(!target)continue;
+  if(!target){if(/^https?:\/\/tyhymvgjkoebetyypspj\.supabase\.co\/functions\/v1\/website-preview/i.test(String(raw||'')))issues.push('画像URLを解決できません: '+String(raw).split('?')[0]);continue;}
   try{el.setAttribute(attr,await asDataURL(await getAsset(target)));}
   catch(err){issues.push('画像: '+(raw||'')+' ('+String(err.message||err)+')');}
  }
