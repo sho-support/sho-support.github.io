@@ -95,6 +95,7 @@ function normalizeProduction(detail){
  const history=(detail.activity||[]).map(a=>({at:formatDate(a.created_at),title:activityLabel(a.action),text:a.detail||''}));
  return {
   id:site.site_id,
+  plan:f.build_plan||'',
   name:site.site_name||f.site_name||'ホームページ',
   customer:f.contact_name||f.contact_email||'顧客',
   status:site.status,
@@ -166,7 +167,9 @@ function actionHtml(p){
  if(p.status==='sho_review'){
  const unresolved=(p.reviewIssues||[]).filter(x=>x.status!=='confirmed').length;
  return '<div class="warning" style="margin-top:0;border-left-color:var(--ok)">制作案を確認してください。問題があれば修正内容を送信できます。運営が確認OKにするまでお客様へURLは送られません。</div>'+
- (p.preview?'<a class="btn primary full" href="'+esc(p.preview)+'" target="_blank" rel="noopener" style="margin-top:8px">① プレビューを確認</a>':'<div class="warning">プレビューの準備中です。</div>')+reviewIssuesHtml(p)+
+ (p.preview?'<a class="btn primary full" href="'+esc(p.preview)+'" target="_blank" rel="noopener" style="margin-top:8px">① プレビューを確認</a>':'<div class="warning">プレビューの準備中です。</div>')+
+  ((prodMode&&p.plan==='semi')?'<button class="btn gold full" id="refreshSemiTemplate" type="button" style="margin-top:8px">写真・文章を最新の仕様で再生成</button><p class="meta" style="margin-top:5px">保存済みの制作内容を使って再生成します。追加の写真登録は不要です。</p>':'')+
+  reviewIssuesHtml(p)+
  '<div class="actionbar"><button class="btn" id="openReviewFix" type="button">② 修正を依頼する</button><button class="btn green" id="approveSho" type="button" '+(unresolved?'disabled title="未確認の修正項目が残っています"':'')+'>③ 確認OK → お客様へ送る</button></div>'+
  '<div class="review-panel" id="shoRevisionPanel" hidden><p class="review-help">修正する場所と内容を具体的に入力してください。</p><textarea class="note" id="reviewNote" placeholder="例：TOPの画像が表示されていない。写真を修正し、他は変更しない。"></textarea><div class="actionbar"><button class="btn" id="closeReviewFix" type="button">戻る</button><button class="btn primary" id="requestFix" type="button">修正内容を送信・再制作</button></div></div>';
 }
@@ -210,6 +213,12 @@ function bind(p,root){
  q('startBuild')?.addEventListener('click',()=>demoMove(p,'building','要望を受信。AIがサイトを作成中。','作成開始','受信した要望から制作を開始。'));
  q('buildDone')?.addEventListener('click',()=>demoMove(p,'sho_review','AI制作完了。SHOが内容を確認中。','AI制作完了','SHO確認へ移行。'));
  q('runWorker')?.addEventListener('click',async()=>{try{await websiteApi('admin_run_worker',{site_id:p.id});state=await loadProduction();render()}catch(error){alert(error.message||'AI制作を開始できませんでした。')}});
+ q('refreshSemiTemplate')?.addEventListener('click',async()=>{
+  if(!confirm('保存済みの制作内容・写真を使い、選択済みのテンプレートで再生成しますか？（まだお客様には送信されません）'))return;
+  const btn=q('refreshSemiTemplate');btn.disabled=true;btn.textContent='再生成の受付中…';
+  try{await websiteApi('admin_refresh_semi_template',{site_id:p.id});state=await loadProduction();render();}
+  catch(error){alert(error.message||'再生成を開始できませんでした。');btn.disabled=false;btn.textContent='写真・文章を最新の仕様で再生成';}
+ });
  const shoRevisionPanel=q('shoRevisionPanel');
  q('openReviewFix')?.addEventListener('click',()=>{if(shoRevisionPanel){shoRevisionPanel.hidden=false;q('reviewNote')?.focus();}});
  q('closeReviewFix')?.addEventListener('click',()=>{if(shoRevisionPanel)shoRevisionPanel.hidden=true;});
