@@ -62,8 +62,21 @@ Deno.serve(async(req)=>{
   if(declaredSize>limit)return error('Preview file too large',413);
   const buffer=await github.arrayBuffer();
   if(buffer.byteLength>limit)return error('Preview file too large',413);
-  const bytes=new Uint8Array(buffer);
+  let bytes=new Uint8Array(buffer);
+  // GitHub Contents API may return a JSON/base64 envelope even with the raw
+  // media type. Normalize it before assigning the image MIME type.
+  if(bytes[0]===123 && (github.headers.get('content-type')||'').includes('json')){
+    const obj=JSON.parse(new TextDecoder().decode(bytes));
+    if(obj?.encoding==='base64' && typeof obj.content==='string'){
+      const raw=atob(obj.content.replace(/\s+/g,''));
+      if(raw.length>limit)return error('Preview file too large',413);
+      bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
+    }
+  }
   const ext=(path.match(/\.([A-Za-z0-9]+)$/)?.[1]||'html').toLowerCase(),ct=types[ext]||'application/octet-stream';
+  if(ext==='png' && !(bytes.length>=8&&bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10))return error('Preview file is not a PNG image',502);
+  if((ext==='jpg'||ext==='jpeg') && !(bytes.length>=3&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255))return error('Preview file is not a JPEG image',502);
+  if(ext==='webp' && !(bytes.length>=12&&new TextDecoder().decode(bytes.slice(0,4))==='RIFF'&&new TextDecoder().decode(bytes.slice(8,12))==='WEBP'))return error('Preview file is not a WebP image',502);
   if(ext==='html'||ext==='htm'||ext==='css'){
    const base=u.origin+u.pathname+'?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key);
    const content=rewrite(new TextDecoder().decode(bytes),path,base,ext==='css');
