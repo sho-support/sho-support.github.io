@@ -1,4 +1,5 @@
 import { adminClient, json, notifyOwner } from './_shared/website.ts';
+import { renderSemiTemplate } from './semi-template.mjs';
 
 const GH_VER='2026-03-10';
 const TEXT_EXT=/\.(html?|css|js|json|md|txt|svg|xml|webmanifest)$/i;
@@ -105,9 +106,12 @@ async function processJob(siteId=''){
   const existing=await readRepo(ri.full,branch),ref=await referenceText(String(intake.payload?.fields?.reference_url||'').trim()),assets=assetPlan(intake.payload);
   const templateSource=String(intake.payload?.fields?.build_plan||'')==='semi'?await officialSemiTemplate(String(intake.payload?.fields?.template_style||'')):'';
   const context={site,intake,activity,job,existing,ref,assets,templateSource};
-  let ai=await buildAI(context),files=filesOK(ai.files);
-  let issues=validateGenerated(files,assets,String(intake.payload?.fields?.build_plan||'full'));
-  if(issues.length){ai=await buildAI({...context,correction:{issues,files}});files=filesOK(ai.files);issues=validateGenerated(files,assets,String(intake.payload?.fields?.build_plan||'full'));}
+  const plan=String(intake.payload?.fields?.build_plan||'full'),semi=plan==='semi';
+  let ai=semi?renderSemiTemplate(context):await buildAI(context),files=filesOK(ai.files);
+  let issues=validateGenerated(files,assets,plan);
+  if(issues.length&&!semi){ai=await buildAI({...context,correction:{issues,files}});files=filesOK(ai.files);issues=validateGenerated(files,assets,plan);}
+  // For semi, never replace the chosen design with a model-generated alternative.
+
   if(issues.length)throw new Error('制作ファイル検査に失敗：'+issues.join(' / '));
   // Lightweight pageview counting is enabled only when the server sees 'live'.
   // Generated draft and owner-preview visits never count.
