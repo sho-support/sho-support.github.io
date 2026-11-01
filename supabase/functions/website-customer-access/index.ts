@@ -35,11 +35,17 @@ async function resolveAccess(admin:any, siteId:string, key:string) {
   return order;
 }
 
+const validSemiTemplates = new Set(['rock','cafe','cute','minimal','premium','pop','vintage','cyber','organic','editorial']);
 function forceOrderFields(payload:any, order:any) {
   const base = payload && typeof payload === 'object' ? structuredClone(payload) : {};
   base.fields = base.fields && typeof base.fields === 'object' ? base.fields : {};
   base.fields.build_plan = order.plan;
-  base.fields.template_style = order.plan === 'semi' ? (order.template_style || '') : '';
+  if (order.plan === 'semi') {
+    const requestedTemplate=String(base.fields.template_style||'').trim();
+    base.fields.template_style=validSemiTemplates.has(requestedTemplate) ? requestedTemplate : (order.template_style||'');
+  } else {
+    base.fields.template_style='';
+  }
   return base;
 }
 
@@ -356,6 +362,12 @@ Deno.serve(async(req)=>{
     if(!Array.isArray(checks.privacy)||!checks.privacy.length) return json({error:'公開用連絡先の掲載許可を確認してください。'},400);
 
     const submittedAt=new Date().toISOString();
+    if (order.plan==='semi' && f.template_style!==order.template_style) {
+      const {error:orderTemplateError}=await admin.from('website_orders').update({
+        template_style:f.template_style,updated_at:submittedAt
+      }).eq('order_code',order.order_code).eq('status','site_created');
+      if(orderTemplateError)throw orderTemplateError;
+    }
     const {error:intakeError}=await admin.from('website_intakes').upsert({
       site_id:siteId,payload,last_saved_at:submittedAt,submitted_at:submittedAt
     },{onConflict:'site_id'});
@@ -396,7 +408,7 @@ Deno.serve(async(req)=>{
     EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch((e)=>console.error('worker trigger',e)));
     const {data:orderLine}=await admin.from('website_orders').select('line_user_id').eq('site_id',siteId).maybeSingle();
     if(orderLine?.line_user_id){
-      const result=await linePush(orderLine.line_user_id,'ホームページの制作内容を受け付けました。ご入力ありがとうございます。\n\n制作を開始します。制作案の準備が整い、運営による確認が完了しましたら、こちらのLINEへ改めてご案内します。');
+      const result=await linePush(orderLine.line_user_id,'制作のご依頼を受け付けました。\nSITE ID：'+siteId+'\n\nご入力ありがとうございます。制作案の確認ができ次第、このLINEでご案内します。');
       if(result.skipped||result.ok===false)await notifyOwner('【要対応】制作内容受付のLINE送信に失敗しました。SITE ID '+siteId);
     }
 
