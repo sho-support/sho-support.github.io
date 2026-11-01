@@ -1,4 +1,4 @@
-import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, publishApprovedStagedBranch, triggerWebsiteWorker } from './_shared/website.ts';
+import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, triggerWebsiteWorker } from './_shared/website.ts';
 
 type Body = {
   action?: string;
@@ -360,6 +360,9 @@ Deno.serve(async (req) => {
         if (!site.customer_approved || !reviewSite.customer_approved) return json({ error: '先にサイト内容の承認が必要です。' }, 409);
         if (!site.repo_full_name) return json({ error: '公開先GitHub Repoがまだ設定されていません。' }, 409);
 
+        const {data:preflightOrder,error:preflightError}=await admin.from('website_orders').select('plan,template_style').eq('site_id',siteId).maybeSingle();
+        if(preflightError)throw preflightError;
+        await verifyWebsiteBeforeDelivery(site.repo_full_name,site.preview_branch||site.publish_branch||'main',preflightOrder?.plan==='semi'?String(preflightOrder.template_style||''):'');
         await publishApprovedStagedBranch(site.repo_full_name,site.publish_branch||'main',site.preview_branch);
         await setGithubPagesSource(
           site.repo_full_name,
@@ -522,6 +525,7 @@ Deno.serve(async (req) => {
       if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
       const allowed = ['request_waiting','building','sho_review','customer_review','live','private','improving_private'];
       if (!allowed.includes(String(body.status))) return json({ error: 'ステータスが不正です。' }, 400);
+      if(body.status==='live')return json({error:'公開はお客様の確認画面から承認・公開操作を行ってください。管理画面から公開を省略できません。'},409);
       if(body.status==='customer_review'){
         const {data:checkSite,error:checkError}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();
         if(checkError)throw checkError;
@@ -529,6 +533,12 @@ Deno.serve(async (req) => {
         const {count,error:issuesError}=await admin.from('website_review_issues').select('id',{count:'exact',head:true}).eq('site_id',siteId).neq('status','confirmed');
         if(issuesError)throw issuesError;
         if(count)return json({error:'修正項目に未確認が残っています。修正後のチェックを完了してください。'},409);
+        const {data:ready,error:readyError}=await admin.from('website_sites').select('repo_full_name,publish_branch,preview_branch').eq('site_id',siteId).single();
+        if(readyError)throw readyError;
+        if(!ready.repo_full_name)return json({error:'制作サイトのGitHubリポジトリがありません。'},409);
+        const {data:ordered,error:orderError}=await admin.from('website_orders').select('plan,template_style').eq('site_id',siteId).maybeSingle();
+        if(orderError)throw orderError;
+        await verifyWebsiteBeforeDelivery(ready.repo_full_name,ready.preview_branch||ready.publish_branch||'main',ordered?.plan==='semi'?String(ordered.template_style||''):'');
       }
 
       if (['live','private','improving_private'].includes(String(body.status))) {
