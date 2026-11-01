@@ -38,6 +38,8 @@ jobs:
         run: node tests/semi-render.cjs
       - name: Verify public pages on mobile and desktop
         run: node tests/website-smoke.cjs
+      - name: Exercise owner review, confirmation and customer handoff controls
+        run: node tests/admin-interactive.cjs
       - name: Simulate customer order, review, publication and update
         run: node tests/customer-flow-mock.cjs
       - name: Simulate secure intake and member photo submission
