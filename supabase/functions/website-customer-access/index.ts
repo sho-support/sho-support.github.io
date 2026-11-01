@@ -213,9 +213,8 @@ Deno.serve(async(req)=>{
         customer_approved:true,current_note:'お客様が内容承認。公開操作待ち。'
       }).eq('site_id',siteId);
       await admin.from('website_activity').insert({
-        site_id:siteId,actor_type:'customer_line',action:'customer_approved',detail:'サイト内容を承認。SHO公開待ち。'
+        site_id:siteId,actor_type:'customer_line',action:'customer_approved',detail:'サイト内容を承認。お客様自身の公開操作待ち。'
       });
-      await notifyOwner('【お客様確認OK】SITE ID '+siteId+'\n公開操作を行ってください。');
       return json({ok:true,customer_approved:true});
     }
     if(action==='review_publish'){
@@ -244,11 +243,12 @@ Deno.serve(async(req)=>{
       await admin.from('website_jobs').update({status:'done'}).eq('site_id',siteId).eq('status','sho_review');
       await admin.from('website_update_requests').update({status:'completed'}).eq('site_id',siteId).eq('status','building');
       await admin.from('website_activity').insert({site_id:siteId,actor_type:'customer_line',action:'published',detail:'お客様の承認を受けてサイトを公開。'});
-      await notifyOwner('【サイト公開】SITE ID '+siteId+'\\n'+publicUrl);
+      await notifyOwner('【サイト公開】SITE ID '+siteId+'\n'+publicUrl);
       const {data:lineLink}=await admin.from('website_line_links').select('line_user_id').eq('site_id',siteId).maybeSingle();
       const updateUrl='https://sho-support.github.io/website-update.html?id='+encodeURIComponent(siteId)+'&key='+updateKey;
-      await linePush(lineLink?.line_user_id,'ホームページを公開しました。\\n'+publicUrl+'\\n\\n公開後の更新・修正依頼はこちらから送れます。\\n'+updateUrl);
-      return json({ok:true,status:'live',public_url:publicUrl});
+      const delivered=await linePush(lineLink?.line_user_id,'ホームページを公開しました。\n\n【公開サイト】\n'+publicUrl+'\n\n【更新・修正依頼】\n'+updateUrl+'\n\n公開日から無料期間が開始します。');
+      if(delivered.skipped||delivered.ok===false)await notifyOwner('【要対応】SITE ID '+siteId+' の公開完了LINEを送信できませんでした。お客様の確認画面にもリンクを表示済みです。');
+      return json({ok:true,status:'live',public_url:publicUrl,update_url:updateUrl});
     }
   }
 
