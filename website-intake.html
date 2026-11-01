@@ -405,6 +405,9 @@ function renderPreview(){
  return parts.join('');
 }
 async function submitIntake(){
+ // A pending autosave must finish before the final submission is committed.
+ clearTimeout(timer);
+ await saveQueue;
  const d=serialize(),f=d.fields;
  if(!String(f.site_name||'').trim())return alert('サイト名 / バンド名 / 店名を入力してください。');
  if(!(d.checks.rights||[]).length)return alert('掲載権利の確認にチェックしてください。');
