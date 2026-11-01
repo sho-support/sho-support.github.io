@@ -27,6 +27,23 @@ const randomReviewKey=()=>Array.from(crypto.getRandomValues(new Uint8Array(24)),
 const addMonths=(base:Date,months:number)=>{const d=new Date(base),day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+months);d.setUTCDate(Math.min(day,new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate()));return d.toISOString();};
 function githubSiteUrl(repo:string,domain?:string|null){const p=repo.split('/');const host=String(domain||'').replace('https://','').replace('http://','').split('/')[0];return host?'https://'+host+'/':'https://'+p[0]+'.github.io/'+p[1]+'/';}
 async function setOrderFreePeriod(admin:ReturnType<typeof adminClient>,siteId:string,now:Date){const {error}=await admin.from('website_orders').update({update_free_until:addMonths(now,3)}).eq('site_id',siteId).in('plan',['semi','full']);if(error)throw error;}
+const paidTemplates=new Set(['rock','cafe','cute','minimal','premium','pop','vintage','cyber','organic','editorial']);
+async function normalizePaidIntake(admin:ReturnType<typeof adminClient>,siteId:string,raw:unknown){
+  const {data:order,error}=await admin.from('website_orders')
+    .select('order_code,plan,template_style').eq('site_id',siteId).maybeSingle();
+  if(error)throw error;
+  const payload=raw&&typeof raw==='object'&&!Array.isArray(raw)?structuredClone(raw as Record<string,any>):{};
+  if(order){
+    payload.fields=payload.fields&&typeof payload.fields==='object'?payload.fields:{};
+    payload.fields.build_plan=order.plan;
+    if(order.plan==='semi'){
+      const wanted=String(payload.fields.template_style||'').trim();
+      payload.fields.template_style=paidTemplates.has(wanted)?wanted:(order.template_style||'');
+    }else payload.fields.template_style='';
+  }
+  return {payload,order};
+}
+
 async function findUserIdByEmail(admin: ReturnType<typeof adminClient>, email: string) {
   const target = email.trim().toLowerCase();
   if (!target) return null;
@@ -220,9 +237,10 @@ Deno.serve(async (req) => {
       const {data:currentSite,error:stateErr}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();if(stateErr)throw stateErr;
       if(currentSite.status!=='request_waiting')return json({error:'初回ヒアリングは受付終了です。更新依頼は専用の窓口からお願いします。'},409);
       const savedAt = new Date().toISOString();
+      const {payload}=await normalizePaidIntake(admin,siteId,body.payload);
       const { error } = await admin.from('website_intakes').upsert({
         site_id: siteId,
-        payload: body.payload || {},
+        payload,
         last_saved_at: savedAt,
       }, { onConflict: 'site_id' });
       if (error) throw error;
@@ -234,9 +252,16 @@ Deno.serve(async (req) => {
       const {data:currentSite,error:stateErr}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();if(stateErr)throw stateErr;
       if(currentSite.status!=='request_waiting')return json({error:'初回ヒアリングは送信済みです。更新依頼は専用の窓口からお願いします。'},409);
       const submittedAt = new Date().toISOString();
+      const {payload,order}=await normalizePaidIntake(admin,siteId,body.payload);
+      if(order?.plan==='semi' && payload.fields?.template_style!==order.template_style){
+        const {error:templateError}=await admin.from('website_orders').update({
+          template_style:payload.fields.template_style,updated_at:submittedAt
+        }).eq('order_code',order.order_code).eq('status','site_created');
+        if(templateError)throw templateError;
+      }
       const { error: intakeError } = await admin.from('website_intakes').upsert({
         site_id: siteId,
-        payload: body.payload || {},
+        payload,
         last_saved_at: submittedAt,
         submitted_at: submittedAt,
       }, { onConflict: 'site_id' });
@@ -256,7 +281,7 @@ Deno.serve(async (req) => {
       if (siteError) throw siteError;
       if (!site) return json({ error: '制作依頼はすでに送信済みです。二重受付は行いません。' }, 409);
 
-      const intakePayload = (body.payload || {}) as Record<string, any>;
+      const intakePayload = payload as Record<string, any>;
       const intakeFields = (intakePayload.fields || {}) as Record<string, any>;
       const intakeChecks = (intakePayload.checks || {}) as Record<string, any>;
       await admin.from('website_profiles').upsert({
