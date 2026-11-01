@@ -28,7 +28,7 @@ const checks={
  'Customer publication promotes the approved staging branch':customer.includes('await publishApprovedStagedBranch(reviewSite.repo_full_name'),
  'Legacy approval also promotes staged updates':api.includes('await publishApprovedStagedBranch(site.repo_full_name'),
  'GitHub merge is handled before Pages update':shared.includes('/merges')&&shared.includes('publishApprovedStagedBranch'),
- 'GitHub preflight verifies page style and image assets':shared.includes('verifyWebsiteBeforeDelivery')&&shared.includes('missing.push(\'画像\'')&&shared.includes('スタイルシートがありません'),
+ 'GitHub preflight verifies page style and image assets':shared.includes('verifyWebsiteBeforeDelivery')&&shared.includes("missing.push('画像")&&shared.includes('スタイルシートがありません'),
  'Owner handoff requires passing source preflight':api.includes('await verifyWebsiteBeforeDelivery(ready.repo_full_name'),
  'Customer publication checks current site files':customer.includes('await verifyWebsiteBeforeDelivery(reviewSite.repo_full_name'),
  'Legacy customer publication checks current site files':api.includes('await verifyWebsiteBeforeDelivery(site.repo_full_name'),
