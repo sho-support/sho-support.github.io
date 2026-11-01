@@ -22,6 +22,13 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
   const noLogo=renderSemiTemplate({...ctx(theme),assets:assets.filter(x=>x.field!=='logo_file')}).files[0].content;
   assert.ok(noLogo.includes('写真と音楽のサイト'),'no-logo fallback is attractive text');
  }
+ const revised=ctx('cyber');
+ revised.intake.payload.meta={semi_patches:[{name_override:'修正版バンド公式サイト',hero_message:'活動内容をご紹介します。',replacements:[{before:'仙台ステージ',after:'新会場ライブハウス'}]}]};
+ const revisedHTML=renderSemiTemplate(revised).files[0].content;
+ assert.ok(revisedHTML.includes('修正版バンド公式サイト')&&revisedHTML.includes('新会場ライブハウス'));
+ assert.ok(revisedHTML.includes('活動内容をご紹介します。'));
+ assert.ok(revisedHTML.includes('data-theme="cyber"')&&revisedHTML.includes('body[data-theme="cyber"]'),'Revisions cannot restyle purchased template');
+ assert.ok(!revisedHTML.includes('仙台ステージ'),'Old content replaced');
  const injected=ctx('cyber');injected.intake.payload.fields.site_name='<img src=x onerror=alert(1)>';injected.intake.payload.fields.instagram='javascript:alert(1)';
  const escaped=renderSemiTemplate(injected).files[0].content;
  assert.ok(!escaped.includes('<img src=x onerror=alert(1)>'));
