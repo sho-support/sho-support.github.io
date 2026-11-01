@@ -80,9 +80,9 @@ Deno.serve(async(req)=>{
   if(ext==='html'||ext==='htm'||ext==='css'){
    // req.url is an internal Edge Runtime URL in some deployments (http://.../website-preview).
    // Never use it for browser-facing asset links: use the public HTTPS Functions URL.
-   const publicRoot=String(Deno.env.get('SUPABASE_URL')||'').replace(/\\/+$/,'');
-   if(!/^https:\/\/[A-Za-z0-9-]+\\.supabase\\.co$/.test(publicRoot))throw new Error('Invalid public Supabase URL');
-   const base=publicRoot+'/functions/v1/website-preview?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key);
+   const publicRoot=new URL(Deno.env.get('SUPABASE_URL')||'');
+   if(publicRoot.protocol!=='https:'||!publicRoot.hostname.endsWith('.supabase.co'))throw new Error('Invalid public Supabase URL');
+   const base=publicRoot.origin+'/functions/v1/website-preview?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key);
    const content=rewrite(new TextDecoder().decode(bytes),path,base,ext==='css');
    return ext==='css'?new Response(content,{status:200,headers:{...noCache,'Content-Type':ct}}):new Response(JSON.stringify({html:content}),{status:200,headers:{...noCache,'Content-Type':'application/json; charset=utf-8'}});
   }
