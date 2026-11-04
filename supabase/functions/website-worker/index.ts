@@ -160,6 +160,7 @@ async function checkpointFull(admin:any,job:any,state:any,note:string){
 async function processJob(siteId=''){
  const admin=adminClient();let q=admin.from('website_jobs').select('*').eq('status','queued').order('created_at',{ascending:true}).limit(1);if(siteId)q=q.eq('site_id',siteId);const{data:queued,error:qerr}=await q.maybeSingle();if(qerr)throw qerr;if(!queued)return;
  const{data:job,error:lerr}=await admin.from('website_jobs').update({status:'running',started_at:new Date().toISOString(),error_message:null}).eq('id',queued.id).eq('status','queued').select('*').maybeSingle();if(lerr)throw lerr;if(!job)return;
+ let stagedForRetry=false;
  if(job.payload?.update_request_id){const {error}=await admin.from('website_update_requests').update({status:'building'}).eq('id',job.payload.update_request_id).eq('site_id',job.site_id);if(error)console.error('Update request state:',error)}
  try{const[{data:site,error:se},{data:intake,error:ie},{data:activity,error:ae}]=await Promise.all([admin.from('website_sites').select('*').eq('site_id',job.site_id).single(),admin.from('website_intakes').select('*').eq('site_id',job.site_id).single(),admin.from('website_activity').select('*').eq('site_id',job.site_id).order('created_at',{ascending:false}).limit(80)]);if(se)throw se;if(ie)throw ie;if(ae)throw ae;
   const ri=await ensureRepo(site),publishBranch=ri.branch||'main';if(site.repo_full_name!==ri.full||site.publish_branch!==publishBranch){const{error}=await admin.from('website_sites').update({repo_full_name:ri.full,publish_branch:publishBranch}).eq('site_id',site.site_id);if(error)throw error;site.repo_full_name=ri.full}
@@ -185,6 +186,7 @@ async function processJob(siteId=''){
   // All initial full-order projects use checkpointed, page-by-page generation.
   // Each request executes at most one AI call, then re-queues itself.
   const staged=plan==='full'&&job.kind==='initial_create'&&!isLiveRevision;
+  stagedForRetry=staged;
   let ai:any,stageResult:any=null;
   if(staged){
     stageResult=await advanceFullBuild(context,job.payload?.staged_full||null);
@@ -233,7 +235,27 @@ await putFile(ri.full,branch,'docs/index.html',offline(site.site_name),'Add offl
    const previewKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');const previewHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(previewKey))),b=>b.toString(16).padStart(2,'0')).join('');const preview='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(site.site_id)+'&key='+previewKey;const finished=new Date().toISOString(),payload={...(job.payload||{}),...(staged?{staged_full:{version:1,phase:'completed',page_count:stageResult.stagedState.plan.pages.length,usage:stageResult.usage,finished_at:finished}}:{}),ai:{model:ai.model,response_id:ai.response_id,usage:ai.usage},reference:{url:ref.url,ok:ref.ok,note:ref.note},github:{repo:ri.full,branch,preview_url:preview},summary:String(ai.summary||'').slice(0,5000)};
   await admin.from('website_jobs').update({status:'sho_review',finished_at:finished,payload}).eq('id',job.id);await admin.from('website_sites').update({status:'sho_review',preview_url:preview,preview_access_token_hash:previewHash,preview_token_issued_at:finished,preview_branch:isLiveRevision?branch:null,current_note:'制作案の生成が完了。運営にて確認中。',customer_approved:false}).eq('site_id',site.site_id);
   if(job.payload?.review_issue_id){const{error:issueErr}=await admin.from('website_review_issues').update({status:'ready_for_check',updated_at:finished}).eq('id',job.payload.review_issue_id).eq('site_id',site.site_id).eq('status','fixing');if(issueErr)throw issueErr;}await admin.from('website_activity').insert({site_id:site.site_id,actor_type:'ai',action:'ai_build_completed',detail:String(ai.summary||'AI制作完了').slice(0,5000),payload:{job_id:job.id,reference_ok:ref.ok}});if(!job.payload?.qa_rebuild)await notifyOwner(`【運営者向け：制作案完成】\nSITE ID ${site.site_id}\n${site.site_name}\n制作案の確認はこちら：\nhttps://sho-support.github.io/admin/index.html?site=${encodeURIComponent(site.site_id)}`)
- }catch(e:any){const m=String(e.message||e).slice(0,4000);console.error('website-worker',m);await admin.from('website_jobs').update({status:'error',error_message:m,finished_at:new Date().toISOString()}).eq('id',job.id);await admin.from('website_sites').update({status:'building',current_note:'AI制作でエラー。SHO確認が必要です。'}).eq('site_id',job.site_id);await admin.from('website_activity').insert({site_id:job.site_id,actor_type:'ai',action:'ai_build_error',detail:m,payload:{job_id:job.id}});if(!job.payload?.qa_rebuild)await notifyOwner(`【AI制作エラー】\nSITE ID ${job.site_id}\n${m.slice(0,1200)}`)}
+ }catch(e:any){
+    const m=String(e.message||e).slice(0,4000);
+    console.error('website-worker',m);
+    if(stagedForRetry){
+      const current=job.payload?.staged_full||initialFullState();
+      const retry=Number(current.attempts||0)+1;
+      if(retry<=2){
+        const next={...current,attempts:retry,lastError:m.slice(0,500)};
+        const {error:retryErr}=await admin.from('website_jobs').update({
+          status:'queued',payload:{...(job.payload||{}),staged_full:next},
+          error_message:'自動再試行 '+retry+'/2：'+m.slice(0,250),started_at:null
+        }).eq('id',job.id).eq('status','running');
+        if(!retryErr){
+          await admin.from('website_sites').update({status:'building',current_note:'一時エラーを検出。分割制作を自動再開（'+retry+'/2）'}).eq('site_id',job.site_id);
+          const awakened=await triggerWebsiteWorker(job.site_id);
+          if(!awakened.ok)console.error('分割制作リトライ起動失敗',JSON.stringify(awakened));
+          return;
+        }
+      }
+    }
+    await admin.from('website_jobs').update({status:'error',error_message:m,finished_at:new Date().toISOString()}).eq('id',job.id);await admin.from('website_sites').update({status:'building',current_note:'AI制作でエラー。SHO確認が必要です。'}).eq('site_id',job.site_id);await admin.from('website_activity').insert({site_id:job.site_id,actor_type:'ai',action:'ai_build_error',detail:m,payload:{job_id:job.id}});if(!job.payload?.qa_rebuild)await notifyOwner(`【AI制作エラー】\nSITE ID ${job.site_id}\n${m.slice(0,1200)}`)}
 }
 
 Deno.serve(async(req)=>{if(req.method!=='POST')return json({error:'Method not allowed'},405);const key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'',auth=req.headers.get('authorization')||'';if(!key||auth!==`Bearer ${key}`)return json({error:'Forbidden'},403);const b=await req.json().catch(()=>({}));EdgeRuntime.waitUntil(processJob(typeof b.site_id==='string'?b.site_id:''));return json({ok:true,accepted:true},202)});
