@@ -180,7 +180,21 @@ Deno.serve(async (req) => {
         if (retryError) throw retryError;
         jobId = retry.id;
       } else if (latest.status === 'running') {
-        return json({ ok: true, status: 'running', job_id: latest.id });
+        // Staged generation can be killed by the Edge runtime before it checkpoints.
+        // Only the administrator may recover a full-order build older than 3 minutes.
+        const stale=!!latest.started_at && (Date.now()-new Date(latest.started_at).getTime()>180000);
+        if(stale && latest.kind==='initial_create'){
+          const {data:intake,error:intakeErr}=await admin.from('website_intakes').select('payload').eq('site_id',siteId).maybeSingle();
+          if(intakeErr)throw intakeErr;
+          if(intake?.payload?.fields?.build_plan==='full'){
+            const deadline=new Date(Date.now()-180000).toISOString();
+            const {data:recovered,error:recoverErr}=await admin.from('website_jobs').update({
+              status:'queued',started_at:null,error_message:'実行時間超過を検出し、保存済み工程から再開しました。'
+            }).eq('id',latest.id).eq('status','running').lt('started_at',deadline).select('id').maybeSingle();
+            if(recoverErr)throw recoverErr;
+            if(!recovered)return json({ok:true,status:'running',job_id:latest.id});
+          }else return json({ok:true,status:'running',job_id:latest.id});
+        }else return json({ok:true,status:'running',job_id:latest.id});
       } else if (latest.status !== 'queued') {
         return json({ error: '現在はAIを再実行する必要がありません。' }, 409);
       }
