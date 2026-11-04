@@ -243,7 +243,20 @@ Deno.serve(async (req) => {
         if(reviewError)throw reviewError;
         reviewIssues=found||[];
       }
-      return json({site,intake,activity:activity||[],jobs:jobs||[],profile,updates:updates||[],reviewIssues,role});
+      // Customers and collaborators must not read unapproved staged HTML, private
+      // preview URLs or operational job payloads before SHO's quality gate.
+      const publicSite=role==='admin'?site:{
+        ...site,
+        preview_url:site.status==='customer_review'||site.status==='live'?site.preview_url:null,
+        preview_access_token_hash:null,review_access_token_hash:null
+      };
+      const visibleJobs=role==='admin'?(jobs||[]):(jobs||[]).map((j:any)=>({
+        id:j.id,site_id:j.site_id,kind:j.kind,status:j.status,
+        created_at:j.created_at,started_at:j.started_at,finished_at:j.finished_at
+      }));
+      const visibleActivity=role==='admin'?(activity||[]):(activity||[]).filter((x:any)=>
+        x.actor_type!=='admin'&&x.action!=='ai_build_error'&&x.action!=='review_issue_requested');
+      return json({site:publicSite,intake,activity:visibleActivity,jobs:visibleJobs,profile,updates:updates||[],reviewIssues,role});
     }
 
     if (action === 'save_draft') {
