@@ -36,8 +36,9 @@ export function validateFullPlan(plan,brief){
   paths.add(p.path);
  }
  const req=[brief.desired_appearance,brief.page_and_feature_requests,brief.final_notes].join(' ');
- const explicit=req.match(/(?:^|[^\d])([2-9]|1[0-2])\s*ページ(?:構成|のサイト|を制作|に限定|のHP|で)?/);
- if(explicit && pages.length!==Number(explicit[1]))throw Error('指定ページ数と構成が一致しません（希望:'+explicit[1]+'、構成:'+pages.length+'）');
+ const explicit=req.match(/(?:^|[^\d])([2-9]|1[0-2])\s*ページ(以上|構成|のサイト|を制作|に限定|のHP|で)?/);
+ if(explicit && (explicit[2]==='以上'?pages.length<Number(explicit[1]):pages.length!==Number(explicit[1])))
+  throw Error('指定ページ数と構成が一致しません（希望:'+explicit[1]+(explicit[2]==='以上'?'ページ以上':'ページ')+'、構成:'+pages.length+'）');
  return plan;
 }
 export function pageNames(plan){return plan.pages.map(p=>p.path);}
