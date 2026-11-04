@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X4VPQ87Q67"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-X4VPQ87Q67");</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080808">
 <meta name="robots" content="noindex,nofollow"><title>制作申込み内容の確認 | SHO WEB SUPPORT</title>
 <link rel="stylesheet" href="website-theme.css">
@@ -167,6 +169,8 @@ document.getElementById('orderBtn').onclick=async()=>{
   const d=await r.json().catch(()=>({}));
   if(!r.ok||!d?.order?.order_code)throw new Error(d?.error||'注文IDを発行できませんでした。');
   localStorage.setItem(RECEIPT,JSON.stringify({state_key:JSON.stringify(state),order:d.order}));
+  // Track successful applications, not purchases. No order ID or personal information is sent.
+  if(typeof gtag==='function')gtag('event','generate_lead',{method:'website_order',plan:String(state.plan||'unknown')});
   showDone(d.order);
  }catch(e){
   btn.disabled=false;btn.textContent='この内容で制作を申し込む';err.textContent=e.message||'処理に失敗しました。';err.classList.add('show');
