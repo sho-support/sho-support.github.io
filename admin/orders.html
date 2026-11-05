@@ -75,14 +75,14 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
      if(stage==='building')actions='<button class="btn" type="button" data-work-action="run">AI制作を実行・再実行</button>';
      if(stage==='sho_review')actions='<button class="btn" type="button" data-work-action="revise">SHOから修正を依頼</button><button class="btn activate" type="button" data-work-action="approve" '+(reviewIssues.length?'disabled title="未確認の修正項目があります"':'')+'>SHO確認OK → お客様確認へ</button>';
      if(stage==='customer_review'&&!site.customer_approved)actions='<button class="btn" type="button" data-work-action="resend">お客様へ確認URLをLINE送信</button>';
-     if(stage==='customer_review'&&site.customer_approved)actions='<div style="color:#8fe6b6;font-weight:850">お客様確認OK済み。公開操作は運営専用画面で管理します。</div>';
+     if(stage==='customer_review'&&site.customer_approved)actions='<button class="btn activate" type="button" data-work-action="publish">お客様確認OK → 公開する</button>';
      const updateInfo=updates.length?'<p style="color:#ebca85">対応中の更新依頼 '+updates.length+'件</p>':'';
      panel.innerHTML='<p>状態：<strong>'+esc(progress[stage]||stage)+'</strong>　／　お客様承認：'+(site.customer_approved?'OK':'未承認')+'</p>'+
        '<p>'+esc(site.current_note||'')+'</p>'+updateInfo+
        (safePreview?'<p><a class="btn" target="_blank" rel="noopener noreferrer" href="'+esc(safePreview)+'" style="display:flex;align-items:center;justify-content:center;text-decoration:none">制作プレビューを開く</a></p>':'')+
        '<div class="inline-actions">'+actions+'</div>'+
        '<div data-work-note style="display:none;margin-top:10px"><textarea data-work-text rows="4" style="width:100%;background:#111;border:1px solid #555;color:#fff;padding:10px;border-radius:9px" placeholder="修正してほしい場所と内容を入力"></textarea><button class="btn" data-work-action="send-fix" type="button">修正内容を送信する</button></div>'+
-       '<p class="note">公開先設定・最終公開・詳細な修正項目の承認は<a href="index.html?site='+encodeURIComponent(siteId)+'" style="color:#ebca85">詳細な制作操作</a>から行えます。</p>';
+       '<p class="note">公開先設定・詳細な修正項目の承認は<a href="index.html?site='+encodeURIComponent(siteId)+'" style="color:#ebca85">詳細な制作操作</a>から行えます。</p>';
      panel.querySelectorAll('[data-work-action]').forEach(btn=>btn.addEventListener('click',async()=>{
        const action=btn.dataset.workAction;
        if(action==='revise'){panel.querySelector('[data-work-note]').style.display='block';return;}
@@ -97,6 +97,13 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
          operation=async()=>{
            const {data,error}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action:'admin_send_review',site_id:siteId}});
            if(error||data?.error)throw new Error(data?.error||'LINEへの送信に失敗しました');
+         };
+       }
+       if(action==='publish'){
+         if(!confirm('お客様の内容承認を確認しましたか？ この操作でGitHub Pagesを公開します。'))return;
+         operation=async()=>{
+           const {data,error}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action:'admin_publish_site',site_id:siteId}});
+           if(error||data?.error)throw new Error(data?.error||'公開処理に失敗しました');
          };
        }
        if(action==='send-fix'){
