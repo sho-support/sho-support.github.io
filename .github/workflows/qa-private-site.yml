@@ -21,7 +21,7 @@ jobs:
       - name: Rebuild and verify legacy private semi-order site
         if: ${{ !contains(github.event.head_commit.message, '[QA-NOVA]') }}
         env:
-          REBUILD_QA_SITE: 'true'
+          REBUILD_QA_SITE: ${{ contains(github.event.head_commit.message, '[QA-SEMI-VERIFY]') && 'false' || 'true' }}
           QA_ACTION: ${{ contains(github.event.head_commit.message, '[QA-REVISION]') && 'revision' || 'rebuild' }}
         run: node tests/qa-private-site.cjs
       - name: Build and audit five-page staged full-order AI site
