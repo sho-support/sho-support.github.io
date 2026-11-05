@@ -42,6 +42,7 @@ const {chromium}=require('playwright');
    assert.equal(calls[0].domain_control_confirmed,true);
    assert.equal(calls[0].final_amount,30000);
    assert.equal(await page.locator('[data-activate]').isEnabled(),true,'quoted order can proceed to manual bank check');
+   assert.equal(await page.locator('[data-quote]').isDisabled(),true,'final quotation cannot be sent twice');
    assert.deepEqual(errors,[],'no admin page JavaScript errors');
    const vw=await page.evaluate(()=>({w:innerWidth,doc:document.documentElement.scrollWidth}));
    assert.ok(vw.doc<=vw.w+3,'admin order panel must not overflow viewport '+width);
