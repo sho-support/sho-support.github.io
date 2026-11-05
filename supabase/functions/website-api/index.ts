@@ -553,7 +553,14 @@ Deno.serve(async (req) => {
       // Each private draft publishes only docs/ (offline placeholder) until
       // the customer approves the complete site. This enables HTTPS/DNS checks
       // without leaking unreviewed files or changing any already-live site.
-      if(domain)await setGithubPagesSource(site.repo_full_name,site.publish_branch||'main','/docs');
+      if(domain){
+        try{
+          await setGithubPagesSource(site.repo_full_name,site.publish_branch||'main','/docs');
+        }catch(e:any){
+          console.error('Customer domain staging failed',String(e?.message||e).slice(0,420));
+          return json({error:'正式URLの事前設定に失敗しました。GitHub Pagesのプラン・非公開リポジトリ利用条件・権限・/docsの公開設定を確認してください。制作途中の非公開リポジトリは勝手に公開しません。'},409);
+        }
+      }
       await setGithubPagesDomain(site.repo_full_name, domain);
       const { error } = await admin.from('website_sites').update({ custom_domain: domain }).eq('site_id', siteId);
       if (error) throw error;
