@@ -137,8 +137,14 @@ try{state={...state,...JSON.parse(localStorage.getItem(STORE)||'{}')}}catch{}
  // Historical per-request selections are now consolidated into pay-as-you-go.
  if(state.plan==='one'&&['live','standard'].includes(state.update))state.update='none';
 const params=new URLSearchParams(location.search);
-if(['one','semi','full'].includes(params.get('plan')))state.plan=params.get('plan');
-if(names[params.get('template')]){state.template=params.get('template');state.plan='semi'}
+const deepPlan=params.get('plan');
+if(['one','semi','full'].includes(deepPlan)){
+  state.plan=deepPlan;
+  if(deepPlan!=='semi')state.template='';
+  if(deepPlan==='semi'||deepPlan==='full')state.update='free3';
+  else if(!['none','unlimited'].includes(state.update))state.update='';
+}
+if(names[params.get('template')]){state.template=params.get('template');state.plan='semi';state.update='free3'}
 
 const consult='ホームページ制作について注文前に相談したいです。';
 document.getElementById('consultTop').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(consult);
