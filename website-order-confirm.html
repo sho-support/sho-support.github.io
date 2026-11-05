@@ -65,7 +65,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <footer><div class="wrap">© 2026 SHO WEB SUPPORT</div></footer>
 <script>
 (()=>{
-const STORE='sho_web_order_v3', RECEIPT='sho_web_order_receipt_v2';
+const STORE='sho_web_order_v3', RECEIPT='sho_web_order_receipt_v2', PENDING='sho_web_order_pending_v1';
 const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',minimal:'T04 Minimal Grid',premium:'T05 Premium Noir',pop:'T06 Pop Studio',vintage:'T07 Vintage Poster',cyber:'T08 Neon Circuit',organic:'T09 Earth Atelier',editorial:'T10 Editorial Mono'};
 const planLabels={one:'1ページ完結サイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'},prices={one:15000,semi:22000,full:30000};
 const updateLabels={none:'更新プランなし',live:'LIVE更新 ¥1,000 / 回',standard:'通常更新 ¥2,500 / 回',unlimited:'通常更新 月8回まで ¥7,000 / 月',free3:'通常更新 月8回まで / 公開後3か月無料（通常 ¥7,000 / 月）'};
@@ -168,23 +168,40 @@ try{
  else if(receipt&&!fresh)localStorage.removeItem(RECEIPT);
 }catch{}
 
+// Keep a cryptographically random, browser-stored attempt across network errors.
+function pendingAttempt(){
+ const stateKey=JSON.stringify(state);
+ let old=null;try{old=JSON.parse(localStorage.getItem(PENDING)||'null')}catch{}
+ const time=old?.created_at?Date.parse(old.created_at):0;
+ if(old?.state_key===stateKey&&time&&Date.now()-time<48*3600*1000&&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(old.client_request_id||'')&&
+  /^[0-9a-f]{40}$/.test(old.client_link_token||''))return old;
+ const result={
+  state_key:stateKey,created_at:new Date().toISOString(),
+  client_request_id:crypto.randomUUID(),
+  client_link_token:[...crypto.getRandomValues(new Uint8Array(20))].map(v=>v.toString(16).padStart(2,'0')).join('')
+ };
+ localStorage.setItem(PENDING,JSON.stringify(result));
+ return result;
+}
 termsCheck.addEventListener('change',()=>{document.getElementById('orderBtn').disabled=!termsCheck.checked;});
 document.getElementById('orderBtn').onclick=async()=>{
  const btn=document.getElementById('orderBtn'),err=document.getElementById('error');
  if(btn.disabled)return; btn.disabled=true;btn.textContent='注文IDを発行中…';err.classList.remove('show');
  try{
+  const attempt=pendingAttempt();
   const r=await fetch('https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-order-api',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({plan:state.plan,template_style:state.template||'',update_plan:state.update,custom_domain:!!state.domain,custom_domain_note:'',extra_request:String(state.extraRequest||'').slice(0,1500),website:''})
+    body:JSON.stringify({plan:state.plan,template_style:state.template||'',update_plan:state.update,custom_domain:!!state.domain,custom_domain_note:'',extra_request:String(state.extraRequest||'').slice(0,1500),client_request_id:attempt.client_request_id,client_link_token:attempt.client_link_token,website:''})
   });
   const d=await r.json().catch(()=>({}));
   if(!r.ok||!d?.order?.order_code)throw new Error(d?.error||'注文IDを発行できませんでした。');
-  localStorage.setItem(RECEIPT,JSON.stringify({state_key:JSON.stringify(state),order:d.order}));
+  try{localStorage.setItem(RECEIPT,JSON.stringify({state_key:JSON.stringify(state),order:d.order}));localStorage.removeItem(PENDING)}catch(storageError){console.warn('Receipt storage failed, but order was accepted',storageError)}
   // Track successful applications, not purchases. No order ID or personal information is sent.
   if(typeof gtag==='function')gtag('event','generate_lead',{method:'website_order',plan:String(state.plan||'unknown')});
   showDone(d.order);
  }catch(e){
-  btn.disabled=false;btn.textContent='この内容で制作を申し込む';err.textContent=e.message||'処理に失敗しました。';err.classList.add('show');
+  btn.disabled=false;btn.textContent='同じお申し込みを再試行する';err.textContent=(e.message||'通信に失敗しました。')+' ※二重申込みを避けるため、同じ受付データで再試行します。';err.classList.add('show');
  }
 };
 })();
