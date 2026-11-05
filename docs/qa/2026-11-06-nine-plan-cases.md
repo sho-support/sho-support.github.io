@@ -97,3 +97,12 @@
 - HTTP実注文APIで数字のみの注文番号1000の発行を実際に確認。DBアーカイブ後にテスト注文を削除し、現在の注文/案件/ジョブは0件。
 - 安全確認のためテスト銀行の情報は `bank_transfer_test` にのみ保持。 `bank_transfer` 本番振込先は未設定。
 - ブラウザ検査を320px/390px/768px/1366pxの4画面幅・48ケースへ拡大した。最新実行結果は別途確認する。
+
+
+## 最終確認：48ケース + RLS
+- GitHub Actions run `42127815193` の `sales-ui` ジョブは `success`。ログにも `"total": 48` と明示。320/390/768/1366pxで、9注文ケース+生成サンプル3ケースの計48件を合格。
+- SupabaseのRLSを確認：すべての `public.website_*` テーブルでRLS有効。公開スキーマの顧客データは `authenticated` のサイト権限確認付きSELECTポリシー、管理者表は本人ID限定、LINE連携表は管理者限定。 `anon` 向けSELECTポリシーなし。
+- 現在の管理者アカウント1件。現行案件、注文、制作ジョブ、顧客リンクは0件。既存過去テストのバックアップは保持。
+- Netlify Public判定は認証なしGET HTTP401のためFAIL。Netlify設定は所有者本人がProject visibilityを変更する必要があり、Github/Supabaseで代替できない。 https://docs.netlify.com/manage/security/secure-access-to-sites/project-visibility/
+- GitHub Pagesの無料URLは正式公開時に実際のPages設定を照合して発行する。運営側ユーザーサイトPages設定がAPIで404だったため、未設定扱い時はGitHubデフォルトURLへフォールバックする実装。
+- 正式見積り・制作開始～公開の本番E2Eは、顧客の本物のLINE通信と運営側の権限ある操作を必要とするため未完了。ユーザー確認なしの対外通知や公開は実行しない。
