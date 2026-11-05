@@ -538,6 +538,12 @@ Deno.serve(async (req) => {
       if(site.published_at || ['live','private','improving_private'].includes(String(site.status)))
         return json({error:'公開後のドメイン変更は名刺・看板などのURLに影響するため、個別の移行手続きが必要です。既存URLを維持してください。'},409);
       const domain = body.custom_domain ? normalizeCustomerHostname(body.custom_domain) : null;
+      if(domain){
+        const {data:alreadyUsed,error:duplicateErr}=await admin.from('website_sites')
+          .select('site_id').eq('custom_domain',domain).neq('site_id',siteId).limit(1);
+        if(duplicateErr)throw duplicateErr;
+        if(alreadyUsed?.length)return json({error:'この正式URLは別のお客様のサイトに割り当て済みです。別のURLを指定してください。'},409);
+      }
       // Each private draft publishes only docs/ (offline placeholder) until
       // the customer approves the complete site. This enables HTTPS/DNS checks
       // without leaking unreviewed files or changing any already-live site.
