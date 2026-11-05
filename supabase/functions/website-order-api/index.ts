@@ -17,6 +17,10 @@ function validBody(body:any){
   if(!['one','semi','full'].includes(plan)) return null;
   const templateStyle=String(body?.template_style||'').slice(0,32);
   if(plan==='semi'&&!['rock','cafe','cute','minimal','premium','pop','vintage','cyber','organic','editorial'].includes(templateStyle)) return null;
+  const requestId=String(body?.client_request_id||'').trim().toLowerCase();
+  const clientToken=String(body?.client_link_token||'').trim().toLowerCase();
+  if(Boolean(requestId)!==Boolean(clientToken))return null;
+  if(requestId&&(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(requestId)||!/^[0-9a-f]{40}$/.test(clientToken)))return null;
   const updatePlan=String(body?.update_plan||'none');
   if(!['none','live','standard','unlimited','free3'].includes(updatePlan)) return null;
   return {
@@ -26,6 +30,7 @@ function validBody(body:any){
     custom_domain:Boolean(body?.custom_domain),
     custom_domain_note:String(body?.custom_domain_note||'').slice(0,300),
     extra_request:String(body?.extra_request||'').trim().slice(0,1500),
+    client_request_id:requestId,client_link_token:clientToken,
   };
 }
 
@@ -58,6 +63,31 @@ Deno.serve(async(req)=>{
 
   const amount=v.plan==='one'?15000:v.plan==='semi'?22000:30000;
   const admin=adminClient();
+  // A browser retry reuses its original request ID and LINE pairing token.
+  // Fetch the already-created order BEFORE rate limiting or creating a new ID.
+  const expectedHash=v.client_link_token
+    ? Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v.client_link_token))),b=>b.toString(16).padStart(2,'0')).join('')
+    : '';
+  async function previouslyCreated(){
+    if(!v.client_request_id)return null;
+    const {data:existing,error:lookupError}=await admin.from('website_orders')
+      .select('order_code,status,plan,template_style,update_plan,custom_domain,amount_from,created_at,line_link_token_hash,selections')
+      .contains('selections',{client_request_id:v.client_request_id}).maybeSingle();
+    if(lookupError)throw lookupError;
+    if(!existing)return null;
+    if(existing.line_link_token_hash!==expectedHash||existing.plan!==v.plan||
+      (existing.template_style||null)!==(v.template_style||null)||existing.amount_from!==amount||
+      Boolean(existing.custom_domain)!==v.custom_domain||
+      String(existing.selections?.extra_request||'')!==v.extra_request)
+      return {mismatch:true};
+    const {line_link_token_hash,selections,...publicOrder}=existing;
+    return {ok:true,order:{...publicOrder,link_token:v.client_link_token}};
+  }
+  const prev=await previouslyCreated();
+  if(prev?.mismatch)return json({error:'既存の申込み内容と再送データが一致しません。申込みページからやり直してください。'},409);
+  if(prev)return new Response(JSON.stringify({...prev,reused:true}),{status:200,headers:{
+    'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':allowedOrigin
+  }});
   const reqHash=await requestHash(req);
   const since=new Date(Date.now()-60*60*1000).toISOString();
   if(reqHash){
@@ -69,7 +99,7 @@ Deno.serve(async(req)=>{
     if((recentCount||0)>=5)return json({error:'短時間に注文操作が繰り返されています。時間を置いてお試しください。'},429);
   }
   const orderCode=await code(admin,v.plan);
-  const linkToken=Array.from(crypto.getRandomValues(new Uint8Array(20)),b=>b.toString(16).padStart(2,'0')).join('');
+  const linkToken=v.client_link_token||Array.from(crypto.getRandomValues(new Uint8Array(20)),b=>b.toString(16).padStart(2,'0')).join('');
   const linkHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(linkToken))),b=>b.toString(16).padStart(2,'0')).join('');
   const selections={
     plan:v.plan,
@@ -79,6 +109,7 @@ Deno.serve(async(req)=>{
     custom_domain_note:v.custom_domain_note,
     extra_request:v.extra_request,
     source:'website-order',
+    ...(v.client_request_id?{client_request_id:v.client_request_id}:{}),
   };
 
   const {data,error}=await admin.from('website_orders').insert({
@@ -95,9 +126,19 @@ Deno.serve(async(req)=>{
     request_hash:reqHash,
     selections,
   }).select('order_code,status,plan,template_style,update_plan,custom_domain,amount_from,created_at').single();
-  if(error) throw error;
+  if(error){
+    if(String(error.code)==='23505'&&v.client_request_id){
+      const already=await previouslyCreated();
+      if(already&&!already.mismatch)return new Response(JSON.stringify({...already,reused:true}),{status:200,headers:{
+        'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':allowedOrigin
+      }});
+    }
+    throw error;
+  }
 
-  await notifyOwner(`【新規仮注文】\n${orderCode}\nプラン: ${v.plan}\n金額: ¥${amount.toLocaleString()}〜\nLINE送信待ち`);
+  // Nonessential notifications must never turn a successfully persisted order into
+  // a 500 response. The admin order list remains the source of truth.
+  try{await notifyOwner(`【新規仮注文】\n${orderCode}\nプラン: ${v.plan}\n金額: ¥${amount.toLocaleString()}〜\nLINE送信待ち`)}catch(error){console.error('Order saved, owner notification failed',error)}
   return new Response(JSON.stringify({ok:true,order:{...data,link_token:linkToken}}),{status:201,headers:{
     'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':allowedOrigin
   }});
