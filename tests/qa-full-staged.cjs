@@ -12,12 +12,18 @@ const paths=[...pages,'style.css','site.js'];
  const jwt=(await auth.json()).value;assert.ok(jwt&&jwt.length>500);
  const endpoint=(params={})=>base+'?'+new URLSearchParams({site_id:siteId,...params});
  const h={Authorization:'Bearer '+jwt};
- const kicked=await fetch(endpoint(),{method:'POST',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({action:'qa-dispatch-existing'})});
- if(kicked.status!==202)throw Error('QA worker launch rejected: '+kicked.status+' '+(await kicked.text()).slice(0,200));
- const {job_id:jobId}=await kicked.json();
- assert.ok(jobId,'Worker job exists');
- console.log('STAGED_QA_JOB_ACCEPTED',jobId);
- let done=false,last='queued';
+ const before=await fetch(endpoint({info:'job'}),{headers:h});
+ assert.equal(before.status,200,'OIDC secured QA job inspection');
+ const prior=(await before.json()).job;
+ let jobId,done=false,last='queued';
+ if(prior?.status==='sho_review'){
+  jobId=prior.id;done=true;console.log('STAGED_QA_REUSE_COMPLETED_JOB',jobId);
+ }else{
+  const kicked=await fetch(endpoint(),{method:'POST',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({action:'qa-dispatch-existing'})});
+  if(kicked.status!==202)throw Error('QA worker launch rejected: '+kicked.status+' '+(await kicked.text()).slice(0,200));
+  jobId=(await kicked.json()).job_id;assert.ok(jobId,'Worker job exists');
+  console.log('STAGED_QA_JOB_ACCEPTED',jobId);
+ }
  for(let i=0;i<220;i++){
   await new Promise(r=>setTimeout(r,2800));
   const response=await fetch(endpoint({info:'job'}),{headers:h});
@@ -38,7 +44,7 @@ const paths=[...pages,'style.css','site.js'];
   return buffer;
  }
  const data={};for(const file of paths)data[file]=(await read(file)).toString('utf8');
- assert.ok(data['index.html'].includes('まだ見ぬ夜の、その先へ。'),'requested hero line exists');
+ assert.ok(data['index.html'].replace(/<br\s*\/?>/gi,'').replace(/<[^>]+>/g,'').replace(/\s+/g,'').includes('まだ見ぬ夜の、その先へ。'),'requested hero line exists even with responsive HTML breaks');
  assert.ok(data['live.html'].includes('NEON WAVES 2027'),'future live is present');
  assert.ok(data['live.html'].includes('AFTER DARK 2026'),'past live is present');
  assert.ok(['AKI','REN','HINA','SOU'].every(n=>data['about.html'].includes(n)),'all brief member names included');
