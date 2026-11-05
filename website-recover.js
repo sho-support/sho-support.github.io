@@ -19,17 +19,21 @@ form.addEventListener('submit',async event=>{
   if(!email.validity.valid||!value)return;
   send.disabled=true;message.textContent='送信しています…';
   try{
-    const destination=new URL('website-password.html',location.href);
-    destination.searchParams.set('mode','recovery');
-    destination.searchParams.set('next',safeNext);
-    const {error}=await websiteSupabase.auth.resetPasswordForEmail(value,{redirectTo:destination.href});
-    if(error)throw error;
+    const {data,error}=await websiteSupabase.functions.invoke('website-password-recovery',{body:{email:value,next:safeNext}});
+    if(error){
+      const httpStatus=error?.context?.status;
+      let code='';
+      try{const details=await error.context.clone().json();code=details?.error||'';}catch{}
+      if(httpStatus===429||code==='rate_limited'){const e=new Error('rate_limited');e.status=429;throw e;}
+      throw error;
+    }
+    if(data?.error){const e=new Error(data.error);if(data.error==='rate_limited')e.status=429;throw e;}
     form.hidden=true;
     message.textContent='送信しました。メール内のリンクからパスワードを再設定してください。受信箱と迷惑メールフォルダをご確認ください。';
     form.reset();
   }catch(error){
     if(error?.status===429||/rate.limit|too.many/i.test(String(error?.code||error?.message||''))){
-      message.textContent='送信回数の制限に達しました。連続送信せず、時間を置いてからお試しください。';
+      message.textContent='このメールアドレスへの再設定メールは24時間に2回までです。送信回数の上限に達した場合は24時間経過後にお試しください。';
     }else{
       message.textContent='再設定メールを送信できませんでした。送信設定または通信状態を確認してください。';
     }
