@@ -1,6 +1,6 @@
 import { adminClient, json, notifyOwner } from './_shared/website.ts';
 
-const allowedOrigin = 'https://sho-support.github.io';
+const allowedOrigins = new Set(['https://sho-support.github.io', 'https://sho-web-support.netlify.app']);
 
 async function requestHash(req:Request){
   const ip=req.headers.get('cf-connecting-ip')||req.headers.get('x-forwarded-for')||'';
@@ -43,6 +43,9 @@ async function code(admin: ReturnType<typeof adminClient>, plan: string){
 }
 
 Deno.serve(async(req)=>{
+  const origin=req.headers.get('origin')||'';
+  const allowedOrigin=allowedOrigins.has(origin)?origin:'https://sho-support.github.io';
+  if(origin&&!allowedOrigins.has(origin))return json({error:'Forbidden'},403);
   if(req.method==='OPTIONS') return new Response('ok',{headers:{
     'Access-Control-Allow-Origin':allowedOrigin,
     'Access-Control-Allow-Headers':'content-type, apikey, x-client-info',
@@ -50,8 +53,7 @@ Deno.serve(async(req)=>{
   }});
   if(req.method!=='POST') return json({error:'Method not allowed'},405);
 
-  const origin=req.headers.get('origin')||'';
-  if(origin&&origin!==allowedOrigin) return json({error:'Forbidden'},403);
+
 
   const raw=await req.text();
   if(raw.length>12000) return json({error:'Request too large'},413);
