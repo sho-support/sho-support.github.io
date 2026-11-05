@@ -17,6 +17,7 @@ on:
       - 'supabase/functions/_shared/website.ts'
       - 'tests/qa-staged-links.cjs'
       - 'tests/qa-admin-quote-ui.cjs'
+      - 'tests/qa-production-api-security.cjs'
       - 'supabase/functions/website-customer-access/index.ts'
       - 'supabase/functions/website-api/index.ts'
   pull_request:
@@ -35,6 +36,7 @@ on:
       - 'supabase/functions/_shared/website.ts'
       - 'tests/qa-staged-links.cjs'
       - 'tests/qa-admin-quote-ui.cjs'
+      - 'tests/qa-production-api-security.cjs'
       - 'supabase/functions/website-customer-access/index.ts'
       - 'supabase/functions/website-api/index.ts'
   workflow_dispatch:
@@ -53,6 +55,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Check generated website link safety and prevent preview token disclosure
         run: node tests/qa-staged-links.cjs
+      - name: Refuse unauthenticated bank, domain, quote, and payment operations
+        if: ${{ github.event_name != 'pull_request' }}
+        run: node tests/qa-production-api-security.cjs
       - name: Start exact checked-out commit in local web server
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/sha-sales-server.log 2>&1 &
