@@ -93,10 +93,50 @@ function composeHtml(name,plan,page,content,ctx){
  '<footer class="site-footer"><div class="shell footer-inner"><span>'+htmlEscape(name)+'</span><nav aria-label="フッターナビゲーション">'+nav+'</nav><small>&copy; '+new Date().getUTCFullYear()+' '+htmlEscape(name)+'</small></div></footer>'+
  '<script defer src="site.js"></script></body></html>';
 }
+
+export function sanitizeFullPageLinks(markup,plan){
+ const pages=(plan?.pages||[]).map(p=>p.path);
+ const management=/(?:^|\/)(?:website-(?:preview|customer-review|intake|update|order|order-confirm|login)\.html|admin\/)/i;
+ return String(markup||'').replace(/<a\b([^>]*?\bhref\s*=\s*)(["'])(.*?)\2([^>]*)>([\s\S]*?)<\/a>/gi,
+  (whole,pre,quote,ref,post,body)=>{
+   const href=String(ref).replace(/&amp;/gi,'&').trim();
+   let invalid=false;
+   if(/(?:[?&](?:key|token|access_token|secret|code)=)/i.test(href))invalid=true;
+   else if(href==='#'||/^(?:javascript:|data:|\/\/)/i.test(href))invalid=true;
+   else if(/^https?:\/\//i.test(href)){
+    const match=href.match(/^https?:\/\/([^/?#]+)(\/[^?#]*)?/i);
+    if(!match)invalid=true;
+    else{
+     const hostname=match[1].toLowerCase().split(':')[0],pathname=match[2]||'/';
+     if((hostname==='sho-support.github.io'||hostname.endsWith('.sho-support.github.io'))&&management.test(pathname))invalid=true;
+    }
+   }else if(/^(?:mailto:|tel:|#)/i.test(href)){invalid=false;}
+   else{
+    const target=href.split(/[?#]/)[0].replace(/^\.\//,'');
+    if(!pages.includes(target)||target.includes('..'))invalid=true;
+   }
+   if(!invalid)return whole;
+   const label=String(body).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+   const hints=[
+    [/LIVE|ライブ|公演|EVENT|日程/i,/live|event|schedule/i],
+    [/ABOUT|メンバー|プロフィール|紹介/i,/about|member|profile/i],
+    [/GALLERY|写真|フォト/i,/gallery|photo/i],
+    [/CONTACT|連絡|問い合わせ|SNS/i,/contact|sns/i],
+    [/TOP|ホーム|トップ/i,/^index\.html$/i]
+   ];
+   const hint=hints.find(([labelRx,pageRx])=>labelRx.test(label)&&pages.some(p=>pageRx.test(p)));
+   const target=hint?pages.find(p=>hint[1].test(p)):null;
+   const cleanPost=String(post).replace(/\s+target\s*=\s*(["'])[^"']*\1/gi,'').replace(/\s+rel\s*=\s*(["'])[^"']*\1/gi,'');
+   if(target)return '<a'+pre+'href="'+target+'"'+cleanPost+'>'+body+'</a>';
+   return '<span class="muted">'+body+'</span>';
+  });
+}
+
 export function completedFullFiles(state,ctx){
  const st=state||{},plan=validateFullPlan(st.plan,fullBrief(ctx));
  if(!st.css||!st.pages||plan.pages.some(p=>!st.pages[p.path]))throw Error('分割制作に未完成ページがあります');
- const files=plan.pages.map(p=>({path:p.path,content:composeHtml(fullBrief(ctx).site_name,plan,p,st.pages[p.path],ctx)}));
+ const files=plan.pages.map(p=>({path:p.path,content:composeHtml(fullBrief(ctx).site_name,plan,p,sanitizeFullPageLinks(st.pages[p.path],plan),ctx)}));
+ for(const file of files){if(/website-(?:preview|customer-review|intake)\.html[^"'<]*[?&](?:amp;)?(?:key|token)=/i.test(file.content))throw Error('公開ページに管理用URLが混入しています。');}
  files.push({path:'style.css',content:st.css},{path:'site.js',content:siteJs()});
  return files;
 }
