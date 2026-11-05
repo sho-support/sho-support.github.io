@@ -14,6 +14,9 @@ const safeNext=(()=>{
     return u.origin===location.origin?u.href:new URL('website-portal.html',location.href).href;
   }catch{return new URL('website-portal.html',location.href).href}
 })();
+const recoveryLink=new URL('website-recover.html',location.href);
+recoveryLink.searchParams.set('next',safeNext);
+document.getElementById('forgotPassword').href=recoveryLink.href;
 const isAdminLogin=(()=>{
   try{return new URL(safeNext).pathname.startsWith('/admin/')}catch{return false}
 })();
