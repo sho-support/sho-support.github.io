@@ -1,0 +1,15 @@
+[build]
+  command = "node scripts/build-sales-netlify.mjs"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Staging only: remove X-Robots-Tag after final production approval.
