@@ -13,6 +13,9 @@ on:
       - 'support.html'
       - 'index.html'
       - 'admin/orders.html'
+      - 'supabase/functions/website-worker/staged-full.mjs'
+      - 'supabase/functions/_shared/website.ts'
+      - 'tests/qa-staged-links.cjs'
   pull_request:
     paths:
       - 'tests/qa-sales-flow.cjs'
@@ -25,6 +28,9 @@ on:
       - 'support.html'
       - 'index.html'
       - 'admin/orders.html'
+      - 'supabase/functions/website-worker/staged-full.mjs'
+      - 'supabase/functions/_shared/website.ts'
+      - 'tests/qa-staged-links.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,6 +45,8 @@ jobs:
           node-version: '22'
       - run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
       - run: npx playwright install --with-deps chromium
+      - name: Check generated website link safety and prevent preview token disclosure
+        run: node tests/qa-staged-links.cjs
       - name: Start exact checked-out commit in local web server
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/sha-sales-server.log 2>&1 &
