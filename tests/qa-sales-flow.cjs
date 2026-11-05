@@ -131,6 +131,32 @@ function label(u){return u.split('?')[0].replace('.html','')}
  await page.locator('.card').first().click();
  assert.match(await page.locator('#goOrder').getAttribute('href'),/template=rock/,'selected template linked');
  console.log('SALES_TEMPLATE_SELECTION_PASS ten templates');
+ // Long notes used to clip the image export: measure actual drawn rows vs canvas height.
+ const last='【末尾の文字まで保存されることを確認】';
+ const longNote='写真の掲載順序を調整したいです。'.repeat(64)+last;
+ await page.evaluate(note=>{
+   localStorage.setItem('sho_web_order_v3',JSON.stringify({
+     plan:'full',template:'',update:'free3',domain:false,extraRequest:note
+   }));
+ },longNote);
+ await page.goto(origin+'website-order-confirm.html',{waitUntil:'domcontentloaded'});
+ await page.evaluate(()=>{
+   window.__orderPngRows=[];
+   const original=CanvasRenderingContext2D.prototype.fillText;
+   CanvasRenderingContext2D.prototype.fillText=function(text,x,y,...other){
+     window.__orderPngRows.push({text:String(text),y,canvasHeight:this.canvas.height/2});
+     return original.call(this,text,x,y,...other);
+   };
+ });
+ await page.locator('#downloadBtn').click();
+ const drawn=await page.evaluate(()=>window.__orderPngRows);
+ assert.ok(drawn.length>20,'long order notes produce 20+ wrapped output rows');
+ assert.ok(drawn.some(line=>line.text.includes('末尾の文字まで')),'last note line must be printed');
+ assert.ok(drawn.every(line=>line.y<line.canvasHeight-16),'all printed rows fit within PNG height');
+ console.log('ORDER_PNG_LONG_NOTE_QA_PASS',JSON.stringify({
+   drawnLines:drawn.length,lastLine:drawn[drawn.length-1].text.slice(0,65),
+   lastY:drawn[drawn.length-1].y,canvasHeight:drawn[drawn.length-1].canvasHeight
+ }));
  const broken=[];
  for(const href of linkSet){
    const resp=await page.request.get(href,{maxRedirects:4,timeout:12000}).catch(e=>({status:()=>0,error:String(e)}));
