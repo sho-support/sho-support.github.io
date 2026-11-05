@@ -77,7 +77,9 @@ Deno.serve(async(req)=>{
     if(!existing)return null;
     if(existing.line_link_token_hash!==expectedHash||existing.plan!==v.plan||
       (existing.template_style||null)!==(v.template_style||null)||existing.amount_from!==amount||
+      existing.update_plan!==v.update_plan||
       Boolean(existing.custom_domain)!==v.custom_domain||
+      String(existing.selections?.custom_domain_note||'')!==v.custom_domain_note||
       String(existing.selections?.extra_request||'')!==v.extra_request)
       return {mismatch:true};
     const {line_link_token_hash,selections,...publicOrder}=existing;
