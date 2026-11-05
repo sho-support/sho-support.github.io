@@ -19,7 +19,7 @@ jobs:
       - run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - name: Rebuild and verify legacy private semi-order site
-        if: ${{ !contains(github.event.head_commit.message, '[QA-NOVA]') }}
+        if: ${{ !contains(github.event.head_commit.message, '[QA-NOVA]') && !contains(github.event.head_commit.message, '[QA-ONE]') }}
         env:
           REBUILD_QA_SITE: ${{ contains(github.event.head_commit.message, '[QA-SEMI-VERIFY]') && 'false' || 'true' }}
           QA_ACTION: ${{ contains(github.event.head_commit.message, '[QA-REVISION]') && 'revision' || 'rebuild' }}
@@ -27,3 +27,7 @@ jobs:
       - name: Build and audit five-page staged full-order AI site
         if: ${{ contains(github.event.head_commit.message, '[QA-NOVA]') }}
         run: node tests/qa-full-staged.cjs
+      - name: Audit private one-page AI website in desktop and mobile Chromium
+        if: ${{ contains(github.event.head_commit.message, '[QA-ONE]') }}
+        run: node tests/qa-one-page.cjs
+
