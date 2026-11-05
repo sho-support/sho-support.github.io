@@ -58,6 +58,25 @@ const server=http.createServer((req,res)=>{
         await context.close();
       }
     }
+    // Check three HTML pages produced by the actual semi-order renderer.
+    for(const theme of ['rock','premium','cyber']){
+      for(const [viewport,width,height] of [['desktop',1366,900],['mobile',390,844]]){
+        const context=await browser.newContext({viewport:{width,height},locale:'ja-JP'});
+        const page=await context.newPage(),errors=[];
+        page.on('pageerror',e=>errors.push(e.message));
+        const response=await page.goto(base+'/website-demo-semi-'+theme+'.html',{waitUntil:'load'});
+        assert.equal(response.status(),200,'rendered sample exists');
+        assert.equal(await page.locator('body').getAttribute('data-theme'),theme,'template locked to customer choice');
+        const doc=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth,heading:document.querySelector('h1')?.textContent||'',title:document.title}));
+        assert.ok(doc.width<=doc.viewport+5,'semi sample horizontal overflow: '+theme+'/'+viewport);
+        assert.ok(doc.heading.length>0,'semi sample missing hero heading');
+        assert.ok(doc.title.length>0,'semi sample missing title');
+        assert.deepEqual(errors,[],'semi sample JS errors');
+        await page.screenshot({path:path.join(shots,'semi-generated-'+theme+'-'+viewport+'.png'),fullPage:true});
+        results.push({case:'semi-generated-'+theme,viewport,result:'PASS'});
+        await context.close();
+      }
+    }
     console.log(JSON.stringify({total:results.length,results},null,2));
   }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
 })().catch(error=>{console.error('SALES_UI_QA_FAILED',error);process.exitCode=1});
