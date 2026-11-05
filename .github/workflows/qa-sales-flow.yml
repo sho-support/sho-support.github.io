@@ -17,6 +17,7 @@ on:
       - 'supabase/functions/_shared/website.ts'
       - 'tests/qa-staged-links.cjs'
       - 'tests/qa-admin-quote-ui.cjs'
+      - 'tests/qa-line-retry.cjs'
       - 'tests/qa-production-api-security.cjs'
       - 'supabase/functions/website-customer-access/index.ts'
       - 'supabase/functions/website-api/index.ts'
@@ -36,6 +37,7 @@ on:
       - 'supabase/functions/_shared/website.ts'
       - 'tests/qa-staged-links.cjs'
       - 'tests/qa-admin-quote-ui.cjs'
+      - 'tests/qa-line-retry.cjs'
       - 'tests/qa-production-api-security.cjs'
       - 'supabase/functions/website-customer-access/index.ts'
       - 'supabase/functions/website-api/index.ts'
@@ -53,6 +55,8 @@ jobs:
           node-version: '22'
       - run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
       - run: npx playwright install --with-deps chromium
+      - name: Verify LINE retry acceptance and duplicate-message prevention
+        run: node tests/qa-line-retry.cjs
       - name: Check generated website link safety and prevent preview token disclosure
         run: node tests/qa-staged-links.cjs
       - name: Refuse unauthenticated bank, domain, quote, and payment operations
