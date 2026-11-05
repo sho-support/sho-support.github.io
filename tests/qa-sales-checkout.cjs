@@ -71,6 +71,15 @@ const server=http.createServer((req,res)=>{
         assert.ok(doc.width<=doc.viewport+5,'semi sample horizontal overflow: '+theme+'/'+viewport);
         assert.ok(doc.heading.length>0,'semi sample missing hero heading');
         assert.ok(doc.title.length>0,'semi sample missing title');
+        const positions=await page.locator('.event').first().evaluate(el=>{
+          const d=el.querySelector('.date')?.getBoundingClientRect();
+          const n=el.querySelector('b')?.getBoundingClientRect();
+          return d&&n?{dateBottom:d.bottom,nameTop:n.top,dateRight:d.right,nameLeft:n.left}:null;
+        });
+        if(positions&&viewport==='mobile'){
+          assert.ok(positions.nameTop>=positions.dateBottom-1,
+            'Mobile event date/name overlap: '+theme+' '+JSON.stringify(positions));
+        }
         assert.deepEqual(errors,[],'semi sample JS errors');
         await page.screenshot({path:path.join(shots,'semi-generated-'+theme+'-'+viewport+'.png'),fullPage:true});
         results.push({case:'semi-generated-'+theme,viewport,result:'PASS'});
