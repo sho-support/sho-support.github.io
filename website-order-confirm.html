@@ -41,7 +41,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <button class="secondary" id="downloadBtn" type="button">注文内容を画像で保存</button>
 </div>
 <div class="notice"><strong>お申込み前にご確認ください</strong><br>
-・表示金額は基本料金です。正式公開URLの取得・設定費、追加機能等はLINEでお見積りします。無料URLは用途・サービスの利用条件を確認して、お支払い前に正式URLをご案内します。<br>
+・表示金額は選択済みの初月更新料を含む概算です（該当する場合）。正式公開URLの取得・設定費、追加機能等はLINEでお見積りします。無料URLは用途・サービスの利用条件を確認して、お支払い前に正式URLをご案内します。<br>
 ・お支払いは銀行振込です。正式URL・最終金額・制作時期を確認した後、制作開始前にお振込みください。URLが未確定の段階では振込をお願いしません。<br>
 ・入金前は無料でキャンセルできます。入金後のキャンセル条件は特商法表記・利用条件をご確認ください。<br>
 ・入金確認と必要素材の受領後に制作を開始します。</div>
@@ -113,7 +113,7 @@ document.getElementById('downloadBtn').onclick=()=>{
  const prepared=[];
  for(const line of lines){
    if(line===''){prepared.push({text:'',font:'',color:'',space:true});continue}
-   const amount=line.startsWith('制作料金：'),note=line.startsWith('※');
+   const amount=line.startsWith('概算料金：'),note=line.startsWith('※');
    const font=amount?'700 34px sans-serif':note?'500 20px sans-serif':'600 28px sans-serif';
    const color=amount?'#7b5421':note?'#69645d':'#171717';
    measurer.font=font;
