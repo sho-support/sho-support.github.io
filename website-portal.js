@@ -32,7 +32,7 @@ try{
         const live=site.status==='live';
         const actions=live?'<a class="btn primary" href="'+esc(site.public_url||'#')+'" target="_blank" rel="noopener noreferrer">完成サイトを見る</a><a class="btn" href="https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent('SITE ID '+site.site_id+' のホームページを更新したいです。')+'" target="_blank" rel="noopener noreferrer">更新についてLINEで相談</a>':
           site.status==='request_waiting'?'<a class="btn primary" href="'+intake+'">制作内容を入力する</a>':
-          site.status==='customer_review'?'<a class="btn primary" href="'+review+'">サイト確認・公開</a>':'<span class="meta">制作・確認処理中です。案内をお待ちください。</span>';
+          site.status==='customer_review'?'<a class="btn primary" href="'+review+'">サイトを確認する</a>':'<span class="meta">制作・確認処理中です。案内をお待ちください。</span>';
         return '<details class="card"><summary><span class="siteid">ID '+esc(site.site_id)+'</span><h2>'+esc(site.site_name||'ホームページ')+'</h2><span class="status">'+esc(labels[site.status]||site.status)+'</span><span class="fold-icon" aria-hidden="true">＋</span></summary><div class="card-body">'+(site.adjustment_free_until?'<p class="meta">無料調整：'+esc(new Date(site.adjustment_free_until).toLocaleDateString('ja-JP'))+'まで</p>':'')+(site.update_free_until?'<p class="meta">無料更新：'+esc(new Date(site.update_free_until).toLocaleDateString('ja-JP'))+'まで（月8回）</p>':'')+'<div class="pageviews" data-site-views="'+esc(site.site_id)+'">'+(live?'ページ表示回数を取得中…':'ページ表示回数：公開後から集計')+'</div><div class="actions">'+actions+'</div></div></details>';
       }).join('');
       sitesBox.classList.remove('hidden');
