@@ -42,6 +42,39 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
    if(error)throw error;if(data?.error)throw new Error(data.error);return data;
  }
  const fmt=d=>d?new Date(d).toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+
+ function applyFilters(){
+   const term=document.getElementById('orderSearch').value.trim().toUpperCase();
+   const selected=document.getElementById('statusFilter').value;
+   const onlyLive=document.getElementById('onlyLive').checked;
+   let visible=0;
+   list.querySelectorAll('.order-card').forEach(el=>{
+     const stage=el.dataset.stage;
+     const match=!term||el.dataset.order.includes(term)||el.dataset.site.includes(term)||el.dataset.order.replace(/^[A-Z]/,'').includes(term);
+     const status=selected==='all'||selected===stage||(selected==='private'&&stage==='improving_private');
+     el.hidden=!(match&&status&&(!onlyLive||stage==='live'));
+     if(!el.hidden)visible++;
+   });
+   const all=list.querySelectorAll('.order-card').length;
+   document.getElementById('visibleCount').textContent=all+'件中 '+visible+'件を表示';
+ }
+ document.querySelectorAll('#orderSearch,#statusFilter,#onlyLive').forEach(el=>el.addEventListener(el.id==='orderSearch'?'input':'change',applyFilters));
+ async function showHistory(panel,siteId){
+   if(!siteId){panel.textContent='SITE IDの発行後に履歴が表示されます。';return;}
+   panel.textContent='履歴を読み込み中…';
+   try{
+     const data=await websiteApi('load_site',{site_id:siteId});
+     const activities=(data.activity||[]).filter(x=>['customer_revision_requested','customer_approved','ai_build_completed','published'].includes(x.action));
+     const updates=(data.updates||[]).filter(x=>x.request_note);
+     const entries=[
+       ...activities.map(x=>({at:x.created_at,text:x.detail||'',name:({customer_revision_requested:'お客様修正依頼',customer_approved:'お客様確認OK',ai_build_completed:'AI制作完了',published:'公開'})[x.action]})),
+       ...updates.map(x=>({at:x.created_at,text:x.request_note,name:'更新依頼'}))
+     ].sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+     if(!entries.length){panel.textContent='修正・承認・更新履歴はありません。';return;}
+     panel.innerHTML=entries.map(x=>'<details class="revision-line"><summary><span>'+esc(x.name+'：'+(x.text||'記録のみ').slice(0,42))+'</span><time>'+esc(fmt(x.at))+'</time></summary><p>'+esc(x.text||'詳細なし')+'</p></details>').join('');
+     panel.querySelectorAll('.revision-line').forEach(d=>d.addEventListener('click',e=>{if(!e.target.closest('summary,a,button,input'))d.open=false;}));
+   }catch(e){panel.textContent='履歴の取得に失敗しました：'+String(e.message||e);}
+ }
  async function load(){
    msg.innerHTML='';
    try{
@@ -59,6 +92,10 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
        o.status==='site_created'?(o.site_status==='request_waiting'?'<button class="btn resend" data-resend="'+esc(o.order_code)+'" type="button">ヒアリングURLをLINEへ再送</button>':'<div class="note" style="font-size:.76rem;color:#d9ae5c">現在：'+esc(progress[o.site_status]||'案件進行中')+'</div>')+'<a class="btn activate" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:8px" href="index.html?site='+encodeURIComponent(o.site_id||'')+'">SITE ID '+esc(o.site_id||'')+' の制作管理を開く</a>':'')+
        '<details class="mini-fold" data-history-fold="'+esc(o.site_id||'')+'"><summary>修正依頼・承認・更新履歴</summary><div class="mini-fold-content" data-history="'+esc(o.site_id||'')+'">開くと履歴を読み込みます。</div></details></div></details>';
      }).join('');
+     applyFilters();
+     document.querySelectorAll('[data-history-fold]').forEach(fold=>fold.addEventListener('toggle',()=>{
+       if(fold.open&&!fold.dataset.loaded){fold.dataset.loaded='1';showHistory(fold.querySelector('[data-history]'),fold.dataset.historyFold);}
+     }));
      document.querySelectorAll('[data-quote]').forEach(btn=>btn.onclick=async()=>{
        const code=btn.dataset.quote,box=btn.closest('.quotebox');
        const finalAmount=Number(box?.querySelector('[data-final-amount]')?.value);
