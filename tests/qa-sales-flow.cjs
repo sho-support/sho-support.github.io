@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
-const origin='https://sho-support.github.io/';
+const origin=(process.env.SALES_BASE_URL||'https://sho-support.github.io/').replace(/\/?$/, '/');
 const names=[
  'band-homepage.html','website-support.html','website-create.html',
  'website-templates.html','website-template-preview.html?style=rock',
@@ -16,7 +16,7 @@ const names=[
  'website-privacy.html','website-update-demo.html','sho-support.html','support.html'
 ];
 const views=[320,360,390,430,768,1366];
-const bads=[],checks=[],linkSet=new Set(),screens=path.resolve('qa-sales-flow-shots');
+const bads=[],checks=[],linkSet=new Set(),screens=path.resolve(process.env.SALES_SHOT_DIR||'qa-sales-flow-shots');
 fs.mkdirSync(screens,{recursive:true});
 function label(u){return u.split('?')[0].replace('.html','')}
 (async()=>{
@@ -72,7 +72,7 @@ function label(u){return u.split('?')[0].replace('.html','')}
     };
    });
    for(const link of m.links){
-    const u=new URL(link);if(u.origin===origin.slice(0,-1)&&u.pathname.endsWith('.html'))linkSet.add(u.href.split('#')[0]);
+    const u=new URL(link);if(u.origin===new URL(origin).origin&&u.pathname.endsWith('.html'))linkSet.add(u.href.split('#')[0]);
    }
    const declaredTheme=slug.startsWith('website-template-preview.html?style=')?slug.split('style=')[1]:null;
    const actualTheme=declaredTheme?await p.locator('body').getAttribute('data-theme'):null;
