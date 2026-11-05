@@ -83,10 +83,10 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 </section>
 
 <section class="section">
-<div class="section-head"><h2>独自ドメイン</h2><span class="section-check show" id="domainCheck">任意</span></div>
+<div class="section-head"><h2>公開URLのご希望</h2><span class="section-check show" id="domainCheck">要相談</span></div>
 <div class="domain" id="domainBox">
-<button class="domain-select" id="domainSelect" type="button">独自ドメイン設定を希望する<span class="domain-price">設定代行 ¥5,000〜 ＋ ドメイン取得・更新の実費</span><span class="dot">✓</span></button>
-<details class="domain-details"><summary>＋ 独自ドメインの詳細</summary><div class="domain-copy">ホスティング会社の無料URLは将来変更される可能性があるため、名刺・看板に記載する正式URLには使用しません。標準URLの長期利用方法を現在準備中です。正式なURLはお支払い前にご案内します。お客様自身の独自ドメインは「example.com」のような専用URLです。<ul><li>覚えやすく公式感を出しやすい</li><li>ドメイン取得・更新の実費が毎年かかる</li><li>原則としてお客様名義で取得</li></ul><button class="close-detail" type="button">− 閉じる</button></div></details><p style="padding:0 13px 12px;margin:10px 0 0;color:#e6cd9f;font-size:.72rem;line-height:1.8">正式公開URLは、お支払い前に必ず確認いただきます。現在、運営管理の標準URLを準備中のため、公開時期はご相談ください。名刺・看板には正式決定したURLだけをご利用ください。</p>
+<button class="domain-select" id="domainSelect" type="button">お客様の独自ドメインの取得・接続を相談する<span class="domain-price">設定代行 ¥5,000〜 ＋ ドメイン取得・更新の実費</span><span class="dot">✓</span></button>
+<details class="domain-details"><summary>＋ 独自ドメインの詳細</summary><div class="domain-copy">ホスティング会社の無料URLは将来変更される可能性があるため、名刺・看板に記載する正式URLには使用しません。標準URLの長期利用方法を現在準備中です。正式なURLはお支払い前にご案内します。お客様自身の独自ドメインは「example.com」のような専用URLです。<ul><li>覚えやすく公式感を出しやすい</li><li>ドメイン取得・更新の実費が毎年かかる</li><li>原則としてお客様名義で取得</li></ul><button class="close-detail" type="button">− 閉じる</button></div></details><p style="padding:0 13px 12px;margin:10px 0 0;color:#e6cd9f;font-size:.72rem;line-height:1.8">正式公開には、長く管理できる独自ドメインが必要です。SHO管理の標準URLは現在準備中で、現時点では提供を確約できません。標準URLをご希望の場合は相談受付のみ可能で、正式URL・費用・公開時期が決まるまでお支払いは不要です。名刺・看板には確定したURLだけをご利用ください。</p>
 </div>
 </section>
 
@@ -108,7 +108,7 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 <div class="sum-row"><span>制作プラン</span><b id="sumPlan">未選択</b></div>
 <div class="sum-row" id="sumTemplateRow" hidden><span>デザイン</span><b id="sumTemplate">未選択</b></div>
 <div class="sum-row"><span>更新</span><b id="sumUpdate">未選択</b></div>
-<div class="sum-row"><span>独自ドメイン</span><b id="sumDomain">希望しない</b></div><div class="sum-row" id="sumExtraRow" hidden><span>追加のご相談</span><b id="sumExtra" style="overflow-wrap:anywhere;white-space:pre-wrap">—</b></div>
+<div class="sum-row"><span>公開URLのご希望</span><b id="sumDomain">標準URLを相談（準備中）</b></div><div class="sum-row" id="sumExtraRow" hidden><span>追加のご相談</span><b id="sumExtra" style="overflow-wrap:anywhere;white-space:pre-wrap">—</b></div>
 <div class="summary-total"><span>制作料金</span><strong id="sumTotal">—</strong></div>
 </div>
 </div>
@@ -191,7 +191,7 @@ function render(){
  if(state.update==='standard')ul='通常更新 ¥2,500 / 回';
  if(state.update==='unlimited')ul='通常更新 月8回まで ¥7,000 / 月';
  document.getElementById('sumUpdate').textContent=ul;
- document.getElementById('sumDomain').textContent=state.domain?'希望する / ¥5,000〜＋実費':'希望しない';
+ document.getElementById('sumDomain').textContent=state.domain?'お客様の独自ドメインを相談 / 設定代行 ¥5,000〜＋実費':'SHO管理の標準URLを相談（現在準備中）';
  document.getElementById('sumExtraRow').hidden=!String(state.extraRequest||'').trim();
  document.getElementById('sumExtra').textContent=String(state.extraRequest||'').trim();
  document.getElementById('sumTotal').textContent=state.plan?'¥'+prices[state.plan].toLocaleString()+'〜':'—';
