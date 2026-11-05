@@ -31,7 +31,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <div class="row"><span>制作プラン</span><strong id="plan">—</strong></div>
 <div class="row" id="templateRow"><span>デザイン</span><strong id="template">—</strong></div>
 <div class="row"><span>更新プラン</span><strong id="update">—</strong></div>
-<div class="row"><span>独自ドメイン</span><strong id="domain">—</strong></div><div class="row" id="extraRow" hidden><span>追加ページ・機能の相談</span><strong id="extra" style="white-space:pre-wrap;overflow-wrap:anywhere">—</strong></div>
+<div class="row"><span>公開URLのご希望</span><strong id="domain">—</strong></div><div class="row" id="extraRow" hidden><span>追加ページ・機能の相談</span><strong id="extra" style="white-space:pre-wrap;overflow-wrap:anywhere">—</strong></div>
 <div class="total"><span>制作料金</span><b id="amount">—</b></div>
 </div>
 </section>
@@ -41,8 +41,8 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <button class="secondary" id="downloadBtn" type="button">注文内容を画像で保存</button>
 </div>
 <div class="notice"><strong>お申込み前にご確認ください</strong><br>
-・表示金額は基本料金です。追加機能・独自ドメイン等がある場合はLINEで最終金額をご案内します。<br>
-・お支払いは銀行振込です。最終金額と制作時期をご確認後、制作開始前にお振込みください。<br>
+・表示金額は基本料金です。正式公開URLの取得・設定費、追加機能等はLINEでお見積りします。標準URLは準備中のため、現時点では提供を確約できません。<br>
+・お支払いは銀行振込です。正式URL・最終金額・制作時期を確認した後、制作開始前にお振込みください。URLが未確定の段階では振込をお願いしません。<br>
 ・入金前は無料でキャンセルできます。入金後のキャンセル条件は特商法表記・利用条件をご確認ください。<br>
 ・入金確認と必要素材の受領後に制作を開始します。</div>
 <label style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0e0e0e;color:#d7d7d7;font-size:.69rem">
@@ -76,14 +76,14 @@ const summaryText=()=>[
  '制作プラン: '+planLabels[state.plan]+' ¥'+prices[state.plan].toLocaleString()+'〜',
  state.plan==='semi'?'デザイン: '+names[state.template]:null,
  '更新: '+updateLabels[state.update],
- '独自ドメイン: '+(state.domain?'希望する（設定代行 ¥5,000〜＋実費）':'希望しない'),
+ '公開URLの希望: '+(state.domain?'お客様の独自ドメインを相談（設定代行 ¥5,000〜＋実費）':'SHO管理の標準URLを相談（準備中）'),
  state.extraRequest?.trim()?'追加ページ・機能の相談: '+state.extraRequest.trim():null
 ].filter(Boolean).join('\n');
 document.getElementById('plan').textContent=planLabels[state.plan];
 document.getElementById('templateRow').hidden=state.plan!=='semi';
 document.getElementById('template').textContent=state.plan==='semi'?names[state.template]:'—';
 document.getElementById('update').textContent=updateLabels[state.update]||state.update;
-document.getElementById('domain').textContent=state.domain?'希望する / ¥5,000〜＋実費':'希望しない';
+document.getElementById('domain').textContent=state.domain?'お客様の独自ドメインを相談 / ¥5,000〜＋実費':'SHO管理の標準URLを相談（準備中）';
 document.getElementById('extraRow').hidden=!String(state.extraRequest||'').trim();
 document.getElementById('extra').textContent=String(state.extraRequest||'').trim();
 document.getElementById('amount').textContent='¥'+prices[state.plan].toLocaleString()+'〜';
@@ -97,12 +97,12 @@ document.getElementById('downloadBtn').onclick=()=>{
   '制作プラン：'+planLabels[state.plan],
   state.plan==='semi'?'デザイン：'+names[state.template]:null,
   '更新：'+updateLabels[state.update],
-  '独自ドメイン：'+(state.domain?'希望する':'希望しない'),
+  '公開URL：'+(state.domain?'お客様の独自ドメインを相談':'SHO管理の標準URLを相談（準備中）'),
   state.extraRequest?.trim()?'追加相談：'+state.extraRequest.trim():null,
   '',
   '制作料金：¥'+prices[state.plan].toLocaleString()+'〜',
   '',
-  '※正式な金額・振込先は公式LINEでご案内します。'
+  '※正式公開URL・追加費用・合計金額・振込先はLINEで確定後にご案内します。'
  ].filter(v=>v!==null);
  const scale=2,w=900,pad=64,lineH=48,headH=150,maxTextWidth=w-pad*2;
  const measurer=document.createElement('canvas').getContext('2d');
