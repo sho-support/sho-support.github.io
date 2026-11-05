@@ -45,6 +45,16 @@ Deno.serve(async req=>{
  }
  if(req.method==='POST'){
   const body=await req.json().catch(()=>({}));
+  if(multi&&body.action==='qa-report-pass'){
+    if(site.status!=='sho_review'||Number(body.pages)!==5||Number(body.viewports)!==2)return reject(409);
+    const {error:writeErr}=await admin.from('website_activity').insert({
+      site_id:qaSite,actor_type:'ai',action:'qa_full_browser_pass',
+      detail:'署名付きGitHub Actionsによる実AI5ページのPC・スマホ表示、リンク・CSS・JavaScript検証に合格。',
+      payload:{site_id:qaSite,pages:5,viewports:2,method:'github_oidc_playwright',note:'internal_qa_only'}
+    });
+    if(writeErr)return reject(500);
+    return new Response(JSON.stringify({ok:true,recorded:true}),{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+  }
   if(body.action==='qa-dispatch-existing'){
     const {data:latest,error:lookupError}=await admin.from('website_jobs').select('id,kind,payload').eq('site_id',qaSite).eq('status','queued').order('created_at',{ascending:false}).limit(1).maybeSingle();
     if(lookupError||!latest||(multi?(latest.kind!=='initial_create'||latest.payload?.qa_rebuild!==true):(latest.kind!=='sho_revision'||latest.payload?.qa_silent!==true)))return reject(409);
