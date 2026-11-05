@@ -1,0 +1,3 @@
+NOVA STATIC 5-page full-order real AI QA run.
+Scope: qafull5nov04, no payment, no publishing, no customer notifications.
+Triggered by signed GitHub Actions OIDC runner.
