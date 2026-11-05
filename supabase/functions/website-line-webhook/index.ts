@@ -138,12 +138,9 @@ Deno.serve(async (req) => {
             ? String(bankTestSetting?.value?.message || '').trim()
             : '';
 
-          if (bankMessage) {
-            await reply(event.replyToken, [
-              `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n【お振込先】\n${bankMessage}\n\nお振込みの際は、振込人名義の前に下記の注文IDを入力してください。必要に応じて、次のメッセージを長押ししてコピーしてお使いください。\n\n入金確認後、正式なSITE IDと制作ヒアリングURLをお送りします。`,
-              order.order_code,
-            ]);
-          } else if (testBankMessage) {
+          // Never request a bank transfer on the basis of a starting price alone.
+          // Final price and payment instructions are sent only after operator approval.
+          if (testBankMessage) {
             await reply(
               event.replyToken,
               `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n【振込先（テスト用・架空口座）】\n${testBankMessage}\n\n※これは動作テスト用の架空口座です。実際に振り込まないでください。\n本番ではこの位置に正式な振込先を表示します。`,
@@ -151,7 +148,7 @@ Deno.serve(async (req) => {
           } else {
             await reply(
               event.replyToken,
-              `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n振込先はこのLINEでご案内します。入金確認後、正式なSITE IDと制作ヒアリングURLをお送りします。`,
+              `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\nまず制作内容を確認し、確定した合計金額と振込先を改めてこのLINEでご案内します。正式なお見積り前にお振込みいただく必要はありません。入金確認後、SITE IDと制作ヒアリングURLをお送りします。`,
             );
           }
           continue;
