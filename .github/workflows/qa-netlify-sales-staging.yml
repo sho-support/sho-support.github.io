@@ -1,0 +1,26 @@
+name: QA Netlify Sales Staging
+on:
+  push:
+    branches: [netlify-sales-staging]
+  workflow_dispatch:
+jobs:
+  build-sales:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build isolated sales site
+        run: node scripts/build-sales-netlify.mjs
+      - name: Check staging output
+        run: |
+          test -f dist/index.html
+          test -f dist/website-order.html
+          test -f dist/website-order-confirm.html
+          test -f dist/admin/orders.html
+          test ! -f dist/gallery.html
+          test ! -f dist/api/stripe-webhook.js
+          echo 'Sales staging outputs validated'
