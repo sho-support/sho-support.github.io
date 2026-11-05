@@ -209,6 +209,43 @@ export async function verifyWebsiteBeforeDelivery(repoFullName: string, branch =
     if(ref===undefined)missing.push('CSSの参照がありません');else verify(ref,'CSS');
   }
   if(!cssFound)missing.push('スタイルシートがありません');
+
+  // Every page must be safe to publish, not only index.html. Prevent AI-generated
+  // preview/review URLs (including access tokens) leaking after repo turns public.
+  const pages=[...files.keys()].filter(p=>/^[a-z0-9-]+\.html$/i.test(p)).slice(0,20);
+  const forbidden=/(?:https?:\/\/sho-support\.github\.io\/(?:website-(?:preview|customer-review|intake|login|update|order-confirm)\.html|admin\/))|(?:website-(?:preview|customer-review|intake)\.html[^"'<>]{0,500}(?:[?&](?:amp;)?(?:key|token)=))/i;
+  const checked=await Promise.all(pages.map(async p=>{
+    if(p==='index.html')return {path:p,html};
+    const url=base+'/contents/'+p+'?ref='+encodeURIComponent(branch);
+    const r=await fetch(url,{headers:{...headers,Accept:'application/vnd.github.raw+json'},signal:AbortSignal.timeout(14000)});
+    if(!r.ok)throw new Error('公開前検査：'+p+' を取得できません。');
+    return {path:p,html:await r.text()};
+  }));
+  for(const {path,html:doc} of checked){
+    if(forbidden.test(doc))missing.push(path+' に制作管理用リンクが含まれています');
+    for(const hit of doc.matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"']*)["'][^>]*>/gi)){
+      const ref=hit[1].replace(/&amp;/gi,'&').trim();
+      if(!ref||ref==='#'||/^(?:javascript:|data:|\/\/)/i.test(ref)){
+        missing.push(path+' に無効なリンクがあります');continue;
+      }
+      if(/^(?:https?:|mailto:|tel:|#)/i.test(ref))continue;
+      try{
+        const parsed=new URL(ref,'https://local.invalid/');
+        if(parsed.origin!=='https://local.invalid')continue;
+        const target=decodeURIComponent(parsed.pathname.slice(1));
+        if(!target||target.includes('..')||!files.has(target))missing.push(path+' のリンク先がありません: '+target);
+      }catch{missing.push(path+' に不正なリンクがあります');}
+    }
+    for(const hit of doc.matchAll(/<(?:img|script)\b[^>]*\bsrc\s*=\s*["']([^"']*)["'][^>]*>/gi)){
+      const ref=hit[1].replace(/&amp;/gi,'&');
+      if(!/^(?:https?:|data:|blob:|\/\/)/i.test(ref)&&!ref.startsWith('#')){
+        try{
+          const target=decodeURIComponent(new URL(ref,'https://local.invalid/').pathname.slice(1));
+          if(!files.has(target))missing.push(path+' の画像・動作ファイルがありません: '+target);
+        }catch{missing.push(path+' のファイル参照が不正です');}
+      }
+    }
+  }
   if(missing.length)throw new Error('公開前検査で不足が見つかりました：'+missing.slice(0,8).join(' / '));
   return {ok:true,files:files.size,inline_css:/<style\b/i.test(html)};
 }
