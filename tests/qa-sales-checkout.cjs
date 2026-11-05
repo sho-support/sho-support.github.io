@@ -44,6 +44,11 @@ const server=http.createServer((req,res)=>{
         if(test.template)await page.locator('[data-template="'+test.template+'"] .swatch').click();
         if(test.update)await page.locator('[data-update="'+test.update+'"]').click();
         assert.equal(await page.locator('#finalBtn').isEnabled(),true,'valid plan selection enables confirmation');
+        if(viewport==='small'){
+          const title=page.locator('[data-plan="'+test.plan+'"] .plan-title');
+          const size=await title.evaluate(e=>({h:e.getBoundingClientRect().height,font:parseFloat(getComputedStyle(e).fontSize)}));
+          assert.ok(size.h<=size.font*1.6,'Plan label wraps on 320px: '+test.plan+' '+JSON.stringify(size));
+        }
         const amount=(await page.locator('#sumTotal').innerText()).replace(/\s+/g,'');
         assert.ok(amount.includes(test.price),test.id+' amount '+amount);
         const w=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth}));
