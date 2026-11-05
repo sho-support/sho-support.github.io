@@ -104,27 +104,38 @@ document.getElementById('downloadBtn').onclick=()=>{
   '',
   '※正式な金額・振込先は公式LINEでご案内します。'
  ].filter(v=>v!==null);
- const scale=2,w=900,pad=64,lineH=48,headH=150,h=headH+pad*2+lines.length*lineH;
+ const scale=2,w=900,pad=64,lineH=48,headH=150,maxTextWidth=w-pad*2;
+ const measurer=document.createElement('canvas').getContext('2d');
+ if(!measurer)return alert('画像を作成できませんでした。');
+ const prepared=[];
+ for(const line of lines){
+   if(line===''){prepared.push({text:'',font:'',color:'',space:true});continue}
+   const amount=line.startsWith('制作料金：'),note=line.startsWith('※');
+   const font=amount?'700 34px sans-serif':note?'500 20px sans-serif':'600 28px sans-serif';
+   const color=amount?'#7b5421':note?'#69645d':'#171717';
+   measurer.font=font;
+   let row='';
+   for(const char of [...line]){
+     if(row&&measurer.measureText(row+char).width>maxTextWidth){
+       prepared.push({text:row,font,color,space:false});row=char;
+     }else row+=char;
+   }
+   if(row)prepared.push({text:row,font,color,space:false});
+ }
+ const contentHeight=prepared.reduce((total,line)=>total+(line.space?18:lineH),0);
+ const h=headH+pad*2+contentHeight+24;
  const canvas=document.createElement('canvas');canvas.width=w*scale;canvas.height=h*scale;
- const ctx=canvas.getContext('2d');ctx.scale(scale,scale);
+ const ctx=canvas.getContext('2d');if(!ctx)return alert('画像を作成できませんでした。');
+ ctx.scale(scale,scale);
  ctx.fillStyle='#f4f0e9';ctx.fillRect(0,0,w,h);
  ctx.fillStyle='#111';ctx.fillRect(0,0,w,headH);
  ctx.fillStyle='#e0b66b';ctx.font='700 24px sans-serif';ctx.fillText('SHO WEB SUPPORT',pad,58);
  ctx.fillStyle='#fff';ctx.font='700 34px sans-serif';ctx.fillText('ORDER DETAILS',pad,105);
- ctx.fillStyle='#171717';ctx.font='600 28px sans-serif';
  let y=headH+pad;
- for(const line of lines){
-   if(line===''){y+=18;continue}
-   if(line.startsWith('制作料金：')){ctx.font='700 34px sans-serif';ctx.fillStyle='#7b5421';}
-   else if(line.startsWith('※')){ctx.font='500 20px sans-serif';ctx.fillStyle='#69645d';}
-   else{ctx.font='600 28px sans-serif';ctx.fillStyle='#171717';}
-   const max=w-pad*2;
-   const chars=[...line];let row='';
-   for(const ch of chars){
-     const test=row+ch;
-     if(ctx.measureText(test).width>max&&row){ctx.fillText(row,pad,y);y+=lineH;row=ch}else row=test;
-   }
-   if(row){ctx.fillText(row,pad,y);y+=lineH;}
+ for(const line of prepared){
+   if(line.space){y+=18;continue}
+   ctx.font=line.font;ctx.fillStyle=line.color;ctx.fillText(line.text,pad,y);
+   y+=lineH;
  }
  canvas.toBlob(blob=>{
    if(!blob)return alert('画像を作成できませんでした。');
