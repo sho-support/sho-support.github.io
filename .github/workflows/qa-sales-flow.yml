@@ -1,0 +1,34 @@
+name: Sales funnel mobile and order smoke QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/qa-sales-flow.cjs'
+      - '.github/workflows/qa-sales-flow.yml'
+      - 'band-homepage.html'
+      - 'website-*.html'
+      - 'website-theme.css'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sales-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Audit live sales pages, links, and customer order journey without payment
+        run: node tests/qa-sales-flow.cjs
+      - name: Save responsive screenshots and detailed findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-sales-funnel-audit
+          path: qa-sales-flow-shots/
+          if-no-files-found: ignore
+          retention-days: 7
