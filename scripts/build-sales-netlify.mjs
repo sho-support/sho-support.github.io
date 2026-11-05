@@ -49,4 +49,29 @@ function checkHtml(file) {
 for (const f of readdirSync(output)) if (f.endsWith('.html')) checkHtml(join(output, f));
 for (const f of readdirSync(join(output, 'admin'))) if (f.endsWith('.html')) checkHtml(join(output, 'admin', f));
 if (failures.length) throw new Error('Missing local assets:\n' + failures.join('\n'));
+// Pre-deploy regression checks: prevent common ordering failures from being published.
+const orderHtml = readFileSync(join(root, 'website-order.html'), 'utf8');
+const confirmHtml = readFileSync(join(root, 'website-order-confirm.html'), 'utf8');
+const recoverHtml = readFileSync(join(root, 'website-recover.html'), 'utf8');
+const recoverJs = readFileSync(join(root, 'website-recover.js'), 'utf8');
+const adminOrders = readFileSync(join(root, 'admin', 'orders.html'), 'utf8');
+const checks = [
+  ['three order plans', ['one','semi','full'].every(p => orderHtml.includes('data-plan="' + p + '"'))],
+  ['ten selectable templates', (orderHtml.match(/data-template="/g) || []).length === 10],
+  ['initial selections empty', orderHtml.includes("state={plan:'',template:'',update:''")],
+  ['explicit order editing', confirmHtml.includes('website-order.html?resume=1')],
+  ['only explicit resume restores draft', orderHtml.includes("get('resume')==='1'")],
+  ['full-order update defaults', orderHtml.includes("deepPlan==='semi'||deepPlan==='full'")],
+  ['all basic prices match', [orderHtml, confirmHtml].every(s => s.includes('one:15000,semi:22000,full:30000'))],
+  ['one-page monthly addition', [orderHtml,confirmHtml].every(s => s.includes("state.update==='unlimited'?7000:0"))],
+  ['pay-as-you-go choice', orderHtml.includes("['none','都度払い")],
+  ['monthly update choice', orderHtml.includes("['unlimited','月額プラン")],
+  ['order receipt recovery', confirmHtml.includes('sho_web_order_pending_v1')],
+  ['browser password recovery page', recoverHtml.includes('id="recoverForm"')],
+  ['recover form hides on success', recoverJs.includes('form.hidden=true')],
+  ['numeric order admin example', adminOrders.includes('placeholder="例：1000"')],
+];
+const broken = checks.filter(([,ok]) => !ok).map(([name]) => name);
+if (broken.length) throw new Error('Sales regression checks failed: ' + broken.join(', '));
+console.log('Sales regression checks passed (' + checks.length + ').');
 console.log('Netlify sales staging ready (' + files.length + ' top-level files + admin).');
