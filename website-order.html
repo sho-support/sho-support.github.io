@@ -135,7 +135,9 @@ try{state={...state,...JSON.parse(localStorage.getItem(STORE)||'{}')}}catch{}
    }
  }catch{}
  // Historical per-request selections are now consolidated into pay-as-you-go.
- if(state.plan==='one'&&['live','standard'].includes(state.update))state.update='none';
+ if(state.plan==='one'&&!['none','unlimited',''].includes(state.update))state.update='';
+if(state.plan==='semi'||state.plan==='full')state.update='free3';
+if(!['one','semi','full'].includes(state.plan)){state.plan='';state.template='';state.update='';}
 const params=new URLSearchParams(location.search);
 const deepPlan=params.get('plan');
 if(['one','semi','full'].includes(deepPlan)){
