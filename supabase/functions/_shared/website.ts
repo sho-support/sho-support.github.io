@@ -279,3 +279,45 @@ export async function setGithubPagesDomain(repoFullName: string, cname: string |
   if (!response.ok) throw new Error(`GitHub Pages domain update failed: ${response.status} ${await response.text()}`);
   return { ok: true };
 }
+
+
+// Long-lived customer URLs must not belong to the current hosting provider.
+export function normalizeCustomerHostname(input: unknown): string {
+  const host = String(input || '').trim().toLowerCase().replace(/\.$/, '');
+  if (!host) throw new Error('正式公開URLが未設定です。お客様所有のドメイン、または当社管理の独自ドメイン配下のURLを設定してください。');
+  if (host.length > 253 || !/^[a-z0-9.-]+$/.test(host) || host.includes('..') ||
+      !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{1,62}$/.test(host)) {
+    throw new Error('正式公開URLは https:// やパスを除いた有効なドメイン名で設定してください。');
+  }
+  if (/(?:^|\.)(?:github\.io|pages\.dev|vercel\.app|netlify\.app|onrender\.com|railway\.app|localhost|example\.com|example\.net|example\.org|test|invalid)$/.test(host)) {
+    throw new Error('サービス提供者の無料URLやテスト用ドメインは正式公開URLに設定できません。');
+  }
+  return host;
+}
+
+export async function requireStablePublicationUrl(repoFullName: string, domain: unknown): Promise<string> {
+  const host = normalizeCustomerHostname(domain);
+  const { owner, repo } = parseRepo(repoFullName);
+  const response = await fetch(
+    'https://api.github.com/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '/pages',
+    { headers: githubHeaders(), signal: AbortSignal.timeout(12000) },
+  );
+  if (!response.ok) throw new Error('GitHub Pagesの設定を確認できません。ステータス: ' + response.status);
+  const pages = await response.json();
+  if (String(pages?.cname || '').trim().toLowerCase() !== host) {
+    throw new Error('GitHub Pagesのカスタムドメイン設定が正式公開URLと一致しません。');
+  }
+  let publicResponse: Response;
+  try {
+    publicResponse = await fetch('https://' + host + '/', {
+      method: 'GET', redirect: 'follow', signal: AbortSignal.timeout(12000),
+      headers: { 'Cache-Control': 'no-cache' },
+    });
+  } catch {
+    throw new Error('正式公開URLのHTTPS接続を確認できません。DNS・SSL設定を完了してください。');
+  }
+  if (!publicResponse.ok || new URL(publicResponse.url).hostname.toLowerCase() !== host) {
+    throw new Error('正式公開URLが正常表示されません。DNS・HTTPS・リンク先を確認してください。');
+  }
+  return 'https://' + host + '/';
+}
