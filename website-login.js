@@ -13,11 +13,20 @@ const safeNext=(()=>{
     return u.origin===location.origin?u.href:new URL('website-portal.html',location.href).href;
   }catch{return new URL('website-portal.html',location.href).href}
 })();
+const isAdminLogin=(()=>{
+  try{return new URL(safeNext).pathname.startsWith('/admin/')}catch{return false}
+})();
+if(isAdminLogin){
+  document.title='運営者ログイン | SHO WEB SUPPORT';
+  document.getElementById('loginHeading').textContent='運営者ログイン';
+  document.getElementById('loginIntro').textContent='SHO WEB SUPPORTの管理者アカウントへログインします。登録済みメールアドレスにログインリンクを送信します。';
+  document.getElementById('loginNote').textContent='注文・入金・制作情報は管理者権限を持つアカウントのみ操作できます。未登録のメールアドレスでは管理画面を利用できません。';
+}
 
 try{
   const session=await currentSession();
   if(session){
-    message.innerHTML='この端末ではログイン済みです。<br><a href="'+safeNext+'" style="color:#d9ae5c">お客様管理ページへ進む →</a>';
+    message.innerHTML='この端末ではログイン済みです。<br><a href="'+safeNext+'" style="color:#d9ae5c">'+(isAdminLogin?'運営管理画面':'お客様管理ページ')+'へ進む →</a>';
   }
 }catch(error){console.error(error)}
 
@@ -29,7 +38,7 @@ form.addEventListener('submit',async e=>{
   try{
     const {error}=await websiteSupabase.auth.signInWithOtp({
       email:value,
-      options:{emailRedirectTo:safeNext,shouldCreateUser:true},
+      options:{emailRedirectTo:safeNext,shouldCreateUser:!isAdminLogin},
     });
     if(error)throw error;
     message.textContent='ログイン用メールを送りました。メール内のリンクを開いてください。';
