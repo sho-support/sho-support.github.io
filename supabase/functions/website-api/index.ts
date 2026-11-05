@@ -530,7 +530,7 @@ Deno.serve(async (req) => {
       if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
       const { data: site, error: readError } = await admin
         .from('website_sites')
-        .select('repo_full_name,published_at,status,custom_domain')
+        .select('repo_full_name,published_at,status,custom_domain,publish_branch,offline_path')
         .eq('site_id', siteId)
         .single();
       if (readError) throw readError;
@@ -539,6 +539,10 @@ Deno.serve(async (req) => {
       if(site.published_at || ['live','private','improving_private'].includes(String(site.status)))
         return json({error:'公開後のドメイン変更は名刺・看板などのURLに影響するため、個別の移行手続きが必要です。既存URLを維持してください。'},409);
       const domain = body.custom_domain ? normalizeCustomerHostname(body.custom_domain) : null;
+      // Each private draft publishes only docs/ (offline placeholder) until
+      // the customer approves the complete site. This enables HTTPS/DNS checks
+      // without leaking unreviewed files or changing any already-live site.
+      if(domain)await setGithubPagesSource(site.repo_full_name,site.publish_branch||'main','/docs');
       await setGithubPagesDomain(site.repo_full_name, domain);
       const { error } = await admin.from('website_sites').update({ custom_domain: domain }).eq('site_id', siteId);
       if (error) throw error;
