@@ -1,0 +1,1 @@
+Verify completed NOVA STATIC full-order five-page files and Chromium rendering using signed OIDC only. No AI rebuild, no payment, no publication.
