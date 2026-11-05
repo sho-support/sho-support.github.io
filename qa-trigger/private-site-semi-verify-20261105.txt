@@ -1,0 +1,1 @@
+Read-only signed QA of completed semi-order test 1241; desktop/mobile real image and CSS verification. No new generation, no public release.
