@@ -1,0 +1,1 @@
+Signed QA rebuild of semi-order test SITE 1241; verify uploaded images, fixed cyber palette, desktop/mobile layout. No public release or payment.
