@@ -1,4 +1,4 @@
-import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, requireStablePublicationUrl } from './_shared/website.ts';
+import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, requireStablePublicationUrl, normalizeCustomerHostname } from './_shared/website.ts';
 
 const allowedOrigin = 'https://sho-support.github.io';
 
@@ -119,6 +119,10 @@ Deno.serve(async(req)=>{
     if(action==='admin_send_final_quote'){
       const orderCode=String(body?.order_code||'').trim().toUpperCase();
       const amount=Number(body?.final_amount);
+      let finalDomain='';
+      try{finalDomain=normalizeCustomerHostname(body?.public_domain)}
+      catch(e:any){return json({error:String(e?.message||e)},400)}
+      if(body?.domain_control_confirmed!==true)return json({error:'正式URLの管理権限・更新負担・表記を確認してください。'},400);
       if(!/^[FSP]\d{4,6}$/.test(orderCode)||!Number.isSafeInteger(amount)||amount<15000||amount>3000000)
         return json({error:'注文IDまたは確定金額が不正です。'},400);
       const {data:order,error:orderErr}=await admin.from('website_orders')
@@ -129,6 +133,14 @@ Deno.serve(async(req)=>{
         return json({error:'LINE連携済みで入金待ちの注文だけ、正式見積りを送信できます。'},409);
       if(amount<Number(order.amount_from||0))
         return json({error:'基本料金未満の金額は送信できません。割引等は個別に確認してください。'},400);
+      const [{data:reservedBySites,error:siteCheckErr},{data:reservedByOrders,error:orderCheckErr}]=await Promise.all([
+        admin.from('website_sites').select('site_id').eq('custom_domain',finalDomain).limit(1),
+        admin.from('website_orders').select('order_code').contains('selections',{final_public_domain:finalDomain})
+          .neq('order_code',orderCode).neq('status','cancelled').limit(1)
+      ]);
+      if(siteCheckErr||orderCheckErr)throw siteCheckErr||orderCheckErr;
+      if(reservedBySites?.length||reservedByOrders?.length)
+        return json({error:'この正式URLは別の案件に割り当て済みです。重複しないURLを設定してください。'},409);
       const {data:setting,error:bankErr}=await admin.from('website_settings')
         .select('value').eq('key','bank_transfer').maybeSingle();
       if(bankErr)throw bankErr;
@@ -136,7 +148,7 @@ Deno.serve(async(req)=>{
       if(bankMessage.length<15)return json({error:'本番用の振込先が未設定です。注文管理画面から設定してください。'},409);
       const label=order.plan==='one'?'1ページ完結サイト':order.plan==='semi'?'セミオーダーサイト':'フルオーダーサイト';
       const original=Number(order.selections?.final_quote_amount||0);
-      if(original===amount&&order.selections?.final_quote_sent_at)
+      if(original===amount&&order.selections?.final_public_domain===finalDomain&&order.selections?.final_quote_sent_at)
         return json({error:'同じ確定金額の見積りは送信済みです。二重送信を防止しました。'},409);
       const explanation=String(body?.quote_note||'').trim().slice(0,500);
       const lines=[
@@ -144,6 +156,8 @@ Deno.serve(async(req)=>{
         '注文ID：'+orderCode,
         'プラン：'+label,
         '確定制作料金：'+amount.toLocaleString('ja-JP')+'円',
+        '正式公開予定URL：https://'+finalDomain+'/',
+        'このURLを長期利用する前提です。公開前にDNS・HTTPSを設定します。',
         explanation?'補足：'+explanation:'',
         '',
         '【お振込先】',bankMessage,'',
@@ -156,6 +170,7 @@ Deno.serve(async(req)=>{
         return json({error:'お客様のLINEへ正式見積りを送信できませんでした。ブロック状態や設定を確認してください。'},502);
       const {error:saveErr}=await admin.from('website_orders').update({
         selections:{...(order.selections||{}),final_quote_amount:amount,
+          final_public_domain:finalDomain,quote_domain_owner_confirmed_at:new Date().toISOString(),
           final_quote_sent_at:new Date().toISOString(),final_quote_note:explanation},
         updated_at:new Date().toISOString()
       }).eq('order_code',orderCode).eq('status','pending_payment');
@@ -176,7 +191,7 @@ Deno.serve(async(req)=>{
         if(relatedError)throw relatedError;
         states=Object.fromEntries((related||[]).map((site:any)=>[site.site_id,site.status]));
       }
-      return json({orders:(data||[]).map((o:any)=>({...o,final_amount:Number(o.selections?.final_quote_amount||0)||null,final_quote_sent_at:o.selections?.final_quote_sent_at||null,selections:undefined,site_status:o.site_id?states[o.site_id]||null:null}))});
+      return json({orders:(data||[]).map((o:any)=>({...o,final_amount:Number(o.selections?.final_quote_amount||0)||null,final_public_domain:String(o.selections?.final_public_domain||''),final_quote_sent_at:o.selections?.final_quote_sent_at||null,selections:undefined,site_status:o.site_id?states[o.site_id]||null:null}))});
     }
 
     if(action==='admin_resend_intake'){
@@ -204,8 +219,8 @@ Deno.serve(async(req)=>{
     if(!target)return json({error:'注文が見つかりません。'},404);
     if(target.status!=='pending_payment')return json({error:'この注文は入金確認待ちではありません。'},409);
     if(!target.line_user_id)return json({error:'お客様のLINE送信がまだ確認できません。'},409);
-    if(!target.selections?.final_quote_amount||!target.selections?.final_quote_sent_at)
-      return json({error:'正式な合計金額と振込先をLINEで送信してから、入金確認してください。'},409);
+    if(!target.selections?.final_quote_amount||!target.selections?.final_quote_sent_at||!target.selections?.final_public_domain||!target.selections?.quote_domain_owner_confirmed_at)
+      return json({error:'正式な合計金額・振込先・確定URLをLINEで送信してから、入金確認してください。'},409);
 
     const newSiteId=orderCode.replace(/^[FSP]/,'');
     const newKey=randomAccessKey();
@@ -218,6 +233,7 @@ Deno.serve(async(req)=>{
       const {error:siteError}=await admin.from('website_sites').insert({
         site_id:newSiteId,site_name:planLabel,status:'request_waiting',
         current_note:'ヒアリング入力待ち。',customer_approved:false,
+        custom_domain:String(target.selections.final_public_domain),
         publish_branch:'main',live_path:'/',offline_path:'/docs'
       });
       if(siteError)throw siteError;
