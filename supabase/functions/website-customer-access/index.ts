@@ -227,8 +227,10 @@ Deno.serve(async(req)=>{
     const newHash=await sha256Hex(newKey);
     const planLabel=target.plan==='one'?'1ページ完結サイト':target.plan==='semi'?'セミオーダーサイト':'フルオーダーサイト';
 
-    const {data:existing,error:siteReadError}=await admin.from('website_sites').select('site_id').eq('site_id',newSiteId).maybeSingle();
+    const {data:existing,error:siteReadError}=await admin.from('website_sites').select('site_id,custom_domain').eq('site_id',newSiteId).maybeSingle();
     if(siteReadError)throw siteReadError;
+    if(existing&&String(existing.custom_domain||'')!==String(target.selections.final_public_domain))
+      return json({error:'既存案件の正式URLが見積り時のURLと一致しません。'},409);
     if(!existing){
       const {error:siteError}=await admin.from('website_sites').insert({
         site_id:newSiteId,site_name:planLabel,status:'request_waiting',
@@ -237,15 +239,23 @@ Deno.serve(async(req)=>{
         publish_branch:'main',live_path:'/',offline_path:'/docs'
       });
       if(siteError)throw siteError;
+
+      await admin.from('website_activity').insert({
+        site_id:newSiteId,actor_type:'admin',actor_user_id:user.id,action:'site_created',
+        detail:`注文 ${orderCode} から案件を作成。`
+      });
+    }
+
+    // Recover partial activations safely: a site may exist without its intake.
+    const {data:intakeExisting,error:intakeReadError}=await admin.from('website_intakes')
+      .select('site_id').eq('site_id',newSiteId).maybeSingle();
+    if(intakeReadError)throw intakeReadError;
+    if(!intakeExisting){
       const {error:intakeError}=await admin.from('website_intakes').insert({
         site_id:newSiteId,
         payload:{fields:{build_plan:target.plan,template_style:target.template_style||''},checks:{},members:[],lives:[],contacts:[],files:{top_photos:[],gallery_photos:[],logo_file:[]},meta:{}}
       });
       if(intakeError)throw intakeError;
-      await admin.from('website_activity').insert({
-        site_id:newSiteId,actor_type:'admin',actor_user_id:user.id,action:'site_created',
-        detail:`注文 ${orderCode} から案件を作成。`
-      });
     }
 
     const {error:linkError}=await admin.from('website_line_links').upsert({
