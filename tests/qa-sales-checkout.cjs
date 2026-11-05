@@ -76,7 +76,7 @@ const server=http.createServer((req,res)=>{
           const n=el.querySelector('b')?.getBoundingClientRect();
           return d&&n?{dateBottom:d.bottom,nameTop:n.top,dateRight:d.right,nameLeft:n.left}:null;
         });
-        if(positions&&viewport==='mobile'){
+        if(positions&&(viewport==='mobile'||viewport==='small')){
           assert.ok(positions.nameTop>=positions.dateBottom-1,
             'Mobile event date/name overlap: '+theme+' '+JSON.stringify(positions));
         }
