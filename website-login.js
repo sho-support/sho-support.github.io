@@ -34,7 +34,8 @@ if(isAdminLogin){
 try{
   const session=await currentSession();
   if(session){
-    message.innerHTML='この端末ではログイン済みです。<br><a href="'+safeNext+'" style="color:#d9ae5c">'+(isAdminLogin?'運営管理画面':'お客様管理ページ')+'へ進む →</a>';
+    message.textContent='ログイン済みのため、管理画面を開きます…';
+    location.replace(safeNext);
   }
 }catch(error){console.error(error)}
 
@@ -47,7 +48,7 @@ form.addEventListener('submit',async e=>{
   try{
     const {error}=await websiteSupabase.auth.signInWithPassword({email:value,password:password.value});
     if(error)throw error;
-    password.value='';
+    // Leave the value until navigation so the browser can offer its password manager.
     location.assign(safeNext);
   }catch(error){
     console.error('Sign-in failed:',error?.code||error?.status||'auth_error');
