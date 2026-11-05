@@ -126,6 +126,8 @@ const labels={one:'1ページ完結サイト',semi:'セミオーダーサイト'
 const prices={one:15000,semi:22000,full:30000};
 let state={plan:'',template:'',update:'',domain:false,extraRequest:''};
 try{state={...state,...JSON.parse(localStorage.getItem(STORE)||'{}')}}catch{}
+ // Historical per-request selections are now consolidated into pay-as-you-go.
+ if(state.plan==='one'&&['live','standard'].includes(state.update))state.update='none';
 const params=new URLSearchParams(location.search);
 if(['one','semi','full'].includes(params.get('plan')))state.plan=params.get('plan');
 if(names[params.get('template')]){state.template=params.get('template');state.plan='semi'}
@@ -139,7 +141,7 @@ function selectPlan(plan){
  state.plan=plan;
  if(plan!=='semi')state.template='';
  if(plan==='semi'||plan==='full')state.update='free3';
- else if(state.update==='free3')state.update='';
+ else if(state.update==='free3')state.update='none';
  persist();render();
 }
 plans.forEach(el=>el.querySelector('.plan-select').addEventListener('click',()=>selectPlan(el.dataset.plan)));
@@ -155,7 +157,7 @@ document.querySelectorAll('.preview-link').forEach(a=>a.addEventListener('click'
 function updateArea(){
  const area=document.getElementById('updateArea');
  if(state.plan==='one'){
-  const opts=[['none','更新プランなし','必要になった時に都度相談'],['live','LIVE更新 ¥1,000 / 回','LIVE・EVENT情報のみ'],['standard','通常更新 ¥2,500 / 回','写真・文章・リンクなど'],['unlimited','通常更新 月8回まで ¥7,000 / 月','1回に複数項目をまとめて依頼可能']];
+  const opts=[['none','都度払い（更新したい時だけ）','月額料金なし・依頼がなければ0円｜LIVE更新 ¥1,000/回・通常更新 ¥2,500/回'],['unlimited','月額プラン ¥7,000 / 月','月8回まで通常更新。毎月料金が発生します']];
   area.innerHTML='<div class="update-options">'+opts.map(([v,t,s])=>'<button class="update-option '+(state.update===v?'selected':'')+'" data-update="'+v+'" type="button"><small>'+s+'</small><b>'+t+'</b><span class="dot">✓</span></button>').join('')+'</div>';
   area.querySelectorAll('.update-option').forEach(b=>b.addEventListener('click',()=>{state.update=b.dataset.update;persist();render()}));
  }else{
@@ -187,7 +189,7 @@ function render(){
  document.getElementById('sumTemplate').textContent=state.template?(names[state.template]||state.template):'未選択';
  let ul='未選択';
  if(state.update==='free3')ul='通常更新 月8回まで / 公開後3か月無料';
- if(state.update==='none')ul='更新プランなし';
+ if(state.update==='none')ul='都度払い（LIVE ¥1,000/回・通常 ¥2,500/回）';
  if(state.update==='live')ul='LIVE更新 ¥1,000 / 回';
  if(state.update==='standard')ul='通常更新 ¥2,500 / 回';
  if(state.update==='unlimited')ul='通常更新 月8回まで ¥7,000 / 月';
