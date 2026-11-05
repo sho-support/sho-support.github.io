@@ -25,7 +25,6 @@ function validSiteId(value: unknown) {
 const sha256Hex=async(value:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
 const randomReviewKey=()=>Array.from(crypto.getRandomValues(new Uint8Array(24)),b=>b.toString(16).padStart(2,'0')).join('');
 const addMonths=(base:Date,months:number)=>{const d=new Date(base),day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+months);d.setUTCDate(Math.min(day,new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate()));return d.toISOString();};
-function githubSiteUrl(repo:string,domain?:string|null){const p=repo.split('/');const host=String(domain||'').replace('https://','').replace('http://','').split('/')[0];return host?'https://'+host+'/':'https://'+p[0]+'.github.io/'+p[1]+'/';}
 async function setOrderFreePeriod(admin:ReturnType<typeof adminClient>,siteId:string,now:Date){const {error}=await admin.from('website_orders').update({update_free_until:addMonths(now,3)}).eq('site_id',siteId).in('plan',['semi','full']);if(error)throw error;}
 const paidTemplates=new Set(['rock','cafe','cute','minimal','premium','pop','vintage','cyber','organic','editorial']);
 async function normalizePaidIntake(admin:ReturnType<typeof adminClient>,siteId:string,raw:unknown){
@@ -131,7 +130,7 @@ Deno.serve(async (req) => {
         publish_branch: body.publish_branch || 'main',
         live_path: body.live_path || '/',
         offline_path: body.offline_path || '/docs',
-      }, { onConflict: 'site_id' });
+      });
       if (siteError) throw siteError;
 
       if (customerUserId) {
