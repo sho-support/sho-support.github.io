@@ -24,7 +24,8 @@ form.addEventListener('submit',async event=>{
     destination.searchParams.set('next',safeNext);
     const {error}=await websiteSupabase.auth.resetPasswordForEmail(value,{redirectTo:destination.href});
     if(error)throw error;
-    message.textContent='再設定メールを送信しました。受信箱と迷惑メールフォルダを確認してください。メールのリンクは一度だけ利用してください。';
+    form.hidden=true;
+    message.textContent='送信しました。メール内のリンクからパスワードを再設定してください。受信箱と迷惑メールフォルダをご確認ください。';
     form.reset();
   }catch(error){
     if(error?.status===429||/rate.limit|too.many/i.test(String(error?.code||error?.message||''))){
