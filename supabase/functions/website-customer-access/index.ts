@@ -67,7 +67,7 @@ Deno.serve(async(req)=>{
   const key=String(body?.key||'');
   const admin=adminClient();
 
-  if(action==='admin_list_orders' || action==='admin_activate_order' || action==='admin_send_review' || action==='admin_resend_intake'){
+  if(action==='admin_list_orders' || action==='admin_activate_order' || action==='admin_send_review' || action==='admin_resend_intake' || action==='admin_bank_settings' || action==='admin_save_bank_settings' || action==='admin_send_final_quote'){
     const user=await getUser(req,admin);
     if(!user)return json({error:'ログインが必要です。'},401);
     if(!(await isAdmin(admin,user.id)))return json({error:'管理者権限が必要です。'},403);
@@ -98,9 +98,75 @@ Deno.serve(async(req)=>{
       return json({ok:true,review_url:reviewUrl});
     }
 
+    if(action==='admin_bank_settings'){
+      const {data:setting,error}=await admin.from('website_settings').select('value').eq('key','bank_transfer').maybeSingle();
+      if(error)throw error;
+      return json({ok:true,message:String(setting?.value?.message||'')});
+    }
+    if(action==='admin_save_bank_settings'){
+      const message=String(body?.bank_message||'').trim();
+      if(message.length>800 || (message.length>0&&message.length<15))
+        return json({error:'振込先の案内は15〜800文字で入力してください。空欄で保存すると自動送信設定を解除します。'},400);
+      if(/(?:架空|テスト用口座|example\.com|XXXX|＊＊＊＊)/i.test(message))
+        return json({error:'テスト・仮の振込先情報は本番設定できません。'},400);
+      const {error}=await admin.from('website_settings').upsert({
+        key:'bank_transfer',value:{message},updated_at:new Date().toISOString()
+      },{onConflict:'key'});
+      if(error)throw error;
+      return json({ok:true,configured:!!message});
+    }
+
+    if(action==='admin_send_final_quote'){
+      const orderCode=String(body?.order_code||'').trim().toUpperCase();
+      const amount=Number(body?.final_amount);
+      if(!/^[FSP]\d{4,6}$/.test(orderCode)||!Number.isSafeInteger(amount)||amount<15000||amount>3000000)
+        return json({error:'注文IDまたは確定金額が不正です。'},400);
+      const {data:order,error:orderErr}=await admin.from('website_orders')
+        .select('order_code,plan,status,line_user_id,amount_from,selections')
+        .eq('order_code',orderCode).maybeSingle();
+      if(orderErr)throw orderErr;
+      if(!order||order.status!=='pending_payment'||!order.line_user_id)
+        return json({error:'LINE連携済みで入金待ちの注文だけ、正式見積りを送信できます。'},409);
+      if(amount<Number(order.amount_from||0))
+        return json({error:'基本料金未満の金額は送信できません。割引等は個別に確認してください。'},400);
+      const {data:setting,error:bankErr}=await admin.from('website_settings')
+        .select('value').eq('key','bank_transfer').maybeSingle();
+      if(bankErr)throw bankErr;
+      const bankMessage=String(setting?.value?.message||'').trim();
+      if(bankMessage.length<15)return json({error:'本番用の振込先が未設定です。注文管理画面から設定してください。'},409);
+      const label=order.plan==='one'?'1ページ完結サイト':order.plan==='semi'?'セミオーダーサイト':'フルオーダーサイト';
+      const original=Number(order.selections?.final_quote_amount||0);
+      if(original===amount&&order.selections?.final_quote_sent_at)
+        return json({error:'同じ確定金額の見積りは送信済みです。二重送信を防止しました。'},409);
+      const explanation=String(body?.quote_note||'').trim().slice(0,500);
+      const lines=[
+        '【SHO WEB SUPPORT 正式お見積り・振込先】',
+        '注文ID：'+orderCode,
+        'プラン：'+label,
+        '確定制作料金：'+amount.toLocaleString('ja-JP')+'円',
+        explanation?'補足：'+explanation:'',
+        '',
+        '【お振込先】',bankMessage,'',
+        'お振込名義に注文ID（'+orderCode+'）を添えてください。',
+        '内容・金額をご確認いただき、ご納得いただけましたらお振込みください。',
+        '入金を確認した後、制作内容入力フォームをご案内します。'
+      ].filter(Boolean);
+      const sent=await linePush(order.line_user_id,lines.join('\n'));
+      if(sent.skipped||sent.ok===false)
+        return json({error:'お客様のLINEへ正式見積りを送信できませんでした。ブロック状態や設定を確認してください。'},502);
+      const {error:saveErr}=await admin.from('website_orders').update({
+        selections:{...(order.selections||{}),final_quote_amount:amount,
+          final_quote_sent_at:new Date().toISOString(),final_quote_note:explanation},
+        updated_at:new Date().toISOString()
+      }).eq('order_code',orderCode).eq('status','pending_payment');
+      if(saveErr)throw saveErr;
+      await notifyOwner('【正式見積り送信】'+orderCode+'　'+amount.toLocaleString('ja-JP')+'円');
+      return json({ok:true,order_code:orderCode,final_amount:amount});
+    }
+
     if(action==='admin_list_orders'){
       const {data,error}=await admin.from('website_orders')
-        .select('order_code,status,plan,template_style,update_plan,custom_domain,extra_request,amount_from,line_user_id,line_display_name,line_linked_at,site_id,created_at,updated_at')
+        .select('order_code,status,plan,template_style,update_plan,custom_domain,extra_request,amount_from,selections,line_user_id,line_display_name,line_linked_at,site_id,created_at,updated_at')
         .order('created_at',{ascending:false}).limit(200);
       if(error)throw error;
       const ids=[...new Set((data||[]).map((o:any)=>o.site_id).filter(Boolean))];
@@ -110,7 +176,7 @@ Deno.serve(async(req)=>{
         if(relatedError)throw relatedError;
         states=Object.fromEntries((related||[]).map((site:any)=>[site.site_id,site.status]));
       }
-      return json({orders:(data||[]).map((o:any)=>({...o,site_status:o.site_id?states[o.site_id]||null:null}))});
+      return json({orders:(data||[]).map((o:any)=>({...o,final_amount:Number(o.selections?.final_quote_amount||0)||null,final_quote_sent_at:o.selections?.final_quote_sent_at||null,selections:undefined,site_status:o.site_id?states[o.site_id]||null:null}))});
     }
 
     if(action==='admin_resend_intake'){
@@ -138,6 +204,8 @@ Deno.serve(async(req)=>{
     if(!target)return json({error:'注文が見つかりません。'},404);
     if(target.status!=='pending_payment')return json({error:'この注文は入金確認待ちではありません。'},409);
     if(!target.line_user_id)return json({error:'お客様のLINE送信がまだ確認できません。'},409);
+    if(!target.selections?.final_quote_amount||!target.selections?.final_quote_sent_at)
+      return json({error:'正式な合計金額と振込先をLINEで送信してから、入金確認してください。'},409);
 
     const newSiteId=orderCode.replace(/^[FSP]/,'');
     const newKey=randomAccessKey();
