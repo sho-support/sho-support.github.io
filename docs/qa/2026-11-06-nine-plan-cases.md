@@ -85,3 +85,15 @@
 ## 追加ブラウザQAコード
 `tests/qa-sales-checkout.cjs` を、9注文シナリオ×PC/スマホ=18、実セミHTML3種×PC/スマホ=6の24ケースへ拡張。
 構文は確認済みだが、GitHub Actionsの実行結果をツールから取得できなかったため、UI合格とは記録しない。
+
+
+## 2026-11-06 追加の実ブラウザ・公開監査
+- GitHub Actions run `42124213557`: sales-ui PASS。Chromiumで注文画面9ケース×PC/スマホ、および生成済みセミHTML3種×PC/スマホの計24ケースを実行。24枚のスクリーンショットをGitHub Actions artifact `13459943174` から取得し目視確認。
+- スクリーンショットでスマホLIVE日付とイベント名の重なりを発見。原因は `website-worker/semi-template.mjs` の後半にある重複 `@media` が先のCSSを上書きしていたこと。workerの最終CSSとテンプレート共通CSS、3サンプルの出力CSSを修正。
+- 追加した `.event` のDOM矩形重なり検査が修正前に赤（run `42126398047`）となり、修正後の run `42126959181` はPASS。新しいartifact `13461531762` の修正版スクリーンショットでも日付と名称の縦表示を確認。
+- Netlify無認証アクセス run `42126581035`: FAIL。ログインしていないChromiumから `https://sho-web-support.netlify.app/` が **HTTP 401** を返した。販売サイトは非公開設定のままで、一般ユーザーに閲覧できない。本番公開前にNetlifyの Project visibility をPublicへ変更する必要がある。Netlify側の設定変更はこのGitHub/Supabaseツールでは不可。
+- GitHub Pagesの無料URLは運営側ユーザーサイトの独自ドメインを継承する場合があるため、`website-customer-access` でGitHub Pages設定を確認して無料URLを算出する処理を追加。公式仕様参照: https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages
+- GitHub REST public Pages確認は非認証で404（Pages設定の存在は非認証では確定できない）。有効なアプリトークンを持つEdge Functionが公開時に判定する。
+- HTTP実注文APIで数字のみの注文番号1000の発行を実際に確認。DBアーカイブ後にテスト注文を削除し、現在の注文/案件/ジョブは0件。
+- 安全確認のためテスト銀行の情報は `bank_transfer_test` にのみ保持。 `bank_transfer` 本番振込先は未設定。
+- ブラウザ検査を320px/390px/768px/1366pxの4画面幅・48ケースへ拡大した。最新実行結果は別途確認する。
