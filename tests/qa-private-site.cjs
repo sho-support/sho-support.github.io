@@ -77,5 +77,7 @@ const endpoint='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-qa
    await context.close();
   }
  }finally{await browser.close()}
- console.log('PRIVATE_SITE_QA_PASS: actual SITE ID 1241, 2 viewports, real uploaded images, cyber theme, valid CSS');
+ const report=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+jwt,'Content-Type':'application/json'},body:JSON.stringify({action:'qa-report-semi-pass',viewports:2})});
+ assert.equal(report.status,200,'signed semi-order browser QA recorded');
+ console.log('PRIVATE_SITE_QA_PASS: actual SITE ID 1241, 2 viewports, real uploaded images, cyber theme, valid CSS, result recorded');
 })().catch(e=>{console.error('PRIVATE_SITE_QA_FAIL',e.stack||e);process.exitCode=1});
