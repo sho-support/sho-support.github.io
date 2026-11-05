@@ -157,6 +157,30 @@ function label(u){return u.split('?')[0].replace('.html','')}
    drawnLines:drawn.length,lastLine:drawn[drawn.length-1].text.slice(0,65),
    lastY:drawn[drawn.length-1].y,canvasHeight:drawn[drawn.length-1].canvasHeight
  }));
+ // Brand/header logo must always navigate to the website-creation home.
+ // Check actual clicking at narrow mobile and desktop widths, not just href.
+ for(const width of [320,390,1366]){
+   const navContext=await browser.newContext({viewport:{width,height:850},locale:'ja-JP'});
+   const navPage=await navContext.newPage();
+   await navPage.goto(origin+'website-order.html',{waitUntil:'domcontentloaded'});
+   await navPage.evaluate(()=>localStorage.setItem('sho_web_order_v3',JSON.stringify({
+    plan:'one',template:'',update:'none',domain:false,extraRequest:''
+   })));
+   for(const item of ['website-order.html','website-order-confirm.html','website-templates.html',
+     'website-faq.html','website-legal.html','website-terms.html','website-privacy.html']){
+     await navPage.goto(origin+item,{waitUntil:'domcontentloaded'});
+     const link=navPage.locator('header a.brand');
+     await link.waitFor();
+     assert.equal(await link.getAttribute('href'),'website-support.html','brand destination '+item);
+     assert.match(await link.getAttribute('aria-label'),/ホームページへ戻る/,'accessible logo '+item);
+     const r=await link.boundingBox();
+     assert.ok(r&&r.width>75&&r.height>=40,'touch target '+item+' '+width);
+     await link.click();
+     await navPage.waitForURL(url=>url.pathname.endsWith('/website-support.html'),{timeout:12000});
+     console.log('SALES_BRAND_HOME_NAV_PASS '+JSON.stringify({source:item,width,destination:new URL(navPage.url()).pathname}));
+   }
+   await navContext.close();
+ }
  const broken=[];
  for(const href of linkSet){
    const resp=await page.request.get(href,{maxRedirects:4,timeout:12000}).catch(e=>({status:()=>0,error:String(e)}));
