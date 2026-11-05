@@ -28,9 +28,9 @@ Deno.serve(async req=>{
  if(!token||!(await checkOIDC(token)))return reject();
  const url=new URL(req.url),path=url.searchParams.get('path')||'index.html';
  const qaSite=url.searchParams.get('site_id')||'1241';
- if(!['1241','qafull5nov04'].includes(qaSite))return reject(404);
- const multi=qaSite==='qafull5nov04';
- if(req.method==='GET'&&url.searchParams.get('info')!=='job'&&!(multi?['index.html','live.html','about.html','gallery.html','contact.html','style.css','site.js'].includes(path):(path==='index.html'||/^assets\/(?:top_photos|gallery_photos|logo_file)\/[A-Za-z0-9._-]+$/.test(path))))return reject(404);
+ if(!['1241','qafull5nov04','qaone20261102'].includes(qaSite))return reject(404);
+ const multi=qaSite==='qafull5nov04',one=qaSite==='qaone20261102';
+ if(req.method==='GET'&&url.searchParams.get('info')!=='job'&&!(multi?['index.html','live.html','about.html','gallery.html','contact.html','style.css','site.js'].includes(path):one?path==='index.html':(path==='index.html'||/^assets\/(?:top_photos|gallery_photos|logo_file)\/[A-Za-z0-9._-]+$/.test(path))))return reject(404);
  const service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'',project=Deno.env.get('SUPABASE_URL')||'';
  const github=Deno.env.get('GITHUB_PAGES_TOKEN')||'';
  if(!service||!project||!github)return reject(503);
@@ -55,7 +55,17 @@ Deno.serve(async req=>{
     if(writeErr)return reject(500);
     return new Response(JSON.stringify({ok:true,recorded:true}),{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
   }
-  if(!multi&&body.action==='qa-report-semi-pass'){
+  if(one&&body.action==='qa-report-one-pass'){
+    if(site.status!=='sho_review'||Number(body.viewports)!==2)return reject(409);
+    const {error:writeErr}=await admin.from('website_activity').insert({
+      site_id:qaSite,actor_type:'ai',action:'qa_one_browser_pass',
+      detail:'署名付きGitHub Actionsによる1ページ完結の制作HTML、文章・公演情報、PC・スマホ表示に合格。',
+      payload:{site_id:qaSite,viewports:2,method:'github_oidc_playwright',note:'internal_qa_only'}
+    });
+    if(writeErr)return reject(500);
+    return new Response(JSON.stringify({ok:true,recorded:true}),{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+  }
+  if(!multi&&!one&&body.action==='qa-report-semi-pass'){
     if(site.status!=='sho_review'||Number(body.viewports)!==2)return reject(409);
     const {error:writeErr}=await admin.from('website_activity').insert({
       site_id:qaSite,actor_type:'ai',action:'qa_semi_browser_pass',
@@ -65,7 +75,7 @@ Deno.serve(async req=>{
     if(writeErr)return reject(500);
     return new Response(JSON.stringify({ok:true,recorded:true}),{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
   }
-  if(body.action==='qa-dispatch-existing'){
+  if(!one&&body.action==='qa-dispatch-existing'){
     const {data:latest,error:lookupError}=await admin.from('website_jobs').select('id,kind,payload').eq('site_id',qaSite).eq('status','queued').order('created_at',{ascending:false}).limit(1).maybeSingle();
     if(lookupError||!latest||(multi?(latest.kind!=='initial_create'||latest.payload?.qa_rebuild!==true):(latest.kind!=='sho_revision'||latest.payload?.qa_silent!==true)))return reject(409);
     const response=await fetch(project+'/functions/v1/website-worker',{method:'POST',
@@ -73,7 +83,7 @@ Deno.serve(async req=>{
     if(!response.ok)return reject(502);
     return new Response(JSON.stringify({ok:true,job_id:latest.id}),{status:202,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
   }
-  if(body.action!=='qa-rebuild'||multi)return reject(403);
+  if(body.action!=='qa-rebuild'||multi||one)return reject(403);
   const {data:active}=await admin.from('website_jobs').select('id').eq('site_id','1241').in('status',['queued','running']).limit(1);
   if(active?.length)return reject(409);
   const {data:queued,error:insertErr}=await admin.from('website_jobs').insert({site_id:'1241',kind:'sho_revision',status:'queued',
