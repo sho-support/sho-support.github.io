@@ -25,7 +25,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,6,.95);border-bottom
  <textarea id="bankMessage" placeholder="銀行名：…&#10;支店名：…&#10;口座：普通 …&#10;名義：…" autocomplete="off" spellcheck="false"></textarea>
  <button class="btn quotebtn" type="button" id="saveBank">振込先を保存する</button><p class="note" id="bankStatus" role="status">設定状態を確認中…</p>
  </details>
-<div class="filterbar"><label>注文ID・SITE ID検索<input type="search" id="orderSearch" placeholder="例：P0001 / 1042 / 0001" autocomplete="off"></label><label>ステータス<select id="statusFilter"><option value="all">すべて</option><option value="pending_line">LINE待ち</option><option value="pending_payment">入金待ち</option><option value="request_waiting">ヒアリング待ち</option><option value="building">AI作成中</option><option value="sho_review">SHO確認中</option><option value="customer_review">お客様確認中</option><option value="live">公開中</option><option value="update_request">更新依頼中</option><option value="private">非公開・改良中</option><option value="cancelled">キャンセル</option></select></label><label class="check"><input type="checkbox" id="onlyLive">公開中だけ表示</label></div><div class="visible-count" id="visibleCount">案件を読み込み中…</div>
+<div class="filterbar"><label>注文ID・SITE ID検索<input type="search" id="orderSearch" placeholder="例：P0001 / 1042 / 0001" autocomplete="off"></label><label>ステータス<select id="statusFilter"><option value="all">すべて</option><option value="pending_line">LINE待ち</option><option value="pending_payment">入金待ち</option><option value="request_waiting">ヒアリング待ち</option><option value="building">AI作成中</option><option value="sho_review">SHO確認中</option><option value="customer_review">お客様確認中</option><option value="live">公開中</option><option value="private">非公開・改良中</option><option value="cancelled">キャンセル</option></select></label><label class="check"><input type="checkbox" id="onlyLive">公開中だけ表示</label></div><div class="visible-count" id="visibleCount">案件を読み込み中…</div>
 <div id="message"></div><div class="list" id="list"><div class="empty">読み込み中…</div></div>
 </main>
 <script type="module">
@@ -59,6 +59,59 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
    document.getElementById('visibleCount').textContent=all+'件中 '+visible+'件を表示';
  }
  document.querySelectorAll('#orderSearch,#statusFilter,#onlyLive').forEach(el=>el.addEventListener(el.id==='orderSearch'?'input':'change',applyFilters));
+
+ async function showWork(panel,siteId){
+   if(!siteId){panel.textContent='入金確認後にSITE IDが発行されると制作管理を利用できます。';return;}
+   panel.textContent='制作状況を読み込み中…';
+   try{
+     const detail=await websiteApi('load_site',{site_id:siteId}),site=detail.site||{};
+     const stage=site.status||'request_waiting';
+     const allowed=['sho_review','customer_review','building'];
+     const preview=stage==='sho_review'||stage==='customer_review'?String(site.preview_url||''):'';
+     const safePreview=(()=>{try{const u=new URL(preview);return u.protocol==='https:'?u.href:''}catch{return ''}})();
+     const updates=(detail.updates||[]).filter(x=>['requested','pending','queued','building'].includes(x.status));
+     const reviewIssues=(detail.reviewIssues||[]).filter(x=>x.status!=='confirmed');
+     let actions='';
+     if(stage==='building')actions='<button class="btn" type="button" data-work-action="run">AI制作を実行・再実行</button>';
+     if(stage==='sho_review')actions='<button class="btn" type="button" data-work-action="revise">SHOから修正を依頼</button><button class="btn activate" type="button" data-work-action="approve" '+(reviewIssues.length?'disabled title="未確認の修正項目があります"':'')+'>SHO確認OK → お客様確認へ</button>';
+     if(stage==='customer_review'&&!site.customer_approved)actions='<button class="btn" type="button" data-work-action="resend">お客様へ確認URLをLINE送信</button>';
+     if(stage==='customer_review'&&site.customer_approved)actions='<div style="color:#8fe6b6;font-weight:850">お客様確認OK済み。公開操作は運営専用画面で管理します。</div>';
+     const updateInfo=updates.length?'<p style="color:#ebca85">対応中の更新依頼 '+updates.length+'件</p>':'';
+     panel.innerHTML='<p>状態：<strong>'+esc(progress[stage]||stage)+'</strong>　／　お客様承認：'+(site.customer_approved?'OK':'未承認')+'</p>'+
+       '<p>'+esc(site.current_note||'')+'</p>'+updateInfo+
+       (safePreview?'<p><a class="btn" target="_blank" rel="noopener noreferrer" href="'+esc(safePreview)+'" style="display:flex;align-items:center;justify-content:center;text-decoration:none">制作プレビューを開く</a></p>':'')+
+       '<div class="inline-actions">'+actions+'</div>'+
+       '<div data-work-note style="display:none;margin-top:10px"><textarea data-work-text rows="4" style="width:100%;background:#111;border:1px solid #555;color:#fff;padding:10px;border-radius:9px" placeholder="修正してほしい場所と内容を入力"></textarea><button class="btn" data-work-action="send-fix" type="button">修正内容を送信する</button></div>'+
+       '<p class="note">公開先設定・最終公開・詳細な修正項目の承認は<a href="index.html?site='+encodeURIComponent(siteId)+'" style="color:#ebca85">詳細な制作操作</a>から行えます。</p>';
+     panel.querySelectorAll('[data-work-action]').forEach(btn=>btn.addEventListener('click',async()=>{
+       const action=btn.dataset.workAction;
+       if(action==='revise'){panel.querySelector('[data-work-note]').style.display='block';return;}
+       let operation=null;
+       if(action==='run')operation=()=>websiteApi('admin_run_worker',{site_id:siteId});
+       if(action==='approve'){
+         if(!confirm('SHO確認を完了してお客様へ最終確認を依頼しますか？'))return;
+         operation=()=>websiteApi('admin_transition',{site_id:siteId,status:'customer_review',current_note:'SHO確認済み。お客様確認待ち。',detail:'SHO確認OK。'});
+       }
+       if(action==='resend'){
+         if(!confirm('お客様へ確認リンクを再送しますか？以前のリンクは無効になります。'))return;
+         operation=async()=>{
+           const {data,error}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action:'admin_send_review',site_id:siteId}});
+           if(error||data?.error)throw new Error(data?.error||'LINEへの送信に失敗しました');
+         };
+       }
+       if(action==='send-fix'){
+         const note=panel.querySelector('[data-work-text]').value.trim();
+         if(!note){alert('修正内容を入力してください。');return;}
+         if(!confirm('入力した内容で修正依頼を送信しますか？'))return;
+         operation=()=>websiteApi('admin_request_review_fix',{site_id:siteId,detail:note});
+       }
+       if(!operation)return;
+       btn.disabled=true;
+       try{await operation();await showWork(panel,siteId);alert('処理を受け付けました。');}
+       catch(e){btn.disabled=false;alert(e.message||'処理に失敗しました。');}
+     }));
+   }catch(e){panel.textContent='制作情報を取得できませんでした：'+String(e.message||e)}
+ }
  async function showHistory(panel,siteId){
    if(!siteId){panel.textContent='SITE IDの発行後に履歴が表示されます。';return;}
    panel.textContent='履歴を読み込み中…';
@@ -90,9 +143,12 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
        (can?'<div class="quotebox"><label>正式な確定制作料金（円）<input data-final-amount type="number" min="'+Number(o.amount_from||15000)+'" max="3000000" step="1" value="'+Number(o.final_amount||o.amount_from||0)+'"></label><label>お客様に渡す正式URL（https://を除く）<input data-public-domain type="text" spellcheck="false" value="'+esc(o.final_public_domain||'')+'" placeholder="bandname.取得済みドメイン.jp" autocomplete="off"></label><label class="domain-proof"><input type="checkbox" data-domain-confirm>このドメインを管理でき、継続更新と印刷物への掲載について確認済み</label><label>追加内容・見積り補足（任意）<textarea data-quote-note rows="2" placeholder="例：追加ページ1枚を含む。その他追加費用なし。"></textarea></label><p>'+(o.final_quote_sent_at?'正式見積り送信済み：¥'+Number(o.final_amount||0).toLocaleString()+'（'+esc(fmt(o.final_quote_sent_at))+'） / URL：'+esc(o.final_public_domain||'未登録'):'まだ正式見積りを送信していません。確定金額と正式URLを先に確認してください。')+'</p><button class="btn quotebtn" data-quote="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at?' disabled':'')+'>'+(o.final_quote_sent_at?'正式見積り送信済み（再送不可）':'確定金額・振込先をLINEへ送信')+'</button></div><button class="btn activate" data-activate="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at&&o.final_public_domain?'':' disabled')+'>入金確認済み → 案件作成・URL送信</button><div class="note">LINE見積り送信後、実際の着金を確認してから案件作成してください。</div>':
        o.status==='pending_line'?'<button class="btn" disabled>お客様のLINE送信待ち</button>':
        o.status==='site_created'?(o.site_status==='request_waiting'?'<button class="btn resend" data-resend="'+esc(o.order_code)+'" type="button">ヒアリングURLをLINEへ再送</button>':'<div class="note" style="font-size:.76rem;color:#d9ae5c">現在：'+esc(progress[o.site_status]||'案件進行中')+'</div>')+'<a class="btn activate" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:8px" href="index.html?site='+encodeURIComponent(o.site_id||'')+'">SITE ID '+esc(o.site_id||'')+' の制作管理を開く</a>':'')+
-       '<details class="mini-fold" data-history-fold="'+esc(o.site_id||'')+'"><summary>修正依頼・承認・更新履歴</summary><div class="mini-fold-content" data-history="'+esc(o.site_id||'')+'">開くと履歴を読み込みます。</div></details></div></details>';
+       '<details class="mini-fold" data-work-fold="'+esc(o.site_id||'')+'"><summary>制作確認・お客様確認・公開状況</summary><div class="mini-fold-content" data-work="'+esc(o.site_id||'')+'">開くと制作状況を読み込みます。</div></details><details class="mini-fold" data-history-fold="'+esc(o.site_id||'')+'"><summary>修正依頼・承認・更新履歴</summary><div class="mini-fold-content" data-history="'+esc(o.site_id||'')+'">開くと履歴を読み込みます。</div></details></div></details>';
      }).join('');
      applyFilters();
+     document.querySelectorAll('[data-work-fold]').forEach(fold=>fold.addEventListener('toggle',()=>{
+       if(fold.open&&!fold.dataset.loaded){fold.dataset.loaded='1';showWork(fold.querySelector('[data-work]'),fold.dataset.workFold);}
+     }));
      document.querySelectorAll('[data-history-fold]').forEach(fold=>fold.addEventListener('toggle',()=>{
        if(fold.open&&!fold.dataset.loaded){fold.dataset.loaded='1';showHistory(fold.querySelector('[data-history]'),fold.dataset.historyFold);}
      }));
