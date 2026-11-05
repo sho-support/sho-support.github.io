@@ -5,9 +5,15 @@ const origin='https://sho-support.github.io/';
 const names=[
  'band-homepage.html','website-support.html','website-create.html',
  'website-templates.html','website-template-preview.html?style=rock',
- 'website-template-preview.html?style=cyber','website-order.html',
+ 'website-template-preview.html?style=cyber',
+ 'website-template-preview.html?style=cafe','website-template-preview.html?style=cute',
+ 'website-template-preview.html?style=minimal','website-template-preview.html?style=premium',
+ 'website-template-preview.html?style=pop','website-template-preview.html?style=vintage',
+ 'website-template-preview.html?style=organic','website-template-preview.html?style=editorial',
+ 'website-templates.html?mode=sample','website-order.html?plan=semi&template=rock',
+ 'website-order.html?plan=full','website-order.html?plan=one','website-order.html',
  'website-faq.html','website-legal.html','website-terms.html',
- 'website-privacy.html','website-update-demo.html'
+ 'website-privacy.html','website-update-demo.html','sho-support.html','support.html'
 ];
 const views=[320,360,390,430,768,1366];
 const bads=[],checks=[],linkSet=new Set(),screens=path.resolve('qa-sales-flow-shots');
@@ -68,15 +74,19 @@ function label(u){return u.split('?')[0].replace('.html','')}
    for(const link of m.links){
     const u=new URL(link);if(u.origin===origin.slice(0,-1)&&u.pathname.endsWith('.html'))linkSet.add(u.href.split('#')[0]);
    }
+   const declaredTheme=slug.startsWith('website-template-preview.html?style=')?slug.split('style=')[1]:null;
+   const actualTheme=declaredTheme?await p.locator('body').getAttribute('data-theme'):null;
    const check={screen:width,url:slug,http:response?.status(),h1:m.h1,
+     themeOk:declaredTheme?actualTheme===declaredTheme:null,
      scroll:m.docWidth>m.innerWidth+3?m.docWidth-m.innerWidth:0,
      badTextCount:m.badTextCount,badText:m.badText,badImages:m.badImages,
      errors:pageErrors,cardTilt:m.cardTilt};
    checks.push(check);
-   if(check.http!==200||check.scroll||check.badTextCount||check.badImages.length||check.errors.length||m.cardTilt&&m.cardTilt!=='none')bads.push(check);
+   if(check.http!==200||check.themeOk===false||check.scroll||check.badTextCount||check.badImages.length||check.errors.length||m.cardTilt&&m.cardTilt!=='none')bads.push(check);
    if((width===390||width===320||width===1366)&&
-       ['band-homepage.html','website-support.html','website-create.html','website-templates.html','website-order.html','website-faq.html','website-update-demo.html'].includes(slug)){
-    await p.screenshot({path:path.join(screens,label(slug)+'-'+width+'.png'),fullPage:true,animations:'disabled',timeout:45000});
+       ['band-homepage.html','website-support.html','website-create.html','website-templates.html','website-order.html','website-faq.html','website-update-demo.html','sho-support.html','support.html'].includes(slug)||
+       (width===390&&slug.startsWith('website-template-preview.html?style='))){
+    await p.screenshot({path:path.join(screens,slug.replace(/[^A-Za-z0-9_-]+/g,'-')+'-'+width+'.png'),fullPage:true,animations:'disabled',timeout:45000});
    }
    console.log('SALES_PAGE_AUDIT',JSON.stringify(check));
    await p.close();
