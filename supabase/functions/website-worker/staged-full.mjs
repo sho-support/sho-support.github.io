@@ -127,7 +127,7 @@ export function sanitizeFullPageLinks(markup,plan){
    const hint=hints.find(([labelRx,pageRx])=>labelRx.test(label)&&pages.some(p=>pageRx.test(p)));
    const target=hint?pages.find(p=>hint[1].test(p)):null;
    const cleanPost=String(post).replace(/\s+target\s*=\s*(["'])[^"']*\1/gi,'').replace(/\s+rel\s*=\s*(["'])[^"']*\1/gi,'');
-   if(target)return '<a'+pre+'href="'+target+'"'+cleanPost+'>'+body+'</a>';
+   if(target)return '<a'+pre+quote+target+quote+cleanPost+'>'+body+'</a>';
    return '<span class="muted">'+body+'</span>';
   });
 }
