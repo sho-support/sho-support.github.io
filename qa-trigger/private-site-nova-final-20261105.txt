@@ -1,0 +1,1 @@
+Final read-only 5page browser audit; report PASS only after all desktop/mobile Chromium assertions. No AI rebuild or publish.
