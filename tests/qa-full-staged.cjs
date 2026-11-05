@@ -98,5 +98,8 @@ const paths=[...pages,'style.css','site.js'];
    await context.close();
   }
  }finally{await browser.close();fs.rmSync(tmp,{recursive:true,force:true})}
- console.log('STAGED_FULL_5PAGE_QA_PASS: real AI + private GitHub files + PC/mobile Chromium rendering');
+ const report=await fetch(endpoint(),{method:'POST',headers:{...h,'Content-Type':'application/json'},
+  body:JSON.stringify({action:'qa-report-pass',pages:5,viewports:2})});
+ assert.equal(report.status,200,'signed browser QA report stored');
+ console.log('STAGED_FULL_5PAGE_QA_PASS: real AI + private GitHub files + PC/mobile Chromium rendering + recorded');
 })().catch(e=>{console.error('STAGED_FULL_5PAGE_QA_FAIL',e.stack||e);process.exitCode=1});
