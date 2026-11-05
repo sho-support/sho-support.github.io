@@ -538,6 +538,12 @@ Deno.serve(async (req) => {
       if(site.published_at || ['live','private','improving_private'].includes(String(site.status)))
         return json({error:'公開後のドメイン変更は名刺・看板などのURLに影響するため、個別の移行手続きが必要です。既存URLを維持してください。'},409);
       const domain = body.custom_domain ? normalizeCustomerHostname(body.custom_domain) : null;
+      const {data:contractOrder,error:contractError}=await admin.from('website_orders')
+        .select('selections').eq('site_id',siteId).maybeSingle();
+      if(contractError)throw contractError;
+      const agreedDomain=String(contractOrder?.selections?.final_public_domain||'').trim().toLowerCase();
+      if(agreedDomain&&domain!==agreedDomain)
+        return json({error:'このURLは契約時にお客様へ案内した正式URLと異なります。名刺・看板への影響を避けるため、勝手に変更できません。'},409);
       if(domain){
         const {data:alreadyUsed,error:duplicateErr}=await admin.from('website_sites')
           .select('site_id').eq('custom_domain',domain).neq('site_id',siteId).limit(1);
