@@ -72,3 +72,16 @@
   - `website-demo-semi-cyber.html`
   サンプルにはnoindexメタと「架空の内容です」表示を付加。ユーザーサイトの本番案件とは区別する。
 - これは本番のAIモデル呼出し、GitHubサイトRepo作成、公開成功とは別の検証である。
+
+
+## 追加調査：旧実AI制作ジョブの履歴
+2026-11-06に退避済みのwebsite_jobsを監査。以前の制作処理の履歴では、初期生成7件中6件がsho_reviewへ到達し、1件がerror。
+- qaone20261102: one-page AIモデル gpt-6.1-sol、sho_review、完了 2026-11-02T09:48:03Z
+- qafull20261102: AIモデル gpt-6.1-sol、同日一度WallClockTime制限のエラーがあり、後続の別ジョブがsho_reviewへ到達
+- qafull5nov04: AIモデル gpt-6.1-sol、sho_review、完了 2026-11-05T05:11:27Z
+- したがって、過去には1ページ・フルオーダーの実AI制作が完了した履歴がある。
+- ただし旧テストの成功は、今回の改良後に3プランそれぞれ3回を実行・公開できた証拠にはならない。旧サイトのprivate repo内容も、この監査では未照合。
+
+## 追加ブラウザQAコード
+`tests/qa-sales-checkout.cjs` を、9注文シナリオ×PC/スマホ=18、実セミHTML3種×PC/スマホ=6の24ケースへ拡張。
+構文は確認済みだが、GitHub Actionsの実行結果をツールから取得できなかったため、UI合格とは記録しない。
