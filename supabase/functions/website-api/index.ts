@@ -118,7 +118,10 @@ Deno.serve(async (req) => {
         customerUserId = await findUserIdByEmail(admin, body.customer_email);
       }
 
-      const { error: siteError } = await admin.from('website_sites').upsert({
+      const { data: duplicateSite, error: duplicateError } = await admin.from('website_sites').select('site_id').eq('site_id',body.site_id).maybeSingle();
+      if(duplicateError)throw duplicateError;
+      if(duplicateSite)return json({error:'このSITE IDはすでに存在します。公開URLの保護のため既存案件を上書きできません。'},409);
+      const { error: siteError } = await admin.from('website_sites').insert({
         site_id: body.site_id,
         site_name: String(body.site_name || ''),
         status: 'request_waiting',
@@ -509,6 +512,10 @@ Deno.serve(async (req) => {
       if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
       const repoFullName = String(body.repo_full_name || '').trim();
       if (repoFullName && !/^[^/]+\/[^/]+$/.test(repoFullName)) return json({ error: 'GitHub Repo名が不正です。' }, 400);
+      const {data:currentSite,error:currentSiteError}=await admin.from('website_sites').select('published_at,status').eq('site_id',siteId).single();
+      if(currentSiteError)throw currentSiteError;
+      if(currentSite.published_at || ['live','private','improving_private'].includes(String(currentSite.status)))
+        return json({error:'公開済みサイトのRepo・公開元は、この画面から変更できません。URLを維持する移行手順が必要です。'},409);
       const { error } = await admin.from('website_sites').update({
         repo_full_name: repoFullName || null,
         publish_branch: body.publish_branch || 'main',
