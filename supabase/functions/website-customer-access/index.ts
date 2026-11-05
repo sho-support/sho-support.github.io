@@ -133,6 +133,8 @@ Deno.serve(async(req)=>{
         return json({error:'LINE連携済みで入金待ちの注文だけ、正式見積りを送信できます。'},409);
       if(amount<Number(order.amount_from||0))
         return json({error:'基本料金未満の金額は送信できません。割引等は個別に確認してください。'},400);
+      if(order.selections?.final_quote_sent_at&&String(order.selections?.final_public_domain||'')!==finalDomain)
+        return json({error:'正式見積りで一度お客様に案内したURLは変更できません。別URLが必要な場合はお客様と個別に調整してください。'},409);
       const [{data:reservedBySites,error:siteCheckErr},{data:reservedByOrders,error:orderCheckErr}]=await Promise.all([
         admin.from('website_sites').select('site_id').eq('custom_domain',finalDomain).limit(1),
         admin.from('website_orders').select('order_code').contains('selections',{final_public_domain:finalDomain})
