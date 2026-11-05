@@ -153,6 +153,18 @@ Deno.serve(async(req)=>{
       if(original===amount&&order.selections?.final_public_domain===finalDomain&&order.selections?.final_quote_sent_at)
         return json({error:'同じ確定金額の見積りは送信済みです。二重送信を防止しました。'},409);
       const explanation=String(body?.quote_note||'').trim().slice(0,500);
+      // Reserve the permanent domain BEFORE notifying the customer. A unique DB index
+      // protects against another order claiming the same domain concurrently.
+      const pendingSelections={...(order.selections||{}),final_public_domain:finalDomain,
+        quote_domain_owner_confirmed_at:order.selections?.quote_domain_owner_confirmed_at||new Date().toISOString()};
+      const {data:reserved,error:reserveErr}=await admin.from('website_orders').update({
+        selections:pendingSelections,updated_at:new Date().toISOString()
+      }).eq('order_code',orderCode).eq('status','pending_payment').select('order_code').maybeSingle();
+      if(reserveErr){
+        if(String(reserveErr.code)==='23505')return json({error:'この正式URLはほかの注文に確保されています。別のURLを確認してください。'},409);
+        throw reserveErr;
+      }
+      if(!reserved)return json({error:'注文状態が変わりました。見積り内容を再確認してください。'},409);
       const lines=[
         '【SHO WEB SUPPORT 正式お見積り・振込先】',
         '注文ID：'+orderCode,
@@ -171,8 +183,7 @@ Deno.serve(async(req)=>{
       if(sent.skipped||sent.ok===false)
         return json({error:'お客様のLINEへ正式見積りを送信できませんでした。ブロック状態や設定を確認してください。'},502);
       const {error:saveErr}=await admin.from('website_orders').update({
-        selections:{...(order.selections||{}),final_quote_amount:amount,
-          final_public_domain:finalDomain,quote_domain_owner_confirmed_at:new Date().toISOString(),
+        selections:{...pendingSelections,final_quote_amount:amount,
           final_quote_sent_at:new Date().toISOString(),final_quote_note:explanation},
         updated_at:new Date().toISOString()
       }).eq('order_code',orderCode).eq('status','pending_payment');
