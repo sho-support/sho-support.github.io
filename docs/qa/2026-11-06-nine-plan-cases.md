@@ -61,3 +61,14 @@
 6. AI生成に用いるSupabase Edge Functionの外部APIキー／GitHub書込権限はライブ実行で未確認。作成した9サイトは存在しない。
 
 **最終判定：静的/DB処理の部分合格。実運用E2Eの販売合格は未取得。**
+
+## 実際のセミオーダー生成エンジン検査（追加）
+- Supabaseの `website-worker/semi-template.mjs` を用い、NetlifyのテンプレートHTMLを入力として全10テーマのHTMLを生成。
+- 同じworkerの `validateGenerated` を直接呼び出して、CSS・内部ページリンク・画像参照の検証に合格（10/10）。
+- `<img onerror>` などをサイト名に含むテストと、`javascript:` リンクの安全性を検査、10テーマともHTMLエスケープ・無効リンク制御が有効。
+- Rock、Premium、Cyberの3種は架空内容のサンプルページも作成済み：
+  - `website-demo-semi-rock.html`
+  - `website-demo-semi-premium.html`
+  - `website-demo-semi-cyber.html`
+  サンプルにはnoindexメタと「架空の内容です」表示を付加。ユーザーサイトの本番案件とは区別する。
+- これは本番のAIモデル呼出し、GitHubサイトRepo作成、公開成功とは別の検証である。
