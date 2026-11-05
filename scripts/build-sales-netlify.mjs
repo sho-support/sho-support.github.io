@@ -55,6 +55,8 @@ const confirmHtml = readFileSync(join(root, 'website-order-confirm.html'), 'utf8
 const recoverHtml = readFileSync(join(root, 'website-recover.html'), 'utf8');
 const recoverJs = readFileSync(join(root, 'website-recover.js'), 'utf8');
 const adminOrders = readFileSync(join(root, 'admin', 'orders.html'), 'utf8');
+const customerReviewHtml = readFileSync(join(root, 'website-customer-review.html'), 'utf8');
+const productionAdmin = readFileSync(join(root,'admin','index.html'),'utf8');
 const checks = [
   ['three order plans', ['one','semi','full'].every(p => orderHtml.includes('data-plan="' + p + '"'))],
   ['ten selectable templates', (orderHtml.match(/data-template="/g) || []).length === 10],
@@ -70,6 +72,13 @@ const checks = [
   ['browser password recovery page', recoverHtml.includes('id="recoverForm"')],
   ['recover form hides on success', recoverJs.includes('form.hidden=true')],
   ['numeric order admin example', adminOrders.includes('placeholder="例：1000"')],
+  ['quote supports free hosted URL', adminOrders.includes("public_domain:publicDomain||'free'")],
+  ['quote warns before free address is sent', adminOrders.includes("const intendedUrl=publicDomain?")],
+  ['operator-only publish button', adminOrders.includes("action:'admin_publish_site'")],
+  ['customer approval without publish button', customerReviewHtml.includes("運営者が公開準備と最終確認を行います")],
+  ['customer production page does not offer publish', !customerReviewHtml.includes("if(secureMode)await secureApi('review_publish')")],
+  ['operator management text updated', productionAdmin.includes('運営管理画面の公開ボタンから公開します')],
+
 ];
 const broken = checks.filter(([,ok]) => !ok).map(([name]) => name);
 if (broken.length) throw new Error('Sales regression checks failed: ' + broken.join(', '));
