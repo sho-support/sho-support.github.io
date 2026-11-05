@@ -55,6 +55,16 @@ Deno.serve(async req=>{
     if(writeErr)return reject(500);
     return new Response(JSON.stringify({ok:true,recorded:true}),{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
   }
+  if(!multi&&body.action==='qa-report-semi-pass'){
+    if(site.status!=='sho_review'||Number(body.viewports)!==2)return reject(409);
+    const {error:writeErr}=await admin.from('website_activity').insert({
+      site_id:qaSite,actor_type:'ai',action:'qa_semi_browser_pass',
+      detail:'署名付きGitHub Actionsによる実セミオーダー・サイバーテンプレートの写真読み込み、CSS、PC・スマホ表示に合格。',
+      payload:{site_id:qaSite,viewports:2,method:'github_oidc_playwright',note:'internal_qa_only'}
+    });
+    if(writeErr)return reject(500);
+    return new Response(JSON.stringify({ok:true,recorded:true}),{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+  }
   if(body.action==='qa-dispatch-existing'){
     const {data:latest,error:lookupError}=await admin.from('website_jobs').select('id,kind,payload').eq('site_id',qaSite).eq('status','queued').order('created_at',{ascending:false}).limit(1).maybeSingle();
     if(lookupError||!latest||(multi?(latest.kind!=='initial_create'||latest.payload?.qa_rebuild!==true):(latest.kind!=='sho_revision'||latest.payload?.qa_silent!==true)))return reject(409);
