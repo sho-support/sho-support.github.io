@@ -91,17 +91,29 @@ export async function getLineMessagingToken() {
   return getLineAccessToken();
 }
 
-export async function linePush(to: string | null | undefined, text: string) {
+export async function linePush(to: string | null | undefined, text: string, retryKey?: string) {
   const token = await getLineAccessToken();
   if (!token || !to) return { skipped: true };
+  const headers: Record<string,string> = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+  // LINE recognizes the same X-Line-Retry-Key for 24 hours. The caller must
+  // persist/reuse this UUID for an identical request, not generate a new one on retry.
+  if(retryKey){
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(retryKey))
+      throw new Error('LINE retry key must be a UUID');
+    headers['X-Line-Retry-Key']=retryKey;
+  }
   const response = await fetch('https://api.line.me/v2/bot/message/push', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    method: 'POST', headers,
     body: JSON.stringify({ to, messages: [{ type: 'text', text: text.slice(0, 5000) }] }),
+    signal: AbortSignal.timeout(13000),
   });
+  // A 409 with accepted-request-id is proof that LINE accepted the same retry key
+  // previously; it does NOT mean the end user definitely saw the message.
+  if(retryKey && response.status===409 && response.headers.has('x-line-accepted-request-id'))
+    return { skipped:false, ok:true, alreadyAccepted:true };
   if (!response.ok) {
     console.error('LINE push failed', response.status, await response.text());
-    return { skipped: false, ok: false };
+    return { skipped: false, ok: false, status: response.status };
   }
   return { skipped: false, ok: true };
 }
