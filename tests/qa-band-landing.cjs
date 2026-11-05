@@ -67,7 +67,7 @@ const base='https://sho-support.github.io/band-homepage.html';
     const card=document.querySelector('.showcase');
     const cs=card&&getComputedStyle(card);
     return {viewport:width,htmlWidth:document.documentElement.scrollWidth,bodyWidth:document.body.scrollWidth,
-      headline:document.querySelector('.hero h1')?.innerText,
+      headline:document.querySelector('.hero h1')?.textContent?.replace(/\s+/g,''),
       examples:document.querySelector('.showcase .chrome')?.innerText,
       tilted:cs?.transform||null,
       rects:Object.fromEntries(selectors.slice(0,10).map(x=>[x,bounds(x)])),
