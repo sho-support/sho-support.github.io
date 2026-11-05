@@ -1,0 +1,1 @@
+One-time privacy maintenance: delete only past qa-private-site.yml workflow log archives created before the screenshot-log protection commit of 2026-11-05. Do not remove the source repository or customer site files.
