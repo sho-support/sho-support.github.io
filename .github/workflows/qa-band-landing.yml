@@ -1,0 +1,32 @@
+name: Band sales landing responsive audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'band-homepage.html'
+      - 'tests/qa-band-landing.cjs'
+      - '.github/workflows/qa-band-landing.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  responsive-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Verify live band landing at six viewport sizes
+        run: node tests/qa-band-landing.cjs
+      - name: Store full-page mobile and desktop screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: band-landing-qa-screenshots
+          path: qa-band-shots/
+          if-no-files-found: ignore
+          retention-days: 7
