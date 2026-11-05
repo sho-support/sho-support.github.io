@@ -1,4 +1,4 @@
-import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, triggerWebsiteWorker } from './_shared/website.ts';
+import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, triggerWebsiteWorker, requireStablePublicationUrl, normalizeCustomerHostname } from './_shared/website.ts';
 
 type Body = {
   action?: string;
@@ -414,6 +414,8 @@ Deno.serve(async (req) => {
         if (!site.customer_approved || !reviewSite.customer_approved) return json({ error: '先にサイト内容の承認が必要です。' }, 409);
         if (!site.repo_full_name) return json({ error: '公開先GitHub Repoがまだ設定されていません。' }, 409);
 
+        // Verify the durable public hostname BEFORE changing any branch or visibility.
+        const verifiedPublicUrl=await requireStablePublicationUrl(site.repo_full_name,site.custom_domain);
         const {data:preflightOrder,error:preflightError}=await admin.from('website_orders').select('plan,template_style').eq('site_id',siteId).maybeSingle();
         if(preflightError)throw preflightError;
         await verifyWebsiteBeforeDelivery(site.repo_full_name,site.preview_branch||site.publish_branch||'main',preflightOrder?.plan==='semi'?String(preflightOrder.template_style||''):'');
@@ -424,7 +426,7 @@ Deno.serve(async (req) => {
           (site.live_path || '/') as '/' | '/docs',
         );
 
-        const when=new Date(),url=githubSiteUrl(site.repo_full_name,site.custom_domain),first=!site.published_at;
+        const when=new Date(),url=verifiedPublicUrl,first=!site.published_at;
         const {data:order}=await admin.from('website_orders').select('plan').eq('site_id',siteId).maybeSingle();
         const { error } = await admin.from('website_sites').update({
           status:'live',current_note:'サイト公開中。',customer_approved:false,
@@ -521,12 +523,15 @@ Deno.serve(async (req) => {
       if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
       const { data: site, error: readError } = await admin
         .from('website_sites')
-        .select('repo_full_name')
+        .select('repo_full_name,published_at,status,custom_domain')
         .eq('site_id', siteId)
         .single();
       if (readError) throw readError;
       if (!site.repo_full_name) return json({ error: '公開先GitHub Repoがまだ設定されていません。' }, 409);
-      const domain = body.custom_domain ? String(body.custom_domain).trim().toLowerCase() : null;
+      // Once a URL has appeared on customers' signs/cards, never silently mutate it.
+      if(site.published_at || ['live','private','improving_private'].includes(String(site.status)))
+        return json({error:'公開後のドメイン変更は名刺・看板などのURLに影響するため、個別の移行手続きが必要です。既存URLを維持してください。'},409);
+      const domain = body.custom_domain ? normalizeCustomerHostname(body.custom_domain) : null;
       await setGithubPagesDomain(site.repo_full_name, domain);
       const { error } = await admin.from('website_sites').update({ custom_domain: domain }).eq('site_id', siteId);
       if (error) throw error;
@@ -653,7 +658,7 @@ Deno.serve(async (req) => {
         const {data:siteInfo,error:infoError}=await admin.from('website_sites').select('repo_full_name,custom_domain,published_at,adjustment_free_until,update_free_until').eq('site_id',siteId).single();if(infoError)throw infoError;
         firstPublication=!siteInfo.published_at;
         const {data:order}=await admin.from('website_orders').select('plan').eq('site_id',siteId).maybeSingle();
-        const url=githubSiteUrl(siteInfo.repo_full_name,siteInfo.custom_domain);
+        const url=await requireStablePublicationUrl(siteInfo.repo_full_name,siteInfo.custom_domain);
         liveData={public_url:url,preview_url:url,published_at:siteInfo.published_at||publishedAt.toISOString(),adjustment_free_until:firstPublication?new Date(publishedAt.getTime()+30*86400000).toISOString():siteInfo.adjustment_free_until,update_free_until:firstPublication&&order&&['semi','full'].includes(order.plan)?addMonths(publishedAt,3):siteInfo.update_free_until,review_access_token_hash:null,preview_access_token_hash:null,preview_branch:null};
       }
       const { error } = await admin.from('website_sites').update({
