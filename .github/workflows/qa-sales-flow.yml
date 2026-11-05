@@ -16,6 +16,9 @@ on:
       - 'supabase/functions/website-worker/staged-full.mjs'
       - 'supabase/functions/_shared/website.ts'
       - 'tests/qa-staged-links.cjs'
+      - 'tests/qa-admin-quote-ui.cjs'
+      - 'supabase/functions/website-customer-access/index.ts'
+      - 'supabase/functions/website-api/index.ts'
   pull_request:
     paths:
       - 'tests/qa-sales-flow.cjs'
@@ -31,6 +34,9 @@ on:
       - 'supabase/functions/website-worker/staged-full.mjs'
       - 'supabase/functions/_shared/website.ts'
       - 'tests/qa-staged-links.cjs'
+      - 'tests/qa-admin-quote-ui.cjs'
+      - 'supabase/functions/website-customer-access/index.ts'
+      - 'supabase/functions/website-api/index.ts'
   workflow_dispatch:
 permissions:
   contents: read
@@ -51,6 +57,10 @@ jobs:
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/sha-sales-server.log 2>&1 &
           sleep 2
+      - name: Verify final quote form with mocked authorization and financial backend
+        env:
+          SALES_BASE_URL: http://127.0.0.1:8765/
+        run: node tests/qa-admin-quote-ui.cjs
       - name: Inspect changed source, not an older GitHub Pages cache
         env:
           SALES_BASE_URL: http://127.0.0.1:8765/
