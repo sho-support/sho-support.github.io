@@ -32,7 +32,7 @@ const server=http.createServer((req,res)=>{
   ];
   const results=[];
   try{
-    for(const [viewport,width,height] of [['desktop',1366,900],['mobile',390,844]]){
+    for(const [viewport,width,height] of [['desktop',1366,900],['tablet',768,1024],['mobile',390,844],['small',320,700]]){
       for(const test of cases){
         const context=await browser.newContext({viewport:{width,height},locale:'ja-JP'});
         const page=await context.newPage(),errors=[];
@@ -60,7 +60,7 @@ const server=http.createServer((req,res)=>{
     }
     // Check three HTML pages produced by the actual semi-order renderer.
     for(const theme of ['rock','premium','cyber']){
-      for(const [viewport,width,height] of [['desktop',1366,900],['mobile',390,844]]){
+      for(const [viewport,width,height] of [['desktop',1366,900],['tablet',768,1024],['mobile',390,844],['small',320,700]]){
         const context=await browser.newContext({viewport:{width,height},locale:'ja-JP'});
         const page=await context.newPage(),errors=[];
         page.on('pageerror',e=>errors.push(e.message));
