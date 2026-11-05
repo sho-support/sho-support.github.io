@@ -149,9 +149,10 @@ Deno.serve(async(req)=>{
       const bankMessage=String(setting?.value?.message||'').trim();
       if(bankMessage.length<15)return json({error:'本番用の振込先が未設定です。注文管理画面から設定してください。'},409);
       const label=order.plan==='one'?'1ページ完結サイト':order.plan==='semi'?'セミオーダーサイト':'フルオーダーサイト';
-      const original=Number(order.selections?.final_quote_amount||0);
-      if(original===amount&&order.selections?.final_public_domain===finalDomain&&order.selections?.final_quote_sent_at)
-        return json({error:'同じ確定金額の見積りは送信済みです。二重送信を防止しました。'},409);
+      // A second, amended quotation cannot silently replace one already sent.
+      // Handle revisions with explicit customer agreement instead.
+      if(order.selections?.final_quote_sent_at)
+        return json({error:'正式見積りは送信済みです。誤送信・二重請求を防ぐため、管理画面からの再送・金額変更はできません。訂正が必要ならLINEで個別に確認してください。'},409);
       const explanation=String(body?.quote_note||'').trim().slice(0,500);
       const lines=[
         '【SHO WEB SUPPORT 正式お見積り・振込先】',
