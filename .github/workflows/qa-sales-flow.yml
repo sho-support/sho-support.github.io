@@ -7,14 +7,31 @@ on:
       - '.github/workflows/qa-sales-flow.yml'
       - 'band-homepage.html'
       - 'website-*.html'
+      - 'website-*.js'
       - 'website-theme.css'
+      - 'sho-support.html'
+      - 'support.html'
+      - 'index.html'
+      - 'admin/orders.html'
+  pull_request:
+    paths:
+      - 'tests/qa-sales-flow.cjs'
+      - '.github/workflows/qa-sales-flow.yml'
+      - 'band-homepage.html'
+      - 'website-*.html'
+      - 'website-*.js'
+      - 'website-theme.css'
+      - 'sho-support.html'
+      - 'support.html'
+      - 'index.html'
+      - 'admin/orders.html'
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   sales-audit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,13 +39,27 @@ jobs:
           node-version: '22'
       - run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
       - run: npx playwright install --with-deps chromium
-      - name: Audit live sales pages, links, and customer order journey without payment
+      - name: Start exact checked-out commit in local web server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/sha-sales-server.log 2>&1 &
+          sleep 2
+      - name: Inspect changed source, not an older GitHub Pages cache
+        env:
+          SALES_BASE_URL: http://127.0.0.1:8765/
+          SALES_SHOT_DIR: qa-sales-flow-shots-local
         run: node tests/qa-sales-flow.cjs
-      - name: Save responsive screenshots and detailed findings
+      - name: Audit current publicly served website
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          SALES_SHOT_DIR: qa-sales-flow-shots-live
+        run: node tests/qa-sales-flow.cjs
+      - name: Save screenshots and QA findings for both source and public site
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: full-sales-funnel-audit
-          path: qa-sales-flow-shots/
+          path: |
+            qa-sales-flow-shots-local/
+            qa-sales-flow-shots-live/
           if-no-files-found: ignore
           retention-days: 7
