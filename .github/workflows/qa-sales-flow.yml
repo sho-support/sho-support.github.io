@@ -18,6 +18,7 @@ on:
       - 'tests/qa-staged-links.cjs'
       - 'tests/qa-admin-quote-ui.cjs'
       - 'tests/qa-order-submit-flow.cjs'
+      - 'tests/qa-real-public-api.cjs'
       - 'supabase/functions/website-order-api/index.ts'
       - 'tests/qa-line-retry.cjs'
       - 'tests/qa-production-api-security.cjs'
@@ -40,6 +41,7 @@ on:
       - 'tests/qa-staged-links.cjs'
       - 'tests/qa-admin-quote-ui.cjs'
       - 'tests/qa-order-submit-flow.cjs'
+      - 'tests/qa-real-public-api.cjs'
       - 'supabase/functions/website-order-api/index.ts'
       - 'tests/qa-line-retry.cjs'
       - 'tests/qa-production-api-security.cjs'
@@ -70,6 +72,9 @@ jobs:
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/sha-sales-server.log 2>&1 &
           sleep 2
+      - name: Check production order API CORS, access controls and LINE signature
+        if: ${{ github.event_name != 'pull_request' }}
+        run: node tests/qa-real-public-api.cjs
       - name: Verify customer order retry and LINE handoff without creating actual order
         env:
           SALES_BASE_URL: http://127.0.0.1:8765/
