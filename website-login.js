@@ -2,6 +2,7 @@ import { websiteSupabase, currentSession } from './website-client.js';
 
 const form=document.getElementById('loginForm');
 const email=document.getElementById('email');
+const password=document.getElementById('password');
 const button=document.getElementById('loginBtn');
 const message=document.getElementById('message');
 const params=new URLSearchParams(location.search);
@@ -19,11 +20,11 @@ const isAdminLogin=(()=>{
 if(isAdminLogin){
   document.title='運営者ログイン | SHO WEB SUPPORT';
   document.getElementById('loginHeading').textContent='運営者ログイン';
-  document.getElementById('loginIntro').textContent='SHO WEB SUPPORTの管理者アカウントへログインします。登録済みメールアドレスにログインリンクを送信します。';
+  document.getElementById('loginIntro').textContent='管理者のメールアドレスとパスワードでログインします。';
   document.getElementById('loginNote').textContent='注文・入金・制作情報は管理者権限を持つアカウントのみ操作できます。未登録のメールアドレスでは管理画面を利用できません。';
 }else{
   document.getElementById('loginHeading').textContent='お客様ログイン';
-  document.getElementById('loginIntro').textContent='登録したメールアドレスへログインリンクを送ります。パスワードは不要です。';
+  document.getElementById('loginIntro').textContent='登録済みのメールアドレスとパスワードでログインします。';
   document.getElementById('loginNote').textContent='ログイン後は、自分が参加しているSITE IDだけが表示されます。同じサイトを複数人で編集する場合は、それぞれのメールアドレスを同じSITE IDへ追加できます。';
 }
 
@@ -38,15 +39,19 @@ form.addEventListener('submit',async e=>{
   e.preventDefault();
   const value=email.value.trim().toLowerCase();
   if(!value||!email.validity.valid){message.textContent='正しいメールアドレスを入力してください。';return}
-  button.disabled=true;message.textContent='送信しています…';
+  if(!password.value){message.textContent='パスワードを入力してください。';return;}
+  button.disabled=true;message.textContent='ログイン中…';
   try{
-    const {error}=await websiteSupabase.auth.signInWithOtp({
-      email:value,
-      options:{emailRedirectTo:safeNext,shouldCreateUser:!isAdminLogin},
-    });
+    const {error}=await websiteSupabase.auth.signInWithPassword({email:value,password:password.value});
     if(error)throw error;
-    message.textContent='ログイン用メールを送りました。メール内のリンクを開いてください。';
+    password.value='';
+    location.assign(safeNext);
   }catch(error){
-    console.error(error);message.textContent='ログインメールを送信できませんでした。時間を置いて再度お試しください。';
+    console.error('Sign-in failed:',error?.code||error?.status||'auth_error');
+    if(error?.status===429||/rate.limit|too.many/i.test(String(error?.code||error?.message||''))){
+      message.textContent='ログイン試行回数が多いため一時的に制限されています。時間を置いて再度お試しください。';
+    }else{
+      message.textContent='ログインできませんでした。メールアドレス・パスワード、または初回設定の有無を確認してください。';
+    }
   }finally{button.disabled=false}
 });
