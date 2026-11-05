@@ -153,18 +153,6 @@ Deno.serve(async(req)=>{
       if(original===amount&&order.selections?.final_public_domain===finalDomain&&order.selections?.final_quote_sent_at)
         return json({error:'同じ確定金額の見積りは送信済みです。二重送信を防止しました。'},409);
       const explanation=String(body?.quote_note||'').trim().slice(0,500);
-      // Reserve the permanent domain BEFORE notifying the customer. A unique DB index
-      // protects against another order claiming the same domain concurrently.
-      const pendingSelections={...(order.selections||{}),final_public_domain:finalDomain,
-        quote_domain_owner_confirmed_at:order.selections?.quote_domain_owner_confirmed_at||new Date().toISOString()};
-      const {data:reserved,error:reserveErr}=await admin.from('website_orders').update({
-        selections:pendingSelections,updated_at:new Date().toISOString()
-      }).eq('order_code',orderCode).eq('status','pending_payment').select('order_code').maybeSingle();
-      if(reserveErr){
-        if(String(reserveErr.code)==='23505')return json({error:'この正式URLはほかの注文に確保されています。別のURLを確認してください。'},409);
-        throw reserveErr;
-      }
-      if(!reserved)return json({error:'注文状態が変わりました。見積り内容を再確認してください。'},409);
       const lines=[
         '【SHO WEB SUPPORT 正式お見積り・振込先】',
         '注文ID：'+orderCode,
@@ -179,12 +167,42 @@ Deno.serve(async(req)=>{
         '内容・金額をご確認いただき、ご納得いただけましたらお振込みください。',
         '入金を確認した後、制作内容入力フォームをご案内します。'
       ].filter(Boolean);
-      const sent=await linePush(order.line_user_id,lines.join('\n'));
+      const quoteMessage=lines.join('\n');
+      // Persist the LINE retry key before the first push. If LINE accepted the
+      // message but our DB write failed, the next attempt reuses the SAME key.
+      // LINE de-duplicates such requests only for 24 hours; after 23 hours,
+      // force an operator to reconcile the conversation rather than risk duplicates.
+      const fingerprint=await sha256Hex([orderCode,order.line_user_id,quoteMessage].join('\n'));
+      const prev=order.selections||{};
+      let retryKey=String(prev.quote_delivery_retry_key||'');
+      const started=Date.parse(String(prev.quote_delivery_started_at||''));
+      if(prev.quote_delivery_started_at&&!prev.final_quote_sent_at){
+        if(prev.quote_delivery_fingerprint!==fingerprint)
+          return json({error:'前回のLINE見積り送信結果が未確定です。金額・振込先・補足を変更せずに再試行するか、LINE履歴を確認してください。'},409);
+        if(!retryKey||!Number.isFinite(started)||Date.now()-started>23*60*60*1000)
+          return json({error:'LINE送信から23時間を超過しました。重複送信防止のため自動再送は停止しました。LINE履歴を確認し、管理者が個別に対応してください。'},409);
+      }else retryKey=crypto.randomUUID();
+      const pendingSelections={...prev,final_public_domain:finalDomain,
+        quote_domain_owner_confirmed_at:prev.quote_domain_owner_confirmed_at||new Date().toISOString(),
+        quote_delivery_retry_key:retryKey,quote_delivery_fingerprint:fingerprint,
+        quote_delivery_started_at:prev.quote_delivery_started_at||new Date().toISOString()};
+      // Reserve the permanent domain BEFORE contacting LINE. The unique
+      // database index prevents concurrent orders claiming the same URL.
+      const {data:reserved,error:reserveErr}=await admin.from('website_orders').update({
+        selections:pendingSelections,updated_at:new Date().toISOString()
+      }).eq('order_code',orderCode).eq('status','pending_payment').select('order_code').maybeSingle();
+      if(reserveErr){
+        if(String(reserveErr.code)==='23505')return json({error:'この正式URLはほかの注文に確保されています。別のURLを確認してください。'},409);
+        throw reserveErr;
+      }
+      if(!reserved)return json({error:'注文状態が変わりました。見積り内容を再確認してください。'},409);
+      const sent=await linePush(order.line_user_id,quoteMessage,retryKey);
       if(sent.skipped||sent.ok===false)
-        return json({error:'お客様のLINEへ正式見積りを送信できませんでした。ブロック状態や設定を確認してください。'},502);
+        return json({error:'お客様のLINEへ正式見積りを送信できませんでした。送信結果が不明な場合は同一内容で再試行してください。'},502);
       const {error:saveErr}=await admin.from('website_orders').update({
         selections:{...pendingSelections,final_quote_amount:amount,
-          final_quote_sent_at:new Date().toISOString(),final_quote_note:explanation},
+          final_quote_sent_at:new Date().toISOString(),final_quote_note:explanation,
+          quote_delivery_confirmed_at:new Date().toISOString()},
         updated_at:new Date().toISOString()
       }).eq('order_code',orderCode).eq('status','pending_payment');
       if(saveErr)throw saveErr;
