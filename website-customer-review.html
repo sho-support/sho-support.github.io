@@ -44,7 +44,7 @@ const accessKey=params.get('key')||'';
 const secureMode=prodMode&&!!accessKey;
 document.getElementById('siteId').textContent=id;
 if(prodMode){
-  document.querySelector('.demo').textContent=secureMode?'LINEで届いた専用URLから内容を確認できます。':'ログイン中のお客様専用画面です。SITE IDに紐づく制作状況を表示しています。';
+  document.querySelector('.demo').hidden=true;
   if(!secureMode)await requireWebsiteSession(location.href);
 }
 
