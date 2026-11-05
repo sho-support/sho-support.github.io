@@ -71,7 +71,8 @@ const endpoint='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-qa
    assert.ok(info.styleSheetCount>0,'CSS applied');
    assert.deepEqual(errors,[],'no client runtime errors');
    const jpeg=await page.screenshot({type:'jpeg',quality:57,animations:'disabled',fullPage:true});
-   console.log('PRIVATE_SITE_SHOT_BEGIN '+label+' '+jpeg.toString('base64')+' PRIVATE_SITE_SHOT_END');
+   // Do not publish private customer imagery in logs of the public source repository.
+   console.log('PRIVATE_SITE_SCREENSHOT_CAPTURED '+label+' bytes='+jpeg.length);
    console.log('PRIVATE_SITE_AUDIT '+JSON.stringify({device:label,...info}));
    await context.close();
   }
