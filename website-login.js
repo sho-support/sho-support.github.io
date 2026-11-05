@@ -21,7 +21,7 @@ if(isAdminLogin){
   document.getElementById('loginHeading').textContent='運営者ログイン';
   document.getElementById('loginIntro').textContent='SHO WEB SUPPORTの管理者アカウントへログインします。登録済みメールアドレスにログインリンクを送信します。';
   document.getElementById('loginNote').textContent='注文・入金・制作情報は管理者権限を持つアカウントのみ操作できます。未登録のメールアドレスでは管理画面を利用できません。';
-else{
+}else{
   document.getElementById('loginHeading').textContent='お客様ログイン';
   document.getElementById('loginIntro').textContent='登録したメールアドレスへログインリンクを送ります。パスワードは不要です。';
   document.getElementById('loginNote').textContent='ログイン後は、自分が参加しているSITE IDだけが表示されます。同じサイトを複数人で編集する場合は、それぞれのメールアドレスを同じSITE IDへ追加できます。';
