@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>顧客アカウント招待 | SHO WEB SUPPORT</title><link rel="stylesheet" href="../website-theme.css">
+<style>:root{--gold:#d9ae5c;--line:rgba(255,255,255,.16)}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 0 0,rgba(180,18,44,.14),transparent 35%),#070708;color:#fafafa;font:15px/1.7 system-ui,sans-serif}header{border-bottom:1px solid var(--line);background:#060607}.wrap{max-width:730px;margin:auto;padding:20px}.head{display:flex;align-items:center;justify-content:space-between;gap:12px}a{color:#e6c581}.brand{color:white;text-decoration:none;font-weight:900;letter-spacing:.04em}h1{font-size:clamp(1.65rem,5vw,2.8rem);margin:18px 0 10px}.sub{color:#bdbdbd}.card{padding:20px;background:#111114;border:1px solid rgba(217,174,92,.3);border-radius:14px}label{display:block;font-size:.83rem;font-weight:850;margin:0 0 16px}select,input{display:block;width:100%;padding:13px;margin:6px 0 0;font:inherit;border:1px solid #666;border-radius:9px;background:#0c0c0e;color:#fff}button{font:inherit;cursor:pointer}.btn{width:100%;padding:12px;border:0;border-radius:9px;background:#bb1d39;color:#fff;font-weight:900}.btn:disabled{opacity:.5;cursor:not-allowed}.msg{min-height:1.4em;color:#e8cb90;font-size:.82rem;white-space:pre-wrap}.fine{color:#999;font-size:.76rem;margin:14px 0 0}.nav{display:flex;gap:14px;flex-wrap:wrap}small{color:var(--gold);font-weight:900;letter-spacing:.08em}</style></head>
+<body><header><div class="wrap head"><a class="brand" href="orders.html">SHO WEB SUPPORT / ADMIN</a><nav class="nav"><a href="orders.html">案件管理</a><a href="../website-portal.html">マイページ</a></nav></div></header>
+<main class="wrap"><small>CUSTOMER ACCESS</small><h1>お客様アカウント招待</h1><p class="sub">入金確認後に発行されたSITE IDへ、メールアドレスのアカウントを紐付けます。未登録の方には初回パスワード設定メールが送られます。</p>
+<section class="card"><form id="inviteForm"><label>制作案件<select id="siteId" required><option value="">読み込み中…</option></select></label><label>招待するメールアドレス<input id="email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="customer@example.com" maxlength="254" required></label><button class="btn" id="inviteBtn" type="submit" disabled>この案件に招待する</button></form><p class="msg" role="status" aria-live="polite" id="message"></p><p class="fine">メールは運営者がボタンを押した場合だけ送信します。既に登録された方はアカウントを紐付けるだけです。連絡先はお客様に確認したアドレスを使用してください。</p></section></main>
+<script type="module">
+import {websiteSupabase,currentSession} from '../website-client.js';
+const form=document.getElementById('inviteForm'),select=document.getElementById('siteId'),email=document.getElementById('email'),btn=document.getElementById('inviteBtn'),message=document.getElementById('message');
+function show(s){message.textContent=s;}
+async function api(action,extra={}){
+ const {data,error}=await websiteSupabase.functions.invoke('website-api',{body:{action,...extra}});
+ if(error||data?.error)throw new Error(data?.error||'操作に失敗しました。');
+ return data;
+}
+try{
+ const session=await currentSession();
+ if(!session){location.replace('../website-login.html?next='+encodeURIComponent(location.href));throw new Error('ログインが必要です。');}
+ const data=await api('list_sites');
+ if(!data.admin)throw new Error('運営者権限が必要です。');
+ const sites=Array.isArray(data.sites)?data.sites:[];
+ select.replaceChildren(new Option('案件を選択してください',''));
+ for(const site of sites){
+  if(!/^\d{4,10}$/.test(String(site.site_id||'')))continue;
+  select.add(new Option('ID '+site.site_id+' | '+String(site.site_name||'ホームページ'),site.site_id));
+ }
+ if(select.options.length===1){select.options[0].textContent='入金確認済みの制作案件がありません';show('注文の入金確認とSITE ID発行後に招待できます。')}
+ else {btn.disabled=false;const fromQuery=new URLSearchParams(location.search).get('id');if(fromQuery&&[...select.options].some(x=>x.value===fromQuery))select.value=fromQuery;}
+}catch(e){show(e.message||'案件を読み込めませんでした。');}
+form.addEventListener('submit',async e=>{
+ e.preventDefault();if(btn.disabled||!select.value||!email.validity.valid)return;
+ const addr=email.value.trim().toLowerCase(),siteId=select.value;
+ const option=select.selectedOptions[0]?.textContent||siteId;
+ if(!confirm('案件：'+option+'\nメール：'+addr+'\n\nこのお客様に管理権限を付与します。よろしいですか？'))return;
+ btn.disabled=true;show('確認しています…');
+ try{
+  const data=await api('admin_invite_customer',{site_id:siteId,customer_email:addr});
+  show(data.already_linked?'このアドレスはすでに該当案件へ登録済みです。':data.invited?'招待メールを送信し、この案件へ紐付けました。初回パスワードはメールのリンクから設定できます。':'既存アカウントをこの案件へ紐付けました。登録済みパスワードでログインできます。');
+ }catch(err){show(err.message||'招待処理に失敗しました。')}finally{btn.disabled=false;}
+});
+</script></body></html>
