@@ -74,7 +74,7 @@ const checks = [
   ['recover form hides on success', recoverJs.includes('form.hidden=true')],
   ['numeric order admin example', adminOrders.includes('placeholder="例：1000"')],
   ['quote supports free hosted URL', adminOrders.includes("public_domain:publicDomain||'free'")],
-  ['quote warns before free address is sent', adminOrders.includes("const intendedUrl=publicDomain?")],
+  ['quote warns before free address is sent', adminOrders.includes("let intendedUrl=''")&&adminOrders.includes("admin_resolve_free_url")],
   ['operator-only publish button', adminOrders.includes("action:'admin_publish_site'")],
   ['customer approval without publish button', customerReviewHtml.includes("運営者が公開準備と最終確認を行います")],
   ['customer production page does not offer publish', !customerReviewHtml.includes("if(secureMode)await secureApi('review_publish')")],
