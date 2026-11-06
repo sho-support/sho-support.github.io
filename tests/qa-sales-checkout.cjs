@@ -65,7 +65,7 @@ const server=http.createServer((req,res)=>{
           assert.equal(await page.locator('.plan.selected').getAttribute('data-plan'),test.plan,'edit lost selected plan');
           if(test.template)assert.equal(await page.locator('.template.selected').getAttribute('data-template'),test.template,'edit lost template');
           assert.equal(await page.locator('#finalBtn').isEnabled(),true,'edit cannot reconfirm');
-          const restored=(await page.locator('#sumTotal').innerText()).replace(/\\s+/g,'');
+          const restored=(await page.locator('#sumTotal').innerText()).replace(/\s+/g,'');
           assert.ok(restored.includes(test.price),'edit changed amount '+test.id);
           await page.locator('#finalBtn').click();
           await page.waitForURL('**/website-order-confirm.html',{timeout:10000});
