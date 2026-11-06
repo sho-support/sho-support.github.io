@@ -106,3 +106,19 @@
 - Netlify Public判定は認証なしGET HTTP401のためFAIL。Netlify設定は所有者本人がProject visibilityを変更する必要があり、Github/Supabaseで代替できない。 https://docs.netlify.com/manage/security/secure-access-to-sites/project-visibility/
 - GitHub Pagesの無料URLは正式公開時に実際のPages設定を照合して発行する。運営側ユーザーサイトPages設定がAPIで404だったため、未設定扱い時はGitHubデフォルトURLへフォールバックする実装。
 - 正式見積り・制作開始～公開の本番E2Eは、顧客の本物のLINE通信と運営側の権限ある操作を必要とするため未完了。ユーザー確認なしの対外通知や公開は実行しない。
+
+
+## 顧客アカウント招待・確認画面再編集・API耐性検査（追加）
+- GitHub Actions run `42137606400` で3プランの「注文確認→内容変更→同じプラン・テンプレート・金額の復元→再確認」の検査を追加し、Chromiumで合格。
+- 320pxのプラン名改行テストで単一行を誤判定するチェックコードの不具合を見つけ、font-sizeではなく実line-heightを基準に修正。run `42136974497` success。
+- 実際のSupabase注文APIへ6種類の不正な注文パラメーターを送信。無効プラン・テンプレート・不正な更新プラン5件はHTTP400、無許可Origin1件はHTTP403。新規の注文・顧客データは作成されず。
+- `website-api` に運営者専用 `admin_invite_customer` を追加。既存のアカウントはSITE IDに権限付与、未登録の場合のみSupabase Authの `inviteUserByEmail` を利用してパスワード設定招待を送る。明示的な運営操作が必要。
+- `admin/customers.html` を追加。既存の制作案件を選び、顧客確認済みメールアドレスに招待を送るUI。管理画面 `admin/index.html` と `admin/orders.html` に導線。販売ビルド検査に3チェック追加。
+- 未ログインで `admin_invite_customer` を呼んでも権限により拒否する設計。ユーザーの実メールへ招待した実配送・パスワード設定・顧客マイページ閲覧の一連のテストは未実施。
+- `website-api` に残っていた古い「お客様が公開を選ぶ」LINE文面を修正し、運営者が最終公開する仕様へ統一。
+- GitHub Actions run `42138864433` は48件の画面テストと公開APIの拒否・CORS検査ともにsuccess。`42138864333` は新しい招待画面込み販売ビルドでsuccess。
+
+現存する外部ブロッカー：
+1. NetlifyのProduction URLは匿名アクセスにHTTP401を返していた。公開設定をオーナーが変更しない限り一般顧客は閲覧できない。
+2. 実銀行口座未登録。テスト用の架空銀行口座は本番の請求に使わない。
+3. LINE送受信・外部AI生成・GitHub Pagesの本番公開を通す完全な実E2Eは未合格。
