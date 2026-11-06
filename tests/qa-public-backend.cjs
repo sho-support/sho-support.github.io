@@ -10,6 +10,7 @@ const origin='https://sho-web-support.netlify.app';
    {name:'deny anonymous operator publication',path:'website-customer-access',body:{action:'admin_publish_site',site_id:'1000'},codes:[401,403]},
    {name:'deny anonymous quote',path:'website-customer-access',body:{action:'admin_send_final_quote',order_code:'1000'},codes:[401,403]},
    {name:'deny anonymous free URL resolve',path:'website-customer-access',body:{action:'admin_resolve_free_url',order_code:'1000'},codes:[401,403]},
+   {name:'deny anonymous customer invitations',path:'website-api',body:{action:'admin_invite_customer',site_id:'1000',customer_email:'qa@example.invalid'},codes:[401,403]},
  ];
  for(const item of cases){
   const ctrl=AbortSignal.timeout(20000);
