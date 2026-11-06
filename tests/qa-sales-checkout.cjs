@@ -58,6 +58,18 @@ const server=http.createServer((req,res)=>{
         await page.waitForURL('**/website-order-confirm.html',{timeout:10000});
         const text=await page.locator('body').innerText();
         assert.ok(text.includes(test.price),'confirmation price missing '+test.id);
+        // Verify that editing the confirmation really restores the existing draft.
+        if(['one-monthly','semi-rock','full-1'].includes(test.id)){
+          await page.locator('a.edit').click();
+          await page.waitForURL('**/website-order.html?resume=1',{timeout:10000});
+          assert.equal(await page.locator('.plan.selected').getAttribute('data-plan'),test.plan,'edit lost selected plan');
+          if(test.template)assert.equal(await page.locator('.template.selected').getAttribute('data-template'),test.template,'edit lost template');
+          assert.equal(await page.locator('#finalBtn').isEnabled(),true,'edit cannot reconfirm');
+          const restored=(await page.locator('#sumTotal').innerText()).replace(/\\s+/g,'');
+          assert.ok(restored.includes(test.price),'edit changed amount '+test.id);
+          await page.locator('#finalBtn').click();
+          await page.waitForURL('**/website-order-confirm.html',{timeout:10000});
+        }
         assert.deepEqual(errors,[],'JavaScript errors '+test.id+'/'+viewport);
         results.push({case:test.id,viewport,price:test.price,result:'PASS'});
         await context.close();
