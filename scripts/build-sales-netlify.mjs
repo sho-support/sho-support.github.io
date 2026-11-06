@@ -57,6 +57,7 @@ const recoverJs = readFileSync(join(root, 'website-recover.js'), 'utf8');
 const adminOrders = readFileSync(join(root, 'admin', 'orders.html'), 'utf8');
 const customerReviewHtml = readFileSync(join(root, 'website-customer-review.html'), 'utf8');
 const productionAdmin = readFileSync(join(root,'admin','index.html'),'utf8');
+const adminCustomers = readFileSync(join(root,'admin','customers.html'),'utf8');
 const checks = [
   ['three order plans', ['one','semi','full'].every(p => orderHtml.includes('data-plan="' + p + '"'))],
   ['ten selectable templates', (orderHtml.match(/data-template="/g) || []).length === 10],
@@ -78,6 +79,9 @@ const checks = [
   ['customer approval without publish button', customerReviewHtml.includes("運営者が公開準備と最終確認を行います")],
   ['customer production page does not offer publish', !customerReviewHtml.includes("if(secureMode)await secureApi('review_publish')")],
   ['operator management text updated', productionAdmin.includes('運営管理画面の公開ボタンから公開します')],
+  ['customer invitation screen included', adminCustomers.includes('id="inviteForm"')],
+  ['invite requires operator confirmation', adminCustomers.includes('このお客様に管理権限を付与します')],
+  ['customer invitation linked from order dashboard', adminOrders.includes('href="customers.html"')],
 
 ];
 const broken = checks.filter(([,ok]) => !ok).map(([name]) => name);
