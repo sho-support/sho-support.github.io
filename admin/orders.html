@@ -168,7 +168,9 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
        const order=orders.find(o=>o.order_code===code);
        if(!Number.isSafeInteger(finalAmount)||finalAmount<Number(order?.amount_from||0))return alert('基本料金以上の正式な確定金額を入力してください。');
        if(publicDomain&&!domainConfirmed)return alert('独自ドメインの場合は、管理権限と更新負担を確認してください。');
-       const intendedUrl=publicDomain?'https://'+publicDomain+'/':String((await api('admin_resolve_free_url',{order_code:code})).free_url||'');
+       let intendedUrl='';
+       try{intendedUrl=publicDomain?'https://'+publicDomain+'/':String((await api('admin_resolve_free_url',{order_code:code})).free_url||'');if(!intendedUrl.startsWith('https://'))throw Error('無料URLを取得できませんでした。');}
+       catch(error){alert(error.message||'公開URLの確認に失敗しました。');return;}
        if(!confirm(code+' の確定金額 '+finalAmount.toLocaleString()+'円、正式URL '+intendedUrl+' と振込先をお客様のLINEへ送信します。内容とURLを確認しましたか？'))return;
        btn.disabled=true;btn.textContent='LINEへ送信中…';
        try{await api('admin_send_final_quote',{order_code:code,final_amount:finalAmount,public_domain:publicDomain||'free',domain_control_confirmed:publicDomain?domainConfirmed:true,quote_note:note});alert('正式見積りと振込先をLINEに送信しました。');await load()}
