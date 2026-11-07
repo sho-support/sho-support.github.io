@@ -19,4 +19,4 @@ jobs:
         with:
           node-version: '22'
       - name: Verify customer URL and release routing
-        run: node --test customer-hosting-v2/tests/site-router.test.mjs
+        run: node --test customer-hosting-v2/tests/*.test.mjs
