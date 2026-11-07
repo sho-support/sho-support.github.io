@@ -24,16 +24,14 @@ function safePath(path){
 export async function handleCustomerRequest(request,env){
   if(request.method!=="GET"&&request.method!=="HEAD")return fail(405,"Method not allowed");
   const url=new URL(request.url);
-  const path=url.pathname;
-  if(path==="/healthz")return new Response("ok",{headers:{"Cache-Control":"no-store"}});
-  // Hosted preview domains must never show a customer website without the explicit public hostname.
-  if(env.PUBLIC_HOSTNAME&&url.hostname!==env.PUBLIC_HOSTNAME)return notFound();
-  const match=/^\/([0-9]{4,10})(?:\/(.*))?$/.exec(path);
+  // Isolate every customer to a separate browser origin.
+  // The customer URL is stable across origin/hosting-provider changes.
+  const match=/^s([0-9]{4,10})\.sho-support\.com$/i.exec(url.hostname);
   if(!match)return notFound();
-  const id=match[1], raw=match[2];
+  const id=match[1];
   if(!SITE_ID.test(id))return notFound();
-  if(raw===undefined)return Response.redirect(url.origin+"/"+id+"/"+url.search,308);
-  const file=safePath(raw);
+  if(url.pathname==="/healthz")return new Response("ok",{headers:{"Cache-Control":"no-store"}});
+  const file=safePath(url.pathname.slice(1));
   if(!file)return notFound();
   if(!env.SITES||typeof env.SITES.get!=="function")return fail(503,"Storage unavailable");
   let manifest;
