@@ -1,0 +1,22 @@
+// Copy to wrangler.jsonc only after all DNS and deployment gates pass.
+// THIS FILE IS NOT ACTIVE. Do not deploy against the live zone during design.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sho-customer-sites",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-07",
+  "workers_dev": false,
+  "r2_buckets": [
+    {
+      "binding": "SITES",
+      "bucket_name": "sho-customer-sites-prod",
+      "preview_bucket_name": "sho-customer-sites-preview"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "*.sho-support.com/*",
+      "zone_name": "sho-support.com"
+    }
+  ]
+}
