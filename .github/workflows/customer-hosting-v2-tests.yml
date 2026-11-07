@@ -1,0 +1,22 @@
+name: Customer hosting v2 architecture tests
+on:
+  push:
+    branches:
+      - architecture/customer-hosting-v2
+    paths:
+      - 'customer-hosting-v2/**'
+      - '.github/workflows/customer-hosting-v2-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify customer URL and release routing
+        run: node --test customer-hosting-v2/tests/site-router.test.mjs
