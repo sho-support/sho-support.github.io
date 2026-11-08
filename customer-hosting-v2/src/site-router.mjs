@@ -1,4 +1,4 @@
-// Portable customer-site reader. Designed for Cloudflare Pages Functions + private R2.
+// Portable customer-site reader. Designed for Cloudflare Workers + private R2.
 // This is a prototype, NOT connected to a production bucket or domain.
 const SITE_ID=/^[0-9]{4,10}$/;
 const RELEASE=/^[0-9a-f]{12,64}$/;
@@ -26,7 +26,15 @@ export async function handleCustomerRequest(request,env){
   const url=new URL(request.url);
   // Isolate every customer to a separate browser origin.
   // The customer URL is stable across origin/hosting-provider changes.
-  const match=/^s([0-9]{4,10})\.sho-support\.com$/i.exec(url.hostname);
+  // This MUST be set to the committed customer-hosting domain before first sale.
+  // No production fallback: a domain change after accepting customers breaks printed URLs.
+  const baseDomain=String(env?.CUSTOMER_BASE_DOMAIN||"").trim().toLowerCase();
+  if(!/^(?:[a-z0-9-]+\.)+[a-z]{2,63}$/.test(baseDomain))return fail(503,"Domain unavailable");
+  const prefix="s";
+  const suffix="."+baseDomain;
+  if(!url.hostname.toLowerCase().endsWith(suffix))return notFound();
+  const subdomain=url.hostname.toLowerCase().slice(0,-suffix.length);
+  const match=/^s([0-9]{4,10})$/.exec(subdomain);
   if(!match)return notFound();
   const id=match[1];
   if(!SITE_ID.test(id))return notFound();
