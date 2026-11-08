@@ -56,6 +56,12 @@
 - 99件でも運営負担や監視・バックアップに見合うサポート費用が発生する
 - 顧客の独自ドメインが多数増えてCloudflare for SaaSの無料ホスト名100件へ接近する
 
+## Supabase Freeの運営上の注意（重要）
+- Supabase Freeのプロジェクトは7日間の低アクティビティで一時停止され得る。**公開済み顧客ページはWorker + R2から配信できても、新規注文、管理画面のデータ取得、ログイン、更新依頼、AI制作は停止する可能性がある。**
+- Freeは自動DBバックアップの対象外。注文/顧客/承認/公開状態のエクスポートと別保管を販売開始前に実装すること。外部バックアップが有効か定期的に復元検証する。
+- 本番を無料で始める場合はSupabaseのpause警告メールと実利用の監視を行い、注文機会損失を許容できない場合は**顧客100人を待たずSupabase Pro（月$25から）**を検討する。同じSupabase内のプラン変更であり、顧客公開URLは変わらない。
+- ユーザーが運営するアプリの実動作としてのアクセスが少ない場合に停止されるかは保証できない。自動的に「絶対停止しない」運用にはならない。
+
 ## 他の費用は別
 - Netlify（販売ページ、必要ならPaid）、Supabase（顧客DB・APIの無料枠）、Resend（メール配信）、Gemini AI制作API、GitHub Actions、独自ドメインの年更新費、バックアップ保存先の費用はCloudflare Workers/R2の無料枠とは**別**。
 - 商用運用の妥当性判断は、月ごとの実使用量・問い合わせ工数・生成API費用・アップグレードの採算を含める。
@@ -77,3 +83,5 @@
 - https://developers.cloudflare.com/billing/understand/faq/
 - https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/limitations/
 - https://supabase.com/docs/guides/platform/billing-on-supabase
+- https://supabase.com/docs/guides/platform/free-project-pausing
+- https://supabase.com/docs/guides/deployment/going-into-prod
