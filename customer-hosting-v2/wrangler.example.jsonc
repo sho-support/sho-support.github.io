@@ -6,6 +6,7 @@
   "main": "worker.mjs",
   "compatibility_date": "2026-11-07",
   "workers_dev": false,
+  "vars": {"CUSTOMER_BASE_DOMAIN": "sho-support.com"}, // Replace before launch if using a dedicated domain
   "r2_buckets": [
     {
       "binding": "SITES",
@@ -13,6 +14,7 @@
       "preview_bucket_name": "sho-customer-sites-preview"
     }
   ],
+  // Example uses the existing zone. Replace zone_name and route if adopting a customer-only domain.
   "routes": [
     {
       "pattern": "*.sho-support.com/*",
