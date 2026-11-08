@@ -47,3 +47,11 @@
 - https://supabase.com/docs/guides/platform/backups
 
 **結論**: 現状では販売システム全体は完成していない。これ以上の概念設計よりも、Cloudflare環境の実接続とSupabase公開フローの置換が次の実装対象。
+
+## 追加でコードと照合した本番移行時の注意点
+
+- 既存の `website-worker` は顧客HTMLへ `https://sho-support.github.io/website-track.js` を挿入している。公開ページからこの旧公開基盤に依存しないよう、追跡処理を適切な商用公開先へ移すか、移行が終わるまで無効化する。GitHub Pagesを商取引サイトの実行基盤に残したまま完成扱いしない。
+- `website-api` と `website-customer-access` の「publish」経路が **2か所** 存在し、どちらも旧GitHub Pagesへ公開する。片側だけ直すと方式が混在するため、両経路の公開許可・顧客承認・更新・通知・状態保存を一括で統合し、旧方式へ誤って公開する経路をなくす。
+- `wrangler.example.jsonc` は `workers_dev:false` かつ `CUSTOMER_BASE_DOMAIN` のホスト名チェックが厳密。そのまま `workers.dev` でアクセスしても顧客サイトを200で表示する仕組みではない。テスト環境では仮ドメイン・Host検証を別途用意し、`workers.dev` が開いたというだけで本番のSSL/ルーティング合格とはしない。
+- 現行の `*.sho-support.com/*` というWorkersルート案は、将来既存サブドメインを巻き込むリスクがある。顧客専用ドメインを優先し、ゾーン・DNSと対象ホスト名を確認するまで既存ドメインへ適用しない。
+- 新しいリリースモジュールの公開許可コールバックは **サーバー側で顧客の最新承認記録と運営者権限を検証して初めて有効**。ブラウザから渡された `approved:true` だけを信用してはならない。公開切替成功後のDB更新失敗も回復可能な手順を別途実装する。
