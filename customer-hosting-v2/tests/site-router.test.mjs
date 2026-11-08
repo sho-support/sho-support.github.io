@@ -17,7 +17,7 @@ const storage=new Map([
   ["sites/1002/releases/"+a+"/index.html","UNAPPROVED"],
   ["sites/1003/active.json",JSON.stringify({release:"../../bad",status:"live"})]
 ]);
-const env={SITES:{async get(key){const value=storage.get(key);return value===undefined?null:new MockObject(value)}}};
+const env={CUSTOMER_BASE_DOMAIN:"sho-support.com",SITES:{async get(key){const value=storage.get(key);return value===undefined?null:new MockObject(value)}}};
 const req=(url,options={})=>handleCustomerRequest(new Request(url,options),env);
 const home=(path="/",options={})=>req(host+path,options);
 test("one customer site per dedicated browser origin",async()=>{
@@ -72,4 +72,14 @@ test("public HTML is not immutable cached",async()=>{
 });
 test("manifest rollback retains previous URL",async()=>{
  assert.match(await (await home()).text(),/Customer 1000/);
+});
+
+test("invalid or missing customer domain configuration fails closed",async()=>{
+ const r=await handleCustomerRequest(new Request(host+"/"),{SITES:env.SITES});
+ assert.equal(r.status,503);
+});
+test("same release works on separately chosen customer domain before first sale",async()=>{
+ const r=await handleCustomerRequest(new Request("https://s1000.customer-host.example/"),{...env,CUSTOMER_BASE_DOMAIN:"customer-host.example"});
+ assert.equal(r.status,200);
+ assert.match(await r.text(),/Customer 1000/);
 });
