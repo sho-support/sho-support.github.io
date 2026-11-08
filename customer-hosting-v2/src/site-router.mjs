@@ -30,7 +30,6 @@ export async function handleCustomerRequest(request,env){
   // No production fallback: a domain change after accepting customers breaks printed URLs.
   const baseDomain=String(env?.CUSTOMER_BASE_DOMAIN||"").trim().toLowerCase();
   if(!/^(?:[a-z0-9-]+\.)+[a-z]{2,63}$/.test(baseDomain))return fail(503,"Domain unavailable");
-  const prefix="s";
   const suffix="."+baseDomain;
   if(!url.hostname.toLowerCase().endsWith(suffix))return notFound();
   const subdomain=url.hostname.toLowerCase().slice(0,-suffix.length);
