@@ -1,5 +1,9 @@
 const assert=require('node:assert/strict');
 const {chromium}=require('playwright');
+const {mkdirSync}=require('node:fs');
+const {join}=require('node:path');
+const screenshots=process.env.QA_SCREENSHOTS_DIR;
+if(screenshots)mkdirSync(screenshots,{recursive:true});
 const BASE='http://127.0.0.1:8765/';
 const paths=[
  'website-support.html','website-create.html','website-faq.html','website-order.html',
@@ -14,7 +18,7 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  try{
-  for(const width of [320,390,768,1280]){
+  for(const width of [320,360,390,430,768,1366]){
    const context=await browser.newContext({viewport:{width,height:850},serviceWorkers:'block'});
    await context.route('**/*',route=>{
     const u=route.request().url();
@@ -32,6 +36,9 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
      const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
      check(overflow<=3,'Horizontal overflow '+width+'px '+path+': '+overflow);
      check(errors.length===0,'JS exceptions in '+path+': '+errors.join(' | '));
+    }
+    if(screenshots&&['website-support.html','website-order.html','website-template-preview.html'].includes(path)){
+     await page.screenshot({path:join(screenshots,width+'-'+path.replace('.html','.png')),fullPage:true});
     }
    }
    await page.goto(BASE+'website-support.html',{waitUntil:'domcontentloaded'});

@@ -1,4 +1,5 @@
 [build]
+  ignore = "node ./scripts/ignore-customer-hosting-build.mjs"
   command = "node scripts/build-sales-netlify.mjs"
   publish = "dist"
 

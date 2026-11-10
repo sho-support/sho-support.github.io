@@ -26,3 +26,15 @@ test("prepareRelease itself does not set any live storage",()=>{
   assert.equal(typeof out.activation.json,"string");
   assert.equal(out.objects.length,2);
 });
+
+test('binary HTML passes through the same structure and URL checks',()=>{
+ const content=new TextEncoder().encode(valid+'https://sho-support.github.io/site-1000/');
+ assert.throws(()=>prepareRelease('1000','aaaaaaaaaaaa',[{path:'index.html',content}]),/provider URL/);
+ assert.throws(()=>prepareRelease('1000','aaaaaaaaaaaa',[{path:'index.html',content:new Uint8Array([255])}]));
+});
+
+test('the old tracking dependency is rejected in scripts as well as HTML',()=>{
+ assert.throws(()=>prepareRelease('1000','aaaaaaaaaaaa',[
+   files[0],{path:'app.js',content:'import("https://sho-support.github.io/website-track.js")'}
+ ]),/provider URL/);
+});

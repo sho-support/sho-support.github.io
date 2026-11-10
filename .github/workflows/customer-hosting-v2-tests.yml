@@ -6,17 +6,100 @@ on:
     paths:
       - 'customer-hosting-v2/**'
       - '.github/workflows/customer-hosting-v2-tests.yml'
+      - 'scripts/ignore-customer-hosting-build.mjs'
+      - 'netlify.toml'
+      - 'tests/website-smoke.cjs'
   workflow_dispatch:
+    inputs:
+      deploy_preview:
+        description: Deploy the verified isolated preview Worker
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
   contract:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: customer-hosting-v2
+    env:
+      WRANGLER_SEND_METRICS: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify customer URL and release routing
-        run: node --test customer-hosting-v2/tests/*.test.mjs
+        run: npm test
+      - name: Verify local workerd and R2 release lifecycle
+        run: npm run test:runtime
+      - name: Validate preview Worker package without deploying
+        run: npm run check:preview
+  sales-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test tools
+        run: npm install --prefix /tmp/sho-browser-qa --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+      - name: Install Chromium
+        run: /tmp/sho-browser-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Check sales pages at the six required viewport widths
+        env:
+          NODE_PATH: /tmp/sho-browser-qa/node_modules
+          QA_SCREENSHOTS_DIR: /tmp/sho-browser-screenshots
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/sho-sales-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          node tests/website-smoke.cjs
+      - name: Keep rendered screenshots for visual inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-hosting-sales-regression
+          path: /tmp/sho-browser-screenshots
+          retention-days: 3
+  preview:
+    # Enable only after the existing Worker/bucket inventory has been checked.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_preview && vars.CF_PREVIEW_ENABLED == 'true' && github.ref == 'refs/heads/architecture/customer-hosting-v2' }}
+    needs: [contract, sales-regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    concurrency:
+      group: customer-hosting-preview
+      cancel-in-progress: false
+    environment: customer-hosting-preview
+    defaults:
+      run:
+        working-directory: customer-hosting-v2
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CF_PREVIEW_HOST: ${{ vars.CF_PREVIEW_HOST }}
+      CF_PREVIEW_BUCKET: ${{ vars.CF_PREVIEW_BUCKET }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Confirm required secret configuration
+        run: |
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_API_TOKEN"
+      - name: Configure only the verified private preview bucket
+        run: node configure-preview.mjs
+      - name: Deploy only the isolated test Worker
+        run: npx --no-install wrangler deploy --config wrangler.preview.local.json

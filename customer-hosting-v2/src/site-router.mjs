@@ -40,6 +40,8 @@ export async function handleCustomerRequest(request,env){
   if(url.pathname==="/healthz")return new Response("ok",{headers:{"Cache-Control":"no-store"}});
   const file=safePath(url.pathname.slice(1));
   if(!file)return notFound();
+  const ext=file.slice(file.lastIndexOf(".")+1).toLowerCase();
+  if(!Object.prototype.hasOwnProperty.call(TYPES,ext))return notFound();
   if(!env.SITES||typeof env.SITES.get!=="function")return fail(503,"Storage unavailable");
   let manifest;
   try{
@@ -53,13 +55,13 @@ export async function handleCustomerRequest(request,env){
   try{object=await env.SITES.get("sites/"+id+"/releases/"+manifest.release+"/"+file)}
   catch{return fail(503,"Content unavailable")}
   if(!object)return notFound();
-  const ext=file.slice(file.lastIndexOf(".")+1).toLowerCase();
-  if(!Object.prototype.hasOwnProperty.call(TYPES,ext))return notFound();
   const headers=new Headers({
     "Content-Type":TYPES[ext],
-    "Cache-Control":ext==="html"?"no-cache, must-revalidate":"public, max-age=60, must-revalidate",
+    // Asset names can stay the same across releases. Revalidate CSS/JS/images too.
+    "Cache-Control":"no-cache, must-revalidate",
     "X-Content-Type-Options":"nosniff",
-    "Referrer-Policy":"strict-origin-when-cross-origin"
+    "Referrer-Policy":"strict-origin-when-cross-origin",
+    "X-SHO-Release":manifest.release
   });
   // No cross-customer cookies, even if generated HTML contained stale Set-Cookie headers.
   if(object.httpEtag)headers.set("ETag",object.httpEtag);

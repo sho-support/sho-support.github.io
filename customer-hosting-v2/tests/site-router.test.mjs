@@ -70,6 +70,18 @@ test("lookalike subdomain is refused",async()=>{
 test("public HTML is not immutable cached",async()=>{
  assert.equal((await home()).headers.get("Cache-Control"),"no-cache, must-revalidate");
 });
+test('assets revalidate across release updates and rollback',async()=>{
+ const result=await home('/assets/app.js');
+ assert.equal(result.headers.get('Cache-Control'),'no-cache, must-revalidate');
+ assert.equal(result.headers.get('X-SHO-Release'),a);
+});
+test('forbidden asset formats cost no storage reads',async()=>{
+ let reads=0;
+ const result=await handleCustomerRequest(new Request(host+'/attack.exe'),{
+   CUSTOMER_BASE_DOMAIN:'sho-support.com',SITES:{async get(){reads++;return null;}}
+ });
+ assert.equal(result.status,404);assert.equal(reads,0);
+});
 test("manifest rollback retains previous URL",async()=>{
  assert.match(await (await home()).text(),/Customer 1000/);
 });

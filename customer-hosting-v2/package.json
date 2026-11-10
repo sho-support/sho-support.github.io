@@ -1,0 +1,17 @@
+{
+  "name": "sho-customer-hosting-v2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:runtime": "node --test tests/runtime.integration.mjs",
+    "check:preview": "wrangler deploy --dry-run --config wrangler.preview.jsonc --outdir /tmp/sho-customer-preview-build"
+  },
+  "devDependencies": {
+    "miniflare": "5.20261110.0-beta",
+    "wrangler": "4.160.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
