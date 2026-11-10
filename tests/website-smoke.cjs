@@ -11,6 +11,7 @@ const paths=[
  'website-update-demo.html','website-legal.html','website-terms.html','website-privacy.html',
  'website-payment.html','website-update.html','website-portal.html','website-login.html',
  'website-intake.html?id=DEMO','website-customer-review.html',
+ 'website-demo-semi-rock.html','website-demo-semi-premium.html','website-demo-semi-cyber.html',
  'admin/index.html?demo=1'
 ];
 let assertions=0;
@@ -32,13 +33,20 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
     const response=await page.goto(BASE+path,{waitUntil:'domcontentloaded',timeout:25000});
     check(response?.status()===200,'HTTP 200 for '+path);
     check((await page.title())!=='','Page title '+path);
-    if(/^(website-support|website-order|website-templates|website-template-preview|website-create|website-faq)\.html/.test(path)){
+    if(/^(website-support|website-order|website-templates|website-template-preview|website-demo-semi-(rock|premium|cyber)|website-create|website-faq)\.html/.test(path)){
      const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
      check(overflow<=3,'Horizontal overflow '+width+'px '+path+': '+overflow);
      check(errors.length===0,'JS exceptions in '+path+': '+errors.join(' | '));
     }
+    if(/^website-(template-preview|demo-semi-(rock|premium|cyber))\.html/.test(path)){
+     const heights=await page.locator('.gallery .shot').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height));
+     check(heights.length===5&&heights.every(height=>height>=120),'All five gallery frames keep image height '+width+'px '+path);
+    }
     if(screenshots&&['website-support.html','website-order.html','website-template-preview.html'].includes(path)){
      await page.screenshot({path:join(screenshots,width+'-'+path.replace('.html','.png')),fullPage:true});
+    }
+    if(screenshots&&path.startsWith('website-demo-semi-')){
+     await page.locator('.gallery').screenshot({path:join(screenshots,width+'-'+path.replace('.html','.png'))});
     }
    }
    await page.goto(BASE+'website-support.html',{waitUntil:'domcontentloaded'});
@@ -66,7 +74,8 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
    await page.locator('[data-template="rock"]').click();
    check(await page.locator('#finalBtn').isEnabled(),'Semi order with template enables confirmation');
    await page.locator('[data-plan="one"] .plan-select').click();
-   check(!await page.locator('#finalBtn').isEnabled(),'One-page needs update option');
+   check(await page.locator('#finalBtn').isEnabled(),'Switching from free campaign defaults one-page to pay per update');
+   check(await page.locator('[data-update="none"]').evaluate(el=>el.classList.contains('selected')),'One-page defaults to the selected pay-per-update option');
    await page.locator('[data-update="none"]').click();
    check(await page.locator('#finalBtn').isEnabled(),'One-page with update choice enables confirmation');
    await page.locator('#finalBtn').click();
