@@ -68,7 +68,14 @@ Cloudflare統合時は、公開だけでなく非公開化・ドメイン変更�
   外向き通信と書き込み処理は失敗させるモックを用いた。Supabaseゲートウェイを通る実API試験ではない。
   本番エンドポイントへの未認証POST試験は、実装不備時の状態変更リスクを理由に自動承認レビューが拒否したため未検証。
 - 販売トップ `https://sho-web-support.netlify.app/` はHTTP 200。残クレジットと配備コミットは未確認。
-- この作業環境はAF_UNIXソケットを作れず、ローカルChromium起動が失敗した。画面検査はGitHub Actionsで実施し、実行結果と画像を確認する必要がある。
+- 作業環境のAF_UNIX制限でローカルChromium起動が失敗したため、GitHub Actions上のChromiumで画面検査を実行した。
+  21画面を320 / 360 / 390 / 430 / 768 / 1366pxで確認し、510項目が合格。36枚のスクリーンショットを取得した。
+  販売トップ・注文・共通テンプレートの各6幅を目視確認し、ギャラリー最下段の修正を確認した。
+  Firefox / WebKit / 実機、および外部通信を伴う本番の注文・制作・決済フローは未検証。
+- HTML36ページ中40個のインラインスクリプトの構文検査と、セミオーダー10テーマのレンダリング検査も合格。
+- 最終コードのCI対象コミットは `e17d903e541e8acc25d901bb9cb716ede3e3945f`。
+  https://github.com/sho-support/sho-support.github.io/actions/runs/42925103906
+  `contract` と `sales-regression` が成功し、実Cloudflareデプロイの `preview` は設定どおりスキップされた。
 - 上記ローカルR2の復元試験は、本番Cloudflareや別プロバイダーへのバックアップ運用の検証とは区別する。
 
 ## 販売前に残る必須事項
@@ -79,5 +86,30 @@ Cloudflare統合時は、公開だけでなく非公開化・ドメイン変更�
    最新承認とリリースの固定、権限、公開ロック、DB更新失敗の回復、通知の重複抑止が必要。
 4. 顧客専用ドメイン、公開維持費と契約条件を確定する。
 5. 3プランの受注から納品までの通しテスト、本番バックアップと復元、実機確認を完了する。
+
+## 今回の変更ファイル
+
+```
+.github/workflows/customer-hosting-v2-tests.yml
+customer-hosting-v2/.gitignore
+customer-hosting-v2/INTEGRATION_STATUS_20261111.md
+customer-hosting-v2/configure-preview.mjs
+customer-hosting-v2/package-lock.json
+customer-hosting-v2/package.json
+customer-hosting-v2/preview-worker.mjs
+customer-hosting-v2/src/release-preflight.mjs
+customer-hosting-v2/src/release-publisher.mjs
+customer-hosting-v2/src/site-router.mjs
+customer-hosting-v2/tests/preview-worker.test.mjs
+customer-hosting-v2/tests/release-preflight.test.mjs
+customer-hosting-v2/tests/release-publisher.test.mjs
+customer-hosting-v2/tests/runtime.integration.mjs
+customer-hosting-v2/tests/site-router.test.mjs
+customer-hosting-v2/wrangler.preview.jsonc
+netlify.toml
+scripts/ignore-customer-hosting-build.mjs
+tests/website-smoke.cjs
+website-template-preview.html
+```
 
 変更範囲はcustomer-hosting-v2、専用GitHub Actions、開発ブランチのNetlifyビルド除外設定、販売画面の検査コード、共通テンプレート見本のギャラリー行高。
