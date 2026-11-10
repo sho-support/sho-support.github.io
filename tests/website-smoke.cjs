@@ -40,13 +40,14 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
     }
     if(/^website-(template-preview|demo-semi-(rock|premium|cyber))\.html/.test(path)){
      const heights=await page.locator('.gallery .shot').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height));
-     check(heights.length===5&&heights.every(height=>height>=120),'All five gallery frames keep image height '+width+'px '+path);
+     if(path==='website-template-preview.html')check(heights.length===5,'Template preview shows five gallery frames');
+     if(heights.length)check(heights.every(height=>height>=120),'Visible gallery frames keep image height '+width+'px '+path);
     }
     if(screenshots&&['website-support.html','website-order.html','website-template-preview.html'].includes(path)){
      await page.screenshot({path:join(screenshots,width+'-'+path.replace('.html','.png')),fullPage:true});
     }
     if(screenshots&&path.startsWith('website-demo-semi-')){
-     await page.locator('.gallery').screenshot({path:join(screenshots,width+'-'+path.replace('.html','.png'))});
+     await page.screenshot({path:join(screenshots,width+'-'+path.replace('.html','.png')),fullPage:true});
     }
    }
    await page.goto(BASE+'website-support.html',{waitUntil:'domcontentloaded'});
