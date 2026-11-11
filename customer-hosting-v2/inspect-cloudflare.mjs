@@ -9,7 +9,8 @@ try {
     if (requireToken) process.exitCode = 1;
   } else {
     const result = await inspectCloudflare({token,
-      accountId:process.env.CLOUDFLARE_ACCOUNT_ID || undefined,bucketName:process.env.CF_PREVIEW_BUCKET || undefined});
+      accountId:process.env.CLOUDFLARE_ACCOUNT_ID?.trim() || undefined,
+      bucketName:process.env.CF_PREVIEW_BUCKET?.trim() || undefined});
     console.log(JSON.stringify(result,null,2));
     if (required && !result.configured_bucket_verified) {
       console.error('PRIVATE_STANDARD_PREVIEW_BUCKET_NOT_VERIFIED');
