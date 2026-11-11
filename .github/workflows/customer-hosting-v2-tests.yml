@@ -12,6 +12,9 @@ on:
       - 'netlify.toml'
       - 'tests/website-smoke.cjs'
       - 'tests/customer-preview-live.cjs'
+      - 'tests/website-order-lifecycle.cjs'
+      - 'website-*.html'
+      - 'website-theme.css'
   workflow_dispatch:
     inputs:
       inspect_preview:
@@ -73,6 +76,7 @@ jobs:
           server_pid=$!
           trap 'kill "$server_pid"' EXIT
           node tests/website-smoke.cjs
+          node tests/website-order-lifecycle.cjs
       - name: Keep rendered screenshots for visual inspection
         if: always()
         uses: actions/upload-artifact@v4
