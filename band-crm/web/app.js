@@ -217,7 +217,7 @@
       '※交通費・入場料等の追加費用がある場合は着手前にお知らせします。'].join('\n');
     copy(msg);
   }
-  function csvEscape(v){let s=String(v??'');if(/^[\s]*[=+@]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"'}
+  function csvEscape(v){let s=String(v??'');if(typeof v==='string'&&/^[\s]*[=+@-]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"'}
   function exportCsv(){
     const data=[['種別','ID','顧客/案件','ステータス','金額','日付','備考']];
     for(const lead of leads)data.push(['営業',lead.id,lead.name,lead.stage,'',lead.created_at,lead.organization]);
