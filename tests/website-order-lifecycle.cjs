@@ -49,9 +49,13 @@ const cases=[
    if(scenario.template)await page.locator(`[data-template="${scenario.template}"]`).click();
    if(scenario.plan==='one')await page.locator(`[data-update="${scenario.update}"]`).click();
    check(await page.locator('#finalBtn').isEnabled(),'Selected plan is ready for final review');
+   check(await page.locator('#sumTemplateRow').isVisible()===(scenario.plan==='semi'),'Only semi-order shows a selected-template summary');
+   check(!await page.locator('#sumExtraRow').isVisible(),'Empty extra-request summary stays hidden');
    await page.locator('#finalBtn').click();
    await page.waitForURL('**/website-order-confirm.html');
    check((await page.locator('#amount').innerText()).includes(scenario.amount.toLocaleString()),'Displayed estimate preserves approved prices');
+   check(await page.locator('#templateRow').isVisible()===(scenario.plan==='semi'),'Only semi-order shows the template on final review');
+   check(!await page.locator('#extraRow').isVisible(),'Empty extra requests do not appear on final review');
    check(await page.locator('#orderBtn').isDisabled(),'Unchecked consent blocks submission');
    await page.locator('#termsCheck').check();
    await page.locator('#orderBtn').click();
@@ -87,6 +91,7 @@ const cases=[
    check(outbound.every(url=>url.startsWith('https://www.googletagmanager.com/')),'No LINE, email, payment or other external request');
    if(process.env.QA_SCREENSHOTS_DIR){
     mkdirSync(process.env.QA_SCREENSHOTS_DIR,{recursive:true});
+    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
     await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,`receipt-${scenario.plan}-${scenario.update}.png`),fullPage:true});
    }
    await context.close();

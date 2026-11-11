@@ -33,6 +33,8 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
     const response=await page.goto(BASE+path,{waitUntil:'domcontentloaded',timeout:25000});
     check(response?.status()===200,'HTTP 200 for '+path);
     check((await page.title())!=='','Page title '+path);
+    const visibleHidden=await page.locator('[hidden]').evaluateAll(els=>els.filter(el=>el.getClientRects().length>0).map(el=>el.id||el.tagName));
+    check(visibleHidden.length===0,'Hidden content must stay hidden '+width+'px '+path+': '+visibleHidden.join(','));
     if(/^(website-support|website-order|website-templates|website-template-preview|website-demo-semi-(rock|premium|cyber)|website-create|website-faq)\.html/.test(path)){
      const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
      check(overflow<=3,'Horizontal overflow '+width+'px '+path+': '+overflow);
