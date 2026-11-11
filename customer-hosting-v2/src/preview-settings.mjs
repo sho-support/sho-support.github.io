@@ -7,7 +7,9 @@ export function validatePreviewTarget(target, env = {}) {
       || target.bucket_name !== 'sho-customer-sites-preview'
       || !/^sho-customer-sites-preview\.[a-z0-9-]+\.workers\.dev$/.test(target.worker_host || '')
       || target.site_id !== '9000001000'
-      || !Number.isSafeInteger(target.verified_inventory_run) || target.verified_inventory_run < 1) {
+      || !Number.isSafeInteger(target.verified_inventory_run) || target.verified_inventory_run < 1
+      || (target.expected_worker_version !== null
+        && !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(target.expected_worker_version || ''))) {
     throw new Error('INVALID_OR_DISABLED_PREVIEW_TARGET');
   }
   for (const [key, expected] of [['CF_PREVIEW_BUCKET', target.bucket_name], ['CF_PREVIEW_HOST', target.worker_host]]) {

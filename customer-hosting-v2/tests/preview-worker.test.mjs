@@ -15,6 +15,7 @@ test('preview displays only the fictional reserved site', async()=>{
   assert.equal(response.status, 200);
   assert.equal(await response.text(), 'Fictional test site');
   assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow, noarchive');
+  assert.equal(response.headers.get('X-SHO-Environment'), 'customer-hosting-preview');
 });
 test('preview fails closed until its exact hostname is configured', async()=>{
   assert.equal((await worker.fetch(new Request('https://' + host), {...env, TEST_WORKER_HOST:''})).status,503);

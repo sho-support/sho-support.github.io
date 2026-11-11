@@ -87,7 +87,12 @@ Environment名は `customer-hosting-preview`。ブランチを `architecture/cus
 HTTP 200を出すには、次項の保存経路で承認付きのテスト用リリースを保存・有効化し、HTTPSで確認する。
 Workerのビルド成功だけで顧客サイトの公開試験完了とはしない。
 
-初回配備は、直前の読み取りで同名Workerがあれば拒否する。既存Workerを自動上書きしない。
+初回配備（`expected_worker_version:null`）は、直前の読み取りで同名Workerがあれば拒否する。
+配備済みの場合は、実配備の証跡から記録した `expected_worker_version` と、APIが返す現在配信中の
+Worker versionが一致する場合だけ更新する。複数版への分散配信・未確認版・Worker消失は停止する。
+公開APIの先頭deploymentを現在配信中とする公式仕様に従い、過去に同じ版が存在するだけでは許可しない。
+GitHubのconcurrencyでCI同士の更新を直列化する。APIの事前照合自体は条件付きデプロイではないため、
+実行中の手動ダッシュボード変更を同時に行わない。成功後、新しいVersion IDを証跡と照合して設定へ記録する。
 配備後の再試験だけなら `[verify-customer-preview]` コミットを利用できる。これはWorkerを再配備せず、
 公開設定を再確認して同じ架空サイトID内の保存・切替・復元を試す。
 
@@ -150,5 +155,6 @@ R2側で確定していた可能性があるため、DB更新失敗と同様に�
 - https://developers.cloudflare.com/r2/examples/aws/aws4fetch/
 - https://developers.cloudflare.com/workers/wrangler/api/
 - https://developers.cloudflare.com/r2/api/workers/workers-api-usage/
+- https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/deployments/methods/list/
 - https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch
 - https://supabase.com/docs/guides/functions/secrets

@@ -17,6 +17,7 @@ export default {
     });
     const headers = new Headers(response.headers);
     headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    headers.set('X-SHO-Environment', 'customer-hosting-preview');
     return new Response(response.body, {status: response.status, headers});
   }
 };

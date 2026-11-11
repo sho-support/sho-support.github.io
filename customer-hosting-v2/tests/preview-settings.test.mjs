@@ -13,7 +13,7 @@ test('the confirmed non-secret target needs no additional repository variables',
 test('disabled, production and other-customer targets are rejected before deployment', async () => {
   const target = await loadPreviewTarget({});
   for (const change of [{test_deployment_enabled:false}, {site_id:'1000'}, {bucket_name:'sho-production'},
-    {worker_name:'existing-sales'}, {worker_host:'sho-support.com'}, {verified_inventory_run:0}]) {
+    {worker_name:'existing-sales'}, {worker_host:'sho-support.com'}, {verified_inventory_run:0}, {expected_worker_version:'unverified'}]) {
     assert.throws(() => validatePreviewTarget({...target,...change}), /INVALID_OR_DISABLED/);
   }
   assert.throws(() => validatePreviewTarget(target, {CF_PREVIEW_BUCKET:'another-preview'}), /OVERRIDE_REJECTED/);

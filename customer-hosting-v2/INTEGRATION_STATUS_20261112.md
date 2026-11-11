@@ -2,6 +2,17 @@
 
 対象ブランチ: `architecture/customer-hosting-v2`。本番DNS・既存販売サイト・バンドサイト・Supabase本番は変更しない。
 
+**現在の到達点：実Cloudflareのテスト配信・R2公開更新復元が成功。販売開始は未承認・未完了。**
+画面修正コミット `0c4694195959b6b22ae36a2744b2b6bfcb976c30` のCI Run 43056715711で、
+単体83件・ローカルR2 8件・Supabaseラッパー3件、販売画面636項目・3プラン模擬申込71項目が合格。
+最後の320px申込画面とセミ受付画面も再取得して目視し、hidden行と撮影時のヘッダー位置が直ったことを確認した。
+https://github.com/sho-support/sho-support.github.io/actions/runs/43056715711
+
+テストWorkerの継続更新に向け、実配備のVersion ID一致を要求する照合を追加。
+確認済みの旧版 `0d39602a-b03a-489d-8dcd-2cf30ae0b2bf` とAPIの現在配信版が一致する場合だけ配備する。
+不明なWorker・過去の版だけの一致・複数版への分散配信・Worker消失を拒否する。
+この照合を使った実更新・復元の結果は、次の配備CIで別に記録する。
+
 ## 本人による初期設定
 
 - CloudflareのUser API Tokenの発行前概要を画像で確認。
@@ -63,8 +74,12 @@ https://github.com/sho-support/sho-support.github.io/actions/runs/43050040929
 本番には書き込んでいない。customer-accessの実公開、apiの非公開化・ドメイン変更、workerのGitHub Pages処理が残る。
 生成HTMLには現行Netlifyの追跡スクリプトが注入されており、そのままでは新方式のpreflightが拒否する。
 顧客承認は現状boolのみでリリース・Gitコミットと未結合。並行制作や承認後の変更を防ぐ統合が必要。
+既存APIは英数字のSITE IDを受け付けるが、新Readerの公開IDは数字のみ。既存DBのIDを破壊せず、
+固定の顧客公開IDへ対応づける設計と検証が必要。
 正式顧客ドメイン・維持契約・S3本番接続・DB整合性回復・別系統バックアップ・3プランの全工程試験は未完了。
 架空サイトの承認試験を、Supabaseの実顧客承認や販売開始の完了とは扱わない。
+Cloudflare GitHub Appのアクセス対象縮小、課金画面のBudget Alertの再確認は未実施。
+管理画面認証ループの原因は特定できず、GitHub Actions/API経由を実証済みの代替経路とした。
 
 ## 日本語での画面再検証済み
 

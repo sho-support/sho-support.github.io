@@ -76,7 +76,7 @@ test('zero, multiple or incompletely paged accounts require an explicit account 
 test('untrusted configuration is rejected before any request',async()=>{
   const {run,requests}=fixture();
   for (const invalid of [{accountId:'../another'},{accountId:'https://evil.invalid'},
-    {bucketName:'sho-prod-preview'},{bucketName:'other-bucket'},{token:'bad\nheader'},{timeoutMs:30001}]) {
+    {bucketName:'sho-prod-preview'},{bucketName:'other-bucket'},{token:'bad\nheader'},{timeoutMs:30001},{expectedWorkerVersionId:'../unverified'}]) {
     await assert.rejects(run(invalid),error=>error.code==='INVALID_INVENTORY_CONFIGURATION');
   }
   assert.equal(requests.length,0);
@@ -179,9 +179,43 @@ test('the CLI reports missing configuration without contacting Cloudflare',()=>{
   const optional=spawnSync(process.execPath,[file],{env:{},encoding:'utf8'});
   assert.equal(optional.status,0);
   assert.equal(JSON.parse(optional.stdout).status,'not_configured');
-  for(const option of ['--require-token','--require-private-preview']) {
+  for(const option of ['--require-token','--require-private-preview','--require-safe-worker-target']) {
     const required=spawnSync(process.execPath,[file,option],{env:{},encoding:'utf8'});
     assert.equal(required.status,1);
     assert.equal(JSON.parse(required.stdout).status,'not_configured');
   }
+});
+
+test('an existing Worker is trusted only when its active version matches our recorded deployment',async()=>{
+  const version='11111111-1111-4111-8111-111111111111';
+  const {run,requests}=fixture({
+    [base+'/workers/scripts']:{result:[{id:'sho-customer-sites-preview'}]},
+    [base+'/workers/scripts/sho-customer-sites-preview/deployments?per_page=1&page=1']:{result:{deployments:[{
+      versions:[{version_id:version,percentage:100}]
+    }]}}
+  });
+  const result=await run({accountId:account,bucketName,expectedWorkerVersionId:version});
+  assert.equal(result.preview_worker_version_verified,true);
+  assert.equal(result.preview_worker_version,version);
+  assert.ok(requests.every(({init})=>init.method==='GET'));
+});
+
+test('unknown, split, malformed and no-longer-existing deployments cannot be overwritten',async()=>{
+  const version='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222';
+  for(const versions of [[{version_id:other,percentage:100}],
+    [{version_id:version,percentage:50},{version_id:other,percentage:50}]]){
+    const {run}=fixture({
+      [base+'/workers/scripts']:{result:[{id:'sho-customer-sites-preview'}]},
+      [base+'/workers/scripts/sho-customer-sites-preview/deployments?per_page=1&page=1']:{result:{deployments:[{versions},
+        {versions:[{version_id:version,percentage:100}]}]}}
+    });
+    assert.equal((await run({accountId:account,expectedWorkerVersionId:version})).preview_worker_version_verified,false);
+  }
+  const missing=fixture();
+  assert.equal((await missing.run({accountId:account,expectedWorkerVersionId:version})).preview_worker_version_verified,false);
+  const malformed=fixture({
+    [base+'/workers/scripts']:{result:[{id:'sho-customer-sites-preview'}]},
+    [base+'/workers/scripts/sho-customer-sites-preview/deployments?per_page=1&page=1']:{result:{deployments:[]}}
+  });
+  await assert.rejects(malformed.run({accountId:account,expectedWorkerVersionId:version}),e=>e.code==='INVALID_CLOUDFLARE_DEPLOYMENT_RESPONSE');
 });

@@ -87,6 +87,7 @@ export async function runPreviewLifecycle({bucket:raw, read, onStep = ()=>{}}) {
     assert.equal(page.status,200);
     assert.equal(page.headers.get('x-sho-release'),release);
     assert.match(page.headers.get('x-robots-tag') || '',/noindex/);
+    assert.equal(page.headers.get('x-sho-environment'),'customer-hosting-preview');
     const html = await page.text();
     assert.ok(html.includes(FIXTURE_MARKER));
     if (label) assert.ok(html.includes(`data-release-label="${label}"`));

@@ -138,9 +138,9 @@ jobs:
       - name: Configure only the verified private preview bucket
         # A public/unknown bucket or incorrect account subdomain must stop before deployment.
         run: node inspect-cloudflare.mjs --require-private-preview
-      - name: Refuse to overwrite any pre-existing Worker
+      - name: Require the existing Worker to match our verified deployment
         if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy-customer-preview]') }}
-        run: node inspect-cloudflare.mjs --require-private-preview --require-absent-worker
+        run: node inspect-cloudflare.mjs --require-safe-worker-target
       - name: Generate the isolated preview configuration
         run: node configure-preview.mjs
       - name: Deploy only the isolated test Worker

@@ -2,6 +2,7 @@
 const ORIGIN = 'https://api.cloudflare.com';
 const ACCOUNT = /^[a-f0-9]{32}$/;
 const WORKER = 'sho-customer-sites-preview';
+const VERSION = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const MAX_RESPONSE = 1024 * 1024;
 const REQUEST_ERRORS = new Set(['CLOUDFLARE_INVENTORY_HTTP_ERROR','CLOUDFLARE_INVENTORY_RESPONSE_TOO_LARGE',
   'INVALID_CLOUDFLARE_INVENTORY_RESPONSE','CLOUDFLARE_INVENTORY_API_ERROR']);
@@ -15,9 +16,10 @@ function fail(code, status) {
   return error;
 }
 
-export async function inspectCloudflare({token, accountId, bucketName, fetch: transport = globalThis.fetch, timeoutMs = 20000}) {
+export async function inspectCloudflare({token, accountId, bucketName, expectedWorkerVersionId, fetch: transport = globalThis.fetch, timeoutMs = 20000}) {
   if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{20,256}$/.test(token)
       || (accountId && !ACCOUNT.test(accountId)) || (bucketName && !previewBucket(bucketName))
+      || (expectedWorkerVersionId !== undefined && !VERSION.test(expectedWorkerVersionId))
       || typeof transport !== 'function' || !Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30000) {
     throw fail('INVALID_INVENTORY_CONFIGURATION');
   }
@@ -83,6 +85,18 @@ export async function inspectCloudflare({token, accountId, bucketName, fetch: tr
       || (subdomain !== null && !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(subdomain))) {
     throw fail('INVALID_CLOUDFLARE_INVENTORY_RESPONSE');
   }
+  const previewWorkerExists = scripts.some(script => script.id === WORKER);
+  let actualVersion = null;
+  if (previewWorkerExists && expectedWorkerVersionId) {
+    const deployment = await get(base + `/workers/scripts/${WORKER}/deployments?per_page=1&page=1`);
+    // The API defines the first deployment as the one actively serving traffic.
+    const versions = deployment.result?.deployments?.[0]?.versions;
+    if (!Array.isArray(versions) || !versions.length || versions.some(v=>!VERSION.test(v?.version_id || '')
+        || typeof v.percentage !== 'number' || v.percentage <= 0 || v.percentage > 100)) {
+      throw fail('INVALID_CLOUDFLARE_DEPLOYMENT_RESPONSE');
+    }
+    if (versions.length === 1 && versions[0].percentage === 100) actualVersion = versions[0].version_id;
+  }
   const buckets = [], cursors = new Set();
   let cursor = '';
   for (let page = 0; page < 10; page++) {
@@ -127,7 +141,9 @@ export async function inspectCloudflare({token, accountId, bucketName, fetch: tr
   }
   return {
     read_only:true,account_id:id,worker_count:scripts.length,
-    preview_worker_exists:scripts.some(script => script.id === WORKER),workers_subdomain:subdomain,
+    preview_worker_exists:previewWorkerExists,preview_worker_version:actualVersion,
+    preview_worker_version_verified:!!expectedWorkerVersionId && actualVersion === expectedWorkerVersionId,
+    workers_subdomain:subdomain,
     candidate_preview_host:subdomain ? `${WORKER}.${subdomain}.workers.dev` : null,
     default_jurisdiction_bucket_count:buckets.length,preview_buckets:inspected,
     configured_bucket_verified:!!bucketName && inspected.length === 1 && inspected[0].private_access_verified
