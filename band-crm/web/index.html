@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="robots" content="noindex,nofollow">
+ <meta name="description" content="SHO Band Support 受注・入金管理（運営者専用）">
+ <title>Band Support | SHO 管理ワークスペース</title>
+ <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+ <header class="masthead"><a class="brand" href="#home" aria-label="Band Support管理ホーム"><span class="brand-mark">S</span><span class="brand-text"><strong>SHO</strong><small>BAND SUPPORT / OPERATIONS</small></span></a><span class="header-status" id="connection-status">管理者専用</span><button class="small-btn" id="signout" hidden type="button">ログアウト</button></header>
+ <main class="shell">
+  <section id="login-panel" class="login-panel card">
+   <p class="eyebrow">PRIVATE WORKSPACE</p><h1>受注・売上を、<br>一つの画面で。</h1>
+   <p class="muted">Band Support運営者専用。既存のSHO WEB SUPPORT認証でログインします。一般のお客様の登録は受け付けません。</p>
+   <form id="login-form" class="stack"><label>メールアドレス<input id="login-email" type="email" autocomplete="username" required></label><label>パスワード<input id="login-password" type="password" autocomplete="current-password" required minlength="8"></label><button class="primary" id="login-submit" type="submit">ログインして管理画面を開く</button></form>
+   <p class="form-message" id="login-message" role="status" aria-live="polite"></p>
+   <p class="muted tiny">管理者権限はサーバー側で検証します。公開URLを知っているだけでは顧客情報を取得できません。</p>
+  </section>
+  <section id="workspace" hidden>
+   <div class="page-intro"><p class="eyebrow">SALES WORKSPACE</p><div class="intro-row"><div><h1>最初の売上を、<br><em>見える化。</em></h1><p class="muted">問い合わせ → 見積 → 入金 → 制作 → 納品。数字は実データから集計。</p></div><div class="intro-actions"><button id="refresh" class="ghost" type="button">↻ 更新</button><button id="export" class="ghost" type="button">CSVバックアップ</button></div></div></div>
+   <section aria-label="営業ダッシュボード" class="stats" id="stats">
+    <article class="stat"><span>今月の実入金</span><strong id="stat-paid">¥0</strong><small>入金記録ベース</small></article>
+    <article class="stat"><span>見積中の金額</span><strong id="stat-quotes">¥0</strong><small>売上には含めない</small></article>
+    <article class="stat"><span>相談・見込み客</span><strong id="stat-leads">0</strong><small>総登録件数</small></article>
+    <article class="stat"><span>進行中の案件</span><strong id="stat-active">0</strong><small>見積送付〜制作・納品</small></article>
+   </section>
+   <div class="goal"><div><strong>初売上目標：¥10,000</strong><span id="goal-label">実入金 0%</span></div><progress id="goal-progress" max="10000" value="0">0%</progress></div>
+   <nav class="tabs" aria-label="管理メニュー"><button data-tab="leads" class="active" type="button">見込み客・営業</button><button data-tab="deals" type="button">見積・案件</button><button data-tab="payments" type="button">入金・売上</button><button data-tab="help" type="button">運用ガイド</button></nav>
+   <section id="leads-tab" class="tab-panel"><div class="section-head"><div><p class="eyebrow">01 / CUSTOMER PIPELINE</p><h2>営業先と問い合わせ</h2></div><button class="primary" id="new-lead" type="button">＋ 新規登録</button></div><div class="list-toolbar"><input id="lead-filter" type="search" placeholder="氏名・バンド名・メモで検索" aria-label="見込み客を検索"><select id="lead-stage-filter" aria-label="営業状況"><option value="">すべての状況</option><option value="new">未対応</option><option value="approached">案内済み</option><option value="replied">返信あり</option><option value="quoted">見積済み</option><option value="booked">受注</option><option value="lost">見送り</option></select></div><div id="leads-list" class="list"></div></section>
+   <section id="deals-tab" class="tab-panel" hidden><div class="section-head"><div><p class="eyebrow">02 / PROJECTS</p><h2>見積・制作・納品</h2></div><button class="primary" id="new-deal" type="button">＋ 見積・案件を作成</button></div><div class="list-toolbar"><input type="search" id="deal-filter" placeholder="案件名・バンド名で検索" aria-label="案件を検索"><select id="deal-stage-filter" aria-label="案件状況"><option value="">すべての状況</option><option value="draft">見積作成中</option><option value="sent">見積送付済み</option><option value="accepted">見積承諾済み</option><option value="in_progress">制作中</option><option value="delivered">納品済み</option><option value="completed">完了</option><option value="cancelled">キャンセル</option></select></div><div id="deals-list" class="list"></div></section>
+   <section id="payments-tab" class="tab-panel" hidden><div class="section-head"><div><p class="eyebrow">03 / REVENUE</p><h2>実入金・返金の記録</h2></div><button class="primary" id="new-payment" type="button">＋ 入金・返金を記録</button></div><p class="info">見積承諾は売上ではありません。銀行明細等で確認した実入金だけを記録します。誤入力の削除・上書きはせず、取消・返金のマイナス記録で訂正します。</p><div id="payments-list" class="list"></div></section>
+   <section id="help-tab" class="tab-panel" hidden><div class="section-head"><div><p class="eyebrow">04 / PLAYBOOK</p><h2>迷わず受注するために</h2></div></div><div class="help-grid"><article class="card"><h3>① 3〜5組へ案内</h3><p>知り合いのバンドへ、実際に公開可能な制作例と料金を添えて個別に案内。無断の一斉送信は行わない。</p><button class="ghost" id="copy-outreach" type="button">営業文をコピー</button></article><article class="card"><h3>② 見積条件を明記</h3><p>素材時間・作業範囲・税込／税別・納期・修正回数・キャンセル条件を確認。書面で承諾を得てから着手。</p></article><article class="card"><h3>③ 入金は証跡で確認</h3><p>振込先は個別案内。実入金を確認してから記録し、明細照合番号を重複させない。</p></article><article class="card"><h3>④ 納品と次の受注</h3><p>顧客の公開許可を確認した作品だけを制作例にする。納品後はリピートや次回ライブ告知を提案。</p></article></div><p class="info">動画編集の受付：<a href="https://line.me/R/ti/p/@383oceah" target="_blank" rel="noopener noreferrer">撮影・編集用LINE</a>。料金・制作例は既存Band Supportページを確認。データは既存HP販売と別のBand Support専用テーブルに保存します。</p></section>
+   <p class="form-message" id="app-message" role="status" aria-live="polite"></p>
+  </section>
+ </main>
+ <dialog id="editor"><form id="editor-form" method="dialog"><div class="modal-top"><div><p class="eyebrow" id="modal-label">EDIT</p><h2 id="modal-title">新規登録</h2></div><button class="close" id="close-modal" type="button" aria-label="閉じる">×</button></div><div id="modal-fields" class="modal-fields"></div><p id="editor-message" class="form-message" role="status" aria-live="polite"></p><div class="modal-actions"><button id="cancel-modal" class="ghost" type="button">キャンセル</button><button id="save-modal" class="primary" type="submit">保存</button></div></form></dialog>
+ <footer class="footer">SHO BAND SUPPORT · PRIVATE OPERATIONS <span>開発版 / 検証済みの操作のみ利用</span></footer>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+ <script src="./config.js" defer></script>
+ <script src="./app.js" defer></script>
+</body>
+</html>
