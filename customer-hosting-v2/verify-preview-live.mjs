@@ -29,13 +29,17 @@ try {
   let healthy = false;
   for(let attempt=0;attempt<6;attempt++) {
     const response = await read('/healthz');
-    if(response.status===200 && await response.text()==='ok') {healthy=true;break;}
+    console.log(JSON.stringify({health_probe:attempt+1,status:response.status,
+      verified_preview_marker:response.headers.get('x-sho-environment')==='customer-hosting-preview'}));
+    if(response.status===200 && await response.text()==='ok'
+      && response.headers.get('x-sho-environment')==='customer-hosting-preview') {healthy=true;break;}
     if([401,403,429].includes(response.status))throw new Error('PREVIEW_HTTP_ACCESS_DENIED');
     if(attempt<5)await new Promise(resolve=>setTimeout(resolve,2000));
   }
   if(!healthy)throw new Error('PREVIEW_HEALTH_NOT_READY');
   step = 'reserved_fixture_lifecycle';
-  const proof = await runPreviewLifecycle({bucket:proxy.env.SITES,read,onStep:name=>console.log('Verified: '+name)});
+  const proof = await runPreviewLifecycle({bucket:proxy.env.SITES,read,
+    onPhase:name=>{step=name;console.log('Checking: '+name);},onStep:name=>console.log('Verified: '+name)});
   await mkdir(new URL('./.wrangler/proof/',import.meta.url),{recursive:true});
   await writeFile(new URL('./.wrangler/proof/live-preview.json',import.meta.url),JSON.stringify({
     ...proof,url:origin,verified_at:new Date().toISOString(),source_commit:process.env.GITHUB_SHA || null
@@ -43,6 +47,7 @@ try {
   console.log(JSON.stringify(proof,null,2));
 } catch(error) {
   // Do not print remote proxy diagnostics, account identifiers or credentials.
-  console.error(JSON.stringify({status:'failed',step,code:/^PREVIEW_[A-Z_]+$/.test(error.message)?error.message:'LIVE_PREVIEW_CHECK_FAILED'}));
+  const ownCode=String(error.message || '').split('\n')[0];
+  console.error(JSON.stringify({status:'failed',step,code:/^PREVIEW_[A-Z_]+$/.test(ownCode)?ownCode:'LIVE_PREVIEW_CHECK_FAILED'}));
   process.exitCode=1;
 } finally {await proxy?.dispose();}

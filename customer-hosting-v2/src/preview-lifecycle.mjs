@@ -59,18 +59,20 @@ section{background:white;border:1px solid #d4e3db;border-radius:20px;padding:24p
 .version{font-weight:700;color:#246044}footer{font-size:12px;color:#4f6860}` }];
 }
 
-export async function runPreviewLifecycle({bucket:raw, read, onStep = ()=>{}}) {
+export async function runPreviewLifecycle({bucket:raw, read, onStep = ()=>{}, onPhase = ()=>{}}) {
   const bucket = scopedPreviewStore(raw);
   const proof = [];
   const check = name => {proof.push(name); onStep(name);};
+  onPhase('verify_reserved_baseline_pointer');
   const baseline = await bucket.get(prefix + 'active.json');
   let previous = null;
   if (baseline) {
     assert.ok(baseline.size <= 4096, 'PREVIEW_BASELINE_INVALID');
     const state = JSON.parse(await baseline.text());
-    assert.equal(state.status, 'live');
-    assert.match(state.release, /^[a-f0-9]{12,64}$/);
+    assert.equal(state.status, 'live','PREVIEW_BASELINE_STATUS_INVALID');
+    assert.match(state.release, /^[a-f0-9]{12,64}$/,'PREVIEW_BASELINE_RELEASE_INVALID');
     // Refuse to overwrite any real or unknown content even in the reserved namespace.
+    onPhase('verify_reserved_baseline_source');
     const source = await bucket.get(`${prefix}releases/${state.release}/index.html`);
     assert.ok(source && source.size < 8192, 'PREVIEW_BASELINE_NOT_OWNED');
     assert.ok((await source.text()).includes(`content="${FIXTURE_MARKER}"`), 'PREVIEW_BASELINE_NOT_OWNED');
@@ -82,18 +84,19 @@ export async function runPreviewLifecycle({bucket:raw, read, onStep = ()=>{}}) {
     return response;
   }
   async function visible(release, label) {
+    onPhase('verify_https_fixture_html_and_css');
     const page = await stateAt();
     if (release === null) {assert.equal(page.status,404); return;}
-    assert.equal(page.status,200);
-    assert.equal(page.headers.get('x-sho-release'),release);
-    assert.match(page.headers.get('x-robots-tag') || '',/noindex/);
-    assert.equal(page.headers.get('x-sho-environment'),'customer-hosting-preview');
+    assert.equal(page.status,200,'PREVIEW_HTML_NOT_SERVED');
+    assert.equal(page.headers.get('x-sho-release'),release,'PREVIEW_PUBLIC_RELEASE_MISMATCH');
+    assert.match(page.headers.get('x-robots-tag') || '',/noindex/,'PREVIEW_NOINDEX_MISSING');
+    assert.equal(page.headers.get('x-sho-environment'),'customer-hosting-preview','PREVIEW_WORKER_VERSION_NOT_PROPAGATED');
     const html = await page.text();
-    assert.ok(html.includes(FIXTURE_MARKER));
+    assert.ok(html.includes(FIXTURE_MARKER),'PREVIEW_PUBLIC_FIXTURE_MARKER_MISSING');
     if (label) assert.ok(html.includes(`data-release-label="${label}"`));
     const css = await stateAt('/assets/main.css');
-    assert.equal(css.status,200);
-    assert.equal(css.headers.get('x-sho-release'),release);
+    assert.equal(css.status,200,'PREVIEW_CSS_NOT_SERVED');
+    assert.equal(css.headers.get('x-sho-release'),release,'PREVIEW_CSS_RELEASE_MISMATCH');
     if (label) assert.ok((await css.text()).includes(`fixture-${label}`));
   }
   await visible(previous);
