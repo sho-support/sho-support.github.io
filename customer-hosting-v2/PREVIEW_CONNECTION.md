@@ -35,8 +35,8 @@ Environment名は `customer-hosting-preview`。ブランチを `architecture/cus
 本番用アカウントやバケットへの権限を混ぜない。共有アカウントのトークンでテストWorkerだけに
 編集権限を限定できない場合、その範囲を隠さず確認し、独立したテストアカウント等を検討する。
 
-現時点でこのworkflowは開発ブランチにのみ存在する。GitHubの仕様上、`workflow_dispatch` は
-デフォルトブランチにもworkflowがあることを要求する。
+現時点でこのworkflowは開発ブランチにのみ存在する。GitHubの仕様上、画面の「Run workflow」ボタンは
+デフォルトブランチにもworkflowがあることを要求する。APIからの手動起動は今回未検証。
 そのため、設定照合後にコミットメッセージへ `[deploy-customer-preview]` を明示する経路を用意した。
 この経路も `CF_PREVIEW_ENABLED=true`、指定ブランチ、単体・ローカル実行・画面CIの合格が必要。
 設定だけでは現在のコミットを再実行しない。`main` へ未検証の変更を入れて起動させない。
@@ -63,6 +63,8 @@ Workerのビルド成功だけで顧客サイトの公開試験完了とはし�
 | `CUSTOMER_R2_SECRET_ACCESS_KEY` | 対応するS3 Secret Access Key |
 
 このS3キーはWrangler用のCloudflare APIトークンと別物である。
+現モジュールはdefault jurisdictionのバケットを対象とする。EU・US・FedRAMPで作成したバケットなら、
+専用endpointへの対応・試験を先に行う。実バケットのjurisdictionは未確認。
 モジュールの保存と実配備は区別する。現在の本番Edge Functionはこのモジュールを呼び出していない。
 呼び出す際は、認証済み管理者、DBの最新の顧客承認・品質検査と承認対象リリース、公開ロックを
 確認してから `activateRelease` を実行する。ブラウザーからの承認フラグを渡して許可してはいけない。

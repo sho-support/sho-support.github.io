@@ -73,7 +73,7 @@ jobs:
           retention-days: 3
   preview:
     # Enable only after the existing Worker/bucket inventory has been checked.
-    # workflow_dispatch is unavailable until the workflow exists on the default branch.
+    # The Run workflow UI requires this workflow on the default branch.
     # An explicit deployment commit also permits using this isolated branch without touching main.
     if: ${{ vars.CF_PREVIEW_ENABLED == 'true' && github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.deploy_preview) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[deploy-customer-preview]'))) }}
     needs: [contract, sales-regression]

@@ -98,7 +98,11 @@ Cloudflare統合時は、公開だけでなく非公開化・ドメイン変更�
   無効なhosting switch、Secrets不足、顧客を越える読み取りを拒否した。外部への通信は模擬応答のみ。
 - 合計で単体68件、ローカルworkerd/R2の6件、Supabaseラッパー3件が合格。
   テストWorkerのdry-runも合格。本番DB・Edge FunctionやCloudflareへの反映は行っていない。
-- 開発ブランチだけではGitHubの手動workflow起動に制限があることを確認した。
+- 接続処理追加時のCI `d091534839acd7de8c5b0695ad81b39ce09e5e82` でも
+  `contract` と `sales-regression` が成功し、実デプロイ `preview` はスキップされた。
+  https://github.com/sho-support/sho-support.github.io/actions/runs/42935457522
+  429・5xx時の試行回数の検査をさらに明示し、ローカルで追加14件を再実行して合格した。
+- 開発ブランチだけではGitHub画面の手動workflow起動に制限があることを公式資料で確認した。
   明示デプロイコミットと有効化設定の両方を必要とする代替起動を追加した。今回は実デプロイを起動していない。
 
 ### 未完了のゲート

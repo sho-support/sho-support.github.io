@@ -50,7 +50,7 @@ const activate = (store,release=a,previous=null,authorize=async()=>true) => acti
   bucket:store,siteId,releaseId:release,expectedCurrentRelease:previous,authorize
 });
 
-test('server R2 configuration rejects missing credentials metadata and untrusted endpoints',()=>{
+test('server R2 configuration rejects missing account metadata and untrusted endpoints',()=>{
   const valid = {accountId,bucketName,siteId,sign:async r=>r};
   for (const invalid of [{accountId:''},{accountId:'https://evil.invalid'}, {bucketName:'../other-bucket'},
     {bucketName:'BUCKET'}, {siteId:'1000/../1001'}, {sign:null}, {timeoutMs:0},{timeoutMs:30001}]) {
@@ -144,7 +144,8 @@ test('a lost write response is ambiguous, never retried automatically or logged 
 
 test('permission errors and bucket policy conflicts are distinct from failed conditions',async()=>{
   for (const status of [403,409,429,500,503]) {
-    const {store,requests} = fixture({fetch:async()=>new Response('secret provider detail',{status})});
+    let attempts = 0;
+    const {store} = fixture({fetch:async()=>{attempts++;return new Response('secret provider detail',{status});}});
     await assert.rejects(store.put(pointer,'x',{onlyIf}),error=>{
       assert.equal(error.status,status);
       assert.equal(error.outcomeUnknown,status>=500);
@@ -152,7 +153,7 @@ test('permission errors and bucket policy conflicts are distinct from failed con
       return true;
     });
     await assert.rejects(store.get(pointer),error=>error.status===status);
-    assert.equal(requests.length,0); // the injected transport is used, not any real network
+    assert.equal(attempts,2); // exactly one PUT and one GET, including 429 and 5xx
   }
 });
 
