@@ -24,7 +24,7 @@ Cloudflare Pagesの静的公開を推奨。無料枠は公式資料上、月500�
 7. テストデータは管理画面から削除できない仕様（誤消去防止）。実DBでテストする場合は専用トランザクションROLLBACKなど安全な手順を使う。
 
 ## データ保護・運用
-- Supabase：`sho-web-support` / `tyhymvgjkoebetyypspj`。新規の `band_crm_*` テーブルのみ追加。HP販売側の`website_*`は未変更。
+- Supabase：`sho-web-support` / `tyhymvgjkoebetyypspj`。新規の `band_crm_*` テーブルと価格・照合番号の制約を追加。HP販売側の`website_*`は未変更。
 - 既存の認証済み運営者アカウント1つにだけCRM管理権限を付与。メールの自己申告やSNS名だけでは他人へ管理権限を付与しない。
 - 取引先情報は必要最小限。銀行口座・パスワード・APIキー・秘密トークンを顧客メモに入力しない。
 - 入金記録は編集・削除不可。実入金は銀行明細と照合し、重複不能な証跡番号を登録。返金・誤入力は理由つきマイナス記録で訂正。
@@ -32,9 +32,9 @@ Cloudflare Pagesの静的公開を推奨。無料枠は公式資料上、月500�
 - CRMの公開前に個人情報の利用目的・保管期間・削除対応・問い合わせ先をBand Supportのプライバシー案内で確認する。
 
 ## 検証済みと未検証
-- PostgreSQL/RLS試験: 管理者書込み可・非管理者拒否・重複入金拒否・マイナス訂正条件・最低価格・証跡番号の大文字小文字差重複拒否。**ROLLBACK**でテストデータを残していない。
+- PostgreSQL/RLS試験: 管理者書込み可・非管理者拒否・重複入金拒否・マイナス訂正条件・DB側の最低価格・証跡番号の大文字小文字差重複拒否。**ROLLBACK**でテストデータを残していない。
 - Node静的検査：10項目通過。
-- Chromiumモック画面検査：PC 1440px、Android相当390px、320pxで合計10項目通過。横はみ出しなし。模擬APIのため**本番API通信成功とは異なる**。
+- Chromiumモック画面検査：PC 1440px、Android相当390px、320pxで合計12項目通過。横はみ出しなし。模擬APIのため**本番API通信成功とは異なる**。
 - 未検証：Cloudflareへの公開／本物の認証セッションでのログイン／現物の銀行入金／LINEと顧客との実やり取り。
 
 公式：
@@ -43,3 +43,7 @@ Cloudflare Pagesの静的公開を推奨。無料枠は公式資料上、月500�
 - https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
 - https://supabase.com/docs/guides/database/postgres/row-level-security
 - https://supabase.com/docs/guides/platform/free-project-pausing
+
+## 2026-11-12 DB制約の強化
+- `database/002_price_and_payment_reference_guards.sql` も適用済み。見積金額の最低ラインをDBで強制し、銀行照合番号の前後スペース・大文字小文字だけの違いによる重複を拒否。
+- モック操作テストは12件成功。ブラウザから実Supabaseにログインする本番接続試験とは区別する。
