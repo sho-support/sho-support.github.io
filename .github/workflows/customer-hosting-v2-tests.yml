@@ -5,6 +5,7 @@ on:
       - architecture/customer-hosting-v2
     paths:
       - 'customer-hosting-v2/**'
+      - 'supabase/functions/_shared/customer-r2.*'
       - '.github/workflows/customer-hosting-v2-tests.yml'
       - 'scripts/ignore-customer-hosting-build.mjs'
       - 'netlify.toml'
@@ -38,6 +39,8 @@ jobs:
         run: npm test
       - name: Verify local workerd and R2 release lifecycle
         run: npm run test:runtime
+      - name: Verify actual Supabase secret wrapper without external requests
+        run: npm run test:supabase
       - name: Validate preview Worker package without deploying
         run: npm run check:preview
   sales-regression:
@@ -70,7 +73,9 @@ jobs:
           retention-days: 3
   preview:
     # Enable only after the existing Worker/bucket inventory has been checked.
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_preview && vars.CF_PREVIEW_ENABLED == 'true' && github.ref == 'refs/heads/architecture/customer-hosting-v2' }}
+    # workflow_dispatch is unavailable until the workflow exists on the default branch.
+    # An explicit deployment commit also permits using this isolated branch without touching main.
+    if: ${{ vars.CF_PREVIEW_ENABLED == 'true' && github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.deploy_preview) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[deploy-customer-preview]'))) }}
     needs: [contract, sales-regression]
     runs-on: ubuntu-24.04
     timeout-minutes: 8

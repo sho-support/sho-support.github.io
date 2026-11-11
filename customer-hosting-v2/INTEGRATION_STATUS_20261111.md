@@ -12,6 +12,14 @@ Googleログイン、パスワード認証、端末での本人確認を経てCl
 新規パスワードの設定は本人操作で行う。APIトークンの作成にもパスワードが必要になる場合がある。
 GitHub ActionsとWranglerを使う経路も、初回のCloudflare認証・権限設定は必要。
 
+### 専用パスワード設定後の再確認
+
+本人から設定完了の連絡を受け、安全な入力欄でメール・パスワード認証を実行した。
+送信後のCloudflare画面に `API Request Failed: post https://dash.cloudflare.com/api/v4/login (403)` が表示された。
+成功は確認できていない。誤った資格情報という表示ではないため、パスワードの誤りやbot検出と断定しない。
+この認証試行はそこで終了した。API・GitHub Actionsによる代替接続手順を `PREVIEW_CONNECTION.md` に整理した。
+Cloudflare資源の実確認は引き続き未実施。
+
 - https://developers.cloudflare.com/fundamentals/user-profiles/login/
 - https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/
 
@@ -79,6 +87,21 @@ Cloudflare統合時は、公開だけでなく非公開化・ドメイン変更�
 - 上記ローカルR2の復元試験は、本番Cloudflareや別プロバイダーへのバックアップ運用の検証とは区別する。
 
 ## 販売前に残る必須事項
+
+### 追加のSupabase接続準備
+
+- `supabase/functions/_shared/customer-r2.mjs` と `.ts` を開発ブランチに追加。
+  サーバーSecretsのみを使用し、S3署名、顧客単位のkey制限、条件付き保存、サイズ・SHA256検査、
+  リダイレクト禁止、20秒の通信期限、無制限再試行の禁止を実装した。
+- 公開・更新・復元モジュールと接続した模擬S3試験14件が合格。署名処理は実aws4fetch 1.0.20を使用する。
+- 実際のSupabase用TypeScriptモジュールをローカルVMで実行した3件も合格。
+  無効なhosting switch、Secrets不足、顧客を越える読み取りを拒否した。外部への通信は模擬応答のみ。
+- 合計で単体68件、ローカルworkerd/R2の6件、Supabaseラッパー3件が合格。
+  テストWorkerのdry-runも合格。本番DB・Edge FunctionやCloudflareへの反映は行っていない。
+- 開発ブランチだけではGitHubの手動workflow起動に制限があることを確認した。
+  明示デプロイコミットと有効化設定の両方を必要とする代替起動を追加した。今回は実デプロイを起動していない。
+
+### 未完了のゲート
 
 1. Cloudflare認証を解決し、既存Worker・R2バケット・非公開設定・権限を確認する。
 2. テストWorkerへ実デプロイし、R2読み書き、HTTPS、未公開保持、更新、切戻しを実サービスで検証する。
