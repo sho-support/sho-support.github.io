@@ -23,6 +23,44 @@ GitHubのActions Secretsへ直接登録する。パスワード、APIトーク�
 
 ## GitHub Actions設定
 
+### 現在のカスタムポリシー画面での設定
+
+`sho-customer-hosting-preview` という名前のUser API Tokenを作る場合は、
+「最初から作成」の左の `+` → `Start with an Account policy` から設定する。
+対象は既存R2バケットを作ったアカウント1つに限定する。「すべてのアカウント」を選ばない。
+Accountポリシーに以下だけを付与する。EditとWriteはUI・API上の表記の違いがある。
+
+| 権限 | 用途 |
+|---|---|
+| `Workers Scripts Edit` / `Workers Scripts Write` | Worker配備と既存Worker・workers.dev設定の確認 |
+| `Workers R2 Storage Read` | 既存バケット・保存クラス・公開設定の確認 |
+| `Account Settings Read` | 対象アカウントIDの確認 |
+
+Workers編集権限は選んだアカウント内のWorkerへ及ぶ。テストWorkerだけに資格情報自体を
+限定できたと主張しない。配備先はコード側で予約したテストWorkerに固定し、既存同名Workerは
+照合するまで上書きしない。DNS・課金・他のサービスへの権限は追加しない。
+初回テスト用トークンの有効期限は30日を推奨する。期限前の更新は別途管理する。
+GitHubの実行元はスマホのIPと異なるため、今回のクライアントIP欄にスマホのIPを書かない。
+発行前の概要を確認した後、トークンはGitHub Secretsへ直接登録する。
+
+### 接続後に最初に行う読み取り確認
+
+`inspect-cloudflare.mjs` はCloudflare APIのGETだけでアカウント、Worker数と同名テストWorkerの有無、
+workers.devサブドメイン、テスト候補R2バケットの正式名・保存クラス・公開設定を確認する。
+`r2.dev` 無効と全カスタムドメイン無効の両方を確認する。対象はdefault jurisdictionに限定する。
+一般のWorker名、非対象バケット名、アカウント名・メール、カスタムドメイン名、認証情報はログへ出さない。
+
+- `CLOUDFLARE_API_TOKEN` があれば、APIで見えるアカウントが1つの場合に限りIDを取得できる。
+  複数・不明なら `CLOUDFLARE_ACCOUNT_ID` の明示を要求して止める。
+- 明示コミット `[inspect-customer-preview]` はCIの `inventory` ジョブを実行する。
+  または利用可能な手動起動で `inspect_preview=true`。`CF_PREVIEW_ENABLED` を有効化する必要はない。
+- この確認だけでは資源を作成・削除・変更せず、候補の名前だけで配備先を承認しない。
+- 実配備の直前にも同じ確認を行い、設定したバケットが非公開Standardでない場合や、
+  設定ホストが実アカウントのサブドメインと異なる場合はアップロード前に止める。
+- HTTP 403・429・5xxは自動再試行せず、応答本文や秘密のヘッダーは出力しない。
+
+### Secretsと変数
+
 | 種別 | 名前 | 内容 |
 |---|---|---|
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | 確認したテスト対象アカウントID |
