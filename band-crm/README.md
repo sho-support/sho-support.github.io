@@ -15,8 +15,8 @@ Band Support専用の**運営者向け**顧客・見積・実入金・納品進�
 ## ファイル
 
 - `web/index.html`, `web/style.css`, `web/app.js`, `web/config.js` — 商用ホスティングへ配置する静的アプリ
-- `database/001_band_crm.sql` — 既存HP販売システムに触れない追加DDL、RLS、監査用トリガー
-- `tests/smoke.py` — Chromiumを使ったレスポンシブ・見積・XSS・権限UI検証（APIはテスト用モック）
+- `database/001_band_crm.sql`・`database/002_price_and_payment_reference_guards.sql` — 既存HP販売システムに触れない追加DDL、RLS、監査用トリガー
+- `tests/check.mjs`・`tests/smoke.py` — Chromiumを使ったレスポンシブ・見積・XSS・権限UI検証（APIはテスト用モック）
 
 ## 公開前の必須確認
 
@@ -33,3 +33,8 @@ Band Support専用の**運営者向け**顧客・見積・実入金・納品進�
 - https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
 - https://supabase.com/docs/guides/database/postgres/row-level-security
 - https://supabase.com/docs/guides/functions/limits
+## 2026-11-12 実施した検証
+- DBマイグレーション2本を専用Band Supportテーブルへ適用。匿名閲覧・非管理者書込みの拒否、支払証跡の重複拒否、DB側の料金下限（2,500円〜）、訂正理由の必須化をROLLBACK付きで試験。
+- Node静的チェック10件成功、PC1440px・スマホ390px/320pxのChromium模擬操作12件成功。試験データは保存していない。
+- GitHub Pages本番`main`は未変更。Cloudflare商用公開は未接続のため、現時点ではWebアプリURLなし。
+- [本番設定の詳細](DEPLOYMENT_AND_RELEASE.md)。
