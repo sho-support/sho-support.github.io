@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {Miniflare, convertV4MiniflareOptions} from 'miniflare';
 import {stageRelease, activateRelease, exportStagedRelease} from '../src/release-publisher.mjs';
 import {handleCustomerRequest} from '../src/site-router.mjs';
+import {runPreviewLifecycle,scopedPreviewStore} from '../src/preview-lifecycle.mjs';
 
 const first = 'aaaaaaaaaaaa', second = 'bbbbbbbbbbbb', third = 'cccccccccccc';
 const files = [{path:'index.html', content:'<!doctype html><html lang="ja"><body><h1>Release A</h1></body></html>'},
@@ -11,6 +12,44 @@ const files = [{path:'index.html', content:'<!doctype html><html lang="ja"><body
 const stage = (bucket, release, content = files) => stageRelease({bucket,siteId:'9000001000',releaseId:release,files:content});
 const activate = (bucket, release, previous) => activateRelease({
   bucket,siteId:'9000001000',releaseId:release,expectedCurrentRelease:previous,authorize:async()=>true
+});
+
+test('the real remote-verification scenario passes on an isolated actual workerd R2 binding', async()=>{
+  const runtime = new Miniflare(convertV4MiniflareOptions({
+    modules:['../preview-worker.mjs','../src/site-router.mjs'].map(path=>({
+      type:'ESModule',path:fileURLToPath(new URL(path,import.meta.url))
+    })),compatibilityDate:'2026-11-07',r2Buckets:{SITES:'reserved-fixture-only'},
+    bindings:{TEST_WORKER_HOST:'sho-customer-sites-preview.local-test.workers.dev'}
+  }));
+  try {
+    const bucket = await runtime.getR2Bucket('SITES');
+    const read = (path,options)=>runtime.dispatchFetch('https://sho-customer-sites-preview.local-test.workers.dev'+path,options);
+    const proof=await runPreviewLifecycle({bucket,read});
+    assert.equal(proof.checks.length,9);
+    assert.ok(proof.usage.writes<=24);
+    assert.equal(proof.production_approval_verified,false);
+    // A deliberate repeat can only replace our own synthetic fixture.
+    const repeated=await runPreviewLifecycle({bucket,read});
+    assert.equal(repeated.checks[0],'existing_fictional_fixture_verified');
+    await bucket.put('sites/9000001000/active.json',JSON.stringify({status:'live',release:'eeeeeeeeeeee'}));
+    await bucket.put('sites/9000001000/releases/eeeeeeeeeeee/index.html','Unknown customer content');
+    await assert.rejects(runPreviewLifecycle({bucket,read}),/PREVIEW_BASELINE_NOT_OWNED/);
+  } finally {await runtime.dispose();}
+});
+
+test('live test transport forbids other keys, limits spend and stops after an unknown write',async()=>{
+  let calls=0;
+  const raw={async put(){calls++;throw new Error('network outcome unknown');},async get(){calls++;return null;}};
+  const scoped=scopedPreviewStore(raw);
+  await assert.rejects(scoped.get('sites/1000/active.json'),/OUTSIDE_RESERVED/);
+  await assert.rejects(scoped.get('sites/9000001000/secret.json'),/OUTSIDE_RESERVED/);
+  assert.equal(calls,0);
+  await assert.rejects(scoped.put('sites/9000001000/active.json','{}'),/outcome unknown/);
+  await assert.rejects(scoped.get('sites/9000001000/active.json'),/OUTCOME_UNKNOWN/);
+  assert.equal(calls,1);
+  const limited=scopedPreviewStore({get:async()=>null},{maxReads:1});
+  await limited.get('sites/9000001000/active.json');
+  await assert.rejects(limited.get('sites/9000001000/active.json'),/BUDGET_EXCEEDED/);
 });
 
 test('release lifecycle uses actual local workerd and R2 bindings', async t => {

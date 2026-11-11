@@ -10,6 +10,7 @@ on:
       - 'scripts/ignore-customer-hosting-build.mjs'
       - 'netlify.toml'
       - 'tests/website-smoke.cjs'
+      - 'tests/customer-preview-live.cjs'
   workflow_dispatch:
     inputs:
       inspect_preview:
@@ -58,7 +59,8 @@ jobs:
       - name: Install isolated browser test tools
         run: npm install --prefix /tmp/sho-browser-qa --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
       - name: Install Chromium
-        run: /tmp/sho-browser-qa/node_modules/.bin/playwright install --with-deps chromium
+        # ubuntu-24.04 already supplies the browser runtime libraries. Avoid apt font-mirror failures.
+        run: /tmp/sho-browser-qa/node_modules/.bin/playwright install chromium
       - name: Check sales pages at the six required viewport widths
         env:
           NODE_PATH: /tmp/sho-browser-qa/node_modules
@@ -93,13 +95,14 @@ jobs:
       - name: Read existing resource metadata without uploading or changing anything
         run: node customer-hosting-v2/inspect-cloudflare.mjs --require-token
   preview:
-    # Enable only after the existing Worker/bucket inventory has been checked.
+    # The committed preview-target.json records the successfully inspected test resources.
+    # Its enabled flag is checked by both inspection and configuration scripts.
     # The Run workflow UI requires this workflow on the default branch.
     # An explicit deployment commit also permits using this isolated branch without touching main.
-    if: ${{ vars.CF_PREVIEW_ENABLED == 'true' && github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.deploy_preview) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[deploy-customer-preview]'))) }}
+    if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.deploy_preview) || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[deploy-customer-preview]') || contains(github.event.head_commit.message, '[verify-customer-preview]')))) }}
     needs: [contract, sales-regression]
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 10
     concurrency:
       group: customer-hosting-preview
       cancel-in-progress: false
@@ -128,7 +131,46 @@ jobs:
       - name: Configure only the verified private preview bucket
         # A public/unknown bucket or incorrect account subdomain must stop before deployment.
         run: node inspect-cloudflare.mjs --require-private-preview
+      - name: Refuse to overwrite any pre-existing Worker
+        if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy-customer-preview]') }}
+        run: node inspect-cloudflare.mjs --require-private-preview --require-absent-worker
       - name: Generate the isolated preview configuration
         run: node configure-preview.mjs
       - name: Deploy only the isolated test Worker
+        if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy-customer-preview]') }}
         run: npx --no-install wrangler deploy --config wrangler.preview.local.json
+      - name: Verify remote R2 staging, approval guards, concurrent update and rollback over HTTPS
+        env:
+          WRANGLER_LOG: error
+        run: node verify-preview-live.mjs
+      - name: Keep sanitized live verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-hosting-live-preview-proof
+          path: customer-hosting-v2/.wrangler/proof
+          retention-days: 7
+  live-visual:
+    needs: [preview]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser tools
+        run: npm install --prefix /tmp/sho-preview-browser --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+      - run: /tmp/sho-preview-browser/node_modules/.bin/playwright install chromium
+      - name: Render the actual test URL at six widths
+        env:
+          NODE_PATH: /tmp/sho-preview-browser/node_modules
+          QA_SCREENSHOTS_DIR: /tmp/sho-live-preview-screenshots
+        run: node tests/customer-preview-live.cjs
+      - name: Keep actual HTTPS screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-hosting-live-preview-screenshots
+          path: /tmp/sho-live-preview-screenshots
+          retention-days: 7

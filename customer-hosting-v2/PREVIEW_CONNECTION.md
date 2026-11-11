@@ -1,6 +1,6 @@
 # テスト公開基盤への接続
 
-2026-11-11。設定前の手順であり、実接続や本番切替の完了記録ではない。
+2026-11-12更新。Cloudflareの読み取り接続は成功。テスト配備・本番切替はそれぞれの実行証跡で判定する。
 
 ## ダッシュボード認証が使えない場合
 
@@ -59,15 +59,19 @@ workers.devサブドメイン、テスト候補R2バケットの正式名・保�
   設定ホストが実アカウントのサブドメインと異なる場合はアップロード前に止める。
 - HTTP 403・429・5xxは自動再試行せず、応答本文や秘密のヘッダーは出力しない。
 
-### Secretsと変数
+### Secretsと確認済みテスト先
 
 | 種別 | 名前 | 内容 |
 |---|---|---|
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | 確認したテスト対象アカウントID |
 | Secret | `CLOUDFLARE_API_TOKEN` | 対象アカウントのWorker配備とR2 bindingに必要な最小権限。Global API Keyを使わない |
-| Variable | `CF_PREVIEW_BUCKET` | 確認した非公開テストバケット名。現在の設定スクリプトは名前にpreviewを要求する |
-| Variable | `CF_PREVIEW_HOST` | 上記の正確なworkers.devホスト名 |
-| Variable | `CF_PREVIEW_ENABLED` | 上記の資源・権限確認を終えた後だけ `true` にする |
+| 版管理設定 | `preview-target.json` | 実APIで確認した非公開バケット・テストホスト・予約サイトIDと有効化フラグ |
+
+Run 43050040929の実API結果で、Worker 0件、`sho-customer-sites-preview` が非公開・Standard・default jurisdiction、
+workers.devサブドメイン `zodiac-suu` と確認した。追加のGitHub Variables入力を依頼せず、この確認済み情報を
+`preview-target.json` に保存する。アカウントID・トークンは引き続きSecretsのみ。
+既存の `CF_PREVIEW_BUCKET` / `CF_PREVIEW_HOST` 変数があれば、版管理設定と異なる値は拒否する。
+`test_deployment_enabled` がfalseまたは不正な対象なら配備・試験を拒否する。
 
 Environment名は `customer-hosting-preview`。ブランチを `architecture/customer-hosting-v2` に限定する。
 本番用アカウントやバケットへの権限を混ぜない。共有アカウントのトークンでテストWorkerだけに
@@ -76,12 +80,32 @@ Environment名は `customer-hosting-preview`。ブランチを `architecture/cus
 現時点でこのworkflowは開発ブランチにのみ存在する。GitHubの仕様上、画面の「Run workflow」ボタンは
 デフォルトブランチにもworkflowがあることを要求する。APIからの手動起動は今回未検証。
 そのため、設定照合後にコミットメッセージへ `[deploy-customer-preview]` を明示する経路を用意した。
-この経路も `CF_PREVIEW_ENABLED=true`、指定ブランチ、単体・ローカル実行・画面CIの合格が必要。
+この経路も確認済み設定の有効化、指定ブランチ、単体・ローカル実行・画面CIの合格が必要。
 設定だけでは現在のコミットを再実行しない。`main` へ未検証の変更を入れて起動させない。
 
 配備されたWorkerはR2の予約ID `9000001000` だけを読む。ファイルがなければ404になる。
 HTTP 200を出すには、次項の保存経路で承認付きのテスト用リリースを保存・有効化し、HTTPSで確認する。
 Workerのビルド成功だけで顧客サイトの公開試験完了とはしない。
+
+初回配備は、直前の読み取りで同名Workerがあれば拒否する。既存Workerを自動上書きしない。
+配備後の再試験だけなら `[verify-customer-preview]` コミットを利用できる。これはWorkerを再配備せず、
+公開設定を再確認して同じ架空サイトID内の保存・切替・復元を試す。
+
+### 実R2とHTTPSの試験
+
+`verify-preview-live.mjs` は公式Wrangler `getPlatformProxy({remoteBindings:true})` のR2 remote bindingを使う。
+新しい公開書き込みAPIやS3資格情報を作らず、GitHub runner内から対象バケットへ接続する。
+remote configは `.wrangler/` 内に作り、認証トークンをファイル・成果物へ保存しない。
+
+- 操作するキーは予約ID `9000001000` のindex.html・CSS・完了manifest・active.jsonのみ。
+- 不明な既存コンテンツは上書きしない。保存済み試験ファイル64個超なら停止し、無限蓄積を防ぐ。
+- 1回最大24 PUT、240 GET/HEAD、合計64KiBアップロード。タイムアウトした書き込みを再試行しない。
+- 未公開404、未承認拒否、新版切替、並行更新で勝者1件、旧版復元、検証付きexportの再保存、
+  途中失敗で旧版維持、公開HTTPからの書き込み・他顧客指定拒否を実際に確認する。
+- 結果JSONには公開URL・コミット・確認項目・操作量だけを残す。HTTPS表示は6画面幅で撮影する。
+
+ここで使う承認はサーバー側の架空試験データ。Supabaseの本物の顧客承認を検証したことにはならない。
+同じバケットでの再保存とローカル別バケット復元は、別事業者へのバックアップ完了を意味しない。
 
 ## SupabaseからR2へ保存するモジュール
 
@@ -102,7 +126,7 @@ Workerのビルド成功だけで顧客サイトの公開試験完了とはし�
 
 このS3キーはWrangler用のCloudflare APIトークンと別物である。
 現モジュールはdefault jurisdictionのバケットを対象とする。EU・US・FedRAMPで作成したバケットなら、
-専用endpointへの対応・試験を先に行う。実バケットのjurisdictionは未確認。
+専用endpointへの対応・試験を先に行う。今回のテストバケットはdefault jurisdictionと確認済み。
 モジュールの保存と実配備は区別する。現在の本番Edge Functionはこのモジュールを呼び出していない。
 呼び出す際は、認証済み管理者、DBの最新の顧客承認・品質検査と承認対象リリース、公開ロックを
 確認してから `activateRelease` を実行する。ブラウザーからの承認フラグを渡して許可してはいけない。
@@ -124,5 +148,7 @@ R2側で確定していた可能性があるため、DB更新失敗と同様に�
 - https://developers.cloudflare.com/r2/api/tokens/
 - https://developers.cloudflare.com/r2/api/s3/conditional-operations/
 - https://developers.cloudflare.com/r2/examples/aws/aws4fetch/
+- https://developers.cloudflare.com/workers/wrangler/api/
+- https://developers.cloudflare.com/r2/api/workers/workers-api-usage/
 - https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch
 - https://supabase.com/docs/guides/functions/secrets

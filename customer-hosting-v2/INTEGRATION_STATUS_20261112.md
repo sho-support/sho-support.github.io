@@ -10,11 +10,31 @@
 - GitHub Repository Secretsへ `CLOUDFLARE_ACCOUNT_ID` と `CLOUDFLARE_API_TOKEN` を保存した旨の連絡と、2件の名前が並ぶ画面を確認。
 - トークン値はチャットで受け取っておらず、Secretsの値を取得・表示しない。
 
-## 今回実行する確認
+## 実APIで確認済み
 
-GitHub Actionsの `inventory` を明示起動し、既存WorkerとR2のメタデータをGETのみで読む。
-保存された値の存在と、Cloudflare API認証・権限の成功は別に判定する。
-Workerやバケットを作成・変更せず、実接続結果が返るまで成功扱いしない。
+GitHub Actions Run 43050040929の `inventory` が成功。APIのGETのみで以下を確認した。
+
+- Worker 0件。同名テストWorkerなし。
+- R2正式名 `sho-customer-sites-preview`、Standard、default jurisdiction。
+- R2管理ドメイン無効、カスタムドメイン0件。非公開を確認。
+- workers.devサブドメイン `zodiac-suu`。
+- アカウントID/APIトークンの認証成功。アカウントIDはGitHubログ上でマスクされる。
+
+この実行ではテスト配備はスキップ。販売画面ジョブはUbuntuの配布ミラー名の解決失敗で中断し、
+510項目を再検証できなかった。単体81件・ローカルR2 6件・Supabaseラッパー3件は合格。
+https://github.com/sho-support/sho-support.github.io/actions/runs/43050040929
+
+## 実装済み・実サービス試験は次のCI結果で判定
+
+`preview-target.json` に確認済みのテスト先と有効化フラグを保存。Secretsは追加しない。
+明示的な配備コミット・開発ブランチ・全品質チェック・直前の非公開確認・Worker未存在確認を要求する。
+既存本番のDNS、販売、バンド、Supabaseには書き込まない。
+
+実R2用のremote binding検証スクリプトと、その同じ処理を実workerd/R2で検証する試験を追加。
+予約ID以外への操作と不明な既存コンテンツの上書きを拒否し、書き込み回数・サイズ・残存数を制限する。
+実R2と公開HTTPSでの成功は、これから走るpreviewジョブと証跡で別に確認する。
+ブラウザ導入は、停止原因となった追加フォントのaptミラーへの依存を外して再実行する。
+
 入力時の余計な空白・改行でアカウントID確認を誤って拒否しないよう、CLIで前後の空白を除去する。
 
 ## 直前の検証証跡
