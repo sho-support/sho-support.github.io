@@ -37,6 +37,35 @@ https://github.com/sho-support/sho-support.github.io/actions/runs/43050040929
 
 入力時の余計な空白・改行でアカウントID確認を誤って拒否しないよう、CLIで前後の空白を除去する。
 
+## 実配備・実R2・HTTPS検証済み
+
+- 実装コミット: `9c4e95a57d2909eef5ee6ebab8b2119fb01db1ab`
+- https://github.com/sho-support/sho-support.github.io/actions/runs/43053315467
+- Worker: `sho-customer-sites-preview` / version `0d39602a-b03a-489d-8dcd-2cf30ae0b2bf`
+- テスト専用URL: https://sho-customer-sites-preview.zodiac-suu.workers.dev
+- 単体83件、実ローカルworkerd/R2 8件、Supabaseラッパー3件が合格。
+- 販売画面510項目が合格。実URLも6幅の自動描画チェックが合格。
+- 実R2で未公開404、未承認拒否、HTML/CSSの公開・更新、同時更新の勝者1件、旧版復元、
+  exportのハッシュ検証と新リリース復元、アップロード失敗時の旧版維持、公開HTTPからの書き込み・他顧客指定拒否の9項目が合格。
+- 操作量: scoped PUT 22回、GET/HEAD 75回、アップロード10,997 bytes。
+  この数字は検証ラッパー内のみ。公開HTTP・一覧取得・配備等は別であり、請求使用量の完全な計測ではない。
+- 最終公開リリース: `ad6b3469330ea110e24e2e16`（コンテンツAの復元）。顧客注文・決済・通知なし。
+- 証跡artifact: `customer-hosting-live-preview-proof` ID `13870526866`。
+
+画面artifactを目視したところ、CIサーバーに日本語フォントがなく日本語が四角で表示されていた。
+この画像を日本語レイアウト検証済みとは扱わない。撮影環境だけに公式Noto CJK Sans2.004の固定blobを導入し、
+日本語フォント存在確認を通して販売画面・実HTTPS画面を再撮影する。
+`[render-customer-preview]` は再撮影だけを許可し、Worker再配備・R2書き込み試験を繰り返さない。
+
+## 本番の再照合・未解決
+
+本番3Functionを再取得し、website-api v46 / website-customer-access v49 / website-worker v42と前回と同じbundle SHAを確認。
+本番には書き込んでいない。customer-accessの実公開、apiの非公開化・ドメイン変更、workerのGitHub Pages処理が残る。
+生成HTMLには現行Netlifyの追跡スクリプトが注入されており、そのままでは新方式のpreflightが拒否する。
+顧客承認は現状boolのみでリリース・Gitコミットと未結合。並行制作や承認後の変更を防ぐ統合が必要。
+正式顧客ドメイン・維持契約・S3本番接続・DB整合性回復・別系統バックアップ・3プランの全工程試験は未完了。
+架空サイトの承認試験を、Supabaseの実顧客承認や販売開始の完了とは扱わない。
+
 ## 直前の検証証跡
 
 - 最終基準コード: `23ae4785235786420427c9b725428bdaf7bbb3d9`

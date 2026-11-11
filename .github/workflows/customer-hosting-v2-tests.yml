@@ -8,6 +8,7 @@ on:
       - 'supabase/functions/_shared/customer-r2.*'
       - '.github/workflows/customer-hosting-v2-tests.yml'
       - 'scripts/ignore-customer-hosting-build.mjs'
+      - 'scripts/install-qa-japanese-font.mjs'
       - 'netlify.toml'
       - 'tests/website-smoke.cjs'
       - 'tests/customer-preview-live.cjs'
@@ -61,6 +62,8 @@ jobs:
       - name: Install Chromium
         # ubuntu-24.04 already supplies the browser runtime libraries. Avoid apt font-mirror failures.
         run: /tmp/sho-browser-qa/node_modules/.bin/playwright install chromium
+      - name: Verify Japanese glyphs are available before capturing layouts
+        run: node scripts/install-qa-japanese-font.mjs
       - name: Check sales pages at the six required viewport widths
         env:
           NODE_PATH: /tmp/sho-browser-qa/node_modules
@@ -151,7 +154,9 @@ jobs:
           path: customer-hosting-v2/.wrangler/proof
           retention-days: 7
   live-visual:
-    needs: [preview]
+    needs: [contract, sales-regression, preview]
+    # A rendering-only retry must not redeploy or repeat writes to R2.
+    if: ${{ always() && github.ref == 'refs/heads/architecture/customer-hosting-v2' && needs.contract.result == 'success' && needs.sales-regression.result == 'success' && (needs.preview.result == 'success' || (needs.preview.result == 'skipped' && github.event_name == 'push' && contains(github.event.head_commit.message, '[render-customer-preview]'))) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 6
     steps:
@@ -162,6 +167,8 @@ jobs:
       - name: Install isolated browser tools
         run: npm install --prefix /tmp/sho-preview-browser --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
       - run: /tmp/sho-preview-browser/node_modules/.bin/playwright install chromium
+      - name: Verify Japanese glyphs are available before capturing layouts
+        run: node scripts/install-qa-japanese-font.mjs
       - name: Render the actual test URL at six widths
         env:
           NODE_PATH: /tmp/sho-preview-browser/node_modules
