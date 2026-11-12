@@ -59,11 +59,19 @@
       else if(key==='channel')input.value='line';
       else if(key==='method')input.value='bank_transfer';
       if(type==='number')input.min=key==='amount_yen'?'-100000000':undefined;
+      if(fields===controls.deal && record.id
+          && payments.some(p=>p.deal_id===record.id)
+          && ['lead_id','title','service','amount_yen','tax_mode'].includes(key)){
+        input.disabled=true;
+      }
       wrap.append(input);root.append(wrap);
     }
     if(fields===controls.payment){
       const info=el('p','info wide','入金済みの銀行明細等を確認して登録。記録後の削除・上書きはできません。訂正はマイナス金額で追記します。');
       root.append(info);
+    }
+    if(fields===controls.deal && record.id && payments.some(p=>p.deal_id===record.id)){
+      root.append(el('p','info wide','入金記録があるため顧客・案件名・サービス・見積金額・税区分は固定です。制作状況や納期の変更は可能です。'));
     }
   }
   function openEditor(kind,record=null){
@@ -171,7 +179,11 @@
     if(yen<0&&(!data.reason||data.reason.trim().length<8))throw Error('返金・訂正には8文字以上の理由が必要です。');
     if(!data.evidence_reference||data.evidence_reference.trim().length<6)throw Error('明細照合番号を6文字以上入力してください。');
     if(data.received_on>today())throw Error('将来の日付を入金確認日にできません。');
-    if(!deals.some(d=>d.id===data.deal_id))throw Error('登録済みの案件を選択してください。');
+    const selectedDeal=deals.find(d=>d.id===data.deal_id);
+    if(!selectedDeal)throw Error('登録済みの案件を選択してください。');
+    if(yen>0&&['draft','cancelled'].includes(selectedDeal.status))throw Error('見積作成中・キャンセル済みの案件には入金を記録できません。');
+    const net=payments.filter(p=>p.deal_id===selectedDeal.id).reduce((sum,p)=>sum+p.amount_yen,0);
+    if(yen<0&&net+yen<0)throw Error('既に記録した入金額を超える返金・訂正はできません。');
   }
   async function save(e){
     e.preventDefault();if(!editing||!admin)return;
