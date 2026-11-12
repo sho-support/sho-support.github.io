@@ -19,7 +19,7 @@
  client.auth.onAuthStateChange((event)=>{
   if(event==='PASSWORD_RECOVERY'||event==='SIGNED_IN'){
    // Avoid calling auth.getUser synchronously inside the auth callback.
-   Promise.resolve().then(()=>checkSession());
+   setTimeout(()=>{checkSession()},0);
   }
  });
  checkSession();
