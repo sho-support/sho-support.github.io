@@ -243,7 +243,12 @@ Deno.serve(async(req)=>{
         if(relatedError)throw relatedError;
         states=Object.fromEntries((related||[]).map((site:any)=>[site.site_id,site.status]));
       }
-      return json({orders:(data||[]).map((o:any)=>({...o,final_amount:Number(o.selections?.final_quote_amount||0)||null,final_public_domain:String(o.selections?.final_public_domain||''),final_quote_sent_at:o.selections?.final_quote_sent_at||null,selections:undefined,site_status:o.site_id?states[o.site_id]||null:null}))});
+      return json({orders:(data||[]).map((o:any)=>({...o,final_amount:Number(o.selections?.final_quote_amount||0)||null,final_public_domain:String(o.selections?.final_public_domain||''),final_quote_sent_at:o.selections?.final_quote_sent_at||null,
+        contract_state:o.selections?.commercial_quote?.state||null,contract_fingerprint:o.selections?.commercial_quote?.fingerprint||null,
+        contract_accepted_at:o.selections?.commercial_quote?.accepted_at||null,
+        quoted_production_amount:o.selections?.commercial_quote?.snapshot?.production_amount_jpy||null,
+        quote_request:o.selections?.commercial_quote?.snapshot?.request||null,
+        selections:undefined,site_status:o.site_id?states[o.site_id]||null:null}))});
     }
 
     if(action==='admin_resend_intake'){

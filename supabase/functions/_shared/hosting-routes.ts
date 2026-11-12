@@ -1,6 +1,7 @@
 import {cloudflareHostingEnabled} from './hosting-mode.ts';
 import {hostingHash,hostingMapping,hostingPublisher,hostingRpc,reserveHostingUrl} from './hosting-service.ts';
 import {PublicationUncertainError,supabaseHostingDatabase} from './hosting-publication.mjs';
+import {handleCommercialAction} from './commercial-routes.ts';
 
 const root='https://sho-web-support.netlify.app/';
 const randomKey=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
@@ -44,7 +45,8 @@ export async function handleHostingAction({req,body,admin,user,dependencies:d}:a
   const action=String(body?.action||'');
   const transition=action==='admin_transition'&&['customer_review','live','private','improving_private'].includes(String(body.status));
   const handled=new Set(['review_load','review_approve','review_revision','review_action','admin_send_review','admin_publish_site',
-    'admin_rollback_site','admin_reconcile_publication','admin_resend_publication','admin_secure_preview','admin_domain','admin_repo_config','admin_activate_order','create_site']);
+    'admin_rollback_site','admin_reconcile_publication','admin_resend_publication','admin_secure_preview','admin_domain','admin_repo_config','admin_activate_order','create_site',
+    'admin_commercial_policy_status','admin_send_final_quote','admin_record_contract_acceptance','admin_contract_detail']);
   if(!handled.has(action)&&!transition)return null;
   try{
     if(!cloudflareHostingEnabled())return null;
@@ -56,6 +58,8 @@ export async function handleHostingAction({req,body,admin,user,dependencies:d}:a
       const adminRow=await one(admin,'website_admins','user_id',user.id);
       if(!adminRow)return d.json({error:'管理者権限が必要です。'},403);
     }
+    const commercial=await handleCommercialAction({body,admin,user,dependencies:d});
+    if(commercial)return commercial;
     if(['create_site','admin_domain','admin_repo_config'].includes(action))return d.json({error:
       action==='create_site'?'新しい案件は、確定URLを案内した注文の入金確認から作成してください。':
       action==='admin_domain'?'独自ドメインは、管理権限・DNS・HTTPSの個別設定が完了するまで自動接続できません。':

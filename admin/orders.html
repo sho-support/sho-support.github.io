@@ -25,6 +25,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,6,.95);border-bottom
  <textarea id="bankMessage" placeholder="銀行名：…&#10;支店名：…&#10;口座：普通 …&#10;名義：…" autocomplete="off" spellcheck="false"></textarea>
  <button class="btn quotebtn" type="button" id="saveBank">振込先を保存する</button><p class="note" id="bankStatus" role="status">設定状態を確認中…</p>
  </details>
+<p id="commercialStatus" class="error" role="status">販売条件を確認中…</p>
 <div class="filterbar"><label>注文ID・SITE ID検索<input type="search" id="orderSearch" placeholder="例：1000" autocomplete="off"></label><label>ステータス<select id="statusFilter"><option value="all">すべて</option><option value="pending_line">LINE待ち</option><option value="pending_payment">入金待ち</option><option value="request_waiting">ヒアリング待ち</option><option value="building">AI作成中</option><option value="sho_review">SHO確認中</option><option value="customer_review">お客様確認中</option><option value="live">公開中</option><option value="private">非公開・改良中</option><option value="cancelled">キャンセル</option></select></label><label class="check"><input type="checkbox" id="onlyLive">公開中だけ表示</label></div><div class="visible-count" id="visibleCount">案件を読み込み中…</div>
 <div id="message"></div><div class="list" id="list"><div class="empty">読み込み中…</div></div>
 </main>
@@ -33,6 +34,7 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
 (async()=>{
  await requireWebsiteSession(location.href);
  const list=document.getElementById('list'),msg=document.getElementById('message');
+ let policyReady=false,policyInfo=null;
  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
  const labels={pending_line:'LINE送信待ち',pending_payment:'入金待ち',site_created:'案件作成済み',cancelled:'キャンセル'};
  const plans={one:'1ページ完結サイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'};
@@ -139,7 +141,10 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
  async function load(){
    msg.innerHTML='';
    try{
-     const r=await api('admin_list_orders'),orders=Array.isArray(r.orders)?r.orders:[];
+     const [r,policy]=await Promise.all([api('admin_list_orders'),api('admin_commercial_policy_status')]);
+     policyReady=policy.ready===true;policyInfo=policy;
+     document.getElementById('commercialStatus').textContent=policyReady?'承認済み販売条件：'+policy.version+'。見積りごとに全文を保存します。':(policy.error||'販売条件が未承認です。正式見積りの送信を停止しています。');
+     const orders=Array.isArray(r.orders)?r.orders:[];
      document.getElementById('nLine').textContent=orders.filter(x=>x.status==='pending_line').length;
      document.getElementById('nPay').textContent=orders.filter(x=>x.status==='pending_payment').length;
      document.getElementById('nDone').textContent=orders.filter(x=>x.status==='site_created').length;
@@ -148,7 +153,7 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
        const can=o.status==='pending_payment';
        const line=o.line_display_name|| (o.line_user_id?'LINE連携済み':'未連携');
        return '<details class="card order-card" data-order="'+esc(String(o.order_code).toUpperCase())+'" data-site="'+esc(String(o.site_id||'').toUpperCase())+'" data-stage="'+esc(o.status==='site_created'?(o.site_status||'request_waiting'):o.status)+'"><summary class="top"><span class="firstline"><span class="id">'+esc(o.order_code)+'</span><span class="name">'+esc(plans[o.plan]||o.plan)+'</span><span class="meta">'+esc(fmt(o.created_at))+'</span></span><span class="badge '+esc(o.status)+'">'+esc(o.status==='site_created'?(progress[o.site_status]||labels[o.status]):(labels[o.status]||o.status))+'</span><span class="chevron">＋</span></summary><div class="body"><div class="kv"><span>お客様</span><b>'+esc(line)+'</b><span>テンプレート</span><b>'+esc(o.template_style||'—')+'</b><span>制作料金</span><b>¥'+Number(o.amount_from||0).toLocaleString()+'〜</b><span>SITE ID</span><b>'+esc(o.site_id||'未発行')+'</b></div>'+(o.extra_request?'<div class="note" style="color:#ebca85"><strong>追加ページ・機能の見積り相談あり</strong><br>'+esc(o.extra_request)+'<br>合計金額の案内・入金確認後に案件を作成してください。</div>':'')+
-       (can?'<div class="quotebox"><label>正式な確定制作料金（円）<input data-final-amount type="number" min="'+Number(o.amount_from||15000)+'" max="3000000" step="1" value="'+Number(o.final_amount||o.amount_from||0)+'"></label><label>公開URL（空欄なら無料URLを自動発行／独自ドメインはホスト名）<input data-public-domain type="text" spellcheck="false" value="'+esc((o.final_public_domain||'').startsWith('https://sho-support.github.io/site-')?'':o.final_public_domain||'')+'" placeholder="独自ドメイン利用時のみ例: bandname.jp" autocomplete="off"></label><label class="domain-proof"><input type="checkbox" data-domain-confirm>このドメインを管理でき、継続更新と印刷物への掲載について確認済み</label><label>追加内容・見積り補足（任意）<textarea data-quote-note rows="2" placeholder="例：追加ページ1枚を含む。その他追加費用なし。"></textarea></label><p>'+(o.final_quote_sent_at?'正式見積り送信済み：¥'+Number(o.final_amount||0).toLocaleString()+'（'+esc(fmt(o.final_quote_sent_at))+'） / URL：'+esc(o.final_public_domain||'未登録'):'まだ正式見積りを送信していません。確定金額と正式URLを先に確認してください。')+'</p><button class="btn quotebtn" data-quote="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at?' disabled':'')+'>'+(o.final_quote_sent_at?'正式見積り送信済み（再送不可）':'確定金額・振込先をLINEへ送信')+'</button></div><button class="btn activate" data-activate="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at&&o.final_public_domain?'':' disabled')+'>入金確認済み → 案件作成・URL送信</button><div class="note">LINE見積り送信後、実際の着金を確認してから案件作成してください。</div>':
+       (can?'<div class="quotebox"><label>確定制作料金（税込・更新料と公開維持費を除く）<input data-final-amount type="number" min="'+Number(o.amount_from||15000)+'" max="3000000" step="1" value="'+Number(o.quoted_production_amount||o.amount_from||0)+'"></label><label>公開URL（空欄ならSHO標準URLを予約／独自ドメインは個別設定）<input data-public-domain type="text" spellcheck="false" value="'+esc(o.quote_request?.public_domain==='free'||(o.final_public_domain||'').startsWith('https://sho-support.github.io/site-')?'':o.final_public_domain||'')+'" placeholder="独自ドメイン利用時のみ例: bandname.jp" autocomplete="off"></label><label class="domain-proof"><input type="checkbox" data-domain-confirm>このドメインを管理でき、継続更新と印刷物への掲載について確認済み</label><label>制作範囲・提供時期（必須）<textarea data-delivery-terms rows="3" maxlength="240" placeholder="例：1ページ・5項目。入金と全素材の受領から14日以内に初回制作案を提示。お客様の確認待ちは除く。">'+esc(o.quote_request?.delivery_terms||'')+'</textarea></label><label>申込・支払期限（日本時間・必須）<input data-payment-deadline type="date" value="'+esc(o.quote_request?.payment_deadline||'')+'"></label><label>追加内容・見積り補足（任意）<textarea data-quote-note rows="2" placeholder="例：追加ページ1枚を含む。その他追加費用なし。">'+esc(o.quote_request?.quote_note||'')+'</textarea></label><p>'+(o.final_quote_sent_at?'正式見積り送信済み：¥'+Number(o.final_amount||0).toLocaleString()+'（'+esc(fmt(o.final_quote_sent_at))+'） / URL：'+esc(o.final_public_domain||'未登録'):'まだ正式見積りを送信していません。確定金額と正式URLを先に確認してください。')+'</p><button class="btn quotebtn" data-quote="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at||!policyReady?' disabled':'')+'>'+(o.final_quote_sent_at?'正式見積り送信済み（再送不可）':'確定金額・振込先をLINEへ送信')+'</button></div>'+ (o.final_quote_sent_at?'<details class="mini-fold"><summary>送信した契約条件と同意確認</summary><div class="mini-fold-content"><button type="button" class="btn" data-contract="'+esc(o.order_code)+'">保存済みの見積り全文を見る</button><pre data-contract-text style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit"></pre>'+(o.contract_state==='accepted'?'<p>顧客の同意返信：管理者確認済み（'+esc(fmt(o.contract_accepted_at))+'）</p>':'<label>同意返信を確認したLINE日時・識別情報<input data-acceptance-reference maxlength="240" placeholder="例：11/13 18:30の「上記内容でお願いします」の返信"></label><p>顧客の同意返信を実際に確認してから記録してください。記録は管理者による確認証跡です。</p><button type="button" class="btn" data-accept-contract="'+esc(o.order_code)+'">同意返信を確認・記録する</button>')+'</div></details>':'')+'<button class="btn activate" data-activate="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at&&o.final_public_domain&&o.contract_state==='accepted'?'':' disabled')+'>入金確認済み → 案件作成・URL送信</button><div class="note">LINEの同意返信を記録し、実際の着金も確認してから案件作成してください。</div>':
        o.status==='pending_line'?'<button class="btn" disabled>お客様のLINE送信待ち</button>':
        o.status==='site_created'?(o.site_status==='request_waiting'?'<button class="btn resend" data-resend="'+esc(o.order_code)+'" type="button">ヒアリングURLをLINEへ再送</button>':'<div class="note" style="font-size:.76rem;color:#d9ae5c">現在：'+esc(progress[o.site_status]||'案件進行中')+'</div>')+'<a class="btn activate" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:8px" href="index.html?site='+encodeURIComponent(o.site_id||'')+'">SITE ID '+esc(o.site_id||'')+' の制作管理を開く</a>':'')+
        '<details class="mini-fold" data-work-fold="'+esc(o.site_id||'')+'"><summary>制作確認・お客様確認・公開状況</summary><div class="mini-fold-content" data-work="'+esc(o.site_id||'')+'">開くと制作状況を読み込みます。</div></details><details class="mini-fold" data-history-fold="'+esc(o.site_id||'')+'"><summary>修正依頼・承認・更新履歴</summary><div class="mini-fold-content" data-history="'+esc(o.site_id||'')+'">開くと履歴を読み込みます。</div></details></div></details>';
@@ -161,21 +166,38 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
        if(fold.open&&!fold.dataset.loaded){fold.dataset.loaded='1';showHistory(fold.querySelector('[data-history]'),fold.dataset.historyFold);}
      }));
      document.querySelectorAll('[data-quote]').forEach(btn=>btn.onclick=async()=>{
+       if(!policyReady)return alert('販売条件が未承認です。正式見積りは送信できません。');
        const code=btn.dataset.quote,box=btn.closest('.quotebox');
        const finalAmount=Number(box?.querySelector('[data-final-amount]')?.value);
        const note=box?.querySelector('[data-quote-note]')?.value.trim()||'';
+       const delivery=box?.querySelector('[data-delivery-terms]')?.value.trim()||'';
+       const deadline=box?.querySelector('[data-payment-deadline]')?.value||'';
+       if(delivery.length<10||!deadline)return alert('制作範囲・提供時期と申込・支払期限を入力してください。');
        const publicDomain=box?.querySelector('[data-public-domain]')?.value.trim().toLowerCase()||'';
        const domainConfirmed=box?.querySelector('[data-domain-confirm]')?.checked===true;
        const order=orders.find(o=>o.order_code===code);
+       const total=finalAmount+Number(policyInfo?.hosting?.initial_fee_jpy||0)+(order?.plan==='one'&&order?.update_plan==='unlimited'?7000:0);
        if(!Number.isSafeInteger(finalAmount)||finalAmount<Number(order?.amount_from||0))return alert('基本料金以上の正式な確定金額を入力してください。');
        if(publicDomain&&!domainConfirmed)return alert('独自ドメインの場合は、管理権限と更新負担を確認してください。');
        let intendedUrl='';
        try{intendedUrl=publicDomain?'https://'+publicDomain+'/':String((await api('admin_resolve_free_url',{order_code:code})).free_url||'');if(!intendedUrl.startsWith('https://'))throw Error('無料URLを取得できませんでした。');}
        catch(error){alert(error.message||'公開URLの確認に失敗しました。');return;}
-       if(!confirm(code+' の確定金額 '+finalAmount.toLocaleString()+'円、正式URL '+intendedUrl+' と振込先をお客様のLINEへ送信します。内容とURLを確認しましたか？'))return;
+       if(!confirm(code+' の初回合計 '+total.toLocaleString()+'円（税込、制作・初回公開維持・選択済み更新料を含む）、正式URL '+intendedUrl+' と振込先をお客様のLINEへ送信します。内容とURLを確認しましたか？'))return;
        btn.disabled=true;btn.textContent='LINEへ送信中…';
-       try{await api('admin_send_final_quote',{order_code:code,final_amount:finalAmount,public_domain:publicDomain||'free',domain_control_confirmed:publicDomain?domainConfirmed:true,quote_note:note});alert('正式見積りと振込先をLINEに送信しました。');await load()}
+       try{await api('admin_send_final_quote',{order_code:code,final_amount:finalAmount,public_domain:publicDomain||'free',domain_control_confirmed:publicDomain?domainConfirmed:true,quote_note:note,delivery_terms:delivery,payment_deadline:deadline});alert('正式見積りと振込先をLINEに送信しました。');await load()}
        catch(e){alert(e.message||'見積りの送信に失敗しました。');btn.disabled=false;btn.textContent='確定金額・振込先をLINEへ送信'}
+     });
+     document.querySelectorAll('[data-contract]').forEach(btn=>btn.onclick=async()=>{
+       try{const r=await api('admin_contract_detail',{order_code:btn.dataset.contract});btn.parentElement.querySelector('[data-contract-text]').textContent=r.contract?.message||'契約条件の保存がありません。個別確認が必要です。'}catch(e){alert(e.message||'見積りを読み込めませんでした。')}
+     });
+     document.querySelectorAll('[data-accept-contract]').forEach(btn=>btn.onclick=async()=>{
+       const code=btn.dataset.acceptContract,order=orders.find(o=>o.order_code===code);
+       const reference=btn.parentElement.querySelector('[data-acceptance-reference]').value.trim();
+       if(reference.length<8)return alert('顧客の同意返信のLINE日時・識別情報を入力してください。');
+       if(!confirm(code+' の保存済み見積りに対する同意返信を、LINEで実際に確認しましたか？'))return;
+       btn.disabled=true;
+       try{await api('admin_record_contract_acceptance',{order_code:code,quote_fingerprint:order.contract_fingerprint,acceptance_reference:reference});await load()}
+       catch(e){alert(e.message||'同意確認の記録に失敗しました。');btn.disabled=false}
      });
      document.querySelectorAll('[data-activate]').forEach(btn=>btn.onclick=async()=>{
        const code=btn.dataset.activate;

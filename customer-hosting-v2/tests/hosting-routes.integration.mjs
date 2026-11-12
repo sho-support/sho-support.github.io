@@ -6,6 +6,7 @@ import {PGlite} from '@electric-sql/pglite';
 import {Miniflare,convertV4MiniflareOptions} from 'miniflare';
 import {stageRelease} from '../src/release-publisher.mjs';
 import {edgeHarness,postgrestFixture} from './helpers/edge-harness.mjs';
+import {commercialPolicy,quoteInput} from './helpers/commercial-fixture.mjs';
 
 const ADMIN='11111111-1111-4111-8111-111111111111',CUSTOMER='22222222-2222-4222-8222-222222222222',STRANGER='33333333-3333-4333-8333-333333333333';
 const DOMAIN='routes.example';
@@ -19,7 +20,9 @@ test('actual Supabase HTTP handlers use the shared Cloudflare protocol',async t=
   t.after(async()=>{await runtime.dispose();await sql.close();});
   await sql.exec(await readFile(new URL('./fixtures/hosting-base.sql',import.meta.url),'utf8'));
   await sql.exec(await readFile(new URL('../../supabase/migrations/20261112053755_website_cloudflare_publication_protocol.sql',import.meta.url),'utf8'));
+  await sql.exec(await readFile(new URL('../../supabase/migrations/20261112170006_website_commercial_quote_protocol.sql',import.meta.url),'utf8'));
   await sql.exec('set role service_role');
+  await sql.query("insert into public.website_settings(key,value) values('commercial_policy',$1),('bank_transfer',$2)",[JSON.stringify(commercialPolicy()),JSON.stringify({message:'架空の銀行・支店・口座・名義（実サービスへの通知はありません）'})]);
   const admin=postgrestFixture(sql),raw=await runtime.getR2Bucket('SITES');
   const env={WEBSITE_CUSTOMER_HOSTING:'cloudflare-r2',CUSTOMER_BASE_DOMAIN:DOMAIN,CUSTOMER_HOSTING_DOMAIN_READY:DOMAIN,
     SUPABASE_URL:'https://fixtureproject.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'synthetic-not-a-real-key',LINE_OWNER_USER_ID:'U_FAKE_OWNER'};
@@ -34,9 +37,10 @@ test('actual Supabase HTTP handlers use the shared Cloudflare protocol',async t=
   };
   async function order(n,plan){
     const code=({one:'P',semi:'S',full:'F'}[plan])+n;
-    await sql.query('insert into public.website_orders(order_code,plan,line_user_id) values($1,$2,$3)',[code,plan,'U_FAKE_'+n]);
-    const url=await rpc('reserve_url',{p_actor:ADMIN,p_order:code,p_domain:DOMAIN});
-    await sql.query('update public.website_orders set selections=$1 where order_code=$2',[JSON.stringify({final_public_domain:url.public_url,final_quote_amount:plan==='one'?15000:plan==='semi'?22000:30000,final_quote_sent_at:'2026-11-12T00:00:00Z',quote_domain_owner_confirmed_at:'2026-11-12T00:00:00Z'}),code]);
+    const amount=plan==='one'?15000:plan==='semi'?22000:30000;
+    await sql.query('insert into public.website_orders(order_code,plan,line_user_id,amount_from) values($1,$2,$3,$4)',[code,plan,'U_FAKE_'+n,amount]);
+    const quote=await send(access,{action:'admin_send_final_quote',order_code:code,...quoteInput(amount)},'admin');assert.equal(quote.status,200,JSON.stringify(quote.body));
+    const accepted=await send(access,{action:'admin_record_contract_acceptance',order_code:code,quote_fingerprint:quote.body.quote_fingerprint,acceptance_reference:'架空LINE同意返信・日時確認済み'},'admin');assert.equal(accepted.status,200);
     const r=await send(access,{action:'admin_activate_order',order_code:code},'admin');assert.equal(r.status,200);assert.equal(r.body.site_id,n);
     await sql.query('insert into public.website_site_users(site_id,user_id,role) values($1,$2,$3)',[n,CUSTOMER,'owner']);
     return n;

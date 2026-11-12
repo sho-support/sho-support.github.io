@@ -23,6 +23,7 @@ create table public.website_orders(
   status text not null default 'pending_payment',plan text not null check(plan in ('one','semi','full')),
   site_id text references public.website_sites(site_id),selections jsonb not null default '{}',update_free_until timestamptz,
   customer_access_token_hash text,access_token_created_at timestamptz,template_style text,line_user_id text,
+  amount_from integer default 15000,update_plan text default 'none',
   line_display_name text,updated_at timestamptz default now()
 );
 create table public.website_site_users(site_id text not null references public.website_sites(site_id),

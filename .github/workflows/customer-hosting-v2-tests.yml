@@ -7,6 +7,7 @@ on:
       - 'customer-hosting-v2/**'
       - 'supabase/functions/_shared/customer-r2.*'
       - 'supabase/functions/_shared/hosting-*'
+      - 'supabase/functions/_shared/commercial-*'
       - 'supabase/functions/_shared/intake-assets.*'
       - 'supabase/functions/_shared/upload-gate.ts'
       - 'supabase/functions/_shared/guarded-ai.*'
@@ -18,6 +19,7 @@ on:
       - 'supabase/functions/website-preview/**'
       - 'supabase/migrations/20261112053755_website_cloudflare_publication_protocol.sql'
       - 'supabase/migrations/20261112123022_website_resource_guardrails.sql'
+      - 'supabase/migrations/20261112170006_website_commercial_quote_protocol.sql'
       - '.github/workflows/customer-hosting-v2-tests.yml'
       - 'scripts/ignore-customer-hosting-build.mjs'
       - 'scripts/install-qa-japanese-font.mjs'
@@ -27,6 +29,7 @@ on:
       - 'tests/website-order-lifecycle.cjs'
       - 'tests/website-hosting-ui.cjs'
       - 'tests/website-intake-materials.cjs'
+      - 'tests/website-contract-ui.cjs'
       - 'admin/index.html'
       - 'admin/orders.html'
       - 'website-*.html'
@@ -138,6 +141,7 @@ jobs:
           node tests/website-order-lifecycle.cjs
           node tests/website-hosting-ui.cjs
           node tests/website-intake-materials.cjs
+          node tests/website-contract-ui.cjs
       - name: Keep rendered screenshots for visual inspection
         if: always()
         uses: actions/upload-artifact@v4
@@ -169,6 +173,28 @@ jobs:
         with:
           name: supabase-storage-preview-proof
           path: customer-hosting-v2/.wrangler/proof/supabase-storage.json
+          retention-days: 3
+  supabase-readiness:
+    if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[inspect-supabase-readiness]') }}
+    needs: [contract, publication-database, sales-regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect only boolean configuration flags through exact-run OIDC
+        run: node customer-hosting-v2/verify-supabase-readiness.mjs
+      - name: Preserve sanitized configuration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-readiness-proof
+          path: customer-hosting-v2/.wrangler/proof/supabase-readiness.json
           retention-days: 3
   inventory:
     if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.inspect_preview) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[inspect-customer-preview]'))) }}

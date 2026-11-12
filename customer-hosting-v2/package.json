@@ -6,7 +6,7 @@
     "test": "node --test tests/*.test.mjs",
     "test:runtime": "node --test tests/runtime.integration.mjs tests/publication-recovery.integration.mjs",
     "test:supabase": "node --experimental-vm-modules --test tests/supabase-r2.integration.mjs",
-    "test:db": "node --test --test-concurrency=1 tests/hosting-db.integration.mjs tests/resource-guardrails.integration.mjs",
+    "test:db": "node --experimental-vm-modules --test --test-concurrency=1 tests/hosting-db.integration.mjs tests/resource-guardrails.integration.mjs tests/commercial-quote.integration.mjs",
     "test:pipeline": "node --test tests/hosting-pipeline.integration.mjs",
     "test:routes": "node --experimental-vm-modules --test tests/hosting-routes.integration.mjs tests/intake-routes.integration.mjs tests/resource-routes.integration.mjs",
     "check:edge": "node check-edge-functions.mjs",
