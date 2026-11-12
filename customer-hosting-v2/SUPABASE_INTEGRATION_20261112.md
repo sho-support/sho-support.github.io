@@ -66,10 +66,10 @@
 
 ## 実行証跡（最終再検証）
 
-- 実装コミット: `e2fbcae821e529a411e681d221a8fe84997b1a15`。
-- 最新の総合試験: https://github.com/sho-support/sho-support.github.io/actions/runs/43174646825 — contract / publication-database / sales-regression が全合格。
-- 単体90、ローカル workerd/R2 14、Supabase R2ラッパー3、PGlite 11、SQL＋R2通し11、実HTTPハンドラー9が合格。別ジョブのPostgreSQL **17.11** でも12テスト合格。重複するDB試験を含むため、総数を一つに合算しない。
-- ブラウザ: 販売ページ636、注文モック71、新しい復元・復旧UI62の各確認項目が合格。全6幅で描画。320 / 390 / 1366px の管理画面と公開済み顧客確認画面の画像を目視確認。QR用の外部CDNはこのモックでは遮断しており、QRの実通信検証ではない。
+- 実装コミット: `e2fbcae821e529a411e681d221a8fe84997b1a15`。素材受付の追加修正: `52ccdfda65a913f02779f3ffd30dc4012e10d1b8`。
+- 最新の総合試験: https://github.com/sho-support/sho-support.github.io/actions/runs/43203729930 — contract / publication-database / sales-regression が全合格。
+- 単体98、ローカル workerd/R2 14、Supabase R2ラッパー3、PGlite 11、SQL＋R2通し11、実HTTPハンドラー11が合格。別ジョブのPostgreSQL **17.11** でも12テスト合格。重複するDB試験を含むため、総数を一つに合算しない。
+- ブラウザ: 販売ページ636、注文モック71、新しい復元・復旧UI62、素材受付68の各確認項目が合格。全6幅で描画。320 / 390 / 1366px の管理画面と公開済み顧客確認画面の画像を目視確認。QR用の外部CDNはこのモックでは遮断しており、QRの実通信検証ではない。
 - 実Cloudflare試験: https://github.com/sho-support/sho-support.github.io/actions/runs/43173412998 — 9項目と実HTTPS画面6幅が合格。公開リーダーは再デプロイしていない。試験対象の予約IDは `9000001000` のみ。
 - 今回の計測範囲は PUT 22回、GET/HEAD 76回、11,333B。訪問者HTTP読取・R2一覧・管理API等を含む総課金量ではない。
 - 証跡JSON: `evidence/supabase-cloudflare-integration-20261112.json` と `evidence/live-preview-supabase-core-20261112.json`。
@@ -84,9 +84,18 @@
 - `website-materials.js` とヒアリング画面は、選択中・保存済み画像を合算し、超過時は最初のアップロードURL発行前に停止する。失敗理由を画面に表示し、保存に失敗したまま確認画面へ進まない。申込最終確認・FAQにも同じ上限を記載。既存価格・無料キャンペーンは変更していない。
 - 画像の複製中にも実バイト数を再確認する。ソース公開パッケージの合計を35 MiBに揃え、30MBの素材に生成HTML等を加えられる範囲を確保した。上限超過は公開前に拒否する。
 - `.info()` を使う実Supabase環境のメタデータ応答との疎通、本番アップロード、全体の保管量制限は未検証・未完了。署名URLは個々に取り消せないため、この修正だけで無制限アップロードや従量課金リスクが解消したとはしない。
-- 追加した試験のCI結果は下の追記証跡で確定する。コードの追加だけを合格とは扱わない。
+- 追加した単体8件・実HTTP経路2件と、Chromiumの素材受付68確認項目が実行済み・合格。6幅で描画・操作し、51点、メンバー写真との合算、30MB超過、1点7MB超過でアップロード開始前に停止すること、正常保存・再保存を確認した。390pxの描画画像は目視確認済み。最新総合CIは上記 `43203729930`。実Cloudflareへの追加書込み・Worker再デプロイは行っていない。
 
 追加の一次資料:
 - https://supabase.com/docs/reference/javascript/file-buckets-info
 - https://supabase.com/docs/guides/platform/manage-your-usage/storage-size
 - https://supabase.com/docs/guides/storage/uploads/standard-uploads
+
+### 追加修正の変更ファイル
+
+- サーバー: `supabase/functions/_shared/intake-assets.mjs`、`intake-assets.ts`、`hosting-github.mjs`、`website-api/index.ts`、`website-customer-access/index.ts`、`website-worker/index.ts`。
+- 画面: `website-materials.js`、`website-intake.html`、`website-order-confirm.html`、`website-faq.html`。
+- 検証: `customer-hosting-v2/tests/intake-assets.test.mjs`、`intake-routes.integration.mjs`、`tests/helpers/edge-harness.mjs`、`customer-hosting-v2/package.json`、`tests/website-intake-materials.cjs`、`.github/workflows/customer-hosting-v2-tests.yml`。
+- 記録: 本資料と `evidence/supabase-cloudflare-integration-20261112.json`。
+
+保存先は開発ブランチ `architecture/customer-hosting-v2`。`main` は再確認時も `b24971dc4e7956a9bbfa68d5607189c3beaebb4b` のまま。既存のバンド公式サイトのファイルは変更していない。
