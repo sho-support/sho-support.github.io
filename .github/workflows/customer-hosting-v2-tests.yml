@@ -6,6 +6,8 @@ on:
     paths:
       - 'customer-hosting-v2/**'
       - 'supabase/functions/_shared/customer-r2.*'
+      - 'supabase/functions/_shared/hosting-*'
+      - 'supabase/migrations/20261112053755_website_cloudflare_publication_protocol.sql'
       - '.github/workflows/customer-hosting-v2-tests.yml'
       - 'scripts/ignore-customer-hosting-build.mjs'
       - 'scripts/install-qa-japanese-font.mjs'
@@ -50,8 +52,42 @@ jobs:
         run: npm run test:runtime
       - name: Verify actual Supabase secret wrapper without external requests
         run: npm run test:supabase
+      - name: Verify the additive publication protocol on a synthetic local database
+        run: npm run test:db
+      - name: Verify all three plans and lost-response recovery using SQL and local R2
+        run: npm run test:pipeline
       - name: Validate preview Worker package without deploying
         run: npm run check:preview
+  publication-database:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: hosting_qa
+          POSTGRES_PASSWORD: synthetic-ci-password-only
+          POSTGRES_DB: sho_hosting_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hosting_qa -d sho_hosting_qa"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: customer-hosting-v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify RPCs and privileges on disposable PostgreSQL 17
+        env:
+          HOSTING_QA_DATABASE_URL: postgres://hosting_qa:synthetic-ci-password-only@127.0.0.1:5432/sho_hosting_qa
+        run: npm run test:db
   sales-regression:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -107,7 +143,7 @@ jobs:
     # The Run workflow UI requires this workflow on the default branch.
     # An explicit deployment commit also permits using this isolated branch without touching main.
     if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.deploy_preview) || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[deploy-customer-preview]') || contains(github.event.head_commit.message, '[verify-customer-preview]')))) }}
-    needs: [contract, sales-regression]
+    needs: [contract, publication-database, sales-regression]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:

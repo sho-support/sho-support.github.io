@@ -48,7 +48,10 @@ test('a successfully staged and authorized release becomes visible',async()=>{
  const bkt=new MockBucket();await publisher(bkt);
  const result=await activate(bkt,a,null);
  assert.equal(result.previous_release,null);
- assert.deepEqual(JSON.parse(await(await bkt.get('sites/1000/active.json')).text()),{status:'live',release:a});
+ const state=JSON.parse(await(await bkt.get('sites/1000/active.json')).text());
+ assert.equal(state.status,'live');assert.equal(state.release,a);
+ assert.equal(state.publication_id,result.publication_id);
+ assert.match(state.publication_id,/^[a-f0-9-]{36}$/);
 });
 test('an update needs the exact previous published release',async()=>{
  const bkt=new MockBucket();await publisher(bkt,'1000',a);await publisher(bkt,'1000',b);await activate(bkt,a,null);
