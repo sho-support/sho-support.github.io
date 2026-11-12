@@ -40,7 +40,7 @@ create table public.website_hosting_operations (
   operation_id uuid primary key check (operation_id::text ~ '^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$'),
   fence_id uuid not null unique default gen_random_uuid(),
   site_id text not null references public.website_hosting_sites(site_id),
-  actor_id uuid not null references public.website_admins(user_id),
+  actor_id uuid not null, -- Immutable audit snapshot; revoking admin membership must remain possible.
   kind text not null check (kind in ('publish','rollback','private')),
   release_id text,
   base_pointer jsonb,
@@ -369,7 +369,7 @@ begin
   update public.website_hosting_operations set state=case when p_fenced then 'fenced' else 'committed' end,
     result_pointer=p_pointer,completed_at=now(),error_code=null where operation_id=p_operation returning * into o;
   insert into public.website_activity(site_id,actor_type,actor_user_id,action,detail,payload)
-    values(o.site_id,'admin',o.actor_id,
+    values(o.site_id,'admin',(select user_id from public.website_admins where user_id=o.actor_id),
       case when p_fenced then 'publication_reconciled' when o.kind='rollback' then 'publication_rollback' when o.kind='private' then 'publication_private' else 'published' end,
       case when p_fenced then '未確定の公開処理を中止し、遅延処理の再反映を防止。' when o.kind='rollback' then '以前の正常版へ復元。' when o.kind='private' then 'サイトを一時非公開へ。' else 'お客様の承認済み固定版を公開。' end,
       jsonb_build_object('operation_id',o.operation_id,'release_id',v_release));

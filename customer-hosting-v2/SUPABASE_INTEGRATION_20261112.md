@@ -58,3 +58,8 @@
 - https://docs.github.com/en/rest/git/blobs
 - https://developers.cloudflare.com/r2/api/workers/workers-api-reference/
 - https://developers.line.biz/en/docs/messaging-api/retrying-api-request/
+
+## 管理権限の再監査
+
+- 公開履歴の actor_id は操作時点の UUID を記録する。管理者一覧への外部キーで権限剥奪を妨げない。公開直前と復旧時に現在の管理者権限を再確認する。
+- 操作を開始した管理者が外れた場合も、別の現管理者が同じ永続記録を照合して復旧できる。元の actor_id は保持し、存在しない認証利用者を操作履歴へ再挿入しない。合成データで権限剥奪と引継ぎ復旧を試験する。

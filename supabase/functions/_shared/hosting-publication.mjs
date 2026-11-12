@@ -17,7 +17,9 @@ export function createHostingPublisher({db,storeForSite}){
     try{await rpc('mark_uncertain',{p_operation:id,p_error:'external_result_unknown'});}catch{/* A DB outage must retain the original durable lock. */}
     return new PublicationUncertainError(id,cause);
   };
-  async function authorize(op){
+  async function authorize(op,actorId=op.actor_id){
+    // Membership may have been revoked since the durable claim was created.
+    await rpc('require_admin',{p_actor:actorId});
     const [latest,h]=await Promise.all([db.operation(op.operation_id),db.hosting(op.site_id)]);
     return !!latest&&!!h&&['writing','reconcile'].includes(latest.state)
       &&h.active_operation_id===op.operation_id&&latest.actor_id===op.actor_id
@@ -44,7 +46,7 @@ export function createHostingPublisher({db,storeForSite}){
   }
   async function operationContext(siteId,operationId,actorId){
     const [op,h]=await Promise.all([db.operation(operationId),db.hosting(siteId)]);
-    if(!op||!h||op.site_id!==siteId||op.actor_id!==actorId)throw new Error('Publication operation not found for this administrator');
+    if(!op||!h||op.site_id!==siteId)throw new Error('Publication operation not found for this site');
     // Revalidate current administrator membership even for an idempotent recovery request.
     await rpc('require_admin',{p_actor:actorId});
     return {...op,public_site_id:h.public_site_id,public_url:h.public_url};
@@ -55,7 +57,7 @@ export function createHostingPublisher({db,storeForSite}){
     if(['committed','fenced'].includes(op.state))return {ok:true,operation_id:op.operation_id,state:op.state,public_url:op.public_url,release_id:op.result_pointer?.release??null};
     const bucket=storeForSite(op.public_site_id);
     try{
-      if(!await authorize(op))throw new Error('Publication operation lock changed');
+      if(!await authorize(op,actorId))throw new Error('Publication operation lock changed');
       let p=await readPublication({bucket,siteId:op.public_site_id});
       if(matches(p,op))return await finish(op,bucket,p);
       if(fenced(p,op))return await finish(op,bucket,p,true);
@@ -63,7 +65,7 @@ export function createHostingPublisher({db,storeForSite}){
       // Use the EXACT baseline persisted before the attempt. Never fence a freshly read winner.
       try{
         await fencePublication({bucket,siteId:op.public_site_id,expectedPointer:op.base_pointer,
-          publicationId:op.fence_id,authorize:()=>authorize(op)});
+          publicationId:op.fence_id,authorize:()=>authorize(op,actorId)});
       }catch{
         // Either the original write or our fence may have succeeded with a lost response.
         // An unrelated winner is never overwritten and leaves the lock for investigation.

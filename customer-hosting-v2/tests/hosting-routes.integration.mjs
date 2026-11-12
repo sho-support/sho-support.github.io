@@ -110,6 +110,24 @@ test('actual Supabase HTTP handlers use the shared Cloudflare protocol',async t=
     assert.equal(calls[0].url,'https://api.github.com/repos/sho-support/site-8100/git/refs');
     assert.equal(JSON.parse(calls[0].options.body).sha,'c'.repeat(40));
   });
+  await t.test('revoking the original administrator leaves recovery available to another current administrator',async()=>{
+    const n=await order('8300','one'),release=await stage(n,'Administrator revocation');
+    const review=await send(api,{action:'admin_transition',site_id:n,status:'customer_review'},'admin');
+    const key=new URL(review.body.review_url).searchParams.get('key');
+    assert.equal((await send(access,{action:'review_approve',site_id:n,key})).status,200);
+    const operation=crypto.randomUUID();
+    await rpc('claim',{p_actor:ADMIN,p_site:n,p_operation:operation,p_kind:'publish',p_release:release,p_base:null});
+    await sql.query('insert into public.website_admins(user_id) values($1)',[STRANGER]);
+    await sql.exec('reset role');
+    await sql.query('delete from public.website_admins where user_id=$1',[ADMIN]);
+    await sql.exec('set role service_role');
+    const request={action:'admin_reconcile_publication',site_id:n,operation_id:operation};
+    assert.equal((await send(access,request,'admin')).status,403);
+    const recovered=await send(access,request,'stranger');assert.equal(recovered.status,200);assert.equal(recovered.body.state,'fenced');
+    assert.equal((await sql.query('select actor_id from public.website_hosting_operations where operation_id=$1',[operation])).rows[0].actor_id,ADMIN);
+    assert.equal((await sql.query("select actor_user_id from public.website_activity where site_id=$1 and action='publication_reconciled'",[n])).rows[0].actor_user_id,null);
+    await sql.query('insert into public.website_admins(user_id) values($1)',[ADMIN]);
+  });
   assert.equal(access.requests.length+api.requests.length+preview.requests.length,0,'No HTTP request may leave the local fixture');
 });
 
