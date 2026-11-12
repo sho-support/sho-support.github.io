@@ -41,4 +41,28 @@ check('No paid network requests or auto-deploy',()=>{
 check('Service minimum prices follow existing support page',()=>{
  for(const [svc,n] of Object.entries({shorts:2500,one_song:4000,full_live:8000,shoot_30:4000,shoot_60:6500}))assert.ok(js.includes(svc+':'+n),svc);
 });
+check('Payment writes confirm affected rows and never retry after uncertain network outcome',()=>{
+ assert.match(js,/\.update\(values\)\.eq\('id',editing\.id\)\.select\('id'\)/);
+ assert.match(js,/\.insert\(values\)\.select\('id'\)/);
+ assert.match(js,/rows\.length!==1/);
+ assert.match(js,/同じ内容を再登録せず/);
+});
+check('Only audited receipts and valid corrections are accepted',()=>{
+ const harden=read('database/003_paid_quote_and_refund_guards.sql');
+ assert.match(harden,/band_private\.lock_paid_quote\(\)/);
+ assert.match(harden,/public\.band_crm_payments p where p\.deal_id=old\.id/);
+ assert.match(harden,/band_private\.validate_payment_balance\(\)/);
+ assert.match(harden,/v_balance\+new\.amount_yen<0/);
+ assert.match(harden,/Asia\/Tokyo/);
+});
+check('Admin password reset requires an authenticated recovery session',()=>{
+ const resetHtml=read('web/reset.html'),resetJs=read('web/reset.js');
+ assert.match(html,/id="forgot-password"/);
+ assert.match(js,/resetPasswordForEmail/);
+ assert.match(js,/redirectTo/);
+ assert.match(resetHtml,/name="robots" content="noindex,nofollow"/);
+ assert.match(resetJs,/auth\.getUser\(\)/);
+ assert.match(resetJs,/auth\.updateUser\(\{password\}\)/);
+ assert.doesNotMatch(resetJs,/service_role|sb_secret_[A-Za-z0-9]{12,}/);
+});
 console.log('RESULT:',passed,'static contracts passed');
