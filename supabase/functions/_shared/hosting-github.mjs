@@ -34,7 +34,7 @@ export async function snapshotCustomerSource({siteId,repo,branch,token,owner='sh
   for(const e of entries){
     validateAssetPath(e.path);
     if(e.type!=='blob'||e.mode!=='100644'||!sha.test(e.sha||'')||!Number.isSafeInteger(e.size)||e.size<1||e.size>7_000_000)throw new Error('Unsafe or oversized customer source file');
-    total+=e.size;if(total>15*1024*1024)throw new Error('Customer source exceeds the initial 15 MiB operating limit');
+    total+=e.size;if(total>35*1024*1024)throw new Error('Customer source exceeds the initial 35 MiB operating limit');
     const bytes=await get('/git/blobs/'+e.sha,e.size+16_384,true);
     if(bytes.byteLength!==e.size)throw new Error('GitHub source file size mismatch');
     const prefix=new TextEncoder().encode('blob '+bytes.length+'\0'),payload=new Uint8Array(prefix.length+bytes.length);

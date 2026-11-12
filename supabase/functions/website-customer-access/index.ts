@@ -1,3 +1,4 @@
+import {intakeAssetProblem} from '../_shared/intake-assets.ts';
 import {handleHostingAction} from '../_shared/hosting-routes.ts';
 import {cloudflareHostingEnabled} from '../_shared/hosting-mode.ts';
 import {reserveHostingUrl} from '../_shared/hosting-service.ts';
@@ -487,6 +488,7 @@ Deno.serve(async(req)=>{
         safeFiles[f].push({path,name});
       }
     }
+    const problem=await intakeAssetProblem(admin,siteId,{files:safeFiles},true);if(problem)return json({error:problem.message},problem.status);
     const now=new Date(),jst=new Date(now.getTime()+9*3600000),start=new Date(Date.UTC(jst.getUTCFullYear(),jst.getUTCMonth(),1,-9,0,0));
     const {count,error:countError}=await admin.from('website_update_requests').select('id',{count:'exact',head:true}).eq('site_id',siteId).eq('billing_category','free_monthly').neq('status','cancelled').gte('created_at',start.toISOString());
     if(countError)throw countError;
@@ -510,6 +512,7 @@ Deno.serve(async(req)=>{
     const raw=JSON.stringify(body?.payload||{});
     if(raw.length>500000) return json({error:'入力内容が大きすぎます。'},413);
     const payload=forceOrderFields(body?.payload||{},order);
+    const problem=await intakeAssetProblem(admin,siteId,payload);if(problem)return json({error:problem.message},problem.status);
     const savedAt=new Date().toISOString();
     const {error}=await admin.from('website_intakes').upsert({
       site_id:siteId,payload,last_saved_at:savedAt
@@ -532,6 +535,7 @@ Deno.serve(async(req)=>{
     const raw=JSON.stringify(body?.payload||{});
     if(raw.length>500000) return json({error:'入力内容が大きすぎます。'},413);
     const payload=forceOrderFields(body?.payload||{},order);
+    const problem=await intakeAssetProblem(admin,siteId,payload,true);if(problem)return json({error:problem.message},problem.status);
     const f=payload.fields||{},checks=payload.checks||{};
     if(!String(f.site_name||'').trim()) return json({error:'サイト名 / バンド名 / 店名を入力してください。'},400);
     if(!Array.isArray(checks.rights)||!checks.rights.length) return json({error:'掲載権利の確認にチェックしてください。'},400);

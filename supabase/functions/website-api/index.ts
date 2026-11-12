@@ -1,3 +1,4 @@
+import {intakeAssetProblem} from '../_shared/intake-assets.ts';
 import {handleHostingAction} from '../_shared/hosting-routes.ts';
 import {hostingAdminState} from '../_shared/hosting-service.ts';
 import {cloudflareHostingEnabled} from '../_shared/hosting-mode.ts';
@@ -314,6 +315,7 @@ Deno.serve(async (req) => {
       if(currentSite.status!=='request_waiting')return json({error:'初回ヒアリングは受付終了です。更新依頼は専用の窓口からお願いします。'},409);
       const savedAt = new Date().toISOString();
       const {payload}=await normalizePaidIntake(admin,siteId,body.payload);
+      const problem=await intakeAssetProblem(admin,siteId,payload,false);if(problem)return json({error:problem.message},problem.status);
       const { error } = await admin.from('website_intakes').upsert({
         site_id: siteId,
         payload,
@@ -329,6 +331,7 @@ Deno.serve(async (req) => {
       if(currentSite.status!=='request_waiting')return json({error:'初回ヒアリングは送信済みです。更新依頼は専用の窓口からお願いします。'},409);
       const submittedAt = new Date().toISOString();
       const {payload,order}=await normalizePaidIntake(admin,siteId,body.payload);
+      const problem=await intakeAssetProblem(admin,siteId,payload,true);if(problem)return json({error:problem.message},problem.status);
       if(order?.plan==='semi' && payload.fields?.template_style!==order.template_style){
         const {error:templateError}=await admin.from('website_orders').update({
           template_style:payload.fields.template_style,updated_at:submittedAt

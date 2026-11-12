@@ -54,6 +54,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 <h1>制作内容の入力</h1>
 <p>サイト制作に必要な内容を入力してください。途中保存できるので、一度に全部入力しなくても大丈夫です。</p>
 <div class="file-note" id="fileNote">入力内容は自動保存されます。途中で閉じても、あとから続きから入力できます。</div>
+<div class="file-note" id="materialLimits">画像素材は合計50点・30MBまで、1点7MB以内です。JPEG・PNG・WebP・GIF・AVIFに対応しています。多い場合は送信前にLINEでご相談ください。</div>
 <div class="savebar"><button type="button" class="savebtn" id="saveTop">入力内容を一時保存</button><div class="save-meta"><strong id="savedTop">最終保存：まだありません</strong><span id="topStatus">編集中の文字はこの端末にも自動保存されます。</span></div></div>
 <div class="progressline"><span id="progressText">入力完了 0 / 7</span><span>後から続きから入力できます</span></div>
 <div class="progress"><div class="bar" id="bar"></div></div>
@@ -156,6 +157,7 @@ input[type=file]{width:100%;margin-top:8px;padding:10px;border:1px dashed rgba(2
 
 <script type="module">
 import { requireWebsiteSession, uploadWebsiteFile, websiteApi, websiteSupabase } from './website-client.js';
+import { checkMaterialSelection } from './website-materials.js';
 (async()=>{
 const params=new URLSearchParams(location.search),siteId=params.get('id')||'DEMO',prodMode=params.get('prod')==='1',accessKey=params.get('key')||'',secureMode=prodMode&&!!accessKey,requestedPlan=params.get('plan')||'',requestedTemplate=params.get('template')||'';
 document.getElementById('siteId').textContent=siteId;
@@ -213,7 +215,7 @@ function addSocial(container,data={}){
 }
 function addMember(data={}){
  memberCount++;const n=memberCount,d=document.createElement('div');d.className='member';
- d.dataset.photoPath=String(data.photo?.path||'');d.dataset.photoName=String(data.photo?.name||'');
+ d.dataset.photoPath=String(data.photo?.path||'');d.dataset.photoName=String(data.photo?.name||'');d.dataset.photoSize=String(data.photo?.size||'');
  d.innerHTML='<div class="blockhead"><h4>MEMBER '+n+'</h4>'+(n>1?'<button type="button" class="remove member-remove">削除</button>':'')+'</div><label>名前<input type="text" data-mf="name" value="'+esc(data.name||'')+'"></label><label>パート / 役割<input type="text" data-mf="part" value="'+esc(data.part||'')+'"></label><label>紹介文<textarea data-mf="bio">'+esc(data.bio||'')+'</textarea></label><div class="member-socials"></div><button type="button" class="addbtn add-social">＋ SNS・リンクを追加</button><label>写真<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif"></label>';
  const socials=d.querySelector('.member-socials');(data.socials||[]).forEach(x=>addSocial(socials,x));if(data.sns&&!data.socials?.length)addSocial(socials,{url:data.sns});
  d.querySelector('.add-social').onclick=()=>{addSocial(socials);saveSoon()};d.querySelector('.member-remove')?.addEventListener('click',()=>{d.remove();saveSoon()});members.appendChild(d);
@@ -284,13 +286,13 @@ function serialize(){
   if(!el.name||el.type==='file')return;
   if(el.type==='checkbox'){if(!data.checks[el.name])data.checks[el.name]=[];if(el.checked)data.checks[el.name].push(el.value||'yes')}else data.fields[el.name]=el.value;
  });
- document.querySelectorAll('.member').forEach(block=>{const m={socials:[]};block.querySelectorAll('[data-mf]').forEach(el=>m[el.dataset.mf]=el.value);block.querySelectorAll('.member-social').forEach(s=>{const url=s.querySelector('[data-ms="url"]').value;if(url.trim())m.socials.push({url})});if(block.dataset.photoPath)m.photo={path:block.dataset.photoPath,name:block.dataset.photoName||'member-photo'};data.members.push(m)});
+ document.querySelectorAll('.member').forEach(block=>{const m={socials:[]};block.querySelectorAll('[data-mf]').forEach(el=>m[el.dataset.mf]=el.value);block.querySelectorAll('.member-social').forEach(s=>{const url=s.querySelector('[data-ms="url"]').value;if(url.trim())m.socials.push({url})});if(block.dataset.photoPath)m.photo={path:block.dataset.photoPath,name:block.dataset.photoName||'member-photo',size:Number(block.dataset.photoSize||0)};data.members.push(m)});
  document.querySelectorAll('.liveblock').forEach(block=>{const l={};block.querySelectorAll('[data-lf]').forEach(el=>l[el.dataset.lf]=el.value);data.lives.push(l)});
  document.querySelectorAll('.contactlink').forEach(block=>{const x={};block.querySelectorAll('[data-cf]').forEach(el=>x[el.dataset.cf]=el.value);x.type=detectType(x.value);data.contacts.push(x)});
  if(!document.getElementById('memberPages').checked)data.members=[];
  if(!document.getElementById('liveAnnouncement').checked)data.lives=[];
  if(data.fields.build_plan==='semi')data.checks.features=(data.checks.features||[]).filter(v=>!['過去LIVEページ','メンバー個別ページ'].includes(v));
- data.files={...uploadedFiles,member_photos:data.members.filter(m=>m.photo?.path).map(m=>({path:m.photo.path,name:m.photo.name}))};
+ data.files={...uploadedFiles,member_photos:data.members.filter(m=>m.photo?.path).map(m=>({path:m.photo.path,name:m.photo.name,size:m.photo.size}))};
  return data;
 }
 async function performSave(manual=false){
@@ -309,7 +311,7 @@ async function performSave(manual=false){
   updateCompletion();
   return true;
  }catch(error){
-  console.error(error);status.textContent='保存できませんでした。通信状態をご確認ください。';document.getElementById('topStatus').textContent='保存できませんでした';return false;
+  console.error(error);const message=error?.message||'保存できませんでした。通信状態をご確認ください。';status.textContent=message;document.getElementById('topStatus').textContent=message;return false;
  }
 }
 function saveDraft(manual=false){saveQueue=saveQueue.then(()=>performSave(manual));return saveQueue}
@@ -357,6 +359,18 @@ document.getElementById('saveBottom').onclick=()=>saveDraft(true);
 
 async function uploadSelectedFiles(){
  const fields=['top_photos','gallery_photos','logo_file'];
+ const retained=fields.flatMap(field=>uploadedFiles[field]||[]),selected=[];
+ for(const field of fields){
+  const saved=uploadedFiles[field]||[];
+  selected.push(...[...(form.elements[field]?.files||[])].filter(file=>!saved.some(x=>x.name===file.name&&Number(x.size||0)===file.size)));
+ }
+ if(document.getElementById('memberPages').checked)for(const block of document.querySelectorAll('.member')){
+  const file=block.querySelector('input[type="file"]')?.files?.[0];
+  if(file)selected.push(file);
+  else if(block.dataset.photoPath)retained.push({path:block.dataset.photoPath,size:Number(block.dataset.photoSize||0)});
+ }
+ // Check the whole selection before requesting the first signed upload URL.
+ checkMaterialSelection(retained,selected);
  for(const field of fields){
   const input=form.elements[field];
   const files=input?.files?[...input.files]:[];
@@ -374,13 +388,13 @@ async function uploadSelectedFiles(){
   }
   if(files.length)input.value='';
  }
- for(const block of document.querySelectorAll('.member')){
+ if(document.getElementById('memberPages').checked)for(const block of document.querySelectorAll('.member')){
   const input=block.querySelector('input[type="file"]'),file=input?.files?.[0];
   if(!file)continue;
   if(file.size>7_000_000)throw new Error(file.name+' は7MBを超えています。');
   if(!file.type.startsWith('image/'))throw new Error(file.name+' は画像ファイルを選択してください。');
   const path=secureMode?await secureUpload(file,'member_photos'):await uploadWebsiteFile(siteId,file,'member_photos');
-  block.dataset.photoPath=path;block.dataset.photoName=file.name;input.value='';
+  block.dataset.photoPath=path;block.dataset.photoName=file.name;block.dataset.photoSize=String(file.size);input.value='';
  }
 }
 function fileNames(name){
@@ -482,7 +496,7 @@ async function savePreviewAsImage(){
  const filename='SHO-WEB-SUPPORT-入力内容-'+siteId+'.png';
  const a=document.createElement('a');a.download=filename;a.href=canvas.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();
 }
-document.getElementById('previewBtn').onclick=async()=>{await saveDraft(true);const p=document.getElementById('preview');p.innerHTML=renderPreview();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('confirmSend')?.addEventListener('click',submitIntake);document.getElementById('savePreviewImage')?.addEventListener('click',()=>savePreviewAsImage().catch(e=>alert(e.message||'画像を保存できませんでした。')))};
+document.getElementById('previewBtn').onclick=async()=>{if(!await saveDraft(true))return;const p=document.getElementById('preview');p.innerHTML=renderPreview();p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('confirmSend')?.addEventListener('click',submitIntake);document.getElementById('savePreviewImage')?.addEventListener('click',()=>savePreviewAsImage().catch(e=>alert(e.message||'画像を保存できませんでした。')))};
 
 if(prodMode&&!secureMode)await requireWebsiteSession(location.href);
 await restore();

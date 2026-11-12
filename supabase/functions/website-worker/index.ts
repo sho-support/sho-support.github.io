@@ -1,3 +1,4 @@
+import {requireIntakeAssets} from '../_shared/intake-assets.ts';
 import {cloudflareHostingEnabled,blockLegacyPages} from '../_shared/hosting-mode.ts';
 import {hostingMapping,freezeHostingRelease,beginHostingSourceBranch} from '../_shared/hosting-service.ts';
 import {customerR2Store} from '../_shared/customer-r2.ts';
@@ -29,7 +30,7 @@ async function referenceText(raw:string){if(!raw)return{url:'',ok:false,note:'Âè
 
 function assetPlan(payload:any){const out:any[]=[];for(const[k,v]of Object.entries(payload?.files||{})){if(!Array.isArray(v))continue;for(const x of v as any[]){if(!x?.path||!x?.name)continue;const name=String(x.name).replace(/[^A-Za-z0-9._-]+/g,'-')||'asset',storage=String(x.path);const stable=(storage.split('/').pop()||name).replace(/[^A-Za-z0-9._-]+/g,'-').slice(-120);out.push({field:k,storage,name:String(x.name),path:`assets/${k}/${stable}`})}}return out.slice(-60)}
 async function putFile(full:string,branch:string,path:string,bytes:Uint8Array|string,message:string){const p=repoParts(full),api=`/repos/${p.owner}/${p.repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;let sha:string|undefined;try{sha=(await gh(api+`?ref=${encodeURIComponent(branch)}`)).sha}catch(e:any){if(e.status!==404)throw e}let b64:string;if(typeof bytes==='string')b64=enc(bytes);else{let s='';for(let i=0;i<bytes.length;i+=32768)s+=String.fromCharCode(...bytes.subarray(i,i+32768));b64=btoa(s)}await gh(api,{method:'PUT',body:JSON.stringify({message,content:b64,branch,...(sha?{sha}:{})})})}
-async function copyAssets(admin:any,full:string,branch:string,plan:any[]){for(const a of plan){const{data,error}=await admin.storage.from('website-intake-files').download(a.storage);if(error||!data)throw new Error('Customer asset unavailable: '+a.name);const b=new Uint8Array(await data.arrayBuffer());if(b.length>7_000_000)throw new Error('Customer asset exceeds 7MB: '+a.name);await putFile(full,branch,a.path,b,'Add customer asset')}}
+async function copyAssets(admin:any,full:string,branch:string,plan:any[]){let total=0;for(const a of plan){const{data,error}=await admin.storage.from('website-intake-files').download(a.storage);if(error||!data)throw new Error('Customer asset unavailable: '+a.name);const b=new Uint8Array(await data.arrayBuffer());if(b.length>7_000_000)throw new Error('Customer asset exceeds 7MB: '+a.name);total+=b.length;if(total>30_000_000)throw new Error('Customer assets exceed the 30MB release material limit');await putFile(full,branch,a.path,b,'Add customer asset')}}
 
 function outputText(d:any){if(typeof d.output_text==='string')return d.output_text;for(const x of d.output||[])for(const c of x.content||[])if(c.type==='output_text')return c.text||'';return''}
 async function officialSemiTemplate(style:string){
@@ -166,6 +167,7 @@ async function processJob(siteId=''){
  let stagedForRetry=false;
  if(job.payload?.update_request_id){const {error}=await admin.from('website_update_requests').update({status:'building'}).eq('id',job.payload.update_request_id).eq('site_id',job.site_id);if(error)console.error('Update request state:',error)}
  try{const[{data:site,error:se},{data:intake,error:ie},{data:activity,error:ae}]=await Promise.all([admin.from('website_sites').select('*').eq('site_id',job.site_id).single(),admin.from('website_intakes').select('*').eq('site_id',job.site_id).single(),admin.from('website_activity').select('*').eq('site_id',job.site_id).order('created_at',{ascending:false}).limit(80)]);if(se)throw se;if(ie)throw ie;if(ae)throw ae;
+  intake.payload=await requireIntakeAssets(admin,site.site_id,intake.payload,true);
   if(cloudflareHostingEnabled()){const h=await hostingMapping(admin,site.site_id);customerR2Store(h.public_site_id);}
   const ri=await ensureRepo(site),publishBranch=ri.branch||'main';if(cloudflareHostingEnabled()&&!ri.isPrivate)throw new Error('Customer source repository must be private; migration review required');if(site.repo_full_name!==ri.full||site.publish_branch!==publishBranch){const{error}=await admin.from('website_sites').update({repo_full_name:ri.full,publish_branch:publishBranch}).eq('site_id',site.site_id);if(error)throw error;site.repo_full_name=ri.full}
   const isLiveRevision=!!site.published_at;

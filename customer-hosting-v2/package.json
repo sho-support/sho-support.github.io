@@ -8,7 +8,7 @@
     "test:supabase": "node --experimental-vm-modules --test tests/supabase-r2.integration.mjs",
     "test:db": "node --test tests/hosting-db.integration.mjs",
     "test:pipeline": "node --test tests/hosting-pipeline.integration.mjs",
-    "test:routes": "node --experimental-vm-modules --test tests/hosting-routes.integration.mjs",
+    "test:routes": "node --experimental-vm-modules --test tests/hosting-routes.integration.mjs tests/intake-routes.integration.mjs",
     "check:edge": "node check-edge-functions.mjs",
     "check:preview": "wrangler deploy --dry-run --config wrangler.preview.jsonc --outdir /tmp/sho-customer-preview-build"
   },

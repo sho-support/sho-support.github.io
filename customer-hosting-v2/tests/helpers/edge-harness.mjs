@@ -30,13 +30,13 @@ export function postgrestFixture(sql){
   return client;
 }
 
-export async function edgeHarness({slug,admin,bucket,users={},env={},legacyHelper=false,fetcher}){
+export async function edgeHarness({slug,admin,bucket,users={},env={},legacyHelper=false,fetcher,roleResolver}){
   let handler;const messages=[],background=[],requests=[];
   const helpers={
     adminClient:()=>admin,corsHeaders:{'Access-Control-Allow-Origin':'*'},
     json:(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}}),
     getUser:async req=>users[req.headers.get('authorization')?.replace(/^Bearer /,'')]??null,
-    siteRole:async()=>{throw new Error('Unexpected legacy role route');},
+    siteRole:roleResolver||(async()=>{throw new Error('Unexpected legacy role route');}),
     linePush:async(to,text,retryKey)=>{messages.push({to,text,retryKey});return {ok:!!to,skipped:!to};},
     notifyOwner:async text=>{messages.push({to:'fixture-owner',text});return {ok:true};},
     triggerWebsiteWorker:async siteId=>{background.push(siteId);return {ok:true};},
@@ -49,7 +49,7 @@ export async function edgeHarness({slug,admin,bucket,users={},env={},legacyHelpe
     freeWebsiteUrl:()=>{throw new Error('Legacy free URL route reached');},
     resolveFreeWebsiteUrl:async()=>{throw new Error('Legacy free URL lookup reached');}
   };
-  const context=vm.createContext({Request,Response,Headers,URL,Uint8Array,ArrayBuffer,TextEncoder,TextDecoder,
+  const context=vm.createContext({Request,Response,Headers,URL,Uint8Array,ArrayBuffer,TextEncoder,TextDecoder,structuredClone,
     AbortController,AbortSignal,crypto,setTimeout,clearTimeout,atob,btoa,
     console:{log(){},warn(){},error(){}},
     Deno:{env:{get:name=>env[name]},serve:fn=>{handler=fn;}},EdgeRuntime:{waitUntil:p=>{background.push(p);}},
