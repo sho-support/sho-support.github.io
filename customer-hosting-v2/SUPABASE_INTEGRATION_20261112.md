@@ -63,3 +63,16 @@
 
 - 公開履歴の actor_id は操作時点の UUID を記録する。管理者一覧への外部キーで権限剥奪を妨げない。公開直前と復旧時に現在の管理者権限を再確認する。
 - 操作を開始した管理者が外れた場合も、別の現管理者が同じ永続記録を照合して復旧できる。元の actor_id は保持し、存在しない認証利用者を操作履歴へ再挿入しない。合成データで権限剥奪と引継ぎ復旧を試験する。
+
+## 実行証跡（最終再検証）
+
+- 実装コミット: `e2fbcae821e529a411e681d221a8fe84997b1a15`。
+- 最新の総合試験: https://github.com/sho-support/sho-support.github.io/actions/runs/43174646825 — contract / publication-database / sales-regression が全合格。
+- 単体90、ローカル workerd/R2 14、Supabase R2ラッパー3、PGlite 11、SQL＋R2通し11、実HTTPハンドラー9が合格。別ジョブのPostgreSQL **17.11** でも12テスト合格。重複するDB試験を含むため、総数を一つに合算しない。
+- ブラウザ: 販売ページ636、注文モック71、新しい復元・復旧UI62の各確認項目が合格。全6幅で描画。320 / 390 / 1366px の管理画面と公開済み顧客確認画面の画像を目視確認。QR用の外部CDNはこのモックでは遮断しており、QRの実通信検証ではない。
+- 実Cloudflare試験: https://github.com/sho-support/sho-support.github.io/actions/runs/43173412998 — 9項目と実HTTPS画面6幅が合格。公開リーダーは再デプロイしていない。試験対象の予約IDは `9000001000` のみ。
+- 今回の計測範囲は PUT 22回、GET/HEAD 76回、11,333B。訪問者HTTP読取・R2一覧・管理API等を含む総課金量ではない。
+- 証跡JSON: `evidence/supabase-cloudflare-integration-20261112.json` と `evidence/live-preview-supabase-core-20261112.json`。
+- 作業用ローカル環境が途中で利用できなくなったため、その後の修正もGitHubへ直接保存し、GitHub Actionsで実行して再検証した。ローカルにしか存在しない完成コードはない。
+
+**判定: 開発版の公開統合と復旧処理は検証済み。本番接続・販売開始は未完了。上記 A 項目を残したまま切り替えない。**

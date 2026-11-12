@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "site_id": "9000001000",
+  "fixture_only": true,
+  "approval_source": "server_owned_test_fixture",
+  "production_approval_verified": false,
+  "separate_provider_backup_verified": false,
+  "active_release": "121bee2e57be562a71bad92c",
+  "checks": [
+    "existing_fictional_fixture_verified",
+    "staged_and_unapproved_content_stays_private",
+    "approved_fixture_html_and_css_served_over_https",
+    "complete_update_switches_html_and_css",
+    "concurrent_publication_has_exactly_one_winner",
+    "rollback_restores_previous_html_and_css",
+    "verified_export_bytes_restore_as_a_new_release",
+    "interrupted_upload_cannot_replace_last_good_release",
+    "public_reader_rejects_writes_and_cross_customer_selection"
+  ],
+  "usage": {
+    "writes": 22,
+    "reads": 76,
+    "uploaded_bytes": 11333
+  },
+  "verification_source_commit": "25b6e99c0a44e5e62fc2a9fefbc342c3d56266e5",
+  "verification_run_id": 43173412998,
+  "verification_url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43173412998",
+  "worker_redeployed": false,
+  "worker_deployed_version": "bdd2b1c8-8fa7-4949-9e1a-ab63b5b3cd37",
+  "scoped_usage_is_not_total_bill": true
+}

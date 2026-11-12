@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "verified_on": "2026-11-12",
+  "development_only": true,
+  "branch": "architecture/customer-hosting-v2",
+  "implementation_commit": "e2fbcae821e529a411e681d221a8fe84997b1a15",
+  "ci": {
+    "run_id": 43174646825,
+    "url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43174646825",
+    "conclusion": "success",
+    "tests": {
+      "unit": 90,
+      "local_workerd_r2": 14,
+      "supabase_secret_wrapper": 3,
+      "pglite_protocol": 11,
+      "sql_r2_pipeline": 11,
+      "http_handlers": 9,
+      "postgres_17_11_protocol": 12
+    },
+    "edge_function_typecheck": "passed",
+    "browser_assertions": {
+      "sales_pages": 636,
+      "order_scenarios": 71,
+      "hosting_controls": 62
+    },
+    "browser_widths": [
+      320,
+      360,
+      390,
+      430,
+      768,
+      1366
+    ],
+    "screenshot_visual_review": {
+      "source_run_id": 43173412998,
+      "widths": [
+        320,
+        390,
+        1366
+      ],
+      "screens": [
+        "admin",
+        "published_customer_review"
+      ],
+      "data": "synthetic",
+      "external_qr_script": "blocked_in_mock"
+    }
+  },
+  "cloudflare_live": {
+    "source_commit": "25b6e99c0a44e5e62fc2a9fefbc342c3d56266e5",
+    "run_id": 43173412998,
+    "url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43173412998",
+    "worker": "sho-customer-sites-preview",
+    "worker_deployed_version": "bdd2b1c8-8fa7-4949-9e1a-ab63b5b3cd37",
+    "worker_redeployed": false,
+    "site_id": "9000001000",
+    "active_release": "121bee2e57be562a71bad92c",
+    "checks": [
+      "existing_fictional_fixture_verified",
+      "staged_and_unapproved_content_stays_private",
+      "approved_fixture_html_and_css_served_over_https",
+      "complete_update_switches_html_and_css",
+      "concurrent_publication_has_exactly_one_winner",
+      "rollback_restores_previous_html_and_css",
+      "verified_export_bytes_restore_as_a_new_release",
+      "interrupted_upload_cannot_replace_last_good_release",
+      "public_reader_rejects_writes_and_cross_customer_selection"
+    ],
+    "scoped_usage": {
+      "writes": 22,
+      "reads": 76,
+      "uploaded_bytes": 11333,
+      "excludes": [
+        "HTTP visitor reads",
+        "R2 list/inventory",
+        "management/proxy calls"
+      ],
+      "billing_total": false
+    },
+    "production_customer_approval_verified": false
+  },
+  "production": {
+    "supabase_functions_deployed": false,
+    "database_migration_applied": false,
+    "dns_changed": false,
+    "main_changed": false,
+    "last_verified_main": "b24971dc4e7956a9bbfa68d5607189c3beaebb4b",
+    "inspected_counts": {
+      "execution_role": "postgres",
+      "bypasses_rls": true,
+      "sites": 0,
+      "orders": 0,
+      "orders_with_quoted_url": 0
+    },
+    "test_orders_created": 0,
+    "real_customer_notifications_sent": 0,
+    "real_payments": 0,
+    "paid_plan_changes": 0
+  },
+  "unresolved_before_sale": [
+    "Supabase to R2 S3 credential setup and actual integration",
+    "Dedicated customer domain and DNS/HTTPS",
+    "Intake size/count and staging limits alignment",
+    "AI cost and storage retention guardrails in production",
+    "Independent backups and hosted database restore",
+    "Maintenance contract, merchant disclosures and real integration approval"
+  ],
+  "security_note": "Static content screening is a deny-list aid, not proof that arbitrary or obfuscated JavaScript is safe.",
+  "production_secrets_state": "Not readable through the available connector; values were not requested or retrieved"
+}
