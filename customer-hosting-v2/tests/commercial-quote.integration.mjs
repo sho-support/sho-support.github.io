@@ -9,7 +9,7 @@ const STRANGER='33333333-3333-4333-8333-333333333333',HASH='a'.repeat(64),DOMAIN
 const hash=async x=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(x))).toString('hex');
 test('frozen commercial contract and acceptance on synthetic SQL and actual Edge handlers',async t=>{
  const db=await resourceDatabase();t.after(()=>db.close());
- const base=(await readFile(new URL('./fixtures/hosting-base.sql',import.meta.url),'utf8')).replace(/create role ([a-z_]+) ([^;]+);/g,(_,name,attrs)=>`do $role$ begin create role ${name} ${attrs}; exception when duplicate_object then null; end $role$;`);
+ const base=await readFile(new URL('./fixtures/hosting-base.sql',import.meta.url),'utf8');
  await db.exec(base);
  for(const name of ['20261112053755_website_cloudflare_publication_protocol.sql','20261112170006_website_commercial_quote_protocol.sql'])await db.exec(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
  await db.exec('set role service_role');

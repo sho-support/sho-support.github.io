@@ -9,7 +9,7 @@ export async function handleCommercialAction({body,admin,user,dependencies:d}:an
   if(action==='admin_commercial_policy_status'){
    const setting=await read(admin,'website_settings','key','commercial_policy');
    try{const p=validateCommercialPolicy(setting?.value);return d.json({ready:true,version:p.version,hosting:p.hosting});}
-   catch{return d.json({ready:false,error:'販売条件が未承認・未設定です。維持費・解約・引き渡し・事業者情報を確定してください。'});}
+   catch{return d.json({ready:false,reason:'販売条件が未承認・未設定です。維持費・解約・引き渡し・事業者情報を確定してください。'});}
   }
   const code=String(body.order_code||'').trim().toUpperCase();
   if(!/^(?:[FSP]\d{4,6}|\d{4,10})$/.test(code))return d.json({error:'注文IDが不正です。'},400);

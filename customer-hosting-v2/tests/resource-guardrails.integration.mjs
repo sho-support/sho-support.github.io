@@ -5,7 +5,7 @@ import {resourceDatabase} from './helpers/resource-db.mjs';
 const ADMIN='11111111-1111-4111-8111-111111111111',HASH='a'.repeat(64);
 test('atomic upload and AI guardrails on synthetic SQL data',async t=>{
  const db=await resourceDatabase();t.after(()=>db.close());
- const base=(await readFile(new URL('./fixtures/hosting-base.sql',import.meta.url),'utf8')).replace(/create role ([a-z_]+) ([^;]+);/g,(_,name,attrs)=>`do $role$ begin create role ${name} ${attrs}; exception when duplicate_object then null; end $role$;`);
+ const base=await readFile(new URL('./fixtures/hosting-base.sql',import.meta.url),'utf8');
  await db.exec(base);await db.exec(await readFile(new URL('./fixtures/resource-storage.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../../supabase/migrations/20261112123022_website_resource_guardrails.sql',import.meta.url),'utf8'));
  await db.exec("insert into public.website_sites(site_id,status) values('8100','request_waiting'),('8101','request_waiting'); insert into public.website_jobs(id,site_id,status) values(1,'8100','running'),(2,'8100','running'),(3,'8101','running')");

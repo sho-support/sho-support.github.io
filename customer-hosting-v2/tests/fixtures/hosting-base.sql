@@ -1,8 +1,9 @@
 -- Synthetic metadata fixture, matching the production columns inspected 2026-11-12.
 -- Intentionally NOT a replay of the historical migrations or production customer data.
-create role anon nologin;
-create role authenticated nologin;
-create role service_role nologin bypassrls;
+-- Roles are cluster-wide: independent disposable databases may already have them.
+do $role$ begin create role anon nologin; exception when duplicate_object then null; end $role$;
+do $role$ begin create role authenticated nologin; exception when duplicate_object then null; end $role$;
+do $role$ begin create role service_role nologin bypassrls; exception when duplicate_object then null; end $role$;
 grant usage on schema public to anon,authenticated,service_role;
 create table public.website_admins(user_id uuid primary key);
 create table public.website_settings(key text primary key,value jsonb not null default '{}');

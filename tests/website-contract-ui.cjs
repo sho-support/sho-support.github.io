@@ -13,7 +13,7 @@ const client=ready=>`
   window.__contractCalls.push(body);
   if(body.action==='admin_list_orders')return{data:{orders:[structuredClone(order)]}};
   if(body.action==='admin_bank_settings')return{data:{message:'架空の銀行・支店・口座番号・名義です'}};
-  if(body.action==='admin_commercial_policy_status')return{data:{ready:${ready},version:'試験用・未公開',hosting:{initial_fee_jpy:500},error:'販売条件が未承認です。送信できません。'}};
+  if(body.action==='admin_commercial_policy_status')return{data:{ready:${ready},version:'試験用・未公開',hosting:{initial_fee_jpy:500},reason:'販売条件が未承認です。送信できません。'}};
   if(body.action==='admin_resolve_free_url')return{data:{free_url:'https://s9100.contract.example/'}};
   if(body.action==='admin_send_final_quote'){
    order.final_quote_sent_at='2026-11-13T01:00:00Z';order.final_amount=22500;order.quoted_production_amount=body.final_amount;order.final_public_domain='https://s9100.contract.example/';order.contract_state='sent';order.contract_fingerprint='a'.repeat(64);
@@ -37,7 +37,7 @@ const client=ready=>`
     });
     const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{dialogs.push(d.message());await d.accept();});
     await page.goto(base+'admin/orders.html',{waitUntil:'domcontentloaded'});
-    await page.locator('.order-card').waitFor();await page.locator('.order-card > summary').click();
+    try{await page.locator('.order-card').waitFor({timeout:10000});}catch(e){throw Error('Contract UI failed to load; errors='+errors.join(';')+'; body='+(await page.locator('body').innerText()).slice(0,1800),{cause:e});}await page.locator('.order-card > summary').click();
     check(await page.locator('[data-activate]').isDisabled(),'Activation requires recorded customer acceptance');
     check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No horizontal overflow at '+width);
     if(!ready){

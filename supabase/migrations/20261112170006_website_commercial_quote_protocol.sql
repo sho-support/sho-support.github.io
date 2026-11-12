@@ -94,9 +94,9 @@ begin
  before_quote=old.selections->'commercial_quote';after_quote=new.selections->'commercial_quote';
  if before_quote is not null then
   if after_quote is null or (after_quote-mutable) is distinct from (before_quote-mutable)
-    or not ((before_quote->>'state'='sending' and after_quote->>'state' in ('sending','sent'))
+    or not coalesce(((before_quote->>'state'='sending' and after_quote->>'state' in ('sending','sent'))
       or (before_quote->>'state'='sent' and after_quote->>'state' in ('sent','accepted'))
-      or (before_quote->>'state'='accepted' and after_quote->>'state'='accepted'))
+      or (before_quote->>'state'='accepted' and after_quote->>'state'='accepted')),false)
     or (before_quote ? 'sent_at' and before_quote->'sent_at' is distinct from after_quote->'sent_at')
     or (before_quote ? 'accepted_at' and (
       before_quote->'accepted_at' is distinct from after_quote->'accepted_at' or before_quote->'accepted_by' is distinct from after_quote->'accepted_by'

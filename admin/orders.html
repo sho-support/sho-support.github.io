@@ -143,7 +143,7 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
    try{
      const [r,policy]=await Promise.all([api('admin_list_orders'),api('admin_commercial_policy_status')]);
      policyReady=policy.ready===true;policyInfo=policy;
-     document.getElementById('commercialStatus').textContent=policyReady?'承認済み販売条件：'+policy.version+'。見積りごとに全文を保存します。':(policy.error||'販売条件が未承認です。正式見積りの送信を停止しています。');
+     document.getElementById('commercialStatus').textContent=policyReady?'承認済み販売条件：'+policy.version+'。見積りごとに全文を保存します。':(policy.reason||'販売条件が未承認です。正式見積りの送信を停止しています。');
      const orders=Array.isArray(r.orders)?r.orders:[];
      document.getElementById('nLine').textContent=orders.filter(x=>x.status==='pending_line').length;
      document.getElementById('nPay').textContent=orders.filter(x=>x.status==='pending_payment').length;
