@@ -258,6 +258,21 @@
     }catch(e){showMessage('login-message','ログインできません。メールアドレスとパスワードを確認してください。',true)}
     finally{button.disabled=false}
   });
+  $('forgot-password').addEventListener('click',async()=>{
+    const email=$('login-email').value.trim();
+    if(!email||!$('login-email').checkValidity()){
+      showMessage('login-message','再設定メールを送る宛先を先に入力してください。',true);return;
+    }
+    const button=$('forgot-password');if(button.disabled)return;button.disabled=true;
+    try{
+      // The redirect must be explicitly allowed in Supabase Auth URL Configuration.
+      const redirectTo=new URL('./reset.html',window.location.href).href;
+      const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo});
+      if(error)throw error;
+      showMessage('login-message','登録済みのアドレスであれば再設定メールが届きます。メールをご確認ください。');
+    }catch(e){showMessage('login-message','再設定メールを送信できませんでした。送信元設定・制限を確認し、時間をおいて再試行してください。',true)}
+    finally{button.disabled=false}
+  });
   $('signout').addEventListener('click',async()=>{await client.auth.signOut();user=null;admin=false;leads=[];deals=[];payments=[];await start()});
   $('refresh').addEventListener('click',refreshData);$('export').addEventListener('click',exportCsv);
   $('new-lead').addEventListener('click',()=>openEditor('lead'));
