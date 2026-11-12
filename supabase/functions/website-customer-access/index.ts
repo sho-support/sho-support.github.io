@@ -1,4 +1,5 @@
 import {intakeAssetProblem} from '../_shared/intake-assets.ts';
+import {issueIntakeUpload,UploadGateError} from '../_shared/upload-gate.ts';
 import {handleHostingAction} from '../_shared/hosting-routes.ts';
 import {cloudflareHostingEnabled} from '../_shared/hosting-mode.ts';
 import {reserveHostingUrl} from '../_shared/hosting-service.ts';
@@ -522,13 +523,8 @@ Deno.serve(async(req)=>{
   }
 
   if(action==='signed_upload'){
-    const folder=String(body?.folder||'');
-    if(!['top_photos','gallery_photos','logo_file','member_photos'].includes(folder)) return json({error:'アップロード先が不正です。'},400);
-    const safeName=String(body?.file_name||'file').replace(/[^A-Za-z0-9._-]+/g,'_').slice(-100)||'file';
-    const path=`${siteId}/secure-intake/${folder}/${crypto.randomUUID()}-${safeName}`;
-    const {data,error}=await admin.storage.from('website-intake-files').createSignedUploadUrl(path);
-    if(error) throw error;
-    return json({ok:true,path,token:data.token});
+    try{return json(await issueIntakeUpload(admin,siteId,String(body?.folder||''),String(body?.file_name||'')));}
+    catch(e){return json({error:e instanceof UploadGateError?e.message:'画像の送信準備に失敗しました。'},e instanceof UploadGateError?e.status:503);}
   }
 
   if(action==='submit_intake'){

@@ -14,6 +14,7 @@ const client=recovery=>`
  export async function websiteApi(action,payload={}){
   if(action==='list_sites')return {admin:true,sites:[structuredClone(detail.site)]};
   if(action==='load_site')return structuredClone(detail);
+  if(action==='admin_resource_usage')return {resources:{limits:{ai_enabled:false,upload_enabled:true,ai_month_micro_usd:10000000,upload_bucket_bytes:800000000,upload_site_bytes:400000000,pricing_checked_on:'2026-11-12'},ai_month_micro_usd:1250000,ai_uncertain_calls:1,upload_reserved_bytes:14000000,site_upload_reserved_bytes:7000000}};
   window.__hostingActions.push({action,payload});
   if(action==='admin_rollback_site'){detail.site.status='live';detail.hosting.status='live';detail.hosting.active_release=payload.release_id;}
   else if(action==='admin_reconcile_publication'){detail.hosting.active_operation_id=null;detail.hosting.status='private';}
@@ -55,6 +56,11 @@ async function inlineScreenshot(page,label,width){
    const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,
     clipped:[...document.querySelectorAll('header a,header .brand,button,select,textarea,input')].filter(e=>e.getClientRects().length&&!e.closest('[hidden]')&&!e.closest('.tabs')).filter(e=>{const r=e.getBoundingClientRect();return r.left< -1||r.right>innerWidth+1;}).map(e=>e.id||e.textContent.trim())}));
    check(!layout.overflow,'No page overflow at '+width);check(!layout.clipped.length,'Visible controls fit at '+width+': '+layout.clipped.join(','));
+   await page.locator('.resource-panel > summary').click();await page.locator('#loadResourceUsage').click();await page.waitForFunction(()=>document.getElementById('resourceUsage').textContent.includes('$1.25'));
+   check((await page.locator('#resourceUsage').innerText()).includes('AI制作：停止中'),'Paused AI and conservative usage are shown');
+   check((await page.locator('#resourceUsage').innerText()).includes('確認待ちのAI呼び出し：1件'),'Unknown requests stay visible');
+   check((await page.locator('#resourceUsage').innerText()).includes('14.0MB / 800.0MB'),'Reserved image capacity is labelled separately from a bill');
+   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Resource usage fits at '+width);
    check((await page.locator('#restoreRelease option').count())===2,'Only server-provided published releases are offered');
    if(process.env.QA_SCREENSHOTS_DIR){mkdirSync(process.env.QA_SCREENSHOTS_DIR,{recursive:true});await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'hosting-admin-'+width+'.png'),fullPage:true});}
    await inlineScreenshot(page,'hosting-admin',width);

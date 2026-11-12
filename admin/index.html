@@ -199,6 +199,7 @@ function card(p){
  '<details class="fold" open><summary>今回の操作</summary><div class="inside">'+actionHtml(p)+'</div></details>'+
  '<details class="fold"><summary>顧客カルテ</summary><div class="inside"><dl class="kv"><dt>業種</dt><dd>'+esc(p.profile.industry)+'</dd><dt>雰囲気・要望</dt><dd><div class="chips">'+fmt(p.profile.mood)+'</div></dd><dt>色</dt><dd><div class="chips">'+fmt(p.profile.colors)+'</div></dd><dt>希望機能</dt><dd><div class="chips">'+fmt(p.profile.likes)+'</div></dd><dt>避けたいもの</dt><dd><div class="chips">'+fmt(p.profile.dislikes)+'</div></dd></dl></div></details>'+
  '<details class="fold"><summary>要望・承認履歴</summary><div class="inside"><div class="timeline">'+historyHtml(p)+'</div></div></details>'+
+ (prodMode?'<details class="fold resource-panel"><summary>AI費用・画像の受付上限</summary><div class="inside"><p class="meta">処理結果が不明な呼び出しと未使用の画像送信枠も、上限の計算に残ります。表示は安全側の管理用換算で、実際の請求額ではありません。</p><button class="btn full" id="loadResourceUsage" type="button">利用上限・確認待ちを読み込む</button><p class="meta" id="resourceUsage" aria-live="polite" style="white-space:pre-line;overflow-wrap:anywhere;margin-top:12px"></p></div></details>':'')+
  (prodMode?(p.hosting?hostingPanel(p):'<details class="fold"><summary>公開設定</summary><div class="inside"><label style="display:block;font-size:.7rem;color:#aaa">GitHub Repo<input id="repoFullName" type="text" value="'+esc(p.repoFullName)+'" placeholder="sho-support/customer-site-1042" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label><div class="actionbar"><label style="font-size:.7rem;color:#aaa">公開ブランチ<input id="publishBranch" type="text" value="'+esc(p.publishBranch)+'" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label><label style="font-size:.7rem;color:#aaa">独自ドメイン<input id="customDomain" type="text" value="'+esc(p.customDomain)+'" placeholder="example.com" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label></div><div class="actionbar"><button class="btn" id="saveRepoConfig" type="button">Repo設定を保存</button><button class="btn gold" id="saveDomain" type="button">独自ドメインをGitHubへ設定</button></div><div class="meta" style="margin-top:8px;color:#f3cd8c">【正式URLの保護】無料URLを選択した案件はGitHub PagesのURLで公開します。独自ドメインを選択した案件だけ、DNS・HTTPSとドメインの管理権限を確認してください。公開後のドメイン・Repo変更はこの画面からできません。</div><div class="meta" style="margin-top:6px">通常公開：/　｜　一時非公開・改良中：/docs　｜　DNS設定はドメイン会社側で別途行います。</div></div></details>'):'')+
  '<div class="footnote">'+(prodMode?'本番データ：Supabase / private Storage':'デモデータ：このブラウザのlocalStorage')+'</div></div></details>';
 }
@@ -214,6 +215,14 @@ function demoMove(p,status,current,title,text){p.status=status;p.current=current
 
 function bind(p,root){
  const q=id=>root.querySelector('#'+id);
+ q('loadResourceUsage')?.addEventListener('click',async()=>{
+  const b=q('loadResourceUsage'),out=q('resourceUsage');b.disabled=true;out.textContent='確認中…';
+  try{
+   const {resources:r}=await websiteApi('admin_resource_usage',{site_id:p.id});
+   const l=r.limits,usd=n=>'$'+(Number(n||0)/1000000).toFixed(2),mb=n=>(Number(n||0)/1000000).toFixed(1)+'MB';
+   out.textContent='AI制作：'+(l.ai_enabled?'有効':'停止中')+'\n月次の管理用換算：'+usd(r.ai_month_micro_usd)+' / '+usd(l.ai_month_micro_usd)+'\n確認待ちのAI呼び出し：'+Number(r.ai_uncertain_calls||0)+'件\n画像受付：'+(l.upload_enabled?'有効':'停止中')+'\n全体の予約枠：'+mb(r.upload_reserved_bytes)+' / '+mb(l.upload_bucket_bytes)+'\nこのサイトの予約枠：'+mb(r.site_upload_reserved_bytes)+' / '+mb(l.upload_site_bytes)+'\n料金確認日：'+String(l.pricing_checked_on||'未確認')+'\n上限や確認待ちがある場合は、再生成を繰り返さず利用記録を確認してください。';
+  }catch(e){out.textContent=e.message||'利用上限を読み込めませんでした。';}finally{b.disabled=false;}
+ });
  const hostingAction=async(action,extra={})=>{
   const response=await websiteApi(action,{site_id:p.id,...extra});state=await loadProduction();render();
   if(response?.warning)alert(response.warning);

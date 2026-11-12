@@ -11,18 +11,20 @@ export function postgrestFixture(sql){
       return {data:r.rows[0].r,error:null};
     }catch(error){return {data:null,error};}},
     from(table){
-      word(table);let filters=[],updates=null,limit=null;
+      word(table);let filters=[],updates=null,inserts=null,limit=null,ordering=[];
       const run=async single=>{try{
         const values=[];let query;
-        if(updates){query='update public.'+table+' set '+Object.entries(updates).map(([k,v])=>{values.push(v);return word(k)+'=$'+values.length;}).join(',');}
+        if(inserts){const entries=Object.entries(inserts);query='insert into public.'+table+'('+entries.map(([k])=>word(k)).join(',')+') values('+entries.map(([,v])=>{values.push(v&&typeof v==='object'?JSON.stringify(v):v);return '$'+values.length;}).join(',')+')';}
+        else if(updates){query='update public.'+table+' set '+Object.entries(updates).map(([k,v])=>{values.push(v&&typeof v==='object'?JSON.stringify(v):v);return word(k)+'=$'+values.length;}).join(',');}
         else query='select * from public.'+table;
         if(filters.length)query+=' where '+filters.map(([k,v])=>{values.push(v);return word(k)+'=$'+values.length;}).join(' and ');
-        if(updates)query+=' returning *';else if(limit)query+=' limit '+limit;
+        if(updates||inserts)query+=' returning *';else{if(ordering.length)query+=' order by '+ordering.join(',');if(limit)query+=' limit '+limit;}
         const r=await sql.query(query,values);
         if(single&&r.rows.length>1)throw new Error('Fixture query returned multiple rows');
         return {data:single?r.rows[0]??null:r.rows,error:null};
       }catch(error){return {data:null,error};}};
-      const b={select(){return b;},eq(k,v){filters.push([k,v]);return b;},limit(n){limit=n;return b;},
+      const b={select(){return b;},eq(k,v){filters.push([k,v]);return b;},limit(n){if(!Number.isInteger(n)||n<1)throw Error('Invalid fixture limit');limit=n;return b;},
+        order(k,{ascending=true}={}){ordering.push(word(k)+(ascending?' asc':' desc'));return b;},insert(v){inserts=v;return b;},
         update(v){updates=v;return b;},maybeSingle(){return run(true);},single(){return run(true);},then(ok,no){return run(false).then(ok,no);}};
       return b;
     }

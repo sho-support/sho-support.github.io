@@ -8,6 +8,8 @@ on:
       - 'supabase/functions/_shared/customer-r2.*'
       - 'supabase/functions/_shared/hosting-*'
       - 'supabase/functions/_shared/intake-assets.*'
+      - 'supabase/functions/_shared/upload-gate.ts'
+      - 'supabase/functions/_shared/guarded-ai.*'
       - 'supabase/functions/_shared/website.ts'
       - 'supabase/functions/_shared/edge-runtime.d.ts'
       - 'supabase/functions/website-api/**'
@@ -15,6 +17,7 @@ on:
       - 'supabase/functions/website-worker/**'
       - 'supabase/functions/website-preview/**'
       - 'supabase/migrations/20261112053755_website_cloudflare_publication_protocol.sql'
+      - 'supabase/migrations/20261112123022_website_resource_guardrails.sql'
       - '.github/workflows/customer-hosting-v2-tests.yml'
       - 'scripts/ignore-customer-hosting-build.mjs'
       - 'scripts/install-qa-japanese-font.mjs'
@@ -30,6 +33,7 @@ on:
       - 'website-theme.css'
       - 'website-portal.js'
       - 'website-materials.js'
+      - 'website-client.js'
   workflow_dispatch:
     inputs:
       inspect_preview:
@@ -104,6 +108,7 @@ jobs:
       - name: Verify RPCs and privileges on disposable PostgreSQL 17
         env:
           HOSTING_QA_DATABASE_URL: postgres://hosting_qa:synthetic-ci-password-only@127.0.0.1:5432/sho_hosting_qa
+          HOSTING_QA_PG_CONTAINER: ${{ job.services.postgres.id }}
         run: npm run test:db
   sales-regression:
     runs-on: ubuntu-24.04
@@ -139,6 +144,31 @@ jobs:
         with:
           name: customer-hosting-sales-regression
           path: /tmp/sho-browser-screenshots
+          retention-days: 3
+  supabase-storage-preview:
+    if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-supabase-storage-preview]') }}
+    needs: [contract, publication-database, sales-regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: customer-hosting-v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify private test-bucket signing, actual metadata, isolation and byte restore
+        run: node verify-supabase-storage.mjs
+      - name: Preserve sanitized Storage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-storage-preview-proof
+          path: customer-hosting-v2/.wrangler/proof/supabase-storage.json
           retention-days: 3
   inventory:
     if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.inspect_preview) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[inspect-customer-preview]'))) }}

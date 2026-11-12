@@ -1,4 +1,5 @@
 import {intakeAssetProblem} from '../_shared/intake-assets.ts';
+import {issueIntakeUpload,UploadGateError} from '../_shared/upload-gate.ts';
 import {handleHostingAction} from '../_shared/hosting-routes.ts';
 import {hostingAdminState} from '../_shared/hosting-service.ts';
 import {cloudflareHostingEnabled} from '../_shared/hosting-mode.ts';
@@ -20,6 +21,8 @@ type Body = {
   offline_path?: '/' | '/docs';
   custom_domain?: string | null;
   review_action?: 'revision' | 'approve' | 'publish';
+  folder?:string;
+  file_name?:string;
 };
 
 function validSiteId(value: unknown) {
@@ -203,6 +206,19 @@ Deno.serve(async (req) => {
     const role = await siteRole(admin, user.id, siteId);
     if (!role) return json({ error: 'このSITE IDへのアクセス権がありません。' }, 403);
     const canEdit = role === 'admin' || role === 'owner' || role === 'editor';
+
+    if(action==='signed_upload'){
+      if(!canEdit)return json({error:'編集権限がありません。'},403);
+      const {data:site,error}=await admin.from('website_sites').select('status').eq('site_id',siteId).single();if(error)throw error;
+      if(!['request_waiting','live'].includes(site.status))return json({error:'現在はこのサイトに画像を追加できません。'},409);
+      return json(await issueIntakeUpload(admin,siteId,String(body.folder||''),String(body.file_name||'')));
+    }
+    if(action==='admin_resource_usage'){
+      if(role!=='admin')return json({error:'運営者権限が必要です。'},403);
+      const {data,error}=await admin.rpc('website_resource_usage',{p_actor:user.id,p_site:siteId});
+      if(error)return json({error:'利用上限の記録を読み込めません。設定の反映状況を確認してください。'},503);
+      return json({ok:true,resources:data});
+    }
 
     if (action === 'admin_run_worker') {
       if (role !== 'admin') return json({ error: '管理者権限が必要です。' }, 403);
@@ -778,6 +794,7 @@ Deno.serve(async (req) => {
 
     return json({ error: 'Unknown action' }, 400);
   } catch (error) {
+    if(error instanceof UploadGateError)return json({error:error.message},error.status);
     console.error('website-api error', error);
     return json({ error: '処理に失敗しました。', detail: String(error) }, 500);
   }

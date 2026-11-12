@@ -56,13 +56,11 @@ export async function requireWebsiteSession(returnUrl=location.href) {
 export async function uploadWebsiteFile(siteId, file, folder='files') {
   const session = await currentSession();
   if (!session) throw new Error('ログインが必要です。');
-  const safeName = String(file.name || 'file')
-    .replace(/[^a-zA-Z0-9._-]+/g, '_')
-    .slice(-100);
-  const path = `${siteId}/${session.user.id}/${folder}/${crypto.randomUUID()}-${safeName}`;
+  const ticket=await websiteApi('signed_upload',{site_id:siteId,folder,file_name:file.name});
+  const path=ticket.path;
   const { error } = await websiteSupabase.storage
     .from('website-intake-files')
-    .upload(path, file, { cacheControl: '3600', upsert: false });
+    .uploadToSignedUrl(path,ticket.token,file,{cacheControl:'3600',upsert:false});
   if (error) throw error;
   return path;
 }
