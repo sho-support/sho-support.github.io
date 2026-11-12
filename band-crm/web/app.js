@@ -243,6 +243,30 @@
     link.href=url;link.download='band-support-backup-'+today()+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
     showMessage('app-message','CSVを書き出しました。個人情報を含むため、保存場所を適切に管理してください。')
   }
+  async function exportFullBackup(){
+    if(!admin){showMessage('app-message','管理者ログインが必要です。',true);return}
+    const button=$('export-full');if(button.disabled)return;button.disabled=true;
+    showMessage('app-message','最新の顧客・案件・入金・監査履歴を取得しています…');
+    try{
+      const [latestLeads,latestDeals,latestPayments,audit]=await Promise.all([
+        loadPages('band_crm_leads'),loadPages('band_crm_deals'),
+        loadPages('band_crm_payments'),loadPages('band_crm_audit')
+      ]);
+      // Do not silently export a partial backup when any table fetch fails.
+      const backup={
+        format:'SHO_BAND_SUPPORT_CRM_BACKUP_V1',
+        created_at:new Date().toISOString(),timezone:'Asia/Tokyo',
+        data:{leads:latestLeads,deals:latestDeals,payments:latestPayments,audit}
+      };
+      const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
+      const url=URL.createObjectURL(blob),link=document.createElement('a');
+      link.href=url;link.download='band-support-full-backup-'+today()+'.json';
+      document.body.append(link);link.click();link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      showMessage('app-message','JSON保存を開始しました。顧客の個人情報が含まれるため、共有せず安全な場所へ保管してください。');
+    }catch(e){showMessage('app-message','全データを取得できなかったため保存しませんでした。接続と管理権限を確認してください。',true)}
+    finally{button.disabled=false}
+  }
   if(!CONFIG||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(CONFIG.url)||!CONFIG.publishableKey?.startsWith('sb_publishable_')){
     showMessage('login-message','Supabase接続設定が未完了です。公開用キーを確認してください。',true);return;
   }
@@ -275,6 +299,7 @@
   });
   $('signout').addEventListener('click',async()=>{await client.auth.signOut();user=null;admin=false;leads=[];deals=[];payments=[];await start()});
   $('refresh').addEventListener('click',refreshData);$('export').addEventListener('click',exportCsv);
+  $('export-full').addEventListener('click',exportFullBackup);
   $('new-lead').addEventListener('click',()=>openEditor('lead'));
   $('new-deal').addEventListener('click',()=>openEditor('deal'));
   $('new-payment').addEventListener('click',()=>openEditor('payment'));
