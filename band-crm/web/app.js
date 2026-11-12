@@ -104,8 +104,8 @@
     showMessage('app-message','読み込み中…');
     try{
       const [l,d,p]=await Promise.all([loadPages('band_crm_leads'),loadPages('band_crm_deals'),loadPages('band_crm_payments')]);
-      leads=l;deals=d;payments=p;drawAll();showMessage('app-message','更新しました。');
-    }catch(e){showMessage('app-message','データを取得できません。接続と管理権限を確認してください。',true)}
+      leads=l;deals=d;payments=p;drawAll();showMessage('app-message','更新しました。');return true;
+    }catch(e){showMessage('app-message','データを取得できません。接続と管理権限を確認してください。',true);return false}
   }
   function drawStats(){
     const month=today().slice(0,7);
@@ -189,13 +189,28 @@
       values.evidence_reference=values.evidence_reference.trim();values.verified_by=user.id;
     }
     button.disabled=true;showMessage('editor-message','保存中…');
+    let saved=false;
     try{
-      const query=editing.id?client.from(table).update(values).eq('id',editing.id):client.from(table).insert(values);
-      const {error}=await query;if(error)throw error;
-      $('editor').close();editing=null;await refreshData();
+      const query=editing.id
+        ?client.from(table).update(values).eq('id',editing.id).select('id')
+        :client.from(table).insert(values).select('id');
+      const {data:rows,error}=await query;
+      if(error)throw error;
+      // A successful HTTP response with zero affected rows is not a successful update.
+      if(!Array.isArray(rows)||rows.length!==1)throw new Error('WRITE_NOT_CONFIRMED');
+      saved=true;
+      $('editor').close();editing=null;
       switchTab(kind==='lead'?'leads':kind==='deal'?'deals':'payments');
+      const refreshed=await refreshData();
+      if(!refreshed)showMessage('app-message','登録は完了しています。一覧の更新に失敗したため、同じ内容を再登録せず「更新」を押してください。',true);
     }catch(err){
-      showMessage('editor-message',err?.code==='23505'?'照合番号が重複しています。銀行明細・入力内容を確認してください。':'登録に失敗しました。入力・権限・通信状態を確認してください。',true)
+      if(saved){
+        showMessage('app-message','登録は完了しています。画面の再読込に失敗しました。二重登録を避けるため再送信せず履歴を確認してください。',true);
+      }else{
+        showMessage('editor-message',err?.code==='23505'
+          ?'明細照合番号が既に登録されています。入力し直さず履歴を更新して確認してください。'
+          :'登録結果を確認できません。通信断の場合は既に保存された可能性があります。履歴を確認してから再試行してください。',true);
+      }
     }finally{button.disabled=false}
   }
   async function copy(value){
