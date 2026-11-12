@@ -16,7 +16,7 @@ const client=ready=>`
   if(body.action==='admin_commercial_policy_status')return{data:{ready:${ready},version:'試験用・未公開',hosting:{initial_fee_jpy:500},reason:'販売条件が未承認です。送信できません。'}};
   if(body.action==='admin_resolve_free_url')return{data:{free_url:'https://s9100.contract.example/'}};
   if(body.action==='admin_send_final_quote'){
-   order.final_quote_sent_at='2026-11-13T01:00:00Z';order.final_amount=22500;order.quoted_production_amount=body.final_amount;order.final_public_domain='https://s9100.contract.example/';order.contract_state='sent';order.contract_fingerprint='a'.repeat(64);
+   order.final_quote_sent_at='2026-11-13T01:00:00Z';order.final_amount=22500;order.quoted_production_amount=body.final_amount;order.final_public_domain='https://s9100.contract.example/';order.contract_state='sent';order.contract_fingerprint='a'.repeat(64);order.quote_request={production_amount:body.final_amount,public_domain:body.public_domain,quote_note:body.quote_note,delivery_terms:body.delivery_terms,payment_deadline:body.payment_deadline};
    return{data:{ok:true}};
   }
   if(body.action==='admin_contract_detail')return{data:{contract:{state:order.contract_state,message:'保存済みの正式見積り・契約条件\\n初回合計22,500円\\n<script>window.__injected=true</script>'}}};
@@ -40,6 +40,7 @@ const client=ready=>`
     try{await page.locator('.order-card').waitFor({timeout:10000});}catch(e){throw Error('Contract UI failed to load; errors='+errors.join(';')+'; body='+(await page.locator('body').innerText()).slice(0,1800),{cause:e});}await page.locator('.order-card > summary').click();
     check(await page.locator('[data-activate]').isDisabled(),'Activation requires recorded customer acceptance');
     check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No horizontal overflow at '+width);
+    check(await page.locator('header .back').evaluateAll(els=>els.every(e=>e.getBoundingClientRect().width>=e.textContent.trim().length*7)),'Navigation links keep enough width to remain readable');
     if(!ready){
      check(await page.locator('[data-quote]').isDisabled(),'Unapproved policy blocks final quotations');
      check((await page.locator('#commercialStatus').innerText()).includes('未承認'),'Blocked reason is visible');
@@ -52,11 +53,14 @@ const client=ready=>`
      check(dialogs.some(x=>x.includes('22,500円（税込')),'Operator confirms the exact itemized initial total');
      check(await page.locator('[data-activate]').isDisabled(),'Sent quote alone does not enable activation');
      check(await page.locator('.order-card').evaluate(el=>el.open),'The active order stays expanded after saving the quotation');
+     check(await page.locator('[data-delivery-terms]').inputValue()==='1サイト・1ページを制作。全素材受領と入金確認から14日以内に初回案を提出します。','Frozen delivery terms remain visible');
+     check(await page.locator('[data-final-amount]').isDisabled(),'Sent quotation values cannot be edited in the form');
      const fold=page.locator('.mini-fold').filter({has:page.locator('[data-contract]')});await fold.locator('summary').click();
      await page.locator('[data-contract]').click();await page.waitForFunction(()=>document.querySelector('[data-contract-text]').textContent.includes('保存済み'));
      check(await page.evaluate(()=>window.__injected!==true),'Frozen text is displayed without executing HTML');
      await page.locator('[data-accept-contract]').click();check(dialogs.some(x=>x.includes('同意返信のLINE日時')),'Acceptance evidence is required');
      await page.locator('[data-acceptance-reference]').fill('試験のみ：11月13日18時30分・上記見積りへの同意返信');
+     await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
      if(process.env.QA_SCREENSHOTS_DIR){mkdirSync(process.env.QA_SCREENSHOTS_DIR,{recursive:true});await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'contract-orders-'+width+'.png'),fullPage:true});}
      if(process.env.QA_INLINE_SCREENSHOTS==='true'&&[320,390,1366].includes(width)){
       const s=(await page.screenshot({type:'jpeg',quality:50,fullPage:true})).toString('base64'),n=Math.ceil(s.length/8000);
