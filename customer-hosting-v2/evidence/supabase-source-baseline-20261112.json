@@ -1,0 +1,71 @@
+{
+  "verified_at": "2026-11-12",
+  "project_id": "tyhymvgjkoebetyypspj",
+  "purpose": "Record live source checksums before development-only Cloudflare integration; no production deployment",
+  "functions": [
+    {
+      "slug": "website-api",
+      "version": 46,
+      "files": [
+        {
+          "path": "index.ts",
+          "sha256": "83f61cadebfa52709da3b8ab40b5555dd3f80d6b386f35c25143f9ec654d2f72"
+        },
+        {
+          "path": "_shared/website.ts",
+          "sha256": "5b82743744fbd0f7023bf414b0889ee5d84226c205fae4a87bd7c6a12d0e85c7"
+        }
+      ]
+    },
+    {
+      "slug": "website-customer-access",
+      "version": 49,
+      "files": [
+        {
+          "path": "index.ts",
+          "sha256": "3fbf19b0b896c5d961999eb02f7aa79fbfb39fb9143a24a3de478db0882a8e94"
+        },
+        {
+          "path": "_shared/website.ts",
+          "sha256": "3f2e11b2a8117ca14a685a7eecd1739889e8b2f5a28aebd66ff788ed683585e2"
+        }
+      ]
+    },
+    {
+      "slug": "website-worker",
+      "version": 42,
+      "files": [
+        {
+          "path": "semi-template.mjs",
+          "sha256": "72acb5f4beaf44ca4439abf6d941d879bd63cb815cf3cccb50d56245b07e7967"
+        },
+        {
+          "path": "staged-full.mjs",
+          "sha256": "074fbaa6db945635ba38ba24c0192abed07d86618d2a9de22c035f58fc304388"
+        },
+        {
+          "path": "index.ts",
+          "sha256": "80679c059122d5e3f33cfb7544a3c61df2eadbfb52e5996c6186a6eb50918f3d"
+        },
+        {
+          "path": "_shared/website.ts",
+          "sha256": "5b82743744fbd0f7023bf414b0889ee5d84226c205fae4a87bd7c6a12d0e85c7"
+        }
+      ]
+    },
+    {
+      "slug": "website-preview",
+      "version": 9,
+      "files": [
+        {
+          "path": "index.ts",
+          "sha256": "1e80527607ba6488413bd296ffab45b7284734efe7fe2b35a98f95fabf78ce7e"
+        },
+        {
+          "path": "_shared/website.ts",
+          "sha256": "4621aee2de2b591e78eda664a7cfe528ad35b072a60f268bb65c70edd30f10d6"
+        }
+      ]
+    }
+  ]
+}

@@ -108,7 +108,7 @@ export function sanitizeFullPageLinks(markup,plan){
     if(!match)invalid=true;
     else{
      const hostname=match[1].toLowerCase().split(':')[0],pathname=match[2]||'/';
-     if((hostname==='sho-support.github.io'||hostname.endsWith('.sho-support.github.io'))&&management.test(pathname))invalid=true;
+     if((hostname==='sho-support.github.io'||hostname.endsWith('.sho-support.github.io')||hostname==='sho-web-support.netlify.app')&&management.test(pathname))invalid=true;
     }
    }else if(/^(?:mailto:|tel:|#)/i.test(href)){invalid=false;}
    else{

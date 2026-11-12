@@ -1,5 +1,6 @@
 // Provider-independent release package preflight.
 // This module NEVER uploads assets or changes a live site's active.json.
+import {auditHostedContent} from './hosting-content-audit.mjs';
 const ID=/^[0-9]{4,10}$/,RELEASE=/^[a-f0-9]{12,64}$/;
 const ALLOWED=new Set(["html","css","js","mjs","json","txt","svg","png","jpg","jpeg","webp","gif","ico","avif","woff","woff2","pdf","mp4","webm"]);
 const TEXT_FORMATS=new Set(["html","css","js","mjs","json","txt","svg"]);
@@ -42,6 +43,7 @@ export function prepareRelease(siteId,releaseId,files){
     objects.push({key:"sites/"+id+"/releases/"+version+"/"+name,path:name,body,bytes:size});
   }
   if(!hasHome)throw new Error("Home page is missing");
+  auditHostedContent(files);
   return {site_id:id,release:version,total_bytes:totalBytes,file_count:files.length,objects,
     activation:{key:"sites/"+id+"/active.json",json:JSON.stringify({status:"live",release:version})}};
 }

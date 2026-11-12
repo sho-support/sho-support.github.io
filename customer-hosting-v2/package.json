@@ -8,10 +8,13 @@
     "test:supabase": "node --experimental-vm-modules --test tests/supabase-r2.integration.mjs",
     "test:db": "node --test tests/hosting-db.integration.mjs",
     "test:pipeline": "node --test tests/hosting-pipeline.integration.mjs",
+    "test:routes": "node --experimental-vm-modules --test tests/hosting-routes.integration.mjs",
+    "check:edge": "node check-edge-functions.mjs",
     "check:preview": "wrangler deploy --dry-run --config wrangler.preview.jsonc --outdir /tmp/sho-customer-preview-build"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.16",
+    "@supabase/supabase-js": "2.57.4",
     "aws4fetch": "1.0.20",
     "miniflare": "5.20261110.0-beta",
     "pg": "8.23.1",

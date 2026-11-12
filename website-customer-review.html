@@ -91,6 +91,7 @@ async function loadProject(){
    updated:site.updated_at?new Date(site.updated_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):'',
    preview:site.preview_url||'',
    customerApproved:Boolean(site.customer_approved),
+   updateUrl:result.update_url||'',
   };
  }
  const state=demoLoad();
@@ -109,7 +110,7 @@ async function render(){
 
  app.innerHTML='<section class="card"><h2>現在の状態</h2><div class="body"><span class="status">'+esc(label(p.status))+'</span><div class="kv"><b>サイト名</b><span>'+esc(p.name)+'</span><b>最終更新</b><span>'+esc(p.updated)+'</span></div></div></section>'+
  '<section class="card"><h2>制作サイト</h2><div class="body"><div class="preview"><div><p style="margin:0 0 10px;color:#aaa;font-size:.76rem">別画面でサイトを確認できます</p>'+previewHtml+'</div></div></div></section>'+
- '<section class="card"><h2>確認・公開</h2><div class="body">'+action(p)+'</div></section>';
+ '<section class="card"><h2>確認・公開</h2><div class="body">'+action(p)+(p.updateUrl?'<div class="actions"><a class="btn" href="'+esc(p.updateUrl)+'" target="_blank" rel="noopener noreferrer">更新・管理画面を開く</a></div>':'')+'</div></section>';
  bind(p);
 }
 

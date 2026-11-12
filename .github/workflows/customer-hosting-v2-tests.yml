@@ -7,6 +7,12 @@ on:
       - 'customer-hosting-v2/**'
       - 'supabase/functions/_shared/customer-r2.*'
       - 'supabase/functions/_shared/hosting-*'
+      - 'supabase/functions/_shared/website.ts'
+      - 'supabase/functions/_shared/edge-runtime.d.ts'
+      - 'supabase/functions/website-api/**'
+      - 'supabase/functions/website-customer-access/**'
+      - 'supabase/functions/website-worker/**'
+      - 'supabase/functions/website-preview/**'
       - 'supabase/migrations/20261112053755_website_cloudflare_publication_protocol.sql'
       - '.github/workflows/customer-hosting-v2-tests.yml'
       - 'scripts/ignore-customer-hosting-build.mjs'
@@ -15,8 +21,12 @@ on:
       - 'tests/website-smoke.cjs'
       - 'tests/customer-preview-live.cjs'
       - 'tests/website-order-lifecycle.cjs'
+      - 'tests/website-hosting-ui.cjs'
+      - 'admin/index.html'
+      - 'admin/orders.html'
       - 'website-*.html'
       - 'website-theme.css'
+      - 'website-portal.js'
   workflow_dispatch:
     inputs:
       inspect_preview:
@@ -56,6 +66,10 @@ jobs:
         run: npm run test:db
       - name: Verify all three plans and lost-response recovery using SQL and local R2
         run: npm run test:pipeline
+      - name: Verify both HTTP approval/publish routes and frozen previews without external requests
+        run: npm run test:routes
+      - name: Type-check the four Edge Functions against the pinned deployed SDK
+        run: npm run check:edge
       - name: Validate preview Worker package without deploying
         run: npm run check:preview
   publication-database:
@@ -113,6 +127,7 @@ jobs:
           trap 'kill "$server_pid"' EXIT
           node tests/website-smoke.cjs
           node tests/website-order-lifecycle.cjs
+          node tests/website-hosting-ui.cjs
       - name: Keep rendered screenshots for visual inspection
         if: always()
         uses: actions/upload-artifact@v4

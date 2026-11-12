@@ -59,6 +59,12 @@ create table public.website_hosting_outbox (
   site_id text not null references public.website_hosting_sites(site_id),
   kind text not null,
   state text not null default 'pending' check (state in ('pending','sent','manual_review')),
+  delivery_started_at timestamptz,
+  delivery_payload jsonb,
+  customer_sent_at timestamptz,
+  owner_sent_at timestamptz,
+  lease_id uuid,
+  lease_until timestamptz,
   created_at timestamptz not null default now(),
   sent_at timestamptz
 );
@@ -151,6 +157,43 @@ begin
   return to_jsonb(r);
 end $$;
 
+create function public.website_hosting_activate_order(p_actor uuid,p_order text,p_key_hash text) returns jsonb
+language plpgsql security invoker set search_path='' as $$
+declare o public.website_orders%rowtype; u public.website_hosting_urls%rowtype; s public.website_sites%rowtype; label text;
+begin
+  perform public.website_hosting_require_admin(p_actor);
+  select * into strict o from public.website_orders where order_code=p_order for update;
+  select * into strict u from public.website_hosting_urls where order_code=p_order;
+  if o.status='site_created' and exists(select 1 from public.website_hosting_sites where site_id=o.site_id and order_code=p_order) then
+    return jsonb_build_object('site_id',o.site_id,'already_active',true);
+  end if;
+  if o.status<>'pending_payment' or coalesce(o.line_user_id,'')='' or p_key_hash is null or p_key_hash !~ '^[a-f0-9]{64}$'
+    or coalesce(o.selections->>'final_quote_amount','')='' or coalesce(o.selections->>'final_quote_sent_at','')=''
+    or coalesce(o.selections->>'quote_domain_owner_confirmed_at','')=''
+    or o.selections->>'final_public_domain' is distinct from u.public_url then
+    raise exception 'A paid-order confirmation requires its sent quotation and immutable URL';
+  end if;
+  label=case o.plan when 'one' then '1ページ完結サイト' when 'semi' then 'セミオーダーサイト' else 'フルオーダーサイト' end;
+  insert into public.website_sites(site_id,site_name,status,current_note,public_url,publish_branch,live_path,offline_path)
+    values(u.public_site_id,label,'request_waiting','ヒアリング入力待ち。',u.public_url,'main','/','/docs')
+    on conflict(site_id) do nothing;
+  select * into strict s from public.website_sites where site_id=u.public_site_id for update;
+  if s.public_url is distinct from u.public_url or s.status<>'request_waiting' or s.published_at is not null or coalesce(s.custom_domain,'')<>'' then
+    raise exception 'Existing site cannot be reused for this order';
+  end if;
+  insert into public.website_intakes(site_id,payload) values(s.site_id,jsonb_build_object(
+    'fields',jsonb_build_object('build_plan',o.plan,'template_style',coalesce(o.template_style,'')),
+    'checks','{}'::jsonb,'members','[]'::jsonb,'lives','[]'::jsonb,'contacts','[]'::jsonb,
+    'files',jsonb_build_object('top_photos','[]'::jsonb,'gallery_photos','[]'::jsonb,'logo_file','[]'::jsonb),'meta','{}'::jsonb))
+    on conflict(site_id) do nothing;
+  insert into public.website_line_links(site_id,line_user_id,line_display_name) values(s.site_id,o.line_user_id,o.line_display_name)
+    on conflict(site_id) do update set line_user_id=excluded.line_user_id,line_display_name=excluded.line_display_name;
+  update public.website_orders set status='site_created',site_id=s.site_id,customer_access_token_hash=p_key_hash,
+    access_token_created_at=now(),updated_at=now() where order_code=p_order;
+  perform public.website_hosting_enrol(p_actor,s.site_id);
+  return jsonb_build_object('site_id',s.site_id,'already_active',false);
+end $$;
+
 create function public.website_hosting_open_review(p_actor uuid,p_site text,p_release text,p_key_hash text) returns jsonb
 language plpgsql security invoker set search_path='' as $$
 declare h public.website_hosting_sites%rowtype;
@@ -167,7 +210,10 @@ begin
   end if;
   perform set_config('sho.hosting_protocol','1',true);
   update public.website_hosting_sites set approved_release=null,updated_at=now() where site_id=p_site;
-  update public.website_sites set status='customer_review',customer_approved=false,review_access_token_hash=p_key_hash where site_id=p_site;
+  update public.website_sites set status='customer_review',customer_approved=false,review_access_token_hash=p_key_hash,
+    current_note='運営確認済み。お客様の最終確認待ち。' where site_id=p_site;
+  insert into public.website_activity(site_id,actor_type,actor_user_id,action,detail,payload)
+    values(p_site,'admin',p_actor,'admin_transition','検査済みの固定版をお客様の最終確認へ。',jsonb_build_object('release_id',p_release));
   perform set_config('sho.hosting_protocol','0',true);
   return jsonb_build_object('site_id',p_site,'release_id',p_release,'status','customer_review');
 end $$;
@@ -190,9 +236,13 @@ begin
   perform set_config('sho.hosting_protocol','1',true);
   update public.website_hosting_releases set approved_at=coalesce(approved_at,now()) where site_id=p_site and release_id=p_release;
   update public.website_hosting_sites set approved_release=p_release,updated_at=now() where site_id=p_site;
-  update public.website_sites set customer_approved=true where site_id=p_site;
+  update public.website_sites set customer_approved=true,current_note='お客様が内容承認。運営者の公開操作待ち。' where site_id=p_site;
+  if h.approved_release is distinct from p_release or not s.customer_approved then
+    insert into public.website_activity(site_id,actor_type,actor_user_id,action,detail,payload)
+      values(p_site,case when p_user is null then 'customer_line' else 'customer' end,p_user,'customer_approved','サイト内容を承認。',jsonb_build_object('release_id',p_release));
+  end if;
   perform set_config('sho.hosting_protocol','0',true);
-  return jsonb_build_object('site_id',p_site,'release_id',p_release,'approved',true);
+  return jsonb_build_object('site_id',p_site,'release_id',p_release,'approved',true,'already_approved',h.approved_release=p_release and s.customer_approved);
 end $$;
 
 create function public.website_hosting_claim(p_actor uuid,p_site text,p_operation uuid,p_kind text,p_release text,p_base jsonb) returns jsonb
@@ -242,6 +292,31 @@ begin
   return to_jsonb(o)||jsonb_build_object('reused',false,'public_site_id',h.public_site_id,'public_url',h.public_url);
 end $$;
 
+create function public.website_hosting_request_revision(p_site text,p_release text,p_note text,
+  p_key_hash text default null,p_user uuid default null) returns jsonb
+language plpgsql security invoker set search_path='' as $$
+declare h public.website_hosting_sites%rowtype; s public.website_sites%rowtype; j public.website_jobs%rowtype;
+begin
+  select * into strict h from public.website_hosting_sites where site_id=p_site for update nowait;
+  select * into strict s from public.website_sites where site_id=p_site for update nowait;
+  if h.active_operation_id is not null or h.pending_release is distinct from p_release or s.status<>'customer_review'
+    or p_note is null or length(trim(p_note))<1 or length(p_note)>4000 then raise exception 'Review revision is not available'; end if;
+  if not ((p_key_hash is not null and s.review_access_token_hash is not null and p_key_hash=s.review_access_token_hash)
+    or (p_user is not null and exists(select 1 from public.website_site_users
+      where site_id=p_site and user_id=p_user and role in ('owner','editor')))) then
+    raise exception 'Customer review authority required' using errcode='42501';
+  end if;
+  insert into public.website_jobs(site_id,kind,status,instruction,payload)
+    values(p_site,'customer_revision','queued',trim(p_note),jsonb_build_object('source','cloudflare_frozen_review','release_id',p_release)) returning * into j;
+  perform set_config('sho.hosting_protocol','1',true);
+  update public.website_sites set status='building',customer_approved=false,review_access_token_hash=null,
+    current_note='お客様から修正依頼。再作成中。' where site_id=p_site;
+  perform set_config('sho.hosting_protocol','0',true);
+  insert into public.website_activity(site_id,actor_type,actor_user_id,action,detail,payload)
+    values(p_site,case when p_user is null then 'customer_line' else 'customer' end,p_user,'customer_revision_requested',trim(p_note),jsonb_build_object('job_id',j.id,'release_id',p_release));
+  return jsonb_build_object('site_id',p_site,'status','building','job_id',j.id);
+end $$;
+
 create function public.website_hosting_finalize(p_operation uuid,p_pointer jsonb,p_fenced boolean default false) returns jsonb
 language plpgsql security invoker set search_path='' as $$
 declare o public.website_hosting_operations%rowtype; h public.website_hosting_sites%rowtype;
@@ -270,6 +345,8 @@ begin
     select * into strict s from public.website_sites where site_id=o.site_id for update nowait;
     select plan into strict v_plan from public.website_orders where order_code=h.order_code;
     update public.website_sites set status=v_status,public_url=h.public_url,customer_approved=false,
+      current_note=case o.kind when 'private' then 'サイトを一時非公開中。' when 'rollback' then '以前の正常な内容へ復元・公開済み。' else 'お客様の内容承認を確認して公開完了。' end,
+      preview_url=case when v_status='live' then h.public_url else preview_url end,preview_branch=null,
       review_access_token_hash=null,preview_access_token_hash=null,
       published_at=case when v_status='live' then coalesce(published_at,now()) else published_at end,
       adjustment_free_until=case when v_status='live' then coalesce(adjustment_free_until,now()+interval '30 days') else adjustment_free_until end,
@@ -277,7 +354,12 @@ begin
       where site_id=o.site_id;
     if v_status='live' then
       update public.website_hosting_releases set published_at=coalesce(published_at,now()) where site_id=o.site_id and release_id=v_release;
-      update public.website_orders set update_free_until=case when v_plan in ('semi','full') then coalesce(update_free_until,now()+interval '3 months') else update_free_until end
+      -- The customer's already-delivered final review link becomes their update access.
+      -- No plaintext bearer token is stored or reconstructed by an administrator.
+      update public.website_orders set
+        customer_access_token_hash=case when o.kind='publish' then s.review_access_token_hash else customer_access_token_hash end,
+        access_token_created_at=case when o.kind='publish' then now() else access_token_created_at end,
+        update_free_until=case when v_plan in ('semi','full') then coalesce(update_free_until,now()+interval '3 months') else update_free_until end
         where order_code=h.order_code;
       update public.website_jobs set status='done',finished_at=coalesce(finished_at,now()) where id=(
         select job_id from public.website_hosting_releases where site_id=o.site_id and release_id=v_release);
@@ -286,6 +368,11 @@ begin
   end if;
   update public.website_hosting_operations set state=case when p_fenced then 'fenced' else 'committed' end,
     result_pointer=p_pointer,completed_at=now(),error_code=null where operation_id=p_operation returning * into o;
+  insert into public.website_activity(site_id,actor_type,actor_user_id,action,detail,payload)
+    values(o.site_id,'admin',o.actor_id,
+      case when p_fenced then 'publication_reconciled' when o.kind='rollback' then 'publication_rollback' when o.kind='private' then 'publication_private' else 'published' end,
+      case when p_fenced then '未確定の公開処理を中止し、遅延処理の再反映を防止。' when o.kind='rollback' then '以前の正常版へ復元。' when o.kind='private' then 'サイトを一時非公開へ。' else 'お客様の承認済み固定版を公開。' end,
+      jsonb_build_object('operation_id',o.operation_id,'release_id',v_release));
   perform set_config('sho.hosting_protocol','0',true);
   return to_jsonb(o)||jsonb_build_object('idempotent',false);
 end $$;
@@ -295,6 +382,43 @@ language sql security invoker set search_path='' as $$
   update public.website_hosting_operations set state='reconcile',error_code=left(p_error,100)
   where operation_id=p_operation and state in ('writing','reconcile');
 $$;
+
+create function public.website_hosting_claim_notice(p_actor uuid,p_operation uuid,p_lease uuid,p_payload jsonb) returns jsonb
+language plpgsql security invoker set search_path='' as $$
+declare n public.website_hosting_outbox%rowtype;
+begin
+  perform public.website_hosting_require_admin(p_actor);
+  select * into strict n from public.website_hosting_outbox where operation_id=p_operation for update nowait;
+  if n.state<>'pending' then return to_jsonb(n)||jsonb_build_object('claimed',false); end if;
+  if n.delivery_started_at is not null and n.delivery_started_at<now()-interval '23 hours' then
+    update public.website_hosting_outbox set state='manual_review',lease_id=null,lease_until=null where operation_id=p_operation returning * into n;
+    return to_jsonb(n)||jsonb_build_object('claimed',false);
+  end if;
+  if n.lease_until>now() then return to_jsonb(n)||jsonb_build_object('claimed',false); end if;
+  if n.delivery_payload is null and (p_payload is null or jsonb_typeof(p_payload)<>'object'
+    or coalesce(length(p_payload#>>'{customer,to}'),0) not between 3 and 100
+    or coalesce(length(p_payload#>>'{owner,to}'),0) not between 3 and 100
+    or coalesce(length(p_payload#>>'{customer,text}'),0) not between 1 and 5000
+    or coalesce(length(p_payload#>>'{owner,text}'),0) not between 1 and 5000) then
+    raise exception 'Notice recipients and messages must be frozen before the first attempt';
+  end if;
+  update public.website_hosting_outbox set delivery_started_at=coalesce(delivery_started_at,now()),
+    delivery_payload=coalesce(delivery_payload,p_payload),
+    lease_id=p_lease,lease_until=now()+interval '2 minutes' where operation_id=p_operation returning * into n;
+  return to_jsonb(n)||jsonb_build_object('claimed',true);
+end $$;
+
+create function public.website_hosting_complete_notice(p_operation uuid,p_lease uuid,p_recipient text) returns void
+language plpgsql security invoker set search_path='' as $$
+begin
+  if p_recipient not in ('customer','owner') or p_recipient is null then raise exception 'Invalid notice recipient'; end if;
+  update public.website_hosting_outbox set customer_sent_at=case when p_recipient='customer' then now() else customer_sent_at end,
+    owner_sent_at=case when p_recipient='owner' then now() else owner_sent_at end
+    where operation_id=p_operation and lease_id=p_lease and state='pending';
+  if not found then raise exception 'Notice delivery lease changed'; end if;
+  update public.website_hosting_outbox set state='sent',sent_at=now(),lease_id=null,lease_until=null
+    where operation_id=p_operation and customer_sent_at is not null and owner_sent_at is not null;
+end $$;
 
 -- Only enrolled sites are protected; unrelated sites/businesses retain existing behavior.
 create function public.website_hosting_guard_site() returns trigger
@@ -337,6 +461,9 @@ begin
   select * into h from public.website_hosting_sites where site_id=new.site_id for update nowait;
   if not found then return new; end if;
   if h.active_operation_id is not null then raise exception 'Publication requires reconciliation before production can start'; end if;
+  if new.status='running' and exists(select 1 from public.website_jobs where site_id=new.site_id and status='running' and id<>new.id) then
+    raise exception 'Another production job is already running for this site';
+  end if;
   update public.website_hosting_sites set pending_release=null,approved_release=null,updated_at=now() where site_id=new.site_id;
   return new;
 end $$;

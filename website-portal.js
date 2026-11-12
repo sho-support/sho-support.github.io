@@ -41,7 +41,7 @@ try{
         const target=[...sitesBox.querySelectorAll('[data-site-views]')].find(x=>x.dataset.siteViews===site.site_id);
         if(!target)continue;
         try{const result=await websiteApi('site_view_stats',{site_id:site.site_id});
-          target.textContent='ページ表示回数：累計 '+Number(result.views_total||0).toLocaleString()+' 回 ／ 今日 '+Number(result.views_today||0).toLocaleString()+' 回（公開後から集計・同一人の複数表示を含みます）';
+          target.textContent=result.analytics_available===false?'アクセス集計は現在準備中です。':'ページ表示回数：累計 '+Number(result.views_total||0).toLocaleString()+' 回 ／ 今日 '+Number(result.views_today||0).toLocaleString()+' 回（公開後から集計・同一人の複数表示を含みます）';
         }catch{target.textContent='ページ表示回数は現在取得できません。'}
       }
 

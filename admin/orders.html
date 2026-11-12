@@ -76,6 +76,7 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
      if(stage==='sho_review')actions='<button class="btn" type="button" data-work-action="revise">SHOから修正を依頼</button><button class="btn activate" type="button" data-work-action="approve" '+(reviewIssues.length?'disabled title="未確認の修正項目があります"':'')+'>SHO確認OK → お客様確認へ</button>';
      if(stage==='customer_review'&&!site.customer_approved)actions='<button class="btn" type="button" data-work-action="resend">お客様へ確認URLをLINE送信</button>';
      if(stage==='customer_review'&&site.customer_approved)actions='<button class="btn activate" type="button" data-work-action="publish">お客様確認OK → 公開する</button>';
+     if(detail.hosting?.active_operation_id)actions='<a class="btn" href="index.html?site='+encodeURIComponent(siteId)+'">公開結果の確認・復旧へ</a>';
      const updateInfo=updates.length?'<p style="color:#ebca85">対応中の更新依頼 '+updates.length+'件</p>':'';
      panel.innerHTML='<p>状態：<strong>'+esc(progress[stage]||stage)+'</strong>　／　お客様承認：'+(site.customer_approved?'OK':'未承認')+'</p>'+
        '<p>'+esc(site.current_note||'')+'</p>'+updateInfo+
@@ -100,7 +101,7 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
          };
        }
        if(action==='publish'){
-         if(!confirm('お客様の内容承認を確認しましたか？ この操作でGitHub Pagesを公開します。'))return;
+         if(!confirm('お客様の内容承認を確認しましたか？ 検査済みの制作案を正式URLへ公開します。'))return;
          operation=async()=>{
            const {data,error}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action:'admin_publish_site',site_id:siteId}});
            if(error||data?.error)throw new Error(data?.error||'公開処理に失敗しました');
@@ -115,7 +116,7 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
        if(!operation)return;
        btn.disabled=true;
        try{await operation();await showWork(panel,siteId);alert('処理を受け付けました。');}
-       catch(e){btn.disabled=false;alert(e.message||'処理に失敗しました。');}
+       catch(e){btn.disabled=false;try{await showWork(panel,siteId);}catch{}alert(e.message||'処理に失敗しました。');}
      }));
    }catch(e){panel.textContent='制作情報を取得できませんでした：'+String(e.message||e)}
  }

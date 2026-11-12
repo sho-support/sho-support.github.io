@@ -1,3 +1,6 @@
+import {cloudflareHostingEnabled,blockLegacyPages} from '../_shared/hosting-mode.ts';
+import {hostingMapping,freezeHostingRelease,beginHostingSourceBranch} from '../_shared/hosting-service.ts';
+import {customerR2Store} from '../_shared/customer-r2.ts';
 import { adminClient, json, notifyOwner, verifyWebsiteBeforeDelivery, triggerWebsiteWorker } from './_shared/website.ts';
 import { advanceFullBuild, initialFullState } from './staged-full.mjs';
 import { renderSemiTemplate } from './semi-template.mjs';
@@ -32,7 +35,7 @@ function outputText(d:any){if(typeof d.output_text==='string')return d.output_te
 async function officialSemiTemplate(style:string){
  const allowed=['rock','cafe','cute','minimal','premium','pop','vintage','cyber','organic','editorial'];
  if(!allowed.includes(style))return '';
- const url='https://sho-support.github.io/website-template-preview.html?style='+encodeURIComponent(style);
+ const url='https://sho-web-support.netlify.app/website-template-preview.html?style='+encodeURIComponent(style);
  const res=await fetch(url,{signal:AbortSignal.timeout(12000),headers:{Accept:'text/html'}});
  if(!res.ok)throw new Error('注文済みのデザイン見本を取得できません。テンプレート確認後に制作を再実行してください。');
  const html=(await res.text()).slice(0,45000);
@@ -128,7 +131,7 @@ function validateGenerated(files:any[],assets:any[],buildPlan:string){
  return [...new Set(problems)].slice(0,16);
 }
 function offline(name:string){name=String(name||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]||m));return`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${name}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#080808;color:#fff;font-family:system-ui}main{padding:40px;text-align:center}</style></head><body><main><small>SHO WEB SUPPORT</small><h1>${name}</h1><p>現在、ページを準備・調整しています。</p></main></body></html>`}
-async function pages(full:string,branch:string,path:'/'|'/docs'='/docs'){const p=repoParts(full),api=`/repos/${p.owner}/${p.repo}/pages`;try{const m=await gh(api);await gh(api,{method:'PUT',body:JSON.stringify({build_type:'legacy',source:{branch,path}})});return m.html_url||`https://${p.owner}.github.io/${p.repo}/`}catch(e:any){if(e.status!==404)throw e;const m=await gh(api,{method:'POST',body:JSON.stringify({build_type:'legacy',source:{branch,path}})});return m.html_url||`https://${p.owner}.github.io/${p.repo}/`}}
+async function pages(full:string,branch:string,path:'/'|'/docs'='/docs'){blockLegacyPages();const p=repoParts(full),api=`/repos/${p.owner}/${p.repo}/pages`;try{const m=await gh(api);await gh(api,{method:'PUT',body:JSON.stringify({build_type:'legacy',source:{branch,path}})});return m.html_url||`https://${p.owner}.github.io/${p.repo}/`}catch(e:any){if(e.status!==404)throw e;const m=await gh(api,{method:'POST',body:JSON.stringify({build_type:'legacy',source:{branch,path}})});return m.html_url||`https://${p.owner}.github.io/${p.repo}/`}}
 
 async function ensureStageBranch(full:string,publishBranch:string,existingStage:string|null){
  const p=repoParts(full),api=`/repos/${p.owner}/${p.repo}/git`;
@@ -163,9 +166,10 @@ async function processJob(siteId=''){
  let stagedForRetry=false;
  if(job.payload?.update_request_id){const {error}=await admin.from('website_update_requests').update({status:'building'}).eq('id',job.payload.update_request_id).eq('site_id',job.site_id);if(error)console.error('Update request state:',error)}
  try{const[{data:site,error:se},{data:intake,error:ie},{data:activity,error:ae}]=await Promise.all([admin.from('website_sites').select('*').eq('site_id',job.site_id).single(),admin.from('website_intakes').select('*').eq('site_id',job.site_id).single(),admin.from('website_activity').select('*').eq('site_id',job.site_id).order('created_at',{ascending:false}).limit(80)]);if(se)throw se;if(ie)throw ie;if(ae)throw ae;
-  const ri=await ensureRepo(site),publishBranch=ri.branch||'main';if(site.repo_full_name!==ri.full||site.publish_branch!==publishBranch){const{error}=await admin.from('website_sites').update({repo_full_name:ri.full,publish_branch:publishBranch}).eq('site_id',site.site_id);if(error)throw error;site.repo_full_name=ri.full}
+  if(cloudflareHostingEnabled()){const h=await hostingMapping(admin,site.site_id);customerR2Store(h.public_site_id);}
+  const ri=await ensureRepo(site),publishBranch=ri.branch||'main';if(cloudflareHostingEnabled()&&!ri.isPrivate)throw new Error('Customer source repository must be private; migration review required');if(site.repo_full_name!==ri.full||site.publish_branch!==publishBranch){const{error}=await admin.from('website_sites').update({repo_full_name:ri.full,publish_branch:publishBranch}).eq('site_id',site.site_id);if(error)throw error;site.repo_full_name=ri.full}
   const isLiveRevision=!!site.published_at;
-  const branch=isLiveRevision?await ensureStageBranch(ri.full,publishBranch,site.preview_branch||null):publishBranch;
+  const branch=isLiveRevision?(cloudflareHostingEnabled()?await beginHostingSourceBranch(admin,site):await ensureStageBranch(ri.full,publishBranch,site.preview_branch||null)):publishBranch;
   const existing=await readRepo(ri.full,branch),ref=await referenceText(String(intake.payload?.fields?.reference_url||'').trim()),assets=assetPlan(intake.payload);
   const templateSource=String(intake.payload?.fields?.build_plan||'')==='semi'?await officialSemiTemplate(String(intake.payload?.fields?.template_style||'')):'';
   const context={site,intake,activity,job,existing,ref,assets,templateSource};
@@ -219,10 +223,16 @@ async function processJob(siteId=''){
   if(issues.length)throw new Error('制作ファイル検査に失敗：'+issues.join(' / '));
   // Lightweight pageview counting is enabled only when the server sees 'live'.
   // Generated draft and owner-preview visits never count.
-  const tracking='<script defer src="https://sho-support.github.io/website-track.js?site='+encodeURIComponent(site.site_id)+'"></script>';
+  if(!cloudflareHostingEnabled()){
+  const tracking='<script defer src="https://sho-web-support.netlify.app/website-track.js?site='+encodeURIComponent(site.site_id)+'"></script>';
   files=files.map((f:any)=>/\.html?$/i.test(f.path)&&!f.content.includes('website-track.js')?
     {...f,content:/<\/body>/i.test(f.content)?f.content.replace(/<\/body>/i,tracking+'</body>'):f.content+tracking}:f);
-await putFile(ri.full,branch,'docs/index.html',offline(site.site_name),'Add offline page');if(!ri.isPrivate&&!isLiveRevision)await pages(ri.full,publishBranch,'/docs');for(const f of files)await putFile(ri.full,branch,f.path,f.content,'SHO WEB SUPPORT AI update');const referencedAssets=assets.filter((a:any)=>files.some((f:any)=>f.content.includes(a.path)));await copyAssets(admin,ri.full,branch,referencedAssets);
+await putFile(ri.full,branch,'docs/index.html',offline(site.site_name),'Add offline page');if(!ri.isPrivate&&!isLiveRevision)await pages(ri.full,publishBranch,'/docs');
+  }else{
+    stagedForRetry=false; // Generated source already exists: a hosting failure must not re-spend on AI.
+    files=files.map((f:any)=>/\.html?$/i.test(f.path)?{...f,content:f.content.replace(/<script\b[^>]*src=["']https:\/\/(?:sho-support\.github\.io|sho-web-support\.netlify\.app)\/website-track\.js[^"']*["'][^>]*>\s*<\/script>/gi,'')}:f);
+  }
+  for(const f of files)await putFile(ri.full,branch,f.path,f.content,'SHO WEB SUPPORT AI update');const referencedAssets=assets.filter((a:any)=>files.some((f:any)=>f.content.includes(a.path)));await copyAssets(admin,ri.full,branch,referencedAssets);
    // Read back committed files and asset references before entering SHO review.
    let preflightError:any=null;
    for(let check=0;check<3;check++){
@@ -232,8 +242,11 @@ await putFile(ri.full,branch,'docs/index.html',offline(site.site_name),'Add offl
      }catch(e){preflightError=e;if(check<2)await new Promise(resolve=>setTimeout(resolve,(check+1)*700));}
    }
    if(preflightError)throw new Error('制作後のファイル検査に失敗：'+String(preflightError.message||preflightError));
-   const previewKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');const previewHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(previewKey))),b=>b.toString(16).padStart(2,'0')).join('');const preview='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(site.site_id)+'&key='+previewKey;const finished=new Date().toISOString(),payload={...(job.payload||{}),...(staged?{staged_full:{version:1,phase:'completed',page_count:stageResult.stagedState.plan.pages.length,usage:stageResult.usage,finished_at:finished}}:{}),ai:{model:ai.model,response_id:ai.response_id,usage:ai.usage},reference:{url:ref.url,ok:ref.ok,note:ref.note},github:{repo:ri.full,branch,preview_url:preview},summary:String(ai.summary||'').slice(0,5000)};
-  await admin.from('website_jobs').update({status:'sho_review',finished_at:finished,payload}).eq('id',job.id);await admin.from('website_sites').update({status:'sho_review',preview_url:preview,preview_access_token_hash:previewHash,preview_token_issued_at:finished,preview_branch:isLiveRevision?branch:null,current_note:'制作案の生成が完了。運営にて確認中。',customer_approved:false}).eq('site_id',site.site_id);
+   const previewKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');const previewHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(previewKey))),b=>b.toString(16).padStart(2,'0')).join('');const preview='https://sho-web-support.netlify.app/website-preview.html?id='+encodeURIComponent(site.site_id)+'&key='+previewKey;const finished=new Date().toISOString(),payload={...(job.payload||{}),...(staged?{staged_full:{version:1,phase:'completed',page_count:stageResult.stagedState.plan.pages.length,usage:stageResult.usage,finished_at:finished}}:{}),ai:{model:ai.model,response_id:ai.response_id,usage:ai.usage},reference:{url:ref.url,ok:ref.ok,note:ref.note},github:{repo:ri.full,branch,preview_url:preview},summary:String(ai.summary||'').slice(0,5000)};
+  const {error:siteFinishError}=await admin.from('website_sites').update({status:'sho_review',preview_url:preview,preview_access_token_hash:previewHash,preview_token_issued_at:finished,preview_branch:isLiveRevision?branch:null,current_note:'制作案の生成が完了。運営にて確認中。',customer_approved:false}).eq('site_id',site.site_id);
+  if(siteFinishError)throw siteFinishError;
+  if(cloudflareHostingEnabled())(payload as any).hosting=await freezeHostingRelease(admin,site,job,branch,verifyWebsiteBeforeDelivery,semi?String(intake.payload?.fields?.template_style||''):'');
+  const {error:jobFinishError}=await admin.from('website_jobs').update({status:'sho_review',finished_at:finished,payload}).eq('id',job.id);if(jobFinishError)throw jobFinishError;
   if(job.payload?.review_issue_id){const{error:issueErr}=await admin.from('website_review_issues').update({status:'ready_for_check',updated_at:finished}).eq('id',job.payload.review_issue_id).eq('site_id',site.site_id).eq('status','fixing');if(issueErr)throw issueErr;}await admin.from('website_activity').insert({site_id:site.site_id,actor_type:'ai',action:'ai_build_completed',detail:String(ai.summary||'AI制作完了').slice(0,5000),payload:{job_id:job.id,reference_ok:ref.ok}});if(!job.payload?.qa_rebuild)await notifyOwner(`【運営者向け：制作案完成】\nSITE ID ${site.site_id}\n${site.site_name}\n制作案の確認はこちら：\nhttps://sho-support.github.io/admin/index.html?site=${encodeURIComponent(site.site_id)}`)
  }catch(e:any){
     const m=String(e.message||e).slice(0,4000);

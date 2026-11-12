@@ -152,6 +152,36 @@ test('server-only publication protocol on synthetic SQL data',async t=>{
     assert.equal((await state(n)).status,'live');
   });
 
+  await t.test('order activation rolls back site, intake and token changes together if linking fails',async()=>{
+    const n='4500',code='P4500';
+    await q("insert into public.website_line_links(site_id,line_user_id) values('2100','U_ALREADY_LINKED')");
+    await q("insert into public.website_orders(order_code,plan,line_user_id) values($1,'one','U_ALREADY_LINKED')",[code]);
+    const u=await rpc('reserve_url',[ADMIN,code,DOMAIN]);
+    await q('update public.website_orders set selections=$1 where order_code=$2',[JSON.stringify({final_public_domain:u.public_url,final_quote_amount:15000,final_quote_sent_at:'2026-11-12',quote_domain_owner_confirmed_at:'2026-11-12'}),code]);
+    await assert.rejects(rpc('activate_order',[ADMIN,code,KEY]),/unique/);
+    assert.equal((await q('select count(*)::int as n from public.website_sites where site_id=$1',[n])).rows[0].n,0);
+    assert.equal((await q('select count(*)::int as n from public.website_intakes where site_id=$1',[n])).rows[0].n,0);
+    assert.equal((await q('select status from public.website_orders where order_code=$1',[code])).rows[0].status,'pending_payment');
+  });
+
+  await t.test('notice delivery leases prevent concurrent sends and stop retries after 23 hours',async()=>{
+    const op=(await q("select operation_id from public.website_hosting_outbox where site_id='4100' limit 1")).rows[0].operation_id;
+    let lease=crypto.randomUUID();
+    const payload=JSON.stringify({customer:{to:'U_FAKE_CUSTOMER',text:'First customer notice'},owner:{to:'U_FAKE_OWNER',text:'First owner notice'}});
+    assert.equal((await rpc('claim_notice',[ADMIN,op,lease,payload])).claimed,true);
+    assert.equal((await rpc('claim_notice',[ADMIN,op,crypto.randomUUID(),payload])).claimed,false);
+    await q("update public.website_hosting_outbox set lease_until=now()-interval '1 second' where operation_id=$1",[op]);
+    lease=crypto.randomUUID();
+    const retry=await rpc('claim_notice',[ADMIN,op,lease,JSON.stringify({customer:{to:'U_DIFFERENT',text:'Changed message'},owner:{to:'U_OTHER',text:'Changed owner'}})]);
+    assert.deepEqual(retry.delivery_payload,JSON.parse(payload),'A retry keeps the original message and recipient even when settings change');
+    await assert.rejects(rpc('complete_notice',[op,crypto.randomUUID(),'customer']),/lease/);
+    await rpc('complete_notice',[op,lease,'customer']);await rpc('complete_notice',[op,lease,'owner']);
+    assert.equal((await rpc('claim_notice',[ADMIN,op,crypto.randomUUID(),payload])).state,'sent');
+    const stale=(await q("select operation_id from public.website_hosting_outbox where site_id='2100' limit 1")).rows[0].operation_id;
+    await q("update public.website_hosting_outbox set delivery_started_at=now()-interval '24 hours' where operation_id=$1",[stale]);
+    assert.equal((await rpc('claim_notice',[ADMIN,stale,crypto.randomUUID(),payload])).state,'manual_review');
+  });
+
   await t.test('sites cannot borrow another tenant release, URL, approval or operation ID',async()=>{
     const n='5100',a='e'.repeat(24);await site(n);await release(n,a);
     await rpc('open_review',[ADMIN,n,a,KEY]);await rpc('approve',[n,a,KEY,null]);

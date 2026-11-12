@@ -21,7 +21,7 @@ header{position:sticky;top:0;z-index:30;background:rgba(5,5,6,.95);border-bottom
 .fold{margin-top:9px;border:1px solid var(--line);border-radius:12px;background:#0c0c0e;overflow:hidden}.fold>summary{cursor:pointer;list-style:none;padding:11px 13px;font-size:.78rem;font-weight:950;display:flex;justify-content:space-between;gap:10px}.fold>summary::-webkit-details-marker{display:none}.fold>summary:after{content:"＋";color:var(--gold)}.fold[open]>summary{border-bottom:1px solid var(--line)}.fold[open]>summary:after{content:"−"}.inside{padding:12px 13px}.kv{display:grid;grid-template-columns:120px 1fr;gap:8px 10px;font-size:.73rem}.kv dt{color:var(--muted);font-weight:900}.kv dd{margin:0;color:#eee;overflow-wrap:anywhere}.chips{display:flex;flex-wrap:wrap;gap:5px}.chip{padding:5px 7px;border:1px solid rgba(217,174,92,.24);border-radius:8px;background:#111;color:#e2d2ad;font-size:.66rem}
 .timeline{display:grid;gap:9px}.event{position:relative;padding:0 0 9px 14px;border-left:1px solid rgba(217,174,92,.25)}.event:before{content:"";position:absolute;left:-4px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--gold)}.event time{display:block;color:var(--muted);font-size:.62rem}.event strong{display:block;margin:2px 0;font-size:.73rem}.event p{margin:0;color:#c5c5ca;font-size:.7rem;white-space:pre-wrap}.note{width:100%;min-height:86px;padding:10px;border:1px solid var(--line);border-radius:9px;background:#111;color:#fff;resize:vertical}.actionbar{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.review-panel{margin-top:10px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#09090b}.review-panel[hidden]{display:none}.review-help{margin:0 0 8px;color:#aaa;font-size:.69rem}.footnote{margin-top:10px;color:#777;font-size:.64rem}
 .empty{padding:28px 12px;color:var(--muted);text-align:center;font-size:.8rem}
-@media(max-width:640px){.wrap{width:min(calc(100% - 20px),980px)}.project-card>summary{padding:14px 13px}.sum-side{align-items:flex-end;flex-direction:column;gap:5px}.workflow{grid-template-columns:1fr 1fr}.workflow span:last-child{grid-column:1/-1}.kv{grid-template-columns:1fr;gap:2px}.kv dd{margin-bottom:7px}.actionbar{grid-template-columns:1fr}.top-actions .btn{flex:1 1 150px}}
+@media(max-width:640px){.wrap{width:min(calc(100% - 20px),980px)}.head{flex-wrap:wrap;padding:10px 0;gap:8px}.head>div:last-child{flex-wrap:wrap;max-width:100%}.project-card>summary{padding:14px 13px}.sum-side{align-items:flex-end;flex-direction:column;gap:5px}.workflow{grid-template-columns:1fr 1fr}.workflow span:last-child{grid-column:1/-1}.kv{grid-template-columns:1fr;gap:2px}.kv dd{margin-bottom:7px}.actionbar{grid-template-columns:1fr}.top-actions .btn{flex:1 1 150px}}
 </style>
 </head>
 <body>
@@ -72,7 +72,7 @@ const fmt=arr=>(arr||[]).map(x=>'<span class="chip">'+esc(x)+'</span>').join('')
 const formatDate=v=>v?new Date(v).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):'';
 const activityLabel=a=>({
  site_created:'案件作成',intake_submitted:'ヒアリング受付',customer_revision_requested:'お客様から修正依頼',
- customer_approved:'お客様確認OK',published:'公開',admin_transition:'SHO操作',line_message:'LINEメッセージ',ai_build_completed:'AI制作完了',ai_build_error:'AI制作エラー'
+ customer_approved:'お客様確認OK',published:'公開',publication_rollback:'以前の版へ復元',publication_private:'一時非公開',publication_reconciled:'公開結果の復旧確認',admin_transition:'SHO操作',line_message:'LINEメッセージ',ai_build_completed:'AI制作完了',ai_build_error:'AI制作エラー'
 }[a]||a);
 const jobLabel=j=>({
  initial_create:'初回制作',customer_revision:'お客様修正',sho_revision:'SHO修正',improvement:'改良'
@@ -113,7 +113,8 @@ function normalizeProduction(detail){
   history,notes:[],customerApproved:Boolean(site.customer_approved),jobs:detail.jobs||[],updates:detail.updates||[],reviewIssues:detail.reviewIssues||[],freeAdjustmentUntil:site.adjustment_free_until||'',freeUpdatesUntil:site.update_free_until||'',
   repoFullName:site.repo_full_name||'',publishBranch:site.publish_branch||'main',
   livePath:site.live_path||'/',offlinePath:site.offline_path||'/docs',
-  customDomain:site.custom_domain||'',publicUrl:site.public_url||''
+  customDomain:site.custom_domain||'',publicUrl:site.public_url||'',
+  hosting:detail.hosting||null
  };
 }
 
@@ -162,6 +163,7 @@ function reviewIssuesHtml(p){
  return '<div class="review-panel"><strong>修正項目（'+(issues.length-unresolved)+' / '+issues.length+' 確認済み）</strong><div class="timeline" style="margin-top:11px">'+issues.map(x=>'<div class="event"><time>修正 #'+esc(x.id)+' / '+esc(formatDate(x.created_at))+'</time><p>'+esc(x.note)+'</p><p style="margin-top:5px">'+(x.status==='confirmed'?'<span style="color:var(--ok)">✓ 確認済み</span>':x.status==='ready_for_check'?'<span style="color:var(--ok)">✓ 修正処理完了</span><span class="meta" style="display:block;margin-top:3px">運営のプレビュー確認待ちです。</span>':'修正中')+'</p>'+(x.status==='ready_for_check'?'<button type="button" class="btn green" data-confirm-issue="'+esc(x.id)+'" style="margin-top:8px">修正を確認した ✓</button>':'')+'</div>').join('')+'</div></div>';
 }
 function actionHtml(p){
+ if(p.hosting?.active_operation_id)return '<div class="warning" style="margin-top:0">公開処理の結果を確認中です。下の「公開履歴・復旧」から復旧確認を行ってください。</div>';
  if(p.status==='request_waiting')return prodMode?'<div class="warning" style="margin-top:0">お客様のヒアリング・要望入力待ちです。送信されると自動で作成中へ進みます。</div>':'<div class="warning" style="margin-top:0">ヒアリングや追加要望の入力待ちです。</div><button class="btn primary full" id="startBuild" type="button" style="margin-top:8px">デモ：要望受信 → 作成開始</button>';
  if(p.status==='building')return prodMode?'<div class="warning" style="margin-top:0">AIが制作・修正を処理中です。通常は自動で進み、完了するとSHO確認待ちへ移動してLINE通知します。</div><button class="btn primary full" id="runWorker" type="button" style="margin-top:8px">AI制作を実行 / 再実行</button>':'<div class="warning" style="margin-top:0">AI制作キューまたは修正作業中です。</div><button class="btn primary full" id="buildDone" type="button" style="margin-top:8px">デモ：作成完了 → SHO確認へ</button>';
  if(p.status==='sho_review'){
@@ -175,9 +177,17 @@ function actionHtml(p){
 }
 if(p.status==='customer_review')return '<div class="warning" style="margin-top:0">お客様の最終確認待ちです。必要に応じて確認URLをLINEで再送できます。内容承認後、運営管理画面の公開ボタンから公開します。</div><button class="btn gold full" id="resendCustomerReview" type="button" style="margin-top:8px">お客様へサイト確認URLをLINEで再送</button>';
  if(p.status==='live')return '<div class="warning" style="margin-top:0;border-left-color:var(--ok)">サイトは公開中です。</div><div class="actionbar"><button class="btn" id="makePrivate" type="button">一時非公開</button><button class="btn gold" id="makeImproving" type="button">改良中・一時非公開</button></div>';
- if(p.status==='private')return '<div class="warning" style="margin-top:0">サイトを一時的に非公開にしている状態です。</div><button class="btn green full" data-action="resumeLive" type="button" style="margin-top:8px">公開を再開</button>';
+ if(p.status==='private')return '<div class="warning" style="margin-top:0">サイトを一時的に非公開にしている状態です。</div><button class="btn green full" data-action="resumeLive" type="button" style="margin-top:8px">公開を再開</button>'+(p.hosting?'<textarea class="note" id="improveNote" style="margin-top:10px" placeholder="改良したい内容"></textarea><button class="btn primary full" id="startImprove" type="button" style="margin-top:8px">AIへ改良依頼</button>':'');
  if(p.status==='improving_private')return '<div class="warning" style="margin-top:0">改良のため一時非公開です。改良内容を入力して制作へ戻せます。</div><textarea class="note" id="improveNote" placeholder="改良したい内容"></textarea><div class="actionbar"><button class="btn primary" id="startImprove" type="button">AIへ改良依頼</button><button class="btn green" data-action="resumeLive" type="button">そのまま再公開</button></div>';
  return '';
+}
+function hostingPanel(p){
+ const h=p.hosting,history=h.releases||[];
+ const options=history.map((r,i)=>'<option value="'+esc(r.release_id)+'">'+esc(formatDate(r.published_at))+(r.release_id===h.active_release?'（現在）':'')+'</option>').join('');
+ return '<details class="fold" open><summary>公開履歴・復旧</summary><div class="inside"><dl class="kv"><dt>正式URL</dt><dd><a target="_blank" rel="noopener noreferrer" href="'+esc(h.public_url)+'">'+esc(h.public_url)+'</a></dd><dt>配信状態</dt><dd>'+esc(h.status==='live'?'公開中':h.status==='private'?'非公開':'公開前')+'</dd></dl>'+
+ (h.active_operation_id?'<p class="warning">前回の公開結果が未確定です。新しい公開や制作を始める前に、結果を確認してください。</p><button class="btn primary full" id="recoverPublication" type="button">未確定の公開結果を確認・復旧</button>':
+ (history.length?'<label style="display:block;margin-top:12px;font-size:.75rem">復元する公開版<select id="restoreRelease" style="font:inherit;display:block;width:100%;max-width:100%;margin-top:6px;padding:10px;background:#111;color:#fff;border:1px solid var(--line);border-radius:8px">'+options+'</select></label><div class="actionbar"><button class="btn gold" id="restorePublication" type="button">選んだ版へ復元・公開</button><button class="btn" id="resendPublicationNotice" type="button">公開通知の再送を確認</button></div>':'<p class="meta">初回公開が完了すると、復元できる履歴が表示されます。</p>'))+
+ '<p class="meta" style="margin-top:10px">復元しても正式URLと無料期間の起算日は変わりません。新しい制作案は、確認・承認が終わるまで公開されません。</p></div></details>';
 }
 function card(p){
  const s=sdef(p.status);
@@ -189,7 +199,7 @@ function card(p){
  '<details class="fold" open><summary>今回の操作</summary><div class="inside">'+actionHtml(p)+'</div></details>'+
  '<details class="fold"><summary>顧客カルテ</summary><div class="inside"><dl class="kv"><dt>業種</dt><dd>'+esc(p.profile.industry)+'</dd><dt>雰囲気・要望</dt><dd><div class="chips">'+fmt(p.profile.mood)+'</div></dd><dt>色</dt><dd><div class="chips">'+fmt(p.profile.colors)+'</div></dd><dt>希望機能</dt><dd><div class="chips">'+fmt(p.profile.likes)+'</div></dd><dt>避けたいもの</dt><dd><div class="chips">'+fmt(p.profile.dislikes)+'</div></dd></dl></div></details>'+
  '<details class="fold"><summary>要望・承認履歴</summary><div class="inside"><div class="timeline">'+historyHtml(p)+'</div></div></details>'+
- (prodMode?'<details class="fold"><summary>公開設定</summary><div class="inside"><label style="display:block;font-size:.7rem;color:#aaa">GitHub Repo<input id="repoFullName" type="text" value="'+esc(p.repoFullName)+'" placeholder="sho-support/customer-site-1042" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label><div class="actionbar"><label style="font-size:.7rem;color:#aaa">公開ブランチ<input id="publishBranch" type="text" value="'+esc(p.publishBranch)+'" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label><label style="font-size:.7rem;color:#aaa">独自ドメイン<input id="customDomain" type="text" value="'+esc(p.customDomain)+'" placeholder="example.com" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label></div><div class="actionbar"><button class="btn" id="saveRepoConfig" type="button">Repo設定を保存</button><button class="btn gold" id="saveDomain" type="button">独自ドメインをGitHubへ設定</button></div><div class="meta" style="margin-top:8px;color:#f3cd8c">【正式URLの保護】無料URLを選択した案件はGitHub PagesのURLで公開します。独自ドメインを選択した案件だけ、DNS・HTTPSとドメインの管理権限を確認してください。公開後のドメイン・Repo変更はこの画面からできません。</div><div class="meta" style="margin-top:6px">通常公開：/　｜　一時非公開・改良中：/docs　｜　DNS設定はドメイン会社側で別途行います。</div></div></details>':'')+
+ (prodMode?(p.hosting?hostingPanel(p):'<details class="fold"><summary>公開設定</summary><div class="inside"><label style="display:block;font-size:.7rem;color:#aaa">GitHub Repo<input id="repoFullName" type="text" value="'+esc(p.repoFullName)+'" placeholder="sho-support/customer-site-1042" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label><div class="actionbar"><label style="font-size:.7rem;color:#aaa">公開ブランチ<input id="publishBranch" type="text" value="'+esc(p.publishBranch)+'" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label><label style="font-size:.7rem;color:#aaa">独自ドメイン<input id="customDomain" type="text" value="'+esc(p.customDomain)+'" placeholder="example.com" style="width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#111;color:#fff"></label></div><div class="actionbar"><button class="btn" id="saveRepoConfig" type="button">Repo設定を保存</button><button class="btn gold" id="saveDomain" type="button">独自ドメインをGitHubへ設定</button></div><div class="meta" style="margin-top:8px;color:#f3cd8c">【正式URLの保護】無料URLを選択した案件はGitHub PagesのURLで公開します。独自ドメインを選択した案件だけ、DNS・HTTPSとドメインの管理権限を確認してください。公開後のドメイン・Repo変更はこの画面からできません。</div><div class="meta" style="margin-top:6px">通常公開：/　｜　一時非公開・改良中：/docs　｜　DNS設定はドメイン会社側で別途行います。</div></div></details>'):'')+
  '<div class="footnote">'+(prodMode?'本番データ：Supabase / private Storage':'デモデータ：このブラウザのlocalStorage')+'</div></div></details>';
 }
 
@@ -204,6 +214,13 @@ function demoMove(p,status,current,title,text){p.status=status;p.current=current
 
 function bind(p,root){
  const q=id=>root.querySelector('#'+id);
+ const hostingAction=async(action,extra={})=>{
+  const response=await websiteApi(action,{site_id:p.id,...extra});state=await loadProduction();render();
+  if(response?.warning)alert(response.warning);
+ };
+ q('recoverPublication')?.addEventListener('click',async()=>{const b=q('recoverPublication');b.disabled=true;try{await hostingAction('admin_reconcile_publication',{operation_id:p.hosting.active_operation_id});}catch(e){alert(e.message||'復旧結果を確認できませんでした。再公開はせず、時間を置いて確認してください。');b.disabled=false;}});
+ q('restorePublication')?.addEventListener('click',async()=>{if(!confirm('選んだ公開版へ復元しますか？ 正式URLは変わりません。'))return;const b=q('restorePublication');b.disabled=true;try{await hostingAction('admin_rollback_site',{release_id:q('restoreRelease').value});}catch(e){alert(e.message||'復元できませんでした。');b.disabled=false;}});
+ q('resendPublicationNotice')?.addEventListener('click',async()=>{if(!confirm('保存された公開結果について、未送信のLINE通知を再確認しますか？'))return;const b=q('resendPublicationNotice');b.disabled=true;try{await hostingAction('admin_resend_publication');}catch(e){alert(e.message||'通知状態を確認できませんでした。');b.disabled=false;}});
  root.querySelectorAll('[data-start-update]').forEach(btn=>btn.addEventListener('click',async()=>{
   const paid=btn.dataset.billing==='estimate_required';
   if(!confirm(paid?'入金確認済みですか？ 制作を開始すると確認完了まで一時非公開になります。':'この更新をAIで制作しますか？ 確認完了まで一時非公開になります。'))return;
@@ -228,7 +245,7 @@ function bind(p,root){
  root.querySelectorAll('[data-confirm-issue]').forEach(btn=>btn.addEventListener('click',async()=>{btn.disabled=true;try{await websiteApi('admin_confirm_review_fix',{site_id:p.id,review_issue_id:Number(btn.dataset.confirmIssue)});state=await loadProduction();render()}catch(e){alert(e.message||'確認を登録できませんでした。');btn.disabled=false}}));
  q('makePrivate')?.addEventListener('click',()=>prodMode?prodMove(p,'private','サイトを一時非公開中。','一時非公開。'):demoMove(p,'private','サイトを一時非公開中。','一時非公開','SHO操作で一時非公開。'));
  q('makeImproving')?.addEventListener('click',()=>prodMode?prodMove(p,'improving_private','改良のため一時非公開中。','改良準備のため一時非公開。'):demoMove(p,'improving_private','改良のため一時非公開中。','改良中・一時非公開','改良準備のため一時非公開。'));
- root.querySelector('[data-action="resumeLive"]')?.addEventListener('click',()=>prodMode?prodMove(p,'live','サイト公開中。','公開を再開。'):demoMove(p,'live','サイト公開中。','公開再開','サイトを再公開。'));
+ root.querySelector('[data-action="resumeLive"]')?.addEventListener('click',async()=>{if(p.hosting){if(!p.hosting.active_release)return alert('公開できる履歴がありません。');try{await hostingAction('admin_rollback_site',{release_id:p.hosting.active_release});}catch(e){alert(e.message||'公開を再開できませんでした。');}return;}prodMode?prodMove(p,'live','サイト公開中。','公開を再開。'):demoMove(p,'live','サイト公開中。','公開再開','サイトを再公開。');});
  q('startImprove')?.addEventListener('click',()=>{const t=q('improveNote').value.trim();if(!t)return alert('改良内容を入力してください。');prodMode?prodMove(p,'building','改良内容をもとに作成中。',t):demoMove(p,'building','改良内容をもとに作成中。','改良依頼',t)});
  q('saveRepoConfig')?.addEventListener('click',async()=>{try{await websiteApi('admin_repo_config',{site_id:p.id,repo_full_name:q('repoFullName').value.trim(),publish_branch:q('publishBranch').value.trim()||'main',live_path:'/',offline_path:'/docs'});state=await loadProduction();render()}catch(error){alert(error.message||'Repo設定を保存できませんでした。')}});
  q('saveDomain')?.addEventListener('click',async()=>{try{const d=q('customDomain').value.trim();await websiteApi('admin_domain',{site_id:p.id,custom_domain:d||null});state=await loadProduction();render()}catch(error){alert(error.message||'独自ドメインを設定できませんでした。')}});
