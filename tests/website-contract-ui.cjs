@@ -51,6 +51,7 @@ const client=ready=>`
      await page.waitForFunction(()=>document.querySelector('[data-quote]')?.disabled&&document.querySelector('[data-contract]'));
      check(dialogs.some(x=>x.includes('22,500円（税込')),'Operator confirms the exact itemized initial total');
      check(await page.locator('[data-activate]').isDisabled(),'Sent quote alone does not enable activation');
+     check(await page.locator('.order-card').evaluate(el=>el.open),'The active order stays expanded after saving the quotation');
      const fold=page.locator('.mini-fold').filter({has:page.locator('[data-contract]')});await fold.locator('summary').click();
      await page.locator('[data-contract]').click();await page.waitForFunction(()=>document.querySelector('[data-contract-text]').textContent.includes('保存済み'));
      check(await page.evaluate(()=>window.__injected!==true),'Frozen text is displayed without executing HTML');
