@@ -3,6 +3,24 @@
 対象ブランチ: `architecture/customer-hosting-v2`。本番DNS・既存販売サイト・バンドサイト・Supabase本番は変更しない。
 
 **現在の到達点：実Cloudflareのテスト配信・R2公開更新復元が成功。販売開始は未承認・未完了。**
+最新の実環境再検証は Run 43058922407で合格。Workerの新規作成だけでなく、確認済みの版を照合した更新も実施した。
+現在の配信版は `bdd2b1c8-8fa7-4949-9e1a-ab63b5b3cd37`。これを次回更新の照合基準として `preview-target.json` に記録する。
+単体85件・ローカルworkerd/R2 8件・Supabaseラッパー3件、販売画面636項目・3プラン模擬申込71項目、
+実R2の公開更新復元9項目、実HTTPSの6幅描画チェックが合格。
+https://github.com/sho-support/sho-support.github.io/actions/runs/43058922407
+
+現在の架空サイトの公開版は `e6b98198c7267a0ec9e4b0ff`。この再試験のscoped PUTは22回、GET/HEADは76回、
+アップロードは10,997 bytes。請求使用量全体を測定した数字ではない。
+原本証跡は `evidence/live-preview-update-20261112.json`。検証スクリプトのソースは
+`a3aeda4cf312f45240581d11d1d9f72e2bcddb99`、実際のWorker配備ソースは
+`3783c531803d215b72e8da8f07dbecc0337f42d6`。
+
+初回更新の直後、Run 43058084289の試験は最初の表示確認で停止した。
+その実行で原因を確定できるログは残らず、伝播遅延は推測に留まる。更新版の応答マーカーを待ち、
+検証段階を区別するログを追加した後、Workerを再配備せずRun 43058922407で全項目が合格した。
+停止を成功扱いしたり、原因を確定したと説明したりしない。
+
+以下は実装・検証の履歴。Supabase本番の公開処理は依然として統合前。
 画面修正コミット `0c4694195959b6b22ae36a2744b2b6bfcb976c30` のCI Run 43056715711で、
 単体83件・ローカルR2 8件・Supabaseラッパー3件、販売画面636項目・3プラン模擬申込71項目が合格。
 最後の320px申込画面とセミ受付画面も再取得して目視し、hidden行と撮影時のヘッダー位置が直ったことを確認した。
@@ -74,12 +92,34 @@ https://github.com/sho-support/sho-support.github.io/actions/runs/43050040929
 本番には書き込んでいない。customer-accessの実公開、apiの非公開化・ドメイン変更、workerのGitHub Pages処理が残る。
 生成HTMLには現行Netlifyの追跡スクリプトが注入されており、そのままでは新方式のpreflightが拒否する。
 顧客承認は現状boolのみでリリース・Gitコミットと未結合。並行制作や承認後の変更を防ぐ統合が必要。
+公開・復元で同じポインタ内容へ戻る際のETag再一致（ABA）への対策も本番前の未検証事項。
+DBの公開ロック・操作IDによるfencingを含め、遅れて到着した条件付き書き込みが復旧後の状態を壊さないことを試験する。
 既存APIは英数字のSITE IDを受け付けるが、新Readerの公開IDは数字のみ。既存DBのIDを破壊せず、
 固定の顧客公開IDへ対応づける設計と検証が必要。
 正式顧客ドメイン・維持契約・S3本番接続・DB整合性回復・別系統バックアップ・3プランの全工程試験は未完了。
 架空サイトの承認試験を、Supabaseの実顧客承認や販売開始の完了とは扱わない。
 Cloudflare GitHub Appのアクセス対象縮小、課金画面のBudget Alertの再確認は未実施。
 管理画面認証ループの原因は特定できず、GitHub Actions/API経由を実証済みの代替経路とした。
+
+本番Supabaseを再取得して `ACTIVE_HEALTHY`、Postgres 17.11.0.003を確認。
+主要テーブルのRLSポリシーはauthenticatedのSELECTのみ。管理者は自身の管理者行だけを読め、
+サイト・制作ジョブ・ヒアリングは `has_website_site_access(site_id)` による制限を確認した。
+同関数と `is_website_admin` はSECURITY INVOKERであり、anon/authenticatedのpublicスキーマCREATE権限はない。
+素材用 `website-intake-files` は非公開、上限7,000,000 bytes、許可形式はJPEG/PNG/WebP/GIF/AVIF。
+これらの読み取り確認だけで全機能・全権限を検証済みとはしない。
+
+診断の残件：RLS有効でポリシーなし（INFO）、public拡張・漏えいパスワード保護（WARN）、
+外部キーのインデックス・主キー・未使用インデックス（INFO）。本番設定やデータを変更していない。
+個別の影響と対策はSupabase統合時に確認する。
+診断資料：https://supabase.com/docs/guides/database/database-linter
+認証資料：https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+
+商用設計の根拠を再確認：Cloudflare Developer Platform固有条項はコンテンツのホストを認める一方、
+素材の権利・顧客へのサポート責任を利用者側に置き、workers.dev/pages.devの変更権も定める。
+正式URLは自社または顧客が所有するドメインで別途確定する。Cloudflareのアカウント・サービスアクセス権を
+顧客へ再販売する構成とは区別して契約を整える。個別契約の法的適合を保証する確認ではない。
+https://www.cloudflare.com/terms/
+https://www.cloudflare.com/service-specific-terms-developer-platform/
 
 ## 日本語での画面再検証済み
 
