@@ -8,7 +8,7 @@ const a='a'.repeat(32),b='b'.repeat(32),op='11111111-1111-4111-8111-111111111111
 const formal='https://s8100.customer-sites.example/';
 const client=recovery=>`
  const a=${JSON.stringify(a)},b=${JSON.stringify(b)};
- const detail={site:{site_id:'8100',site_name:'ホームページ公開・復元の確認用サイト',status:'${recovery?'customer_review':'private'}',public_url:${JSON.stringify(formal)},preview_url:'',current_note:'確認用の仮データ',updated_at:'2026-11-12T01:00:00Z'},intake:{payload:{fields:{build_plan:'one'}}},activity:[],jobs:[],updates:[],reviewIssues:[],hosting:{provider:'cloudflare-r2',status:'${recovery?'unpublished':'private'}',public_url:${JSON.stringify(formal)},active_release:${recovery?'null':'a'},active_publication_id:${JSON.stringify(op)},active_operation_id:${recovery?JSON.stringify(op):'null'},releases:${recovery?'[]':"[{release_id:a,published_at:'2026-11-12T01:00:00Z'},{release_id:b,published_at:'2026-11-11T01:00:00Z'}]"}};
+ const detail={site:{site_id:'8100',site_name:'ホームページ公開・復元の確認用サイト',status:'${recovery?'customer_review':'private'}',public_url:${JSON.stringify(formal)},preview_url:'',current_note:'確認用の仮データ',updated_at:'2026-11-12T01:00:00Z'},intake:{payload:{fields:{build_plan:'one'}}},activity:[],jobs:[],updates:[],reviewIssues:[],hosting:{provider:'cloudflare-r2',status:'${recovery?'unpublished':'private'}',public_url:${JSON.stringify(formal)},active_release:${recovery?'null':'a'},active_publication_id:${JSON.stringify(op)},active_operation_id:${recovery?JSON.stringify(op):'null'},releases:${recovery?'[]':"[{release_id:a,published_at:'2026-11-12T01:00:00Z'},{release_id:b,published_at:'2026-11-11T01:00:00Z'}]"}}};
  window.__hostingActions=[];
  export async function requireWebsiteSession(){return {user:{id:'synthetic-admin'}};}
  export async function websiteApi(action,payload={}){
@@ -22,6 +22,14 @@ const client=recovery=>`
  }
  export const websiteSupabase={functions:{invoke:async()=>{throw new Error('Unexpected legacy function invocation');}}};
 `;
+// Validate both generated ESM fixture variants before starting any browser.
+for(const recovery of [false,true])new Function(client(recovery).replace(/\\bexport\\s+/g,''));
+async function inlineScreenshot(page,label,width){
+ if(process.env.QA_INLINE_SCREENSHOTS!=='true'||![320,390,1366].includes(width))return;
+ const data=(await page.screenshot({type:'jpeg',quality:45,fullPage:true})).toString('base64');
+ const total=Math.ceil(data.length/8000);
+ for(let i=0;i<total;i++)console.log('SHO_UI_IMAGE '+label+'-'+width+' '+i+'/'+total+' '+data.slice(i*8000,(i+1)*8000));
+}
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.QA_CHROMIUM_EXECUTABLE?{executablePath:process.env.QA_CHROMIUM_EXECUTABLE}:{})});let checks=0;
  const check=(value,label)=>{assert.ok(value,label);checks++;};
@@ -42,12 +50,14 @@ const client=recovery=>`
    });
    const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
    await page.goto(base+'admin/index.html?site=8100',{waitUntil:'domcontentloaded'});
-   await page.locator('#restorePublication').waitFor({state:'visible'});
+   try{await page.locator('#restorePublication').waitFor({state:'visible',timeout:10000});}
+   catch(e){if(process.env.QA_SCREENSHOTS_DIR){mkdirSync(process.env.QA_SCREENSHOTS_DIR,{recursive:true});await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'hosting-error-'+width+'.png'),fullPage:true});}throw new Error('Admin fixture did not render; page errors='+errors.join('; ')+'; body='+(await page.locator('body').innerText()).slice(0,1500),{cause:e});}
    const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,
     clipped:[...document.querySelectorAll('header a,header .brand,button,select,textarea,input')].filter(e=>e.getClientRects().length&&!e.closest('[hidden]')&&!e.closest('.tabs')).filter(e=>{const r=e.getBoundingClientRect();return r.left< -1||r.right>innerWidth+1;}).map(e=>e.id||e.textContent.trim())}));
    check(!layout.overflow,'No page overflow at '+width);check(!layout.clipped.length,'Visible controls fit at '+width+': '+layout.clipped.join(','));
    check((await page.locator('#restoreRelease option').count())===2,'Only server-provided published releases are offered');
    if(process.env.QA_SCREENSHOTS_DIR){mkdirSync(process.env.QA_SCREENSHOTS_DIR,{recursive:true});await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'hosting-admin-'+width+'.png'),fullPage:true});}
+   await inlineScreenshot(page,'hosting-admin',width);
    await page.locator('#restoreRelease').selectOption(b);await page.locator('#restorePublication').click();
    await page.waitForFunction(()=>window.__hostingActions.some(x=>x.action==='admin_rollback_site'));
    const restored=await page.evaluate(()=>window.__hostingActions.find(x=>x.action==='admin_rollback_site'));
@@ -61,6 +71,7 @@ const client=recovery=>`
    check(new URL(await update.getAttribute('href')).searchParams.get('key')==='k'.repeat(40),'Published customer review links to the authenticated update page');
    check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Published review has no overflow at '+width);
    if(process.env.QA_SCREENSHOTS_DIR)await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'hosting-review-'+width+'.png'),fullPage:true});
+   await inlineScreenshot(page,'hosting-review',width);
    check(!errors.length,'No JavaScript page errors: '+errors.join(';'));
    check(external.every(url=>url==='https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'),'No real external service request');
    await context.close();
