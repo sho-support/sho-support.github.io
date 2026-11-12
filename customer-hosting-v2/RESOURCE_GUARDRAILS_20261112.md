@@ -72,3 +72,15 @@
 - https://developers.openai.com/api/docs/models/gpt-6.1-sol
 - https://developers.openai.com/api/reference/resources/responses/methods/create
 - https://docs.github.com/en/actions/reference/security/oidc
+
+## 実行して確定した結果
+
+- 実装: `d73429c5920594e94f64efa12866878f7a1223b3`。総合CI: https://github.com/sho-support/sho-support.github.io/actions/runs/43224425247 。必要な4ジョブが合格。Cloudflare側の追加デプロイ・書込みを行うジョブは今回起動していない。
+- 単体107、実HTTPハンドラー19、ローカルR2 14、R2ラッパー3、SQL+R2通し11が合格。PGliteは27中26合格/ネイティブ復元1件を意図的にスキップ。別のPostgreSQL **17.11** ジョブでは29件すべて合格し、同時実行の排他・暗号化ダンプの別DB復元も実行した。
+- 暗号化前50,870B/暗号化後50,960Bの合成DBアーカイブを復号・復元し、レコード一致・匿名アクセス拒否・Storage RLSの復元を確認。本番の顧客DBの復元とは区別する。
+- 実Supabaseの9確認項目が合格。固定PNGの署名アップロード、SDK 2.57.4の `.info()` による実サイズ/MIME、署名パスの改変拒否、標準動作での上書き拒否、匿名ダウンロード拒否、非画像MIME拒否、バイト一致のダウンロード/復元を確認。
+- 専用バケットは非公開/上限4KB、固定テスト画像3点/合計204B。既存素材バケットは確認前後とも6点/4,186,028B。テスト用の顧客・注文・認証ユーザーは作らず、既存の受注/制作/公開用関数は置換していない。
+- 試験後、QA関数をSDKや認証情報にアクセスしない拒否専用コードへ置換（v2）。実際のHTTP POSTでも403を確認。GitHubにある試験テンプレートも、指定した実行ID/コミットを設定しない限り閉じている。
+- 画面: 販売636、注文モック71、管理画面86、素材受付68項目が合格。6幅で実描画・操作。新しい管理パネルは320/390/1366pxの画像を目視確認した。Chromiumの結果であり、全ブラウザー・実端末を保証するものではない。
+- 試験後も本番は api v46/customer-access v49/worker v42/preview v9。新しい制限表は本番に未反映。注文・サイトは読取時点で0件。`main` は `b24971dc4e7956a9bbfa68d5607189c3beaebb4b` のまま。
+- 保存した証跡: `evidence/resource-guardrails-20261112.json`。本番接続・販売開始は未完了。
