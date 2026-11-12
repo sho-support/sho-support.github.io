@@ -27,9 +27,9 @@ function query(table){
    const w=b._write;
    if(w.type==='insert'){
     if(table==='band_crm_payments'&&rows.some(r=>r.evidence_reference===w.row.evidence_reference)) return Promise.resolve({error:{code:'23505'}}).then(resolve,reject);
-    const rec={id:'new-'+Date.now().toString(36)+Math.random(),created_at:new Date().toISOString(),...w.row};current.unshift(rec);
+    const rec={id:'new-'+Date.now().toString(36)+Math.random(),created_at:new Date().toISOString(),...w.row};current.unshift(rec);rows=[rec];
    }else if(w.type==='update')rows.forEach(r=>Object.assign(r,w.row));
-   return Promise.resolve({data:null,error:null}).then(resolve,reject);
+   return Promise.resolve({data:rows.map(r=>({id:r.id})),error:null}).then(resolve,reject);
   }
   if(b._range){rows=rows.slice(b._range[0],b._range[1]+1)}
   return Promise.resolve({data:rows,error:null}).then(resolve,reject);
