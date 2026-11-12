@@ -65,4 +65,19 @@ check('Admin password reset requires an authenticated recovery session',()=>{
  assert.match(resetJs,/auth\.updateUser\(\{password\}\)/);
  assert.doesNotMatch(resetJs,/service_role|sb_secret_[A-Za-z0-9]{12,}/);
 });
+check('Full archive is complete and distinct from a summary CSV',()=>{
+ assert.match(html,/id="export-full"/);
+ assert.match(html,/集計CSV/);
+ assert.match(js,/async function exportFullBackup\(\)/);
+ for(const name of ['band_crm_leads','band_crm_deals','band_crm_payments','band_crm_audit'])
+  assert.ok(js.includes("loadPages('"+name+"')"),name);
+ assert.match(js,/JSON\.stringify\(backup,null,2\)/);
+ assert.match(js,/format:'SHO_BAND_SUPPORT_CRM_BACKUP_V1'/);
+});
+check('UI follows the paid-quote lock and refund balance restrictions',()=>{
+ assert.match(js,/payments\.some\(p=>p\.deal_id===record\.id\)/);
+ assert.match(js,/input\.disabled=true/);
+ assert.match(js,/net\+yen<0/);
+ assert.match(js,/\['draft','cancelled'\]\.includes\(selectedDeal\.status\)/);
+});
 console.log('RESULT:',passed,'static contracts passed');
