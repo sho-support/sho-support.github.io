@@ -1,0 +1,92 @@
+{
+  "date_jst": "2026-11-13",
+  "branch": "architecture/customer-hosting-v2",
+  "implementation_commit": "4c2b9eb37c4a6751dbd5fda8e7c66dd14e0bfb9e",
+  "ci_url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43270768409",
+  "ci_run_id": 43270768409,
+  "tests": {
+    "unit": 116,
+    "worker_r2_local": 14,
+    "supabase_wrapper": 3,
+    "pglite": {
+      "total": 37,
+      "pass": 35,
+      "skip": 2
+    },
+    "postgresql_17": {
+      "total": 39,
+      "pass": 39,
+      "skip": 0
+    },
+    "sql_r2_pipeline": 11,
+    "http_routes": 19,
+    "browser": {
+      "sales": 636,
+      "order": 71,
+      "hosting": 86,
+      "materials": 68,
+      "contracts": 156,
+      "widths": [
+        320,
+        360,
+        390,
+        430,
+        768,
+        1366
+      ],
+      "visually_inspected": [
+        320,
+        390,
+        1366
+      ]
+    },
+    "edge_typecheck": true
+  },
+  "readiness": {
+    "run_id": "43270039412",
+    "source_commit": "c1d0d6da34ba611d3e327b37ea925a4957ada6a7",
+    "purpose": "configuration-only",
+    "configured": {
+      "CUSTOMER_R2_ACCOUNT_ID": false,
+      "CUSTOMER_R2_BUCKET": false,
+      "CUSTOMER_R2_ACCESS_KEY_ID": false,
+      "CUSTOMER_R2_SECRET_ACCESS_KEY": false
+    },
+    "account_matches": false,
+    "bucket_is_preview": false,
+    "hosting_enabled": false,
+    "database_url_available": true,
+    "production_data_accessed": false,
+    "external_customer_requests": 0
+  },
+  "isolated_probe_after_test": {
+    "slug": "website-resource-qa",
+    "version": 6,
+    "bundle_sha256": "4bbdcef0c708cfc34ae667cf6af9eda9c9263e4ae5c41aa7797502f7538d730f",
+    "always_403": true,
+    "http_403_observed": true
+  },
+  "production": {
+    "main_sha": "b24971dc4e7956a9bbfa68d5607189c3beaebb4b",
+    "database_migrations_applied": false,
+    "critical_functions_replaced": false,
+    "cloudflare_reader_redeployed": false,
+    "prices_changed": false,
+    "dns_changed": false,
+    "real_notifications": 0,
+    "real_payments": 0,
+    "real_ai_requests": 0,
+    "orders": 0,
+    "sites": 0,
+    "netlify_root_http_status": 200
+  },
+  "unverified": [
+    "production full backup and independent private storage",
+    "Supabase-to-R2 actual write with bucket-scoped S3 credentials",
+    "formal customer domain, DNS and HTTPS",
+    "approved maintenance and termination terms",
+    "seller disclosure and bank configuration",
+    "real AI generation, LINE/mail delivery and bank/payment confirmation",
+    "Firefox/WebKit and physical device verification"
+  ]
+}
