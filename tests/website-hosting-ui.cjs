@@ -23,7 +23,7 @@ const client=recovery=>`
  export const websiteSupabase={functions:{invoke:async()=>{throw new Error('Unexpected legacy function invocation');}}};
 `;
 // Validate both generated ESM fixture variants before starting any browser.
-for(const recovery of [false,true])new Function(client(recovery).replace(/\\bexport\\s+/g,''));
+for(const recovery of [false,true])new Function(client(recovery).replace(/\bexport\s+/g,''));
 async function inlineScreenshot(page,label,width){
  if(process.env.QA_INLINE_SCREENSHOTS!=='true'||![320,390,1366].includes(width))return;
  const data=(await page.screenshot({type:'jpeg',quality:45,fullPage:true})).toString('base64');
