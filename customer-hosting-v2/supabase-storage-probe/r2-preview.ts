@@ -29,9 +29,22 @@ Deno.serve(async(req:Request)=>{
  if(!Object.values(config.configured).every(Boolean)||!config.account_matches||!config.bucket_is_preview||config.hosting_enabled)
   return safeResponse({...common,ok:false,step:'configuration',error:'Configuration is missing, mismatched or already enabled'},503);
  let step='create_scoped_transport';
+ const observations:Record<string,unknown>[]=[];
  try{
   const signer=new AwsClient({accessKeyId:Deno.env.get('CUSTOMER_R2_ACCESS_KEY_ID')!,secretAccessKey:Deno.env.get('CUSTOMER_R2_SECRET_ACCESS_KEY')!,region:'auto',service:'s3',retries:0});
-  const bucket=createR2S3Store({accountId:Deno.env.get('CUSTOMER_R2_ACCOUNT_ID'),bucketName:Deno.env.get('CUSTOMER_R2_BUCKET'),siteId:PREVIEW_SITE,sign:signer.sign.bind(signer)});
+  const transport:typeof fetch=async(input,options)=>{
+   const request=input instanceof Request?input:new Request(input,options);
+   const response=await fetch(request,options);
+   if(observations.length<6)observations.push({
+    method:['GET','HEAD','PUT'].includes(request.method)?request.method:'other',status:response.status,
+    content_length_present:response.headers.has('content-length'),
+    content_length_valid:/^(0|[1-9][0-9]*)$/.test(response.headers.get('content-length')||''),
+    gzip:response.headers.get('content-encoding')==='gzip',br:response.headers.get('content-encoding')==='br',
+    etag_valid:/^"[A-Za-z0-9-]{1,128}"$/.test(response.headers.get('etag')||''),
+    checksum_present:response.headers.has('x-amz-meta-sha256')});
+   return response;
+  };
+  const bucket=createR2S3Store({accountId:Deno.env.get('CUSTOMER_R2_ACCOUNT_ID'),bucketName:Deno.env.get('CUSTOMER_R2_BUCKET'),siteId:PREVIEW_SITE,sign:signer.sign.bind(signer),fetch:transport});
   const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ALLOWED_RUN_ID+':'+ALLOWED_SHA)));
   const claimId=Array.from(hash,x=>x.toString(16).padStart(2,'0')).join('');
   step='one_shot_run_claim';
@@ -48,6 +61,10 @@ Deno.serve(async(req:Request)=>{
  }catch(error){
   // Never return exceptions, provider bodies, URLs, headers, credential digests or lengths.
   const status=(error as {status?:unknown})?.status;
-  return safeResponse({...common,ok:false,step,error:'Isolated R2 verification failed',...(Number.isInteger(status)&&Number(status)>=400&&Number(status)<=599?{provider_status:status}:{})},502);
+  const code=(error as {code?:unknown})?.code;
+  const codes=['R2_INVALID_RESPONSE','R2_CHECKSUM_MISMATCH','R2_SIGNER_REJECTED','R2_HTTP_ERROR','R2_TRANSPORT_FAILED','R2_REDIRECT_REJECTED','R2_WRITE_OUTCOME_UNKNOWN'];
+  return safeResponse({...common,ok:false,step,error:'Isolated R2 verification failed',observations,
+   ...(typeof code==='string'&&codes.includes(code)?{transport_code:code}:{}),
+   ...(Number.isInteger(status)&&Number(status)>=400&&Number(status)<=599?{provider_status:status}:{})},502);
  }
 });
