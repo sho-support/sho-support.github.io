@@ -1,6 +1,7 @@
 // Shared by real remote-R2 verification and actual local workerd tests.
 // This fixture is NOT a Supabase customer's approval or a production publication.
 import assert from 'node:assert/strict';
+import {Buffer} from 'node:buffer';
 import {randomBytes} from 'node:crypto';
 import {stageRelease, activateRelease, exportStagedRelease} from './release-publisher.mjs';
 
@@ -59,7 +60,7 @@ section{background:white;border:1px solid #d4e3db;border-radius:20px;padding:24p
 .version{font-weight:700;color:#246044}footer{font-size:12px;color:#4f6860}` }];
 }
 
-export async function runPreviewLifecycle({bucket:raw, read, onStep = ()=>{}, onPhase = ()=>{}}) {
+export async function runPreviewLifecycle({bucket:raw, read, onStep = (_name)=>{}, onPhase = (_name)=>{}}) {
   const bucket = scopedPreviewStore(raw);
   const proof = [];
   const check = name => {proof.push(name); onStep(name);};

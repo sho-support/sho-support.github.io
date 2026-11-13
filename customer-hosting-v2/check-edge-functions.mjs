@@ -15,7 +15,7 @@ try{
   const args=['--yes','deno@2.9.6','check','--config','deno.qa.json','--no-remote','--no-lock',
     '../supabase/functions/_shared/edge-runtime.d.ts',
     ...['website-api','website-customer-access','website-worker','website-preview'].map(x=>'../supabase/functions/'+x+'/index.ts'),
-    'supabase-storage-probe/index.ts','supabase-storage-probe/readiness.ts'];
+    'supabase-storage-probe/index.ts','supabase-storage-probe/readiness.ts','supabase-storage-probe/r2-preview.ts'];
   const child=spawn('npx',args,{cwd:fileURLToPath(new URL('./',import.meta.url)),stdio:'inherit'});
   process.exitCode=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>resolve(code??1));});
 }finally{

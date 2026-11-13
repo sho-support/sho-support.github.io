@@ -196,6 +196,31 @@ jobs:
           name: supabase-readiness-proof
           path: customer-hosting-v2/.wrangler/proof/supabase-readiness.json
           retention-days: 3
+  supabase-r2-preview:
+    if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-supabase-r2-preview]') }}
+    needs: [contract, publication-database, sales-regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: supabase-r2-preview
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Supabase S3 signing and the existing fictional fixture lifecycle
+        run: node customer-hosting-v2/verify-supabase-r2-preview.mjs
+      - name: Preserve only sanitized R2 connection evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-r2-preview-proof
+          path: customer-hosting-v2/.wrangler/proof/supabase-r2-preview.json
+          retention-days: 3
   inventory:
     if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.inspect_preview) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[inspect-customer-preview]'))) }}
     needs: [contract]
