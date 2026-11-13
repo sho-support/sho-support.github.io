@@ -1,4 +1,7 @@
 # SHO WEB SUPPORT — Customer Hosting v2 / 事業用アーキテクチャ決定案
+
+> 2026-11-13追記：過去の検討記録。現在の料金・専用ドメイン方針・販売可否は `SALES_READINESS_STATUS_20261113.md` と `SALES_DECISIONS_20261113.md` を優先する。既存 `sho-support.com` のDNSを顧客公開へ切り替えない。
+
 更新日 2026-11-07
 状態: **提案・プロトタイプ**。稼働環境、DNS、データ移行は未実施。現行販売フローの公開先を勝手に変更しない。
 

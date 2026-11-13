@@ -6,7 +6,7 @@
   "main": "worker.mjs",
   "compatibility_date": "2026-11-07",
   "workers_dev": false,
-  "vars": {"CUSTOMER_BASE_DOMAIN": "sho-support.com"}, // Replace before launch if using a dedicated domain
+  "vars": {"CUSTOMER_BASE_DOMAIN": "customer-domain.invalid"}, // Replace only with the verified customer-only domain.
   "r2_buckets": [
     {
       "binding": "SITES",
@@ -14,11 +14,11 @@
       "preview_bucket_name": "sho-customer-sites-preview"
     }
   ],
-  // Example uses the existing zone. Replace zone_name and route if adopting a customer-only domain.
+  // Deliberately non-deployable placeholder. Do not use sho-support.com or its mail/band zone.
   "routes": [
     {
-      "pattern": "*.sho-support.com/*",
-      "zone_name": "sho-support.com"
+      "pattern": "*.customer-domain.invalid/*",
+      "zone_name": "customer-domain.invalid"
     }
   ]
 }

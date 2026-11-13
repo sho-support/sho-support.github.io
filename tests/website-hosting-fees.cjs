@@ -11,6 +11,7 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
  try{for(const width of widths){
   const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});
   await context.addInitScript(({terms})=>{
+   if(location.origin!=='http://127.0.0.1:8765')return;
    localStorage.setItem('sho_web_order_v3',JSON.stringify({plan:'one',update:'none',template:'',domain:false}));
    window.__settingsCalls=[];let saved=null;
    window.__mockSales=async body=>{
