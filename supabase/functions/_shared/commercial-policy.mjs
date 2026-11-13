@@ -1,3 +1,4 @@
+import {matchesHostingOffer} from './hosting-offer.mjs';
 // The owner-approved policy is loaded from server-side website_settings.
 // No draft price or browser-supplied approved flag can authorize a quotation.
 const plans={one:{name:'1ページ完結サイト',minimum:15000},semi:{name:'セミオーダーサイト',minimum:22000},full:{name:'フルオーダーサイト',minimum:30000}};
@@ -13,6 +14,7 @@ export function validateCommercialPolicy(value,now=new Date()){
   if(!h||![1,12].includes(h.initial_months)||![1,12].includes(h.renewal_months)||h.renewal!=='opt_in'||h.notice_days!==30)
     throw Error('公開維持の期間・更新方法を確定してください。');
   money(h.initial_fee_jpy,'初回公開維持費');money(h.renewal_fee_jpy,'次回公開維持費');
+  if(!matchesHostingOffer(h))throw Error('公開ページの維持費と販売条件が一致しません。初年度込み・2年目以降年6,000円の条件を確認してください。');
   for(const key of ['provider','hosting','cancellation','handover','rights','data','backup','support','update_billing'])text(value.terms?.[key],12,key==='provider'?600:450,key);
   return structuredClone(value);
 }

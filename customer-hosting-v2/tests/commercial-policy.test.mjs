@@ -15,9 +15,12 @@ test('three approved plans preserve prices, the 30-day adjustment and only eligi
  }
 });
 test('hosting and selected content updates are itemized and cannot silently disappear from the total',()=>{
- const policy=commercialPolicy();policy.hosting.initial_fee_jpy=500;
+ const policy=commercialPolicy();
  const r=make({policy,order:{order_code:'P8100',plan:'one',amount_from:15000,update_plan:'unlimited'}});
- assert.equal(r.total,22500);assert.equal(r.snapshot.production_amount_jpy,15000);assert.equal(r.snapshot.update_initial_fee_jpy,7000);assert.match(r.message,/22,500円/);
+ assert.equal(r.total,22000);assert.equal(r.snapshot.production_amount_jpy,15000);assert.equal(r.snapshot.update_initial_fee_jpy,7000);assert.match(r.message,/22,000円/);
+});
+test('published annual hosting fees cannot drift from the approved public offer',()=>{
+ for(const h of [{initial_fee_jpy:500},{renewal_fee_jpy:12000},{initial_months:1},{renewal_months:1}])assert.throws(()=>make({policy:{...commercialPolicy(),hosting:{...commercialPolicy().hosting,...h}}}),/公開ページ/);
 });
 test('draft/body flags, changed requests and vendor/auth-parent URLs never create an approved formal URL',()=>{
  assert.throws(()=>make({policy:{...commercialPolicy(),enabled:false,approved:true}}));

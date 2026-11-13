@@ -14,6 +14,8 @@ on:
       - 'supabase/functions/_shared/website.ts'
       - 'supabase/functions/_shared/edge-runtime.d.ts'
       - 'supabase/functions/website-api/**'
+      - 'supabase/functions/website-order-api/**'
+      - 'supabase/functions/website-sales-setup/**'
       - 'supabase/functions/website-customer-access/**'
       - 'supabase/functions/website-worker/**'
       - 'supabase/functions/website-preview/**'
@@ -32,6 +34,10 @@ on:
       - 'tests/website-contract-ui.cjs'
       - 'admin/index.html'
       - 'admin/orders.html'
+      - 'admin/sales-settings.html'
+      - 'tests/website-hosting-fees.cjs'
+      - 'scripts/sync-hosting-offer.mjs'
+      - 'website-hosting-offer.js'
       - 'website-*.html'
       - 'website-theme.css'
       - 'website-portal.js'
@@ -66,6 +72,8 @@ jobs:
           cache: npm
           cache-dependency-path: customer-hosting-v2/package-lock.json
       - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify public price copies stay synchronized
+        run: node ../scripts/sync-hosting-offer.mjs --check
       - name: Verify customer URL and release routing
         run: npm test
       - name: Verify local workerd and R2 release lifecycle
@@ -78,7 +86,7 @@ jobs:
         run: npm run test:pipeline
       - name: Verify both HTTP approval/publish routes and frozen previews without external requests
         run: npm run test:routes
-      - name: Type-check the four Edge Functions against the pinned deployed SDK
+      - name: Type-check all six Edge Functions against the pinned deployed SDK
         run: npm run check:edge
       - name: Validate preview Worker package without deploying
         run: npm run check:preview
@@ -142,6 +150,7 @@ jobs:
           node tests/website-hosting-ui.cjs
           node tests/website-intake-materials.cjs
           node tests/website-contract-ui.cjs
+          node tests/website-hosting-fees.cjs
       - name: Keep rendered screenshots for visual inspection
         if: always()
         uses: actions/upload-artifact@v4

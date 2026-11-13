@@ -20,7 +20,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,6,.95);border-bottom
 </style>
 </head>
 <body>
-<header><div class="wrap head"><div class="brand">SHO WEB SUPPORT / ORDERS</div><div style="display:flex;gap:15px"><a class="back" href="../website-password.html">パスワード変更</a><a class="back" href="customers.html">顧客招待</a><a class="back" href="index.html">← 制作管理</a></div></div></header>
+<header><div class="wrap head"><div class="brand">SHO WEB SUPPORT / ORDERS</div><div style="display:flex;gap:15px"><a class="back" href="../website-password.html">パスワード変更</a><a class="back" href="customers.html">顧客招待</a><a class="back" href="index.html">← 制作管理</a></div></div></header><div style="width:min(calc(100% - 24px),1120px);margin:12px auto"><a href="sales-settings.html" style="color:#edbf76">販売準備設定：維持費・事業者情報・振込先を確認 →</a></div>
 <main class="wrap">
 <section class="hero"><small>ORDER MANAGEMENT</small><h1>運営管理</h1><p>注文受付・入金確認・制作・顧客確認・公開状況を注文ID単位で管理します。</p></section>
 <div class="summary"><div class="stat"><small>LINE待ち</small><b id="nLine">0</b></div><div class="stat"><small>入金待ち</small><b id="nPay">0</b></div><div class="stat"><small>案件作成済み</small><b id="nDone">0</b></div></div>
@@ -146,7 +146,7 @@ import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-c
    const openOrders=new Set([...list.querySelectorAll('.order-card[open]')].map(el=>el.dataset.order));
    msg.innerHTML='';
    try{
-     const [r,policy]=await Promise.all([api('admin_list_orders'),api('admin_commercial_policy_status')]);
+     const [r,policy]=await Promise.all([api('admin_list_orders'),(async()=>{const {data,error}=await websiteSupabase.functions.invoke('website-sales-setup',{body:{action:'admin_commercial_policy_status'}});if(error||data?.error)return {ready:false,reason:data?.error||'販売準備設定が未反映です。正式見積りは送信できません。'};return data;})()]);
      policyReady=policy.ready===true;policyInfo=policy;
      document.getElementById('commercialStatus').textContent=policyReady?'承認済み販売条件：'+policy.version+'。見積りごとに全文を保存します。':(policy.reason||'販売条件が未承認です。正式見積りの送信を停止しています。');
      const orders=Array.isArray(r.orders)?r.orders:[];

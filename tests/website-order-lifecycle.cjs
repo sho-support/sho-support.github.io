@@ -34,6 +34,7 @@ const cases=[
     assert.equal(body.template_style,scenario.template||'');
     assert.equal(body.custom_domain,false);
     assert.equal(body.website,'');
+    assert.equal(body.hosting_offer_version,'hosting-20261113');assert.equal(body.hosting_offer_acknowledged,true);
     assert.match(body.client_request_id,/^[0-9a-f-]{36}$/);
     assert.match(body.client_link_token,/^[0-9a-f]{40}$/);
     if(!ledger.has(body.client_request_id))ledger.set(body.client_request_id,{

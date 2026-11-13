@@ -133,3 +133,6 @@ input,textarea,select,button{font-family:var(--jp)}
   input,textarea,select{font-size:16px !important}
   .stat small,.plans .plan,.tip,.chip,.feature-chips span{font-size:.8rem !important}
 }
+
+/* Public hosting fee: generated amounts stay visible without JavaScript. */
+.hosting-fee{box-sizing:border-box;width:min(calc(100% - 24px),1060px);margin:24px auto;padding:20px;border:1px solid #a77d3e;border-radius:14px;background:#15120e;color:#f3ece0;font-size:.85rem;line-height:1.9;overflow-wrap:anywhere}.hosting-fee h2{margin:0 0 10px;font:700 1.15rem/1.5 sans-serif;color:#fff}.hosting-fee p{margin:8px 0}.hosting-fee strong,.hosting-fee a{color:#f2c684}.hosting-fee-price strong{display:block;font-size:1.2rem}.hosting-fee small{display:block;color:#d3c5ae;font-size:.75rem}.hosting-fee a{text-decoration:underline}@media(max-width:430px){.hosting-fee{padding:16px;font-size:.78rem}.hosting-fee-price strong{font-size:1.07rem}}

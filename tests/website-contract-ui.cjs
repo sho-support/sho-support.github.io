@@ -13,13 +13,13 @@ const client=ready=>`
   window.__contractCalls.push(body);
   if(body.action==='admin_list_orders')return{data:{orders:[structuredClone(order)]}};
   if(body.action==='admin_bank_settings')return{data:{message:'架空の銀行・支店・口座番号・名義です'}};
-  if(body.action==='admin_commercial_policy_status')return{data:{ready:${ready},version:'試験用・未公開',hosting:{initial_fee_jpy:500},reason:'販売条件が未承認です。送信できません。'}};
+  if(body.action==='admin_commercial_policy_status')return{data:{ready:${ready},version:'試験用・未公開',hosting:{initial_fee_jpy:0},reason:'販売条件が未承認です。送信できません。'}};
   if(body.action==='admin_resolve_free_url')return{data:{free_url:'https://s9100.contract.example/'}};
   if(body.action==='admin_send_final_quote'){
-   order.final_quote_sent_at='2026-11-13T01:00:00Z';order.final_amount=22500;order.quoted_production_amount=body.final_amount;order.final_public_domain='https://s9100.contract.example/';order.contract_state='sent';order.contract_fingerprint='a'.repeat(64);order.quote_request={production_amount:body.final_amount,public_domain:body.public_domain,quote_note:body.quote_note,delivery_terms:body.delivery_terms,payment_deadline:body.payment_deadline};
+   order.final_quote_sent_at='2026-11-13T01:00:00Z';order.final_amount=22000;order.quoted_production_amount=body.final_amount;order.final_public_domain='https://s9100.contract.example/';order.contract_state='sent';order.contract_fingerprint='a'.repeat(64);order.quote_request={production_amount:body.final_amount,public_domain:body.public_domain,quote_note:body.quote_note,delivery_terms:body.delivery_terms,payment_deadline:body.payment_deadline};
    return{data:{ok:true}};
   }
-  if(body.action==='admin_contract_detail')return{data:{contract:{state:order.contract_state,message:'保存済みの正式見積り・契約条件\\n初回合計22,500円\\n<script>window.__injected=true</script>'}}};
+  if(body.action==='admin_contract_detail')return{data:{contract:{state:order.contract_state,message:'保存済みの正式見積り・契約条件\\n初回合計22,000円\\n<script>window.__injected=true</script>'}}};
   if(body.action==='admin_record_contract_acceptance'){order.contract_state='accepted';order.contract_accepted_at='2026-11-13T01:02:00Z';return{data:{ok:true}};}
   throw Error('Unexpected contract mock action '+body.action);
  }}};
@@ -50,7 +50,7 @@ const client=ready=>`
      await page.locator('[data-payment-deadline]').fill('2026-11-20');
      await page.locator('[data-quote]').click();
      await page.waitForFunction(()=>document.querySelector('[data-quote]')?.disabled&&document.querySelector('[data-contract]'));
-     check(dialogs.some(x=>x.includes('22,500円（税込')),'Operator confirms the exact itemized initial total');
+     check(dialogs.some(x=>x.includes('22,000円（税込')),'Operator confirms the exact itemized initial total');
      check(await page.locator('[data-activate]').isDisabled(),'Sent quote alone does not enable activation');
      check(await page.locator('.order-card').evaluate(el=>el.open),'The active order stays expanded after saving the quotation');
      check(await page.locator('[data-delivery-terms]').inputValue()==='1サイト・1ページを制作。全素材受領と入金確認から14日以内に初回案を提出します。','Frozen delivery terms remain visible');

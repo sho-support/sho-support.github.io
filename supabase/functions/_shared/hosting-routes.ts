@@ -44,12 +44,15 @@ async function deliverPublicationNotice(admin:any,actorId:string,operationId:str
 export async function handleHostingAction({req,body,admin,user,dependencies:d}:any):Promise<Response|null>{
   const action=String(body?.action||'');
   const transition=action==='admin_transition'&&['customer_review','live','private','improving_private'].includes(String(body.status));
+  if(action==='review_publish')return d.json({error:'公開作業は運営者が行います。内容の承認をお願いします。'},403);
   const handled=new Set(['review_load','review_approve','review_revision','review_action','admin_send_review','admin_publish_site',
     'admin_rollback_site','admin_reconcile_publication','admin_resend_publication','admin_secure_preview','admin_domain','admin_repo_config','admin_activate_order','create_site',
-    'admin_commercial_policy_status','admin_send_final_quote','admin_record_contract_acceptance','admin_contract_detail']);
+    'admin_commercial_policy_status','admin_get_sales_settings','admin_save_sales_settings','admin_send_final_quote','admin_record_contract_acceptance','admin_contract_detail']);
   if(!handled.has(action)&&!transition)return null;
   try{
-    if(!cloudflareHostingEnabled())return null;
+    const commercialAction=action.startsWith('admin_')&&['admin_commercial_policy_status','admin_get_sales_settings','admin_save_sales_settings','admin_send_final_quote','admin_record_contract_acceptance','admin_contract_detail'].includes(action);
+    const publicationMutation=['admin_activate_order','create_site','admin_publish_site','admin_rollback_site','admin_reconcile_publication'].includes(action)||transition;
+    if(!cloudflareHostingEnabled()&&!commercialAction&&!publicationMutation)return null;
     const siteId=String(body.site_id||'');
     const customer=action.startsWith('review_')||action==='review_action';
     if(!customer){
@@ -60,6 +63,7 @@ export async function handleHostingAction({req,body,admin,user,dependencies:d}:a
     }
     const commercial=await handleCommercialAction({body,admin,user,dependencies:d});
     if(commercial)return commercial;
+    if(!cloudflareHostingEnabled())return d.json({error:'公開基盤の本番切り替えが未完了です。旧方式での案件作成・公開は実行できません。'},409);
     if(['create_site','admin_domain','admin_repo_config'].includes(action))return d.json({error:
       action==='create_site'?'新しい案件は、確定URLを案内した注文の入金確認から作成してください。':
       action==='admin_domain'?'独自ドメインは、管理権限・DNS・HTTPSの個別設定が完了するまで自動接続できません。':

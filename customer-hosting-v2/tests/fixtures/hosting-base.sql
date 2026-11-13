@@ -6,7 +6,7 @@ do $role$ begin create role authenticated nologin; exception when duplicate_obje
 do $role$ begin create role service_role nologin bypassrls; exception when duplicate_object then null; end $role$;
 grant usage on schema public to anon,authenticated,service_role;
 create table public.website_admins(user_id uuid primary key);
-create table public.website_settings(key text primary key,value jsonb not null default '{}');
+create table public.website_settings(key text primary key,value jsonb not null default '{}',updated_at timestamptz not null default now());
 create table public.website_sites(
   site_id text primary key,site_name text not null default '',status text not null default 'building',
   current_note text not null default '',

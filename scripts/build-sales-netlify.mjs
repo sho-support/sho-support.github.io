@@ -1,5 +1,6 @@
 import { cpSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, extname, basename, dirname, resolve } from 'node:path';
+import './sync-hosting-offer.mjs';
 
 const root = process.cwd();
 const output = join(root, 'dist');
