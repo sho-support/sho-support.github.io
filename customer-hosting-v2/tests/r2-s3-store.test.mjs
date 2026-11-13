@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {gzipSync} from 'node:zlib';
 import {AwsClient} from 'aws4fetch';
 import {createR2S3Store} from '../../supabase/functions/_shared/customer-r2.mjs';
 import {stageRelease, activateRelease, exportStagedRelease} from '../src/release-publisher.mjs';
@@ -100,6 +102,33 @@ test('read and head preserve quoted ETag, sizes, digest and binary content',asyn
   assert.deepEqual(new Uint8Array(await object.arrayBuffer()),bytes);
   assert.equal(await store.get(pointer),null);
   assert.equal(await store.head(pointer),null);
+});
+
+test('compressible HTTP objects retain exact bytes and strong ETags through content negotiation',async()=>{
+  const bytes=new TextEncoder().encode(JSON.stringify({status:'live',release:a,note:'fixture '.repeat(80)}));
+  const compressed=gzipSync(bytes);
+  const checksum=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('');
+  const server=createServer((req,res)=>{
+    const identity=req.headers['accept-encoding']==='identity',body=identity?bytes:compressed;
+    res.writeHead(200,{'content-type':'application/json','content-length':String(body.byteLength),
+      etag:identity?'"fixture-original"':'W/"fixture-compressed"','x-amz-meta-sha256':checksum,
+      ...(identity?{}:{'content-encoding':'gzip'})});
+    res.end(req.method==='HEAD'?undefined:body);
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const target='http://127.0.0.1:'+server.address().port+'/fixture';
+  try{
+    const {store}=fixture({fetch:async(request,options)=>{
+      // Only the negotiation header reaches the local test server, never signed credentials.
+      const encoding=request.headers.get('accept-encoding');
+      return fetch(target,{method:request.method,headers:encoding?{'accept-encoding':encoding}:{},signal:options.signal,redirect:'error'});
+    }});
+    const info=await store.head(pointer),object=await store.get(pointer);
+    assert.equal(info.size,bytes.byteLength);
+    assert.equal(info.httpEtag,'"fixture-original"');
+    assert.equal(object.httpEtag,info.httpEtag);
+    assert.deepEqual(new Uint8Array(await object.arrayBuffer()),bytes);
+  }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 });
 
 test('all writes require safe atomic conditions and release files are immutable',async()=>{

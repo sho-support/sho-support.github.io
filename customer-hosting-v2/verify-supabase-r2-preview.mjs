@@ -34,7 +34,7 @@ try{
   const codes=['R2_INVALID_RESPONSE','R2_CHECKSUM_MISMATCH','R2_SIGNER_REJECTED','R2_HTTP_ERROR','R2_TRANSPORT_FAILED','R2_REDIRECT_REJECTED','R2_WRITE_OUTCOME_UNKNOWN'];
   if(codes.includes(r.transport_code))proof.transport_code=r.transport_code;
   if(Array.isArray(r.observations))proof.observations=r.observations.slice(0,6).filter(o=>['GET','HEAD','PUT','other'].includes(o.method)&&Number.isInteger(o.status)&&o.status>=100&&o.status<=599)
-   .map(o=>({method:o.method,status:o.status,...Object.fromEntries(['content_length_present','content_length_valid','gzip','br','etag_valid','checksum_present'].map(k=>[k,o[k]===true]))}));
+   .map(o=>({method:o.method,status:o.status,...Object.fromEntries(['content_length_present','content_length_valid','gzip','br','etag_valid','etag_present','etag_weak','checksum_present'].map(k=>[k,o[k]===true]))}));
  }else{
   if(r.ok!==true||!Object.values(proof.configured).every(Boolean)||!r.account_matches||!r.bucket_is_preview||r.hosting_enabled
     ||proof.checks.length!==checks.length||new Set(proof.checks).size!==checks.length

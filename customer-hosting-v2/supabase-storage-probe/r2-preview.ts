@@ -41,6 +41,7 @@ Deno.serve(async(req:Request)=>{
     content_length_valid:/^(0|[1-9][0-9]*)$/.test(response.headers.get('content-length')||''),
     gzip:response.headers.get('content-encoding')==='gzip',br:response.headers.get('content-encoding')==='br',
     etag_valid:/^"[A-Za-z0-9-]{1,128}"$/.test(response.headers.get('etag')||''),
+    etag_present:response.headers.has('etag'),etag_weak:(response.headers.get('etag')||'').startsWith('W/'),
     checksum_present:response.headers.has('x-amz-meta-sha256')});
    return response;
   };

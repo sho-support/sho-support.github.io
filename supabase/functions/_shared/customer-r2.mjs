@@ -92,6 +92,9 @@ export function createR2S3Store({accountId, bucketName, siteId, sign, fetch: tra
 
   async function request(method, key, headers = new Headers(), body, consume = response => response) {
     keyLimit(key, id);
+    // GET/HEAD must describe the stored bytes and original strong ETag. Automatic
+    // compression/decompression can remove size headers or weaken the ETag used by CAS.
+    headers.set('accept-encoding','identity');
     const url = objectUrl(key), controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     let response;
