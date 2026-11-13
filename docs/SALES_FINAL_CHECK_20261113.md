@@ -56,3 +56,5 @@
 - レビュー用draft PR：https://github.com/sho-support/sho-support.github.io/pull/1 。mainは `b24971dc4e7956a9bbfa68d5607189c3beaebb4b`。バンド3ファイルの差分なし。
 - PR作成で既存の別販売QAも起動した。古い管理見積り試験が新しいモジュールexport・契約同意経路に未対応で停止。試験を、正式URL予約と提供時期/期限、同意記録前は入金確認不可、見積りハッシュに対する同意記録後だけ操作可という現行契約へ更新した。再実行結果は後記する。
 - 機械可読な記録：`docs/qa/sales-readiness-20261113.json`。実通知・実決済・有料AIは0。
+
+2026-11-14 最終結果取得：追加の販売QAも成功。https://github.com/sho-support/sho-support.github.io/actions/runs/43368172243 （対象 `2c2840ca4b088d24519d2069d9b90cd2314daad7`）。PR #1はdraft・未merge、本番mainは従来のまま。アプリ本体は先の全件合格コードから変更なし。本人情報・本番ドメイン/R2・実バックアップ・本番反映と実機試験は引き続き未完了。

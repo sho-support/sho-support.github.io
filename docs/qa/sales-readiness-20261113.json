@@ -56,5 +56,12 @@
   },
   "real_notifications": 0,
   "real_payments": 0,
-  "paid_ai_calls": 0
+  "paid_ai_calls": 0,
+  "additional_sales_qa": {
+    "test_commit": "2c2840ca4b088d24519d2069d9b90cd2314daad7",
+    "ci_run": 43368172243,
+    "url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43368172243",
+    "conclusion": "success",
+    "application_code_changed_since_main_suite": false
+  }
 }
