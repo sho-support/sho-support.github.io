@@ -1,0 +1,60 @@
+{
+  "code_commit": "2cee8b9ed548a452ef8213e1e0e4dddb6a102598",
+  "ci_run": 43367365050,
+  "url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43367365050",
+  "unit": 121,
+  "runtime": 14,
+  "supabase_wrapper": 3,
+  "pipeline": 11,
+  "http_routes": 21,
+  "pglite": {
+    "pass": 35,
+    "skip": 2
+  },
+  "postgres17": 39,
+  "browser": {
+    "widths": [
+      320,
+      360,
+      390,
+      430,
+      768,
+      1366
+    ],
+    "sales": 636,
+    "orders": 71,
+    "hosting": 86,
+    "intake": 68,
+    "contracts": 156,
+    "fees_and_setup": 258
+  },
+  "setup_api": {
+    "name": "website-sales-setup",
+    "version": 1,
+    "bundle_sha256": "19be48c1f07c3171c19abb8ffb5eec6f931eeee2e416041f3a00160dae456e5c",
+    "body_authentication": "Supabase getUser and website_admins membership",
+    "anonymous": 401,
+    "foreign_origin": 403,
+    "forbidden_send_action": 403,
+    "wrong_method": 405,
+    "preflight": 200,
+    "owner_authenticated_live_save_tested": false
+  },
+  "production": {
+    "orders": 0,
+    "sites": 0,
+    "bank_registered": false,
+    "policy_registered": false,
+    "identity_registered": false,
+    "existing_core_function_hashes_unchanged": true,
+    "main_sha": "b24971dc4e7956a9bbfa68d5607189c3beaebb4b",
+    "price_pages_updated": false,
+    "production_migrations_applied": false,
+    "production_backup_complete": false,
+    "production_domain_complete": false,
+    "production_r2_complete": false
+  },
+  "real_notifications": 0,
+  "real_payments": 0,
+  "paid_ai_calls": 0
+}

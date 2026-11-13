@@ -49,4 +49,10 @@
 
 ## 最終実行結果
 
-再試験と設定API配備の結果をここへ記録する。ここにない結果を成功扱いしない。
+- 料金・設定の再試験：コミット `2cee8b9ed548a452ef8213e1e0e4dddb6a102598`、CI https://github.com/sho-support/sho-support.github.io/actions/runs/43367365050 は成功。単体121、workerd14、共通接続3、SQL+R2 11、HTTP21、PGlite35合格/2skip、ネイティブPostgreSQL39合格。
+- Chromium6幅：販売636、注文71、公開管理86、素材68、契約156、維持費/設定258項目合格。320pxの維持費・入力/確認欄も画像を目視した。Firefox/WebKit・本人実機は未検証。
+- 独立設定API `website-sales-setup` v1は配備済み。バンドルSHA256 `19be48c1f07c3171c19abb8ffb5eec6f931eeee2e416041f3a00160dae456e5c`。関数内で実ユーザーと現在の管理者を認証する。実HTTPで匿名読取401、外部Origin403、顧客送信操作403、GET405、OPTIONS200、no-storeを確認した。実管理者による保存は未実施。
+- 配備後も既存6関数（api/worker/customer-access/preview/order-api/resource-qa）のバンドル・JWT設定が配備前と一致。注文/サイト0件、振込先/販売条件/本人情報は未登録。公開中の販売画面は今回更新していない。
+- レビュー用draft PR：https://github.com/sho-support/sho-support.github.io/pull/1 。mainは `b24971dc4e7956a9bbfa68d5607189c3beaebb4b`。バンド3ファイルの差分なし。
+- PR作成で既存の別販売QAも起動した。古い管理見積り試験が新しいモジュールexport・契約同意経路に未対応で停止。試験を、正式URL予約と提供時期/期限、同意記録前は入金確認不可、見積りハッシュに対する同意記録後だけ操作可という現行契約へ更新した。再実行結果は後記する。
+- 機械可読な記録：`docs/qa/sales-readiness-20261113.json`。実通知・実決済・有料AIは0。
