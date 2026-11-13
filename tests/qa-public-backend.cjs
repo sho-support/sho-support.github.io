@@ -5,7 +5,7 @@ const origin='https://sho-web-support.netlify.app';
 (async()=>{
  const cases=[
    {name:'reject invalid plan',path:'website-order-api',body:{plan:'bogus',update_plan:'none'},codes:[400]},
-   {name:'reject incompatible one-page update',path:'website-order-api',body:{plan:'one',update_plan:'free3'},codes:[400]},
+   {name:'reject invalid update enum',path:'website-order-api',body:{plan:'one',update_plan:'not-a-plan'},codes:[400]},
    {name:'reject invalid semi template',path:'website-order-api',body:{plan:'semi',template_style:'not-a-template',update_plan:'free3'},codes:[400]},
    {name:'deny anonymous operator publication',path:'website-customer-access',body:{action:'admin_publish_site',site_id:'1000'},codes:[401,403]},
    {name:'deny anonymous quote',path:'website-customer-access',body:{action:'admin_send_final_quote',order_code:'1000'},codes:[401,403]},

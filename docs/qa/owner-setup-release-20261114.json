@@ -1,0 +1,55 @@
+{
+  "date_jst": "2026-11-14",
+  "release_branch": "netlify-sales-staging",
+  "release_commit": "9c7f4dab3fa312d455968325ae1d951a8b5e3bfe",
+  "build_checks": 23,
+  "build_ci": {
+    "run": 43502088589,
+    "result": "success",
+    "url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43502088589"
+  },
+  "sales_ci": {
+    "run": 43502088169,
+    "result": "success",
+    "url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43502088169",
+    "public_denial_checks": 11,
+    "cors": 200
+  },
+  "archive": {
+    "bytes": 181304,
+    "sha256": "28ccf51d34ea986d260446e8541209bdca2962ef568e8ca63a3312f5beb64280",
+    "files": 38,
+    "contains_backend_or_backup_files": false
+  },
+  "public_settings_page": {
+    "url": "https://sho-web-support.netlify.app/admin/sales-settings.html",
+    "http_status": 404,
+    "deployed": false
+  },
+  "netlify_authentication": {
+    "origin": "https://app.netlify.com",
+    "method": "github",
+    "device_confirmation_requested": true,
+    "website_error": "Invalid state key",
+    "fresh_canonical_page": "login form",
+    "automatic_retries_after_error": 0
+  },
+  "rdap": {
+    "sho-websites.com": 404,
+    "sho-sites.net": 404,
+    "registration_object_found": false,
+    "purchase_availability_guaranteed": false,
+    "registrar_prices_verified": false
+  },
+  "production": {
+    "orders": 0,
+    "sites": 0,
+    "bank_registered": false,
+    "main_changed": false,
+    "existing_customer_functions_changed": false,
+    "hosting_enabled": false,
+    "domain_purchased": false,
+    "full_production_backup_complete": false,
+    "customer_messages_or_payments_created": 0
+  }
+}

@@ -58,3 +58,5 @@
 - 機械可読な記録：`docs/qa/sales-readiness-20261113.json`。実通知・実決済・有料AIは0。
 
 2026-11-14 最終結果取得：追加の販売QAも成功。https://github.com/sho-support/sho-support.github.io/actions/runs/43368172243 （対象 `2c2840ca4b088d24519d2069d9b90cd2314daad7`）。PR #1はdraft・未merge、本番mainは従来のまま。アプリ本体は先の全件合格コードから変更なし。本人情報・本番ドメイン/R2・実バックアップ・本番反映と実機試験は引き続き未完了。
+
+2026-11-14 残件作業：本人設定ページだけを既存Netlify用ブランチへ追加し、ビルドと販売導線CIは合格。公開URLはまだ404で、Netlify認証が `Invalid state key` により完了せず。準備済みアーカイブ・検証・正確な再開点は `OWNER_SETUP_RELEASE_20261114.md` を参照する。実情報入力先がすでに公開されたとは案内しない。
