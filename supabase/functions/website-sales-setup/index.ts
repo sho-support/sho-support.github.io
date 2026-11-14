@@ -1,6 +1,6 @@
 import {adminClient,getUser} from '../_shared/website.ts';
 import {handleCommercialAction} from '../_shared/commercial-routes.ts';
-const origins=new Set(['https://sho-web-support.netlify.app','https://sho-support.github.io']);
+const origins=new Set(['https://sho-web-support.netlify.app','https://sho-support.github.io','https://sho-web-support-preview.zodiac-suu.workers.dev']);
 Deno.serve(async(req:Request)=>{
  const origin=req.headers.get('origin')||'';
  const headers={'content-type':'application/json; charset=utf-8','cache-control':'no-store','access-control-allow-origin':origins.has(origin)?origin:'https://sho-web-support.netlify.app','access-control-allow-headers':'authorization, content-type, apikey, x-client-info','access-control-allow-methods':'POST, OPTIONS'};
