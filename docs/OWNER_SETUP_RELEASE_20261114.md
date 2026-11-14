@@ -2,6 +2,10 @@
 
 2026-11-14 JST。新しい顧客公開方式の本番移行を行う前に、本人情報・振込先を入力する管理者専用画面を独立して反映する作業。
 
+同日更新：Netlify有料化を必須として進めず、販売画面もCloudflareへまとめられるか先に検証する。新しい再開点は `SALES_CLOUDFLARE_PREFLIGHT_20261114.md`。以下のNetlify履歴は現状の証跡として保持するが、課金や12月5日待ちを唯一の進め方とは扱わない。
+
+最新到達点：Cloudflare検証先への配信と実HTTPS検証が成功。本人設定APIのみv2で検証先を許可し、管理者認証は維持。本人入力は `https://sho-web-support-preview.zodiac-suu.workers.dev/admin/sales-settings.html` を使用する。実ログイン/保存、顧客向け業務API・復旧メール・正式ドメインの切替は未完了。Netlify課金を先に進めない。
+
 ## 準備・検証済み
 
 - Netlify用の既存ブランチ `netlify-sales-staging` を `509e601eff52dfd2b7aa4c2cd08eb20af3361ecd` から `9c7f4dab3fa312d455968325ae1d951a8b5e3bfe` へ更新。
