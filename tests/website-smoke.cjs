@@ -1,5 +1,9 @@
 const assert=require('node:assert/strict');
 const {chromium}=require('playwright');
+const {mkdirSync}=require('node:fs');
+const {join}=require('node:path');
+const screenshots=process.env.QA_SCREENSHOTS_DIR;
+if(screenshots)mkdirSync(screenshots,{recursive:true});
 const BASE='http://127.0.0.1:8765/';
 const paths=[
  'website-support.html','website-create.html','website-faq.html','website-order.html',
@@ -7,6 +11,7 @@ const paths=[
  'website-update-demo.html','website-legal.html','website-terms.html','website-privacy.html',
  'website-payment.html','website-update.html','website-portal.html','website-login.html',
  'website-intake.html?id=DEMO','website-customer-review.html',
+ 'website-demo-semi-rock.html','website-demo-semi-premium.html','website-demo-semi-cyber.html',
  'admin/index.html?demo=1'
 ];
 let assertions=0;
@@ -14,7 +19,7 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  try{
-  for(const width of [320,390,768,1280]){
+  for(const width of [320,360,390,430,768,1366]){
    const context=await browser.newContext({viewport:{width,height:850},serviceWorkers:'block'});
    await context.route('**/*',route=>{
     const u=route.request().url();
@@ -28,10 +33,23 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
     const response=await page.goto(BASE+path,{waitUntil:'domcontentloaded',timeout:25000});
     check(response?.status()===200,'HTTP 200 for '+path);
     check((await page.title())!=='','Page title '+path);
-    if(/^(website-support|website-order|website-templates|website-template-preview|website-create|website-faq)\.html/.test(path)){
+    const visibleHidden=await page.locator('[hidden]').evaluateAll(els=>els.filter(el=>el.getClientRects().length>0).map(el=>el.id||el.tagName));
+    check(visibleHidden.length===0,'Hidden content must stay hidden '+width+'px '+path+': '+visibleHidden.join(','));
+    if(/^(website-support|website-order|website-templates|website-template-preview|website-demo-semi-(rock|premium|cyber)|website-create|website-faq)\.html/.test(path)){
      const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
      check(overflow<=3,'Horizontal overflow '+width+'px '+path+': '+overflow);
      check(errors.length===0,'JS exceptions in '+path+': '+errors.join(' | '));
+    }
+    if(/^website-(template-preview|demo-semi-(rock|premium|cyber))\.html/.test(path)){
+     const heights=await page.locator('.gallery .shot').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height));
+     if(path==='website-template-preview.html')check(heights.length===5,'Template preview shows five gallery frames');
+     if(heights.length)check(heights.every(height=>height>=120),'Visible gallery frames keep image height '+width+'px '+path);
+    }
+    if(screenshots&&['website-support.html','website-order.html','website-template-preview.html'].includes(path)){
+     await page.screenshot({path:join(screenshots,width+'-'+path.replace('.html','.png')),fullPage:true});
+    }
+    if(screenshots&&path.startsWith('website-demo-semi-')){
+     await page.screenshot({path:join(screenshots,width+'-'+path.replace('.html','.png')),fullPage:true});
     }
    }
    await page.goto(BASE+'website-support.html',{waitUntil:'domcontentloaded'});
@@ -59,7 +77,8 @@ const check=(condition,message)=>{assert.ok(condition,message);assertions++};
    await page.locator('[data-template="rock"]').click();
    check(await page.locator('#finalBtn').isEnabled(),'Semi order with template enables confirmation');
    await page.locator('[data-plan="one"] .plan-select').click();
-   check(!await page.locator('#finalBtn').isEnabled(),'One-page needs update option');
+   check(await page.locator('#finalBtn').isEnabled(),'Switching from free campaign defaults one-page to pay per update');
+   check(await page.locator('[data-update="none"]').evaluate(el=>el.classList.contains('selected')),'One-page defaults to the selected pay-per-update option');
    await page.locator('[data-update="none"]').click();
    check(await page.locator('#finalBtn').isEnabled(),'One-page with update choice enables confirmation');
    await page.locator('#finalBtn').click();

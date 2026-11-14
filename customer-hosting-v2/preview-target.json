@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "test_deployment_enabled": true,
+  "worker_name": "sho-customer-sites-preview",
+  "bucket_name": "sho-customer-sites-preview",
+  "worker_host": "sho-customer-sites-preview.zodiac-suu.workers.dev",
+  "site_id": "9000001000",
+  "verified_inventory_run": 43050040929,
+  "expected_worker_version": "bdd2b1c8-8fa7-4949-9e1a-ab63b5b3cd37"
+}

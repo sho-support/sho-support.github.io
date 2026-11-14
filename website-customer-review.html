@@ -28,7 +28,7 @@ header{border-bottom:1px solid var(--line);background:#070708}.head{min-height:6
 <body>
 <header><div class="wrap head"><div class="brand">SHO WEB SUPPORT</div><div class="siteid">SITE ID: <span id="siteId">----</span></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>サイト確認</h1><p>制作したホームページをご確認ください。修正があれば送信し、問題なければ内容承認後にご自身で公開できます。</p><div class="demo">現在は承認フロー確認用のデモです。同じブラウザのSHO管理画面デモと状態が連動します。</div></section>
+<section class="hero"><h1>サイト確認</h1><p>制作したホームページをご確認ください。修正依頼、または内容承認を送信できます。公開は運営者が行います。</p><div class="demo">現在は承認フロー確認用のデモです。同じブラウザのSHO管理画面デモと状態が連動します。</div></section>
 <div id="app"></div>
 <section class="card"><h2>LINEで相談</h2><div class="body"><div class="line-consult-wrap" style="margin-top:0"><p class="line-consult-copy">修正内容や分からないことはLINEでも相談できます。SITE ID入りの文章が最初から入力されます。</p><a class="btn" id="lineConsult" href="#" target="_blank" rel="noopener">LINEで相談する</a><div class="line-qr"><div id="lineQr"></div></div><div class="msg line-mobile-note">スマホではボタンからLINEを開けます。</div><div class="msg">PCではQRコードをスマホで読み取ってください。</div></div></div></section>
 </main>
@@ -44,7 +44,7 @@ const accessKey=params.get('key')||'';
 const secureMode=prodMode&&!!accessKey;
 document.getElementById('siteId').textContent=id;
 if(prodMode){
-  document.querySelector('.demo').textContent=secureMode?'LINEで届いた専用URLから内容を確認できます。':'ログイン中のお客様専用画面です。SITE IDに紐づく制作状況を表示しています。';
+  document.querySelector('.demo').hidden=true;
   if(!secureMode)await requireWebsiteSession(location.href);
 }
 
@@ -66,10 +66,10 @@ function demoSave(s){localStorage.setItem(KEY,JSON.stringify(s))}
 
 function action(p){
  if(p.status==='customer_review'&&!p.customerApproved){
-  return '<div class="actions"><button class="btn" id="openRevision" type="button">修正を依頼する</button><button class="btn primary" id="approve" type="button">この内容でOK</button></div><div class="revision-panel" id="revisionPanel" hidden><p class="revision-title">修正してほしい内容を入力してください</p><p class="revision-help">箇条書きでも大丈夫です。気になる場所・変更したい文章・色・写真などを自由に書けます。</p><textarea class="note" id="revision" placeholder="例：トップの写真を2枚目に変更してほしい。見出しの赤を少し暗くしたい。"></textarea><div class="actions"><button class="btn" id="closeRevision" type="button">戻る</button><button class="btn primary" id="sendRevision" type="button">修正内容を送信</button></div></div><div class="msg">「この内容でOK」を押しても、まだ公開されません。続けて公開確認が表示されます。</div>';
+  return '<div class="actions"><button class="btn" id="openRevision" type="button">修正を依頼する</button><button class="btn primary" id="approve" type="button">この内容でOK</button></div><div class="revision-panel" id="revisionPanel" hidden><p class="revision-title">修正してほしい内容を入力してください</p><p class="revision-help">箇条書きでも大丈夫です。気になる場所・変更したい文章・色・写真などを自由に書けます。</p><textarea class="note" id="revision" placeholder="例：トップの写真を2枚目に変更してほしい。見出しの赤を少し暗くしたい。"></textarea><div class="actions"><button class="btn" id="closeRevision" type="button">戻る</button><button class="btn primary" id="sendRevision" type="button">修正内容を送信</button></div></div><div class="msg">「この内容でOK」を押しても、まだ公開されません。運営側の最終公開操作をお待ちください。</div>';
  }
  if(p.status==='customer_review'&&p.customerApproved){
-  return '<div class="success">サイト内容は承認済みです。公開して問題なければ、下のボタンで公開してください。</div><div class="actions" style="grid-template-columns:1fr"><button class="btn publish" id="publish" type="button">この内容で公開する</button></div><div class="msg">公開後も、必要に応じて一時非公開や改良対応ができます。</div>';
+  return prodMode?'<div class="success">サイト内容を承認しました。運営者が公開準備と最終確認を行います。公開完了までお待ちください。</div>':'<div class="success">デモ：内容承認済みです。</div>';
  }
  if(p.status==='live')return '<div class="success">このサイトは現在公開中です。</div>';
  if(p.status==='private')return '<div class="info">このサイトは現在、一時非公開です。</div>';
@@ -91,6 +91,7 @@ async function loadProject(){
    updated:site.updated_at?new Date(site.updated_at).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'):'',
    preview:site.preview_url||'',
    customerApproved:Boolean(site.customer_approved),
+   updateUrl:result.update_url||'',
   };
  }
  const state=demoLoad();
@@ -109,7 +110,7 @@ async function render(){
 
  app.innerHTML='<section class="card"><h2>現在の状態</h2><div class="body"><span class="status">'+esc(label(p.status))+'</span><div class="kv"><b>サイト名</b><span>'+esc(p.name)+'</span><b>最終更新</b><span>'+esc(p.updated)+'</span></div></div></section>'+
  '<section class="card"><h2>制作サイト</h2><div class="body"><div class="preview"><div><p style="margin:0 0 10px;color:#aaa;font-size:.76rem">別画面でサイトを確認できます</p>'+previewHtml+'</div></div></div></section>'+
- '<section class="card"><h2>確認・公開</h2><div class="body">'+action(p)+'</div></section>';
+ '<section class="card"><h2>確認・公開</h2><div class="body">'+action(p)+(p.updateUrl?'<div class="actions"><a class="btn" href="'+esc(p.updateUrl)+'" target="_blank" rel="noopener noreferrer">更新・管理画面を開く</a></div>':'')+'</div></section>';
  bind(p);
 }
 

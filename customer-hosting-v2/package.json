@@ -1,0 +1,27 @@
+{
+  "name": "sho-customer-hosting-v2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:runtime": "node --test tests/runtime.integration.mjs tests/publication-recovery.integration.mjs",
+    "test:supabase": "node --experimental-vm-modules --test tests/supabase-r2.integration.mjs",
+    "test:db": "node --experimental-vm-modules --test --test-concurrency=1 tests/hosting-db.integration.mjs tests/resource-guardrails.integration.mjs tests/commercial-quote.integration.mjs",
+    "test:pipeline": "node --test tests/hosting-pipeline.integration.mjs",
+    "test:routes": "node --experimental-vm-modules --test tests/hosting-routes.integration.mjs tests/intake-routes.integration.mjs tests/resource-routes.integration.mjs tests/sales-settings.integration.mjs",
+    "check:edge": "node check-edge-functions.mjs",
+    "check:preview": "wrangler deploy --dry-run --config wrangler.preview.jsonc --outdir /tmp/sho-customer-preview-build"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.16",
+    "@supabase/supabase-js": "2.57.4",
+    "aws4fetch": "1.0.20",
+    "jose": "6.1.0",
+    "miniflare": "5.20261110.0-beta",
+    "pg": "8.23.1",
+    "wrangler": "4.160.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

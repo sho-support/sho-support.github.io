@@ -1,0 +1,142 @@
+{
+  "date_jst": "2026-11-13",
+  "branch": "architecture/customer-hosting-v2",
+  "implementation_commit": "c336af0d51fec7c0bc6287eb6088ca09b9abc558",
+  "ci_url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43354795636",
+  "ci_run_id": 43354795636,
+  "tests": {
+    "unit": 117,
+    "worker_r2_local": 14,
+    "supabase_wrapper": 3,
+    "pglite": {
+      "total": 37,
+      "pass": 35,
+      "skip": 2
+    },
+    "postgresql_17": {
+      "total": 39,
+      "pass": 39,
+      "skip": 0
+    },
+    "sql_r2_pipeline": 11,
+    "http_routes": 19,
+    "browser": {
+      "sales": 636,
+      "order": 71,
+      "hosting": 86,
+      "materials": 68,
+      "contracts": 156,
+      "widths": [
+        320,
+        360,
+        390,
+        430,
+        768,
+        1366
+      ],
+      "visually_inspected": [
+        320,
+        390,
+        1366
+      ],
+      "visual_inspection_source_commit": "4c2b9eb37c4a6751dbd5fda8e7c66dd14e0bfb9e",
+      "layout_changed_in_current_update": false
+    },
+    "edge_typecheck": true
+  },
+  "readiness": {
+    "run_id": "43354795636",
+    "source_commit": "c336af0d51fec7c0bc6287eb6088ca09b9abc558",
+    "purpose": "supabase-r2-preview",
+    "http_status": 200,
+    "ok": true,
+    "configured": {
+      "CUSTOMER_R2_ACCOUNT_ID": true,
+      "CUSTOMER_R2_BUCKET": true,
+      "CUSTOMER_R2_ACCESS_KEY_ID": true,
+      "CUSTOMER_R2_SECRET_ACCESS_KEY": true
+    },
+    "account_matches": true,
+    "bucket_is_preview": true,
+    "hosting_enabled": false,
+    "database_url_available": true,
+    "fixture_only": true,
+    "site_id": "9000001000",
+    "production_data_accessed": false,
+    "external_customer_requests": 0,
+    "real_notifications": 0,
+    "ai_requests": 0,
+    "production_functions_replaced": false,
+    "checks": [
+      "configuration_present_and_preview_only",
+      "one_shot_run_claim",
+      "supabase_signed_r2_requests",
+      "existing_fictional_fixture_verified",
+      "staged_and_unapproved_content_stays_private",
+      "approved_fixture_html_and_css_served_over_https",
+      "complete_update_switches_html_and_css",
+      "concurrent_publication_has_exactly_one_winner",
+      "rollback_restores_previous_html_and_css",
+      "verified_export_bytes_restore_as_a_new_release",
+      "interrupted_upload_cannot_replace_last_good_release",
+      "public_reader_rejects_writes_and_cross_customer_selection"
+    ],
+    "production_approval_verified": false,
+    "separate_provider_backup_verified": false,
+    "active_release": "6158a141628fcc807a2d3e9c",
+    "usage": {
+      "writes": 22,
+      "reads": 76,
+      "uploaded_bytes": 11333
+    }
+  },
+  "isolated_probe_after_test": {
+    "slug": "website-resource-qa",
+    "version": 16,
+    "bundle_sha256": "713b2c32c47e0e40cb426a39053104a4287be8c7ceafbcb5cdbe3179e9e02bea",
+    "always_403": true,
+    "http_403_observed": true
+  },
+  "production": {
+    "main_sha": "b24971dc4e7956a9bbfa68d5607189c3beaebb4b",
+    "database_migrations_applied": false,
+    "critical_functions_replaced": false,
+    "cloudflare_reader_redeployed": false,
+    "prices_changed": false,
+    "dns_changed": false,
+    "real_notifications": 0,
+    "real_payments": 0,
+    "real_ai_requests": 0,
+    "orders": 0,
+    "sites": 0,
+    "netlify_root_http_status": 200,
+    "netlify_status_checked_in_this_run": false
+  },
+  "unverified": [
+    "production full backup and independent private storage",
+    "formal customer domain, DNS and HTTPS",
+    "approved maintenance and termination terms",
+    "seller disclosure and bank configuration",
+    "real AI generation, LINE/mail delivery and bank/payment confirmation",
+    "Firefox/WebKit and physical device verification",
+    "production R2 provisioning, credential expiration/rotation and approved rollout; preview-only connection verified"
+  ],
+  "previous_configuration_snapshot": {
+    "run_id": "43270039412",
+    "source_commit": "c1d0d6da34ba611d3e327b37ea925a4957ada6a7",
+    "purpose": "configuration-only",
+    "configured": {
+      "CUSTOMER_R2_ACCOUNT_ID": false,
+      "CUSTOMER_R2_BUCKET": false,
+      "CUSTOMER_R2_ACCESS_KEY_ID": false,
+      "CUSTOMER_R2_SECRET_ACCESS_KEY": false
+    },
+    "account_matches": false,
+    "bucket_is_preview": false,
+    "hosting_enabled": false,
+    "database_url_available": true,
+    "production_data_accessed": false,
+    "external_customer_requests": 0
+  },
+  "r2_live_evidence": "supabase-r2-preview-20261113.json"
+}

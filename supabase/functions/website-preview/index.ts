@@ -1,7 +1,9 @@
+import {cloudflareHostingEnabled} from '../_shared/hosting-mode.ts';
+import {frozenPreviewFile} from '../_shared/hosting-service.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 import { verifyWebsiteBeforeDelivery } from './_shared/website.ts';
 
-const noCache={'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Robots-Tag':'noindex, nofollow','X-Content-Type-Options':'nosniff','Cross-Origin-Resource-Policy':'cross-origin','Access-Control-Allow-Origin':'https://sho-support.github.io','Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Content-Type'};
+const noCache={'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Robots-Tag':'noindex, nofollow','X-Content-Type-Options':'nosniff','Cross-Origin-Resource-Policy':'cross-origin','Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Content-Type'};
 const error=(message:string,status:number)=>new Response(message,{status,headers:{...noCache,'Content-Type':'text/plain; charset=utf-8'}});
 const sha256=async(s:string)=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,'0')).join('');
 const validPath=(s:string)=>s.length>0&&s.length<=300&&!s.startsWith('/')&&!s.includes('\\')&&!s.split('/').some(p=>p==='..'||p==='.'||p.startsWith('.git'))&&!s.startsWith('docs/')&&/^[\w.\-/ ]+$/.test(s);
@@ -21,7 +23,7 @@ function rewrite(s:string,path:string,base:string,css:boolean){
   const ref=proxy(raw,path,base);
   if(ref===raw)return raw;
   const param=ref.slice(base.length+1);
-  return 'https://sho-support.github.io/website-preview.html?'+base.split('?')[1]+'&'+param;
+  return 'https://sho-web-support.netlify.app/website-preview.html?'+base.split('?')[1]+'&'+param;
  };
  if(!css){
    s=s.replace(/\b(href|src|poster|action)\s*=\s*(["'])(.*?)\2/gi,(_,attr,q,v)=>attr+'='+q+(attr.toLowerCase()==='href'?viewer(v):proxy(v,path,base)).replace(/&/g,'&amp;')+q);
@@ -42,6 +44,12 @@ Deno.serve(async(req)=>{
   const hash=await sha256(key);
   if(!site?.repo_full_name||(hash!==site.preview_access_token_hash&&hash!==site.review_access_token_hash))return error('Preview link expired',403);
   if(site.status==='live')return error('Preview ended. Visit the public site.',403);
+  let bytes:Uint8Array;
+  if(cloudflareHostingEnabled()){
+    const result=await frozenPreviewFile(db,id,path,u.searchParams.get('qa')==='1');
+    if(u.searchParams.get('qa')==='1')return new Response(JSON.stringify(result),{status:200,headers:{...noCache,'Content-Type':'application/json; charset=utf-8'}});
+    bytes=result as Uint8Array;
+  }else{
   if(u.searchParams.get('qa')==='1'){
     const {data:order,error:orderError}=await db.from('website_orders').select('plan,template_style').eq('site_id',id).maybeSingle();
     if(orderError)throw orderError;
@@ -62,7 +70,7 @@ Deno.serve(async(req)=>{
   if(declaredSize>limit)return error('Preview file too large',413);
   const buffer=await github.arrayBuffer();
   if(buffer.byteLength>limit)return error('Preview file too large',413);
-  let bytes=new Uint8Array(buffer);
+  bytes=new Uint8Array(buffer);
   // GitHub Contents API may return a JSON/base64 envelope even with the raw
   // media type. Normalize it before assigning the image MIME type.
   if(bytes[0]===123 && (github.headers.get('content-type')||'').includes('json')){
@@ -72,6 +80,7 @@ Deno.serve(async(req)=>{
       if(raw.length>limit)return error('Preview file too large',413);
       bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
     }
+  }
   }
   const ext=(path.match(/\.([A-Za-z0-9]+)$/)?.[1]||'html').toLowerCase(),ct=types[ext]||'application/octet-stream';
   if(ext==='png' && !(bytes.length>=8&&bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10))return error('Preview file is not a PNG image',502);
@@ -86,6 +95,6 @@ Deno.serve(async(req)=>{
    const content=rewrite(new TextDecoder().decode(bytes),path,base,ext==='css');
    return ext==='css'?new Response(content,{status:200,headers:{...noCache,'Content-Type':ct}}):new Response(JSON.stringify({html:content}),{status:200,headers:{...noCache,'Content-Type':'application/json; charset=utf-8'}});
   }
-  return new Response(bytes,{status:200,headers:{...noCache,'Content-Type':ct}});
+  return new Response(new Uint8Array(bytes).buffer,{status:200,headers:{...noCache,'Content-Type':ct}});
  }catch(e){console.error('website-preview:',String(e));return error('Preview unavailable',500);}
 });

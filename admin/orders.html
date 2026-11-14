@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#070707">
-<title>注文管理 | SHO WEB SUPPORT</title>
+<title>運営管理｜注文・入金・制作 | SHO WEB SUPPORT</title>
 <link rel="stylesheet" href="../website-theme.css">
 <style>
 :root{--bg:#070707;--panel:#0e0e10;--text:#fff;--soft:#c8c8cc;--muted:#85858c;--red:#c61f38;--gold:#d9ae5c;--line:rgba(255,255,255,.12);--green:#55d68a;--warn:#f0a64b}
@@ -12,38 +12,144 @@ header{position:sticky;top:0;z-index:20;background:rgba(5,5,6,.95);border-bottom
 .hero{padding:28px 0 14px}.hero small{color:var(--gold);font-size:.64rem;font-weight:950;letter-spacing:.15em}.hero h1{margin:5px 0 7px;font-size:1.65rem}.hero p{margin:0;color:var(--soft);font-size:.76rem}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:13px 0}.stat{padding:10px;border:1px solid var(--line);border-radius:11px;background:#101012}.stat small{display:block;color:var(--muted);font-size:.6rem}.stat b{display:block;margin-top:2px;font-size:1.05rem}
 .list{display:grid;gap:9px;padding:8px 0 38px}.card{border:1px solid rgba(217,174,92,.22);border-radius:15px;background:linear-gradient(145deg,#121214,#09090a);overflow:hidden}.top{display:grid;grid-template-columns:1fr auto;gap:9px;padding:13px}.id{color:var(--gold);font-weight:950;font-size:.85rem}.name{font-weight:900;margin-top:2px}.meta{color:var(--muted);font-size:.65rem;margin-top:3px}.badge{align-self:start;padding:5px 7px;border:1px solid var(--line);border-radius:999px;font-size:.59rem;font-weight:950;white-space:nowrap}.pending_line{color:#bfc9ff}.pending_payment{color:#ffd49b;border-color:rgba(240,166,75,.45)}.site_created{color:#9aefbe;border-color:rgba(85,214,138,.42)}.cancelled{color:#aaa}.body{padding:0 13px 13px;border-top:1px solid var(--line)}.kv{display:grid;grid-template-columns:100px 1fr;gap:6px 8px;padding:10px 0;font-size:.69rem}.kv span:nth-child(odd){color:var(--muted)}.kv b{text-align:right;overflow-wrap:anywhere}.btn{width:100%;min-height:44px;border:1px solid var(--line);border-radius:9px;background:#161618;color:#fff;font-weight:950;font-size:.72rem}.btn.activate{background:#153523;border-color:rgba(85,214,138,.45);color:#baf2d1}.btn:disabled{opacity:.45}.banksetup{padding:15px;margin:12px 0;border:1px solid rgba(217,174,92,.35);border-radius:13px;background:#131313}.banksetup summary{cursor:pointer;font-weight:900;color:#e8c891}.banksetup textarea,.quotebox input,.quotebox textarea{width:100%;margin:5px 0 8px;padding:9px;border:1px solid var(--line);border-radius:9px;background:#070709;color:#fff;font:inherit}.banksetup textarea{min-height:100px}.quotebox{padding:12px;border:1px solid var(--line);border-radius:10px;background:#0c0e10;margin:8px 0}.quotebox label{display:block;font-size:.72rem;font-weight:800;color:#eee}.quotebox input[type=checkbox]{width:auto;margin:4px 8px 0 0;padding:0;accent-color:var(--gold)}.quotebox .domain-proof{display:flex;align-items:flex-start;font-weight:600;font-size:.68rem;line-height:1.6;margin:8px 0 11px}.quotebox p{font-size:.68rem;color:#c2c2cc;margin:2px 0 9px}.btn.quotebtn{background:#402b14;border-color:#d9ae5c;color:#ffe5ad}.note{margin-top:8px;color:#888;font-size:.62rem;text-align:center}.empty{padding:30px;text-align:center;color:#888}.error{margin:10px 0;padding:10px;border-left:3px solid var(--red);background:#100b0c;color:#efb7bf;font-size:.7rem}
 @media(max-width:520px){.summary{grid-template-columns:repeat(3,1fr)}.stat{padding:8px}.kv{grid-template-columns:1fr;gap:1px}.kv b{text-align:left;margin-bottom:5px}.top{padding:12px}}
+.filterbar{display:grid;grid-template-columns:1.2fr 1fr auto;gap:9px;align-items:end;margin:14px 0 4px}.filterbar label{font-size:.69rem;font-weight:850;color:#ccc}.filterbar input[type=search],.filterbar select{display:block;width:100%;margin-top:5px;background:#111;color:#fff;border:1px solid var(--line);border-radius:9px;padding:10px;min-height:42px}.filterbar .check{display:flex;align-items:center;gap:6px;white-space:nowrap;min-height:42px}.filterbar input[type=checkbox]{accent-color:#55d68a}.order-card>summary{cursor:pointer;list-style:none}.order-card>summary::-webkit-details-marker{display:none}.order-card>summary:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}.order-card .top{display:flex;align-items:center;gap:10px;justify-content:space-between}.order-card .top .firstline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.order-card .top .name{margin:0;font-size:.73rem;color:#ccc}.order-card .top .meta{margin:0}.order-card .top .badge{margin-left:auto}.order-card .top .chevron{color:var(--gold);font-weight:900}.order-card[open] .top{border-bottom:1px solid var(--line)}.order-card[open] .top .chevron{transform:rotate(45deg)}.order-card .body{border-top:0}.order-card[hidden]{display:none!important}.mini-fold{border:1px solid var(--line);border-radius:9px;margin-top:10px;background:#09090b}.mini-fold summary{cursor:pointer;padding:10px;font-weight:800;font-size:.72rem}.mini-fold-content{padding:11px;border-top:1px solid var(--line);font-size:.7rem}.revision-line{border-top:1px solid var(--line)}.revision-line:first-child{border-top:0}.revision-line summary{cursor:pointer;display:flex;gap:12px;justify-content:space-between;padding:10px 0;font-size:.72rem}.revision-line summary span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.revision-line p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 12px;color:#ddd;font-size:.74rem}.visible-count{color:#888;font-size:.68rem;margin-top:9px}@media(max-width:650px){.filterbar{grid-template-columns:1fr 1fr}.filterbar .check{grid-column:1/-1}.order-card .top .firstline{gap:7px}.order-card .top .meta{width:100%}}
+
+.head{flex-wrap:wrap;padding:10px 0;gap:7px}.head .brand{font-size:.9rem}.head>div{flex-wrap:wrap;gap:12px!important}.head .back{display:inline-flex;align-items:center;min-height:32px;white-space:nowrap}
+[data-acceptance-reference]{display:block;width:100%;min-height:44px;margin:6px 0 10px;padding:10px;border:1px solid var(--line);border-radius:9px;background:#070709;color:#fff;font:inherit}
+@media(max-width:600px){.head{display:block}.head>div{margin-top:3px;justify-content:space-between}.head .brand{font-size:.85rem}.head .back{font-size:.69rem}}
 </style>
 </head>
 <body>
-<header><div class="wrap head"><div class="brand">SHO WEB SUPPORT / ORDERS</div><a class="back" href="index.html">← 制作管理</a></div></header>
+<header><div class="wrap head"><div class="brand">SHO WEB SUPPORT / ORDERS</div><div style="display:flex;gap:15px"><a class="back" href="../website-password.html">パスワード変更</a><a class="back" href="customers.html">顧客招待</a><a class="back" href="index.html">← 制作管理</a></div></div></header><div style="width:min(calc(100% - 24px),1120px);margin:12px auto"><a href="sales-settings.html" style="color:#edbf76">販売準備設定：維持費・事業者情報・振込先を確認 →</a></div>
 <main class="wrap">
-<section class="hero"><small>ORDER MANAGEMENT</small><h1>注文管理</h1><p>LINE紐付けと入金確認後の案件作成を管理します。</p></section>
+<section class="hero"><small>ORDER MANAGEMENT</small><h1>運営管理</h1><p>注文受付・入金確認・制作・顧客確認・公開状況を注文ID単位で管理します。</p></section>
 <div class="summary"><div class="stat"><small>LINE待ち</small><b id="nLine">0</b></div><div class="stat"><small>入金待ち</small><b id="nPay">0</b></div><div class="stat"><small>案件作成済み</small><b id="nDone">0</b></div></div>
 <details class="banksetup"><summary>本番用の振込先を設定する（管理者のみ）</summary>
  <p style="color:#c8c8cc;font-size:.73rem">銀行名・支店名・口座種別・口座番号・名義を入力してください。保存内容は公開ページには表示されず、注文ごとの<strong>正式見積りを確定して送信したときだけ</strong>お客様のLINEへ送ります。</p>
  <textarea id="bankMessage" placeholder="銀行名：…&#10;支店名：…&#10;口座：普通 …&#10;名義：…" autocomplete="off" spellcheck="false"></textarea>
  <button class="btn quotebtn" type="button" id="saveBank">振込先を保存する</button><p class="note" id="bankStatus" role="status">設定状態を確認中…</p>
  </details>
+<p id="commercialStatus" class="error" role="status">販売条件を確認中…</p>
+<div class="filterbar"><label>注文ID・SITE ID検索<input type="search" id="orderSearch" placeholder="例：1000" autocomplete="off"></label><label>ステータス<select id="statusFilter"><option value="all">すべて</option><option value="pending_line">LINE待ち</option><option value="pending_payment">入金待ち</option><option value="request_waiting">ヒアリング待ち</option><option value="building">AI作成中</option><option value="sho_review">SHO確認中</option><option value="customer_review">お客様確認中</option><option value="live">公開中</option><option value="private">非公開・改良中</option><option value="cancelled">キャンセル</option></select></label><label class="check"><input type="checkbox" id="onlyLive">公開中だけ表示</label></div><div class="visible-count" id="visibleCount">案件を読み込み中…</div>
 <div id="message"></div><div class="list" id="list"><div class="empty">読み込み中…</div></div>
 </main>
 <script type="module">
-import { requireWebsiteSession, websiteSupabase } from '../website-client.js';
+import { requireWebsiteSession, websiteSupabase, websiteApi } from '../website-client.js';
 (async()=>{
  await requireWebsiteSession(location.href);
  const list=document.getElementById('list'),msg=document.getElementById('message');
+ let policyReady=false,policyInfo=null;
  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
  const labels={pending_line:'LINE送信待ち',pending_payment:'入金待ち',site_created:'案件作成済み',cancelled:'キャンセル'};
  const plans={one:'1ページ完結サイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'};
- const progress={request_waiting:'制作内容の入力待ち',building:'AI制作中',sho_review:'AI制作完了・運営確認待ち',customer_review:'お客様確認待ち',live:'公開中',private:'一時非公開',improving_private:'改良中'};
+ const progress={request_waiting:'ヒアリング待ち',building:'AI作成中',sho_review:'SHO確認中',customer_review:'お客様確認中',live:'公開中',private:'一時非公開',improving_private:'改良中',update_request:'更新依頼中'};
  async function api(action,payload={}){
    const {data,error}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action,...payload}});
    if(error)throw error;if(data?.error)throw new Error(data.error);return data;
  }
  const fmt=d=>d?new Date(d).toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+
+ function applyFilters(){
+   const term=document.getElementById('orderSearch').value.trim().toUpperCase();
+   const selected=document.getElementById('statusFilter').value;
+   const onlyLive=document.getElementById('onlyLive').checked;
+   let visible=0;
+   list.querySelectorAll('.order-card').forEach(el=>{
+     const stage=el.dataset.stage;
+     const match=!term||el.dataset.order.includes(term)||el.dataset.site.includes(term)||el.dataset.order.replace(/^[A-Z]/,'').includes(term);
+     const status=selected==='all'||selected===stage||(selected==='private'&&stage==='improving_private');
+     el.hidden=!(match&&status&&(!onlyLive||stage==='live'));
+     if(!el.hidden)visible++;
+   });
+   const all=list.querySelectorAll('.order-card').length;
+   document.getElementById('visibleCount').textContent=all+'件中 '+visible+'件を表示';
+ }
+ document.querySelectorAll('#orderSearch,#statusFilter,#onlyLive').forEach(el=>el.addEventListener(el.id==='orderSearch'?'input':'change',applyFilters));
+
+ async function showWork(panel,siteId){
+   if(!siteId){panel.textContent='入金確認後にSITE IDが発行されると制作管理を利用できます。';return;}
+   panel.textContent='制作状況を読み込み中…';
+   try{
+     const detail=await websiteApi('load_site',{site_id:siteId}),site=detail.site||{};
+     const stage=site.status||'request_waiting';
+     const allowed=['sho_review','customer_review','building'];
+     const preview=stage==='sho_review'||stage==='customer_review'?String(site.preview_url||''):'';
+     const safePreview=(()=>{try{const u=new URL(preview);return u.protocol==='https:'?u.href:''}catch{return ''}})();
+     const updates=(detail.updates||[]).filter(x=>['requested','pending','queued','building'].includes(x.status));
+     const reviewIssues=(detail.reviewIssues||[]).filter(x=>x.status!=='confirmed');
+     let actions='';
+     if(stage==='building')actions='<button class="btn" type="button" data-work-action="run">AI制作を実行・再実行</button>';
+     if(stage==='sho_review')actions='<button class="btn" type="button" data-work-action="revise">SHOから修正を依頼</button><button class="btn activate" type="button" data-work-action="approve" '+(reviewIssues.length?'disabled title="未確認の修正項目があります"':'')+'>SHO確認OK → お客様確認へ</button>';
+     if(stage==='customer_review'&&!site.customer_approved)actions='<button class="btn" type="button" data-work-action="resend">お客様へ確認URLをLINE送信</button>';
+     if(stage==='customer_review'&&site.customer_approved)actions='<button class="btn activate" type="button" data-work-action="publish">お客様確認OK → 公開する</button>';
+     if(detail.hosting?.active_operation_id)actions='<a class="btn" href="index.html?site='+encodeURIComponent(siteId)+'">公開結果の確認・復旧へ</a>';
+     const updateInfo=updates.length?'<p style="color:#ebca85">対応中の更新依頼 '+updates.length+'件</p>':'';
+     panel.innerHTML='<p>状態：<strong>'+esc(progress[stage]||stage)+'</strong>　／　お客様承認：'+(site.customer_approved?'OK':'未承認')+'</p>'+
+       '<p>'+esc(site.current_note||'')+'</p>'+updateInfo+
+       (safePreview?'<p><a class="btn" target="_blank" rel="noopener noreferrer" href="'+esc(safePreview)+'" style="display:flex;align-items:center;justify-content:center;text-decoration:none">制作プレビューを開く</a></p>':'')+
+       '<div class="inline-actions">'+actions+'</div>'+
+       '<div data-work-note style="display:none;margin-top:10px"><textarea data-work-text rows="4" style="width:100%;background:#111;border:1px solid #555;color:#fff;padding:10px;border-radius:9px" placeholder="修正してほしい場所と内容を入力"></textarea><button class="btn" data-work-action="send-fix" type="button">修正内容を送信する</button></div>'+
+       '<p class="note">公開先設定・詳細な修正項目の承認は<a href="index.html?site='+encodeURIComponent(siteId)+'" style="color:#ebca85">詳細な制作操作</a>から行えます。</p>';
+     panel.querySelectorAll('[data-work-action]').forEach(btn=>btn.addEventListener('click',async()=>{
+       const action=btn.dataset.workAction;
+       if(action==='revise'){panel.querySelector('[data-work-note]').style.display='block';return;}
+       let operation=null;
+       if(action==='run')operation=()=>websiteApi('admin_run_worker',{site_id:siteId});
+       if(action==='approve'){
+         if(!confirm('SHO確認を完了してお客様へ最終確認を依頼しますか？'))return;
+         operation=()=>websiteApi('admin_transition',{site_id:siteId,status:'customer_review',current_note:'SHO確認済み。お客様確認待ち。',detail:'SHO確認OK。'});
+       }
+       if(action==='resend'){
+         if(!confirm('お客様へ確認リンクを再送しますか？以前のリンクは無効になります。'))return;
+         operation=async()=>{
+           const {data,error}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action:'admin_send_review',site_id:siteId}});
+           if(error||data?.error)throw new Error(data?.error||'LINEへの送信に失敗しました');
+         };
+       }
+       if(action==='publish'){
+         if(!confirm('お客様の内容承認を確認しましたか？ 検査済みの制作案を正式URLへ公開します。'))return;
+         operation=async()=>{
+           const {data,error}=await websiteSupabase.functions.invoke('website-customer-access',{body:{action:'admin_publish_site',site_id:siteId}});
+           if(error||data?.error)throw new Error(data?.error||'公開処理に失敗しました');
+         };
+       }
+       if(action==='send-fix'){
+         const note=panel.querySelector('[data-work-text]').value.trim();
+         if(!note){alert('修正内容を入力してください。');return;}
+         if(!confirm('入力した内容で修正依頼を送信しますか？'))return;
+         operation=()=>websiteApi('admin_request_review_fix',{site_id:siteId,detail:note});
+       }
+       if(!operation)return;
+       btn.disabled=true;
+       try{await operation();await showWork(panel,siteId);alert('処理を受け付けました。');}
+       catch(e){btn.disabled=false;try{await showWork(panel,siteId);}catch{}alert(e.message||'処理に失敗しました。');}
+     }));
+   }catch(e){panel.textContent='制作情報を取得できませんでした：'+String(e.message||e)}
+ }
+ async function showHistory(panel,siteId){
+   if(!siteId){panel.textContent='SITE IDの発行後に履歴が表示されます。';return;}
+   panel.textContent='履歴を読み込み中…';
+   try{
+     const data=await websiteApi('load_site',{site_id:siteId});
+     const activities=(data.activity||[]).filter(x=>['customer_revision_requested','customer_approved','ai_build_completed','published'].includes(x.action));
+     const updates=(data.updates||[]).filter(x=>x.request_note);
+     const entries=[
+       ...activities.map(x=>({at:x.created_at,text:x.detail||'',name:({customer_revision_requested:'お客様修正依頼',customer_approved:'お客様確認OK',ai_build_completed:'AI制作完了',published:'公開'})[x.action]})),
+       ...updates.map(x=>({at:x.created_at,text:x.request_note,name:'更新依頼'}))
+     ].sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+     if(!entries.length){panel.textContent='修正・承認・更新履歴はありません。';return;}
+     panel.innerHTML=entries.map(x=>'<details class="revision-line"><summary><span>'+esc(x.name+'：'+(x.text||'記録のみ').slice(0,42))+'</span><time>'+esc(fmt(x.at))+'</time></summary><p>'+esc(x.text||'詳細なし')+'</p></details>').join('');
+     panel.querySelectorAll('.revision-line').forEach(d=>d.addEventListener('click',e=>{if(!e.target.closest('summary,a,button,input'))d.open=false;}));
+   }catch(e){panel.textContent='履歴の取得に失敗しました：'+String(e.message||e);}
+ }
  async function load(){
+   const openOrders=new Set([...list.querySelectorAll('.order-card[open]')].map(el=>el.dataset.order));
    msg.innerHTML='';
    try{
-     const r=await api('admin_list_orders'),orders=Array.isArray(r.orders)?r.orders:[];
+     const [r,policy]=await Promise.all([api('admin_list_orders'),(async()=>{const {data,error}=await websiteSupabase.functions.invoke('website-sales-setup',{body:{action:'admin_commercial_policy_status'}});if(error||data?.error)return {ready:false,reason:data?.error||'販売準備設定が未反映です。正式見積りは送信できません。'};return data;})()]);
+     policyReady=policy.ready===true;policyInfo=policy;
+     document.getElementById('commercialStatus').textContent=policyReady?'承認済み販売条件：'+policy.version+'。見積りごとに全文を保存します。':(policy.reason||'販売条件が未承認です。正式見積りの送信を停止しています。');
+     const orders=Array.isArray(r.orders)?r.orders:[];
      document.getElementById('nLine').textContent=orders.filter(x=>x.status==='pending_line').length;
      document.getElementById('nPay').textContent=orders.filter(x=>x.status==='pending_payment').length;
      document.getElementById('nDone').textContent=orders.filter(x=>x.status==='site_created').length;
@@ -51,25 +157,53 @@ import { requireWebsiteSession, websiteSupabase } from '../website-client.js';
      list.innerHTML=orders.map(o=>{
        const can=o.status==='pending_payment';
        const line=o.line_display_name|| (o.line_user_id?'LINE連携済み':'未連携');
-       return '<article class="card"><div class="top"><div><div class="id">'+esc(o.order_code)+'</div><div class="name">'+esc(plans[o.plan]||o.plan)+'</div><div class="meta">'+esc(fmt(o.created_at))+'</div></div><span class="badge '+esc(o.status)+'">'+esc(o.status==='site_created'?(progress[o.site_status]||labels[o.status]):(labels[o.status]||o.status))+'</span></div><div class="body"><div class="kv"><span>お客様</span><b>'+esc(line)+'</b><span>テンプレート</span><b>'+esc(o.template_style||'—')+'</b><span>制作料金</span><b>¥'+Number(o.amount_from||0).toLocaleString()+'〜</b><span>SITE ID</span><b>'+esc(o.site_id||'未発行')+'</b></div>'+(o.extra_request?'<div class="note" style="color:#ebca85"><strong>追加ページ・機能の見積り相談あり</strong><br>'+esc(o.extra_request)+'<br>合計金額の案内・入金確認後に案件を作成してください。</div>':'')+
-       (can?'<div class="quotebox"><label>正式な確定制作料金（円）<input data-final-amount type="number" min="'+Number(o.amount_from||15000)+'" max="3000000" step="1" value="'+Number(o.final_amount||o.amount_from||0)+'"></label><label>お客様に渡す正式URL（https://を除く）<input data-public-domain type="text" spellcheck="false" value="'+esc(o.final_public_domain||'')+'" placeholder="bandname.取得済みドメイン.jp" autocomplete="off"></label><label class="domain-proof"><input type="checkbox" data-domain-confirm>このドメインを管理でき、継続更新と印刷物への掲載について確認済み</label><label>追加内容・見積り補足（任意）<textarea data-quote-note rows="2" placeholder="例：追加ページ1枚を含む。その他追加費用なし。"></textarea></label><p>'+(o.final_quote_sent_at?'正式見積り送信済み：¥'+Number(o.final_amount||0).toLocaleString()+'（'+esc(fmt(o.final_quote_sent_at))+'） / URL：'+esc(o.final_public_domain||'未登録'):'まだ正式見積りを送信していません。確定金額と正式URLを先に確認してください。')+'</p><button class="btn quotebtn" data-quote="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at?' disabled':'')+'>'+(o.final_quote_sent_at?'正式見積り送信済み（再送不可）':'確定金額・振込先をLINEへ送信')+'</button></div><button class="btn activate" data-activate="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at&&o.final_public_domain?'':' disabled')+'>入金確認済み → 案件作成・URL送信</button><div class="note">LINE見積り送信後、実際の着金を確認してから案件作成してください。</div>':
+       return '<details '+(openOrders.has(String(o.order_code).toUpperCase())?'open ':'')+'class="card order-card" data-order="'+esc(String(o.order_code).toUpperCase())+'" data-site="'+esc(String(o.site_id||'').toUpperCase())+'" data-stage="'+esc(o.status==='site_created'?(o.site_status||'request_waiting'):o.status)+'"><summary class="top"><span class="firstline"><span class="id">'+esc(o.order_code)+'</span><span class="name">'+esc(plans[o.plan]||o.plan)+'</span><span class="meta">'+esc(fmt(o.created_at))+'</span></span><span class="badge '+esc(o.status)+'">'+esc(o.status==='site_created'?(progress[o.site_status]||labels[o.status]):(labels[o.status]||o.status))+'</span><span class="chevron">＋</span></summary><div class="body"><div class="kv"><span>お客様</span><b>'+esc(line)+'</b><span>テンプレート</span><b>'+esc(o.template_style||'—')+'</b><span>制作料金</span><b>¥'+Number(o.amount_from||0).toLocaleString()+'〜</b><span>SITE ID</span><b>'+esc(o.site_id||'未発行')+'</b></div>'+(o.extra_request?'<div class="note" style="color:#ebca85"><strong>追加ページ・機能の見積り相談あり</strong><br>'+esc(o.extra_request)+'<br>合計金額の案内・入金確認後に案件を作成してください。</div>':'')+
+       (can?'<div class="quotebox"><label>確定制作料金（税込・更新料と公開維持費を除く）<input data-final-amount type="number" min="'+Number(o.amount_from||15000)+'" max="3000000" step="1" value="'+Number(o.quoted_production_amount||o.amount_from||0)+'"></label><label>公開URL（空欄ならSHO標準URLを予約／独自ドメインは個別設定）<input data-public-domain type="text" spellcheck="false" value="'+esc(o.quote_request?.public_domain==='free'||(o.final_public_domain||'').startsWith('https://sho-support.github.io/site-')?'':o.final_public_domain||'')+'" placeholder="独自ドメイン利用時のみ例: bandname.jp" autocomplete="off"></label><label class="domain-proof"><input type="checkbox" data-domain-confirm>このドメインを管理でき、継続更新と印刷物への掲載について確認済み</label><label>制作範囲・提供時期（必須）<textarea data-delivery-terms rows="3" maxlength="240" placeholder="例：1ページ・5項目。入金と全素材の受領から14日以内に初回制作案を提示。お客様の確認待ちは除く。">'+esc(o.quote_request?.delivery_terms||'')+'</textarea></label><label>申込・支払期限（日本時間・必須）<input data-payment-deadline type="date" value="'+esc(o.quote_request?.payment_deadline||'')+'"></label><label>追加内容・見積り補足（任意）<textarea data-quote-note rows="2" placeholder="例：追加ページ1枚を含む。その他追加費用なし。">'+esc(o.quote_request?.quote_note||'')+'</textarea></label><p>'+(o.final_quote_sent_at?'正式見積り送信済み：¥'+Number(o.final_amount||0).toLocaleString()+'（'+esc(fmt(o.final_quote_sent_at))+'） / URL：'+esc(o.final_public_domain||'未登録'):'まだ正式見積りを送信していません。確定金額と正式URLを先に確認してください。')+'</p><button class="btn quotebtn" data-quote="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at||!policyReady?' disabled':'')+'>'+(o.final_quote_sent_at?'正式見積り送信済み（再送不可）':'確定金額・振込先をLINEへ送信')+'</button></div>'+ (o.final_quote_sent_at?'<details class="mini-fold"><summary>送信した契約条件と同意確認</summary><div class="mini-fold-content"><button type="button" class="btn" data-contract="'+esc(o.order_code)+'">保存済みの見積り全文を見る</button><pre data-contract-text style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit"></pre>'+(o.contract_state==='accepted'?'<p>顧客の同意返信：管理者確認済み（'+esc(fmt(o.contract_accepted_at))+'）</p>':'<label>同意返信を確認したLINE日時・識別情報<input data-acceptance-reference maxlength="240" placeholder="例：11/13 18:30の「上記内容でお願いします」の返信"></label><p>顧客の同意返信を実際に確認してから記録してください。記録は管理者による確認証跡です。</p><button type="button" class="btn" data-accept-contract="'+esc(o.order_code)+'">同意返信を確認・記録する</button>')+'</div></details>':'')+'<button class="btn activate" data-activate="'+esc(o.order_code)+'" type="button"'+(o.final_quote_sent_at&&o.final_public_domain&&o.contract_state==='accepted'?'':' disabled')+'>入金確認済み → 案件作成・URL送信</button><div class="note">LINEの同意返信を記録し、実際の着金も確認してから案件作成してください。</div>':
        o.status==='pending_line'?'<button class="btn" disabled>お客様のLINE送信待ち</button>':
        o.status==='site_created'?(o.site_status==='request_waiting'?'<button class="btn resend" data-resend="'+esc(o.order_code)+'" type="button">ヒアリングURLをLINEへ再送</button>':'<div class="note" style="font-size:.76rem;color:#d9ae5c">現在：'+esc(progress[o.site_status]||'案件進行中')+'</div>')+'<a class="btn activate" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:8px" href="index.html?site='+encodeURIComponent(o.site_id||'')+'">SITE ID '+esc(o.site_id||'')+' の制作管理を開く</a>':'')+
-       '</div></article>';
+       '<details class="mini-fold" data-work-fold="'+esc(o.site_id||'')+'"><summary>制作確認・お客様確認・公開状況</summary><div class="mini-fold-content" data-work="'+esc(o.site_id||'')+'">開くと制作状況を読み込みます。</div></details><details class="mini-fold" data-history-fold="'+esc(o.site_id||'')+'"><summary>修正依頼・承認・更新履歴</summary><div class="mini-fold-content" data-history="'+esc(o.site_id||'')+'">開くと履歴を読み込みます。</div></details></div></details>';
      }).join('');
+     list.querySelectorAll('.order-card').forEach(card=>{const o=orders.find(x=>String(x.order_code).toUpperCase()===card.dataset.order);if(o?.final_quote_sent_at)card.querySelectorAll('.quotebox input,.quotebox textarea').forEach(el=>el.disabled=true);});
+     applyFilters();
+     document.querySelectorAll('[data-work-fold]').forEach(fold=>fold.addEventListener('toggle',()=>{
+       if(fold.open&&!fold.dataset.loaded){fold.dataset.loaded='1';showWork(fold.querySelector('[data-work]'),fold.dataset.workFold);}
+     }));
+     document.querySelectorAll('[data-history-fold]').forEach(fold=>fold.addEventListener('toggle',()=>{
+       if(fold.open&&!fold.dataset.loaded){fold.dataset.loaded='1';showHistory(fold.querySelector('[data-history]'),fold.dataset.historyFold);}
+     }));
      document.querySelectorAll('[data-quote]').forEach(btn=>btn.onclick=async()=>{
+       if(!policyReady)return alert('販売条件が未承認です。正式見積りは送信できません。');
        const code=btn.dataset.quote,box=btn.closest('.quotebox');
        const finalAmount=Number(box?.querySelector('[data-final-amount]')?.value);
        const note=box?.querySelector('[data-quote-note]')?.value.trim()||'';
+       const delivery=box?.querySelector('[data-delivery-terms]')?.value.trim()||'';
+       const deadline=box?.querySelector('[data-payment-deadline]')?.value||'';
+       if(delivery.length<10||!deadline)return alert('制作範囲・提供時期と申込・支払期限を入力してください。');
        const publicDomain=box?.querySelector('[data-public-domain]')?.value.trim().toLowerCase()||'';
        const domainConfirmed=box?.querySelector('[data-domain-confirm]')?.checked===true;
        const order=orders.find(o=>o.order_code===code);
+       const total=finalAmount+Number(policyInfo?.hosting?.initial_fee_jpy||0)+(order?.plan==='one'&&order?.update_plan==='unlimited'?7000:0);
        if(!Number.isSafeInteger(finalAmount)||finalAmount<Number(order?.amount_from||0))return alert('基本料金以上の正式な確定金額を入力してください。');
-       if(!publicDomain||!domainConfirmed)return alert('正式公開URLを入力し、ドメイン取得・管理権限と更新負担を確認してください。');
-       if(!confirm(code+' の確定金額 '+finalAmount.toLocaleString()+'円、正式URL https://'+publicDomain+'/ と振込先をお客様のLINEへ送信します。内容とURLを確認しましたか？'))return;
+       if(publicDomain&&!domainConfirmed)return alert('独自ドメインの場合は、管理権限と更新負担を確認してください。');
+       let intendedUrl='';
+       try{intendedUrl=publicDomain?'https://'+publicDomain+'/':String((await api('admin_resolve_free_url',{order_code:code})).free_url||'');if(!intendedUrl.startsWith('https://'))throw Error('無料URLを取得できませんでした。');}
+       catch(error){alert(error.message||'公開URLの確認に失敗しました。');return;}
+       if(!confirm(code+' の初回合計 '+total.toLocaleString()+'円（税込、制作・初回公開維持・選択済み更新料を含む）、正式URL '+intendedUrl+' と振込先をお客様のLINEへ送信します。内容とURLを確認しましたか？'))return;
        btn.disabled=true;btn.textContent='LINEへ送信中…';
-       try{await api('admin_send_final_quote',{order_code:code,final_amount:finalAmount,public_domain:publicDomain,domain_control_confirmed:domainConfirmed,quote_note:note});alert('正式見積りと振込先をLINEに送信しました。');await load()}
+       try{await api('admin_send_final_quote',{order_code:code,final_amount:finalAmount,public_domain:publicDomain||'free',domain_control_confirmed:publicDomain?domainConfirmed:true,quote_note:note,delivery_terms:delivery,payment_deadline:deadline});alert('正式見積りと振込先をLINEに送信しました。');await load()}
        catch(e){alert(e.message||'見積りの送信に失敗しました。');btn.disabled=false;btn.textContent='確定金額・振込先をLINEへ送信'}
+     });
+     document.querySelectorAll('[data-contract]').forEach(btn=>btn.onclick=async()=>{
+       try{const r=await api('admin_contract_detail',{order_code:btn.dataset.contract});btn.parentElement.querySelector('[data-contract-text]').textContent=r.contract?.message||'契約条件の保存がありません。個別確認が必要です。'}catch(e){alert(e.message||'見積りを読み込めませんでした。')}
+     });
+     document.querySelectorAll('[data-accept-contract]').forEach(btn=>btn.onclick=async()=>{
+       const code=btn.dataset.acceptContract,order=orders.find(o=>o.order_code===code);
+       const reference=btn.parentElement.querySelector('[data-acceptance-reference]').value.trim();
+       if(reference.length<8)return alert('顧客の同意返信のLINE日時・識別情報を入力してください。');
+       if(!confirm(code+' の保存済み見積りに対する同意返信を、LINEで実際に確認しましたか？'))return;
+       btn.disabled=true;
+       try{await api('admin_record_contract_acceptance',{order_code:code,quote_fingerprint:order.contract_fingerprint,acceptance_reference:reference});await load()}
+       catch(e){alert(e.message||'同意確認の記録に失敗しました。');btn.disabled=false}
      });
      document.querySelectorAll('[data-activate]').forEach(btn=>btn.onclick=async()=>{
        const code=btn.dataset.activate;

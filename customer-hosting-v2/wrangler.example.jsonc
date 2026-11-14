@@ -1,0 +1,24 @@
+// Copy to wrangler.jsonc only after all DNS and deployment gates pass.
+// THIS FILE IS NOT ACTIVE. Do not deploy against the live zone during design.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sho-customer-sites",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-07",
+  "workers_dev": false,
+  "vars": {"CUSTOMER_BASE_DOMAIN": "customer-domain.invalid"}, // Replace only with the verified customer-only domain.
+  "r2_buckets": [
+    {
+      "binding": "SITES",
+      "bucket_name": "sho-customer-sites-prod",
+      "preview_bucket_name": "sho-customer-sites-preview"
+    }
+  ],
+  // Deliberately non-deployable placeholder. Do not use sho-support.com or its mail/band zone.
+  "routes": [
+    {
+      "pattern": "*.customer-domain.invalid/*",
+      "zone_name": "customer-domain.invalid"
+    }
+  ]
+}

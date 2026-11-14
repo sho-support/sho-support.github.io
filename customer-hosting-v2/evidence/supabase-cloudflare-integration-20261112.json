@@ -1,0 +1,140 @@
+{
+  "version": 2,
+  "verified_on": "2026-11-12",
+  "development_only": true,
+  "branch": "architecture/customer-hosting-v2",
+  "implementation_commit": "52ccdfda65a913f02779f3ffd30dc4012e10d1b8",
+  "ci": {
+    "run_id": 43203729930,
+    "url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43203729930",
+    "conclusion": "success",
+    "tests": {
+      "unit": 98,
+      "local_workerd_r2": 14,
+      "supabase_secret_wrapper": 3,
+      "pglite_protocol": 11,
+      "sql_r2_pipeline": 11,
+      "http_handlers": 11,
+      "postgres_17_11_protocol": 12
+    },
+    "edge_function_typecheck": "passed",
+    "browser_assertions": {
+      "sales_pages": 636,
+      "order_scenarios": 71,
+      "hosting_controls": 62,
+      "intake_materials": 68
+    },
+    "browser_widths": [
+      320,
+      360,
+      390,
+      430,
+      768,
+      1366
+    ],
+    "screenshot_visual_review": {
+      "source_run_id": 43173412998,
+      "widths": [
+        320,
+        390,
+        1366
+      ],
+      "screens": [
+        "admin",
+        "published_customer_review"
+      ],
+      "data": "synthetic",
+      "external_qr_script": "blocked_in_mock"
+    },
+    "material_screenshot_visual_review": {
+      "source_run_id": 43203729930,
+      "widths": [
+        390
+      ],
+      "data": "synthetic",
+      "screen": "intake_material_limits_and_successful_save",
+      "result": "visually inspected"
+    }
+  },
+  "cloudflare_live": {
+    "source_commit": "25b6e99c0a44e5e62fc2a9fefbc342c3d56266e5",
+    "run_id": 43173412998,
+    "url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43173412998",
+    "worker": "sho-customer-sites-preview",
+    "worker_deployed_version": "bdd2b1c8-8fa7-4949-9e1a-ab63b5b3cd37",
+    "worker_redeployed": false,
+    "site_id": "9000001000",
+    "active_release": "121bee2e57be562a71bad92c",
+    "checks": [
+      "existing_fictional_fixture_verified",
+      "staged_and_unapproved_content_stays_private",
+      "approved_fixture_html_and_css_served_over_https",
+      "complete_update_switches_html_and_css",
+      "concurrent_publication_has_exactly_one_winner",
+      "rollback_restores_previous_html_and_css",
+      "verified_export_bytes_restore_as_a_new_release",
+      "interrupted_upload_cannot_replace_last_good_release",
+      "public_reader_rejects_writes_and_cross_customer_selection"
+    ],
+    "scoped_usage": {
+      "writes": 22,
+      "reads": 76,
+      "uploaded_bytes": 11333,
+      "excludes": [
+        "HTTP visitor reads",
+        "R2 list/inventory",
+        "management/proxy calls"
+      ],
+      "billing_total": false
+    },
+    "production_customer_approval_verified": false
+  },
+  "production": {
+    "supabase_functions_deployed": false,
+    "database_migration_applied": false,
+    "dns_changed": false,
+    "main_changed": false,
+    "last_verified_main": "b24971dc4e7956a9bbfa68d5607189c3beaebb4b",
+    "inspected_counts": {
+      "execution_role": "postgres",
+      "bypasses_rls": true,
+      "sites": 0,
+      "orders": 0,
+      "orders_with_quoted_url": 0
+    },
+    "test_orders_created": 0,
+    "real_customer_notifications_sent": 0,
+    "real_payments": 0,
+    "paid_plan_changes": 0
+  },
+  "unresolved_before_sale": [
+    "Supabase to R2 S3 credential setup and actual integration",
+    "Dedicated customer domain and DNS/HTTPS",
+    "Retained Storage quotas, signed upload issuance limits and orphan cleanup",
+    "AI cost and storage retention guardrails in production",
+    "Independent backups and hosted database restore",
+    "Maintenance contract, merchant disclosures and real integration approval"
+  ],
+  "security_note": "Static content screening is a deny-list aid, not proof that arbitrary or obfuscated JavaScript is safe.",
+  "production_secrets_state": "Not readable through the available connector; values were not requested or retrieved",
+  "intake_safety": {
+    "accepted_material_limits": {
+      "files": 50,
+      "total_bytes": 30000000,
+      "per_file_bytes": 7000000
+    },
+    "source_snapshot_limits": {
+      "files": 80,
+      "total_bytes": 36700160
+    },
+    "ownership_validation": "before any privileged metadata read and before GitHub or AI work",
+    "server_size_source": "Storage info API, never client-declared sizes",
+    "browser_preflight": "before first signed upload URL",
+    "unit_tests": 8,
+    "actual_handler_tests": 2,
+    "production_storage_info_verified": false,
+    "retained_storage_total_quota_implemented": false,
+    "signed_url_issuance_quota_implemented": false,
+    "orphan_cleanup_implemented": false
+  }
+}

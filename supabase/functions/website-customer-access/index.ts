@@ -1,6 +1,11 @@
-import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, requireStablePublicationUrl, normalizeCustomerHostname } from './_shared/website.ts';
+import {intakeAssetProblem} from '../_shared/intake-assets.ts';
+import {issueIntakeUpload,UploadGateError} from '../_shared/upload-gate.ts';
+import {handleHostingAction} from '../_shared/hosting-routes.ts';
+import {cloudflareHostingEnabled} from '../_shared/hosting-mode.ts';
+import {reserveHostingUrl} from '../_shared/hosting-service.ts';
+import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, requireStablePublicationUrl, normalizeCustomerHostname, freeWebsiteUrl, resolveFreeWebsiteUrl, setGithubPagesDomain } from './_shared/website.ts';
 
-const allowedOrigin = 'https://sho-support.github.io';
+const allowedOrigins = new Set(['https://sho-support.github.io','https://sho-web-support.netlify.app']);
 
 async function sha256Hex(value: string) {
   const bytes = new TextEncoder().encode(value);
@@ -50,6 +55,8 @@ function forceOrderFields(payload:any, order:any) {
 }
 
 Deno.serve(async(req)=>{
+  const origin=req.headers.get('origin')||'';
+  const allowedOrigin=allowedOrigins.has(origin)?origin:'https://sho-web-support.netlify.app';
   if(req.method==='OPTIONS') return new Response('ok',{headers:{
     'Access-Control-Allow-Origin':allowedOrigin,
     'Access-Control-Allow-Headers':'authorization, content-type, apikey, x-client-info',
@@ -57,8 +64,7 @@ Deno.serve(async(req)=>{
   }});
   if(req.method!=='POST') return json({error:'Method not allowed'},405);
 
-  const origin=req.headers.get('origin')||'';
-  if(origin && origin!==allowedOrigin) return json({error:'Forbidden'},403);
+  if(origin && !allowedOrigins.has(origin)) return json({error:'Forbidden'},403);
 
   let body:any={};
   try{body=await req.json()}catch{return json({error:'Invalid request'},400)}
@@ -66,8 +72,10 @@ Deno.serve(async(req)=>{
   const siteId=String(body?.site_id||'');
   const key=String(body?.key||'');
   const admin=adminClient();
+  const hostingResponse=await handleHostingAction({req,body,admin,dependencies:{getUser,json,linePush,notifyOwner,triggerWebsiteWorker}});
+  if(hostingResponse)return hostingResponse;
 
-  if(action==='admin_list_orders' || action==='admin_activate_order' || action==='admin_send_review' || action==='admin_resend_intake' || action==='admin_bank_settings' || action==='admin_save_bank_settings' || action==='admin_send_final_quote'){
+  if(action==='admin_list_orders' || action==='admin_activate_order' || action==='admin_send_review' || action==='admin_resend_intake' || action==='admin_bank_settings' || action==='admin_save_bank_settings' || action==='admin_send_final_quote' || action==='admin_resolve_free_url'){
     const user=await getUser(req,admin);
     if(!user)return json({error:'ログインが必要です。'},401);
     if(!(await isAdmin(admin,user.id)))return json({error:'管理者権限が必要です。'},403);
@@ -91,9 +99,9 @@ Deno.serve(async(req)=>{
         .update({review_access_token_hash:await sha256Hex(reviewKey)})
         .eq('site_id',targetSite);
       if(updateError)throw updateError;
-      const reviewUrl='https://sho-support.github.io/website-customer-review.html?id='+encodeURIComponent(targetSite)+'&prod=1&key='+encodeURIComponent(reviewKey);
-      const previewUrl='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(targetSite)+'&key='+encodeURIComponent(reviewKey);
-      const delivered=await linePush(link.line_user_id,'ホームページの制作案ができました。\n\n【サイトを確認する】\n'+previewUrl+'\n\n【修正依頼・内容承認・公開する】\n'+reviewUrl+'\n\nサイトを確認し、修正がなければ確認画面から承認後、公開をお選びください。');
+      const reviewUrl='https://sho-web-support.netlify.app/website-customer-review.html?id='+encodeURIComponent(targetSite)+'&prod=1&key='+encodeURIComponent(reviewKey);
+      const previewUrl='https://sho-web-support.netlify.app/website-preview.html?id='+encodeURIComponent(targetSite)+'&key='+encodeURIComponent(reviewKey);
+      const delivered=await linePush(link.line_user_id,'ホームページの制作案ができました。\n\n【サイトを確認する】\n'+previewUrl+'\n\n【修正依頼・内容承認】\n'+reviewUrl+'\n\nサイトを確認し、修正がなければ内容を承認してください。公開作業はSHO WEB SUPPORTが行います。');
       if(delivered.skipped||delivered.ok===false)return json({error:'LINEへ確認URLを送信できませんでした。LINE設定やブロック状態を確認し、再送してください。'},502);
       return json({ok:true,review_url:reviewUrl});
     }
@@ -116,14 +124,26 @@ Deno.serve(async(req)=>{
       return json({ok:true,configured:!!message});
     }
 
+    if(action==='admin_resolve_free_url'){
+      const code=String(body?.order_code||'').trim().toUpperCase();
+      if(!/^(?:[FSP]\d{4,6}|\d{4,10})$/.test(code))return json({error:'注文番号が正しくありません。'},400);
+      const {data:order,error}=await admin.from('website_orders').select('order_code,status').eq('order_code',code).maybeSingle();
+      if(error)throw error;
+      if(!order||order.status!=='pending_payment')return json({error:'入金待ちの注文ではありません。'},409);
+      const url=cloudflareHostingEnabled()?await reserveHostingUrl(admin,user.id,code):await resolveFreeWebsiteUrl(code.replace(/^[FSP]/,''));
+      return json({ok:true,free_url:url});
+    }
+
     if(action==='admin_send_final_quote'){
       const orderCode=String(body?.order_code||'').trim().toUpperCase();
       const amount=Number(body?.final_amount);
+      const freeMode=String(body?.public_domain||'').trim().toLowerCase()==='free';
+      if(cloudflareHostingEnabled()&&!freeMode)return json({error:'独自ドメインは管理権限・DNS・HTTPSの個別設定が完了してから確定見積りを案内してください。'},409);
       let finalDomain='';
-      try{finalDomain=normalizeCustomerHostname(body?.public_domain)}
+      try{finalDomain=freeMode?(cloudflareHostingEnabled()?await reserveHostingUrl(admin,user.id,orderCode):await resolveFreeWebsiteUrl(orderCode.replace(/^[FSP]/,''))):normalizeCustomerHostname(body?.public_domain)}
       catch(e:any){return json({error:String(e?.message||e)},400)}
-      if(body?.domain_control_confirmed!==true)return json({error:'正式URLの管理権限・更新負担・表記を確認してください。'},400);
-      if(!/^[FSP]\d{4,6}$/.test(orderCode)||!Number.isSafeInteger(amount)||amount<15000||amount>3000000)
+      if(!freeMode&&body?.domain_control_confirmed!==true)return json({error:'正式URLの管理権限・更新負担・表記を確認してください。'},400);
+      if(!/^(?:[FSP]\d{4,6}|\d{4,10})$/.test(orderCode)||!Number.isSafeInteger(amount)||amount<15000||amount>3000000)
         return json({error:'注文IDまたは確定金額が不正です。'},400);
       const {data:order,error:orderErr}=await admin.from('website_orders')
         .select('order_code,plan,status,line_user_id,amount_from,selections')
@@ -136,7 +156,7 @@ Deno.serve(async(req)=>{
       if(order.selections?.final_quote_sent_at&&String(order.selections?.final_public_domain||'')!==finalDomain)
         return json({error:'正式見積りで一度お客様に案内したURLは変更できません。別URLが必要な場合はお客様と個別に調整してください。'},409);
       const [{data:reservedBySites,error:siteCheckErr},{data:reservedByOrders,error:orderCheckErr}]=await Promise.all([
-        admin.from('website_sites').select('site_id').eq('custom_domain',finalDomain).limit(1),
+        admin.from('website_sites').select('site_id').eq('custom_domain',freeMode?'':finalDomain).limit(1),
         admin.from('website_orders').select('order_code').contains('selections',{final_public_domain:finalDomain})
           .neq('order_code',orderCode).neq('status','cancelled').limit(1)
       ]);
@@ -159,8 +179,8 @@ Deno.serve(async(req)=>{
         '注文ID：'+orderCode,
         'プラン：'+label,
         '確定制作料金：'+amount.toLocaleString('ja-JP')+'円',
-        '正式公開予定URL：https://'+finalDomain+'/',
-        'このURLを長期利用する前提です。公開前にDNS・HTTPSを設定します。',
+        '正式公開予定URL：'+(freeMode?finalDomain:'https://'+finalDomain+'/'),
+        freeMode?(cloudflareHostingEnabled()?'SHO管理の正式URLです。契約期間中、公開先の変更だけを理由にURLを変更しません。維持条件・解約時の扱いは契約内容に従います。':'無料GitHub Pages URLです。将来の運営・ホスティング変更時にURLが変わる可能性があります。印刷物への記載には独自ドメインを推奨します。'):'このURLを長期利用する前提です。公開前にDNS・HTTPSを設定します。',
         explanation?'補足：'+explanation:'',
         '',
         '【お振込先】',bankMessage,'',
@@ -184,7 +204,7 @@ Deno.serve(async(req)=>{
           return json({error:'LINE送信から23時間を超過しました。重複送信防止のため自動再送は停止しました。LINE履歴を確認し、管理者が個別に対応してください。'},409);
       }else retryKey=crypto.randomUUID();
       const pendingSelections={...prev,final_public_domain:finalDomain,
-        quote_domain_owner_confirmed_at:prev.quote_domain_owner_confirmed_at||new Date().toISOString(),
+        quote_domain_owner_confirmed_at:prev.quote_domain_owner_confirmed_at||new Date().toISOString(),quote_url_type:freeMode?'free':'custom',
         quote_delivery_retry_key:retryKey,quote_delivery_fingerprint:fingerprint,
         quote_delivery_started_at:prev.quote_delivery_started_at||new Date().toISOString()};
       // Reserve the permanent domain BEFORE contacting LINE. The unique
@@ -223,19 +243,24 @@ Deno.serve(async(req)=>{
         if(relatedError)throw relatedError;
         states=Object.fromEntries((related||[]).map((site:any)=>[site.site_id,site.status]));
       }
-      return json({orders:(data||[]).map((o:any)=>({...o,final_amount:Number(o.selections?.final_quote_amount||0)||null,final_public_domain:String(o.selections?.final_public_domain||''),final_quote_sent_at:o.selections?.final_quote_sent_at||null,selections:undefined,site_status:o.site_id?states[o.site_id]||null:null}))});
+      return json({orders:(data||[]).map((o:any)=>({...o,final_amount:Number(o.selections?.final_quote_amount||0)||null,final_public_domain:String(o.selections?.final_public_domain||''),final_quote_sent_at:o.selections?.final_quote_sent_at||null,
+        contract_state:o.selections?.commercial_quote?.state||null,contract_fingerprint:o.selections?.commercial_quote?.fingerprint||null,
+        contract_accepted_at:o.selections?.commercial_quote?.accepted_at||null,
+        quoted_production_amount:o.selections?.commercial_quote?.snapshot?.production_amount_jpy||null,
+        quote_request:o.selections?.commercial_quote?.snapshot?.request||null,
+        selections:undefined,site_status:o.site_id?states[o.site_id]||null:null}))});
     }
 
     if(action==='admin_resend_intake'){
       const resendCode=String(body?.order_code||'').trim().toUpperCase();
-      if(!/^[FSP]\d{4,6}$/.test(resendCode))return json({error:'注文IDが不正です。'},400);
+      if(!/^(?:[FSP]\d{4,6}|\d{4,10})$/.test(resendCode))return json({error:'注文IDが不正です。'},400);
       const {data:target,error:targetErr}=await admin.from('website_orders').select('order_code,status,site_id,line_user_id').eq('order_code',resendCode).maybeSingle();
       if(targetErr)throw targetErr;
       if(!target||target.status!=='site_created'||!target.site_id||!target.line_user_id)return json({error:'ヒアリングURLを再送できる注文ではありません。'},409);
       const {data:resendSite,error:resendSiteError}=await admin.from('website_sites').select('status').eq('site_id',target.site_id).single();
       if(resendSiteError)throw resendSiteError;
       if(resendSite.status!=='request_waiting')return json({error:'初回ヒアリングはすでに受付終了です。公開後の更新フォームをご利用ください。'},409);
-      const newKey=randomAccessKey(),url='https://sho-support.github.io/website-intake.html?id='+encodeURIComponent(target.site_id)+'&prod=1&key='+encodeURIComponent(newKey);
+      const newKey=randomAccessKey(),url='https://sho-web-support.netlify.app/website-intake.html?id='+encodeURIComponent(target.site_id)+'&prod=1&key='+encodeURIComponent(newKey);
       const {error:tokenErr}=await admin.from('website_orders').update({customer_access_token_hash:await sha256Hex(newKey),access_token_created_at:new Date().toISOString()}).eq('order_code',resendCode);
       if(tokenErr)throw tokenErr;
       const sent=await linePush(target.line_user_id,'制作内容・写真の入力URLを再送します。最新のURLから入力してください。\n\n'+url);
@@ -245,7 +270,7 @@ Deno.serve(async(req)=>{
     }
 
     const orderCode=String(body?.order_code||'').trim().toUpperCase();
-    if(!/^[FSP]\d{4,6}$/.test(orderCode))return json({error:'注文IDが不正です。'},400);
+    if(!/^(?:[FSP]\d{4,6}|\d{4,10})$/.test(orderCode))return json({error:'注文IDが不正です。'},400);
     const {data:target,error:orderError}=await admin.from('website_orders').select('*').eq('order_code',orderCode).maybeSingle();
     if(orderError)throw orderError;
     if(!target)return json({error:'注文が見つかりません。'},404);
@@ -261,13 +286,14 @@ Deno.serve(async(req)=>{
 
     const {data:existing,error:siteReadError}=await admin.from('website_sites').select('site_id,custom_domain').eq('site_id',newSiteId).maybeSingle();
     if(siteReadError)throw siteReadError;
-    if(existing&&String(existing.custom_domain||'')!==String(target.selections.final_public_domain))
+    if(existing&&String(existing.custom_domain||'')!==(target.selections.quote_url_type==='free'?'':String(target.selections.final_public_domain)))
       return json({error:'既存案件の正式URLが見積り時のURLと一致しません。'},409);
     if(!existing){
       const {error:siteError}=await admin.from('website_sites').insert({
         site_id:newSiteId,site_name:planLabel,status:'request_waiting',
         current_note:'ヒアリング入力待ち。',customer_approved:false,
-        custom_domain:String(target.selections.final_public_domain),
+        custom_domain:target.selections.quote_url_type==='free'?null:String(target.selections.final_public_domain),
+        public_url:target.selections.quote_url_type==='free'?String(target.selections.final_public_domain):null,
         publish_branch:'main',live_path:'/',offline_path:'/docs'
       });
       if(siteError)throw siteError;
@@ -301,65 +327,96 @@ Deno.serve(async(req)=>{
     }).eq('order_code',orderCode);
     if(updateError)throw updateError;
 
-    const url=`https://sho-support.github.io/website-intake.html?id=${encodeURIComponent(newSiteId)}&prod=1&key=${encodeURIComponent(newKey)}`;
+    const url=`https://sho-web-support.netlify.app/website-intake.html?id=${encodeURIComponent(newSiteId)}&prod=1&key=${encodeURIComponent(newKey)}`;
     const sent=await linePush(target.line_user_id,`お振込みによるご入金を確認いたしました。\nこのたびは正式にご注文いただき、ありがとうございます。\n\nSITE ID：${newSiteId}\n\n下の専用URLから制作内容・写真をご入力ください。入力途中でも自動保存され、同じURLなら別端末・別ブラウザから続けられます。\n\n${url}`);
     const warning=sent.skipped||sent.ok===false?'お客様へのLINE送信に失敗しました。注文管理画面からURLを再送してください。':null;
     if(warning)await notifyOwner(`【要対応：制作案内LINE送信失敗】\n注文ID ${orderCode}\nSITE ID ${newSiteId}\n${warning}`);
     return json({ok:true,site_id:newSiteId,...(warning?{warning}:{})});
   }
 
-  if(action==='review_load' || action==='review_revision' || action==='review_approve' || action==='review_publish'){
-    if(!/^[A-Za-z0-9_-]{3,32}$/.test(siteId)||key.length<20)return json({error:'確認URLが無効です。'},403);
+  if(action==='review_load' || action==='review_revision' || action==='review_approve' || action==='admin_publish_site'){
+    const operatorPublish=action==='admin_publish_site';
+    if(operatorPublish){const operator=await getUser(req,admin);if(!operator||!(await isAdmin(admin,operator.id)))return json({error:'公開操作には運営者ログインが必要です。'},403);}
+    if(!/^[A-Za-z0-9_-]{3,32}$/.test(siteId)||(!operatorPublish&&key.length<20))return json({error:'確認URLが無効です。'},403);
     const {data:reviewSite,error:reviewError}=await admin.from('website_sites')
-      .select('site_id,site_name,status,preview_url,customer_approved,review_access_token_hash,repo_full_name,publish_branch,preview_branch,live_path,custom_domain')
+      .select('site_id,site_name,status,preview_url,public_url,customer_approved,review_access_token_hash,repo_full_name,publish_branch,preview_branch,live_path,custom_domain')
       .eq('site_id',siteId)
       .maybeSingle();
     if(reviewError)throw reviewError;
-    if(!reviewSite?.review_access_token_hash||await sha256Hex(key)!==reviewSite.review_access_token_hash){
+    if(!reviewSite||(operatorPublish?false:(!reviewSite.review_access_token_hash||await sha256Hex(key)!==reviewSite.review_access_token_hash))){
       return json({error:'確認URLが無効です。LINEで届いた最新のURLをご利用ください。'},403);
     }
     if(action==='review_load'){
       const {review_access_token_hash, ...publicReview}=reviewSite;
-      publicReview.preview_url='https://sho-support.github.io/website-preview.html?id='+encodeURIComponent(siteId)+'&key='+encodeURIComponent(key);
+      publicReview.preview_url='https://sho-web-support.netlify.app/website-preview.html?id='+encodeURIComponent(siteId)+'&key='+encodeURIComponent(key);
       return json({ok:true,site:publicReview});
     }
     if(reviewSite.status!=='customer_review')return json({error:'現在は最終確認を受け付ける状態ではありません。'},409);
     if(action==='review_revision'){
       const detail=String(body?.detail||'').trim();
-      if(!detail)return json({error:'修正内容を入力してください。'},400);
-      await admin.from('website_sites').update({
+      if(!detail||detail.length>4000)return json({error:'修正内容は1〜4000文字で入力してください。'},400);
+      // Atomically claim the review link before creating a job; concurrent
+      // double-submissions must not create two different AI revisions.
+      const {data:claimed,error:claimError}=await admin.from('website_sites').update({
         status:'building',customer_approved:false,current_note:'お客様から修正依頼。再作成中。',review_access_token_hash:null
-      }).eq('site_id',siteId);
-      await admin.from('website_activity').insert({
-        site_id:siteId,actor_type:'customer_line',action:'customer_revision_requested',detail
-      });
-      await admin.from('website_jobs').insert({
+      }).eq('site_id',siteId).eq('status','customer_review')
+        .eq('review_access_token_hash',await sha256Hex(key)).select('site_id').maybeSingle();
+      if(claimError)throw claimError;
+      if(!claimed)return json({error:'この確認リンクは既に処理済みです。最新の案内を確認してください。'},409);
+      const {error:jobError}=await admin.from('website_jobs').insert({
         site_id:siteId,kind:'customer_revision',status:'queued',instruction:detail,payload:{source:'secure_review'}
       });
+      if(jobError){
+        // Recover the review state if the queue operation never committed.
+        const {error:restoreError}=await admin.from('website_sites').update({
+          status:'customer_review',customer_approved:reviewSite.customer_approved,review_access_token_hash:await sha256Hex(key),
+          current_note:'修正依頼を受け付けられませんでした。再度お試しください。'
+        }).eq('site_id',siteId).eq('status','building');
+        if(restoreError)console.error('Revision recovery error',restoreError);
+        throw jobError;
+      }
+      const {error:activityError}=await admin.from('website_activity').insert({
+        site_id:siteId,actor_type:'customer_line',action:'customer_revision_requested',detail
+      });
+      if(activityError)console.error('Revision activity log error',activityError);
       EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch(e=>console.error('worker trigger',e)));
-      await notifyOwner('【修正依頼】SITE ID '+siteId+'\n'+detail.slice(0,1200));
+      try{await notifyOwner('【修正依頼】SITE ID '+siteId+'\n'+detail.slice(0,1200))}
+      catch(error){console.error('Revision saved; operator notification failed',error)}
       return json({ok:true,status:'building'});
     }
     if(action==='review_approve'){
-      await admin.from('website_sites').update({
-        customer_approved:true,current_note:'お客様が内容承認。公開操作待ち。'
-      }).eq('site_id',siteId);
-      await admin.from('website_activity').insert({
-        site_id:siteId,actor_type:'customer_line',action:'customer_approved',detail:'サイト内容を承認。お客様自身の公開操作待ち。'
+      const {data:approved,error:approveError}=await admin.from('website_sites').update({
+        customer_approved:true,current_note:'お客様が内容承認。運営者の公開操作待ち。'
+      }).eq('site_id',siteId).eq('status','customer_review').eq('customer_approved',false)
+        .eq('review_access_token_hash',await sha256Hex(key)).select('site_id').maybeSingle();
+      if(approveError)throw approveError;
+      if(!approved){
+        const {data:current,error:stateError}=await admin.from('website_sites')
+          .select('customer_approved,status').eq('site_id',siteId).single();
+        if(stateError)throw stateError;
+        if(current.customer_approved&&current.status==='customer_review')
+          return json({ok:true,customer_approved:true,already_approved:true});
+        return json({error:'確認状態が変わりました。新しい案内を開き直してください。'},409);
+      }
+      const {error:activityError}=await admin.from('website_activity').insert({
+        site_id:siteId,actor_type:'customer_line',action:'customer_approved',detail:'サイト内容を承認。運営者による公開操作待ち。'
       });
+      if(activityError)console.error('Approval activity log error',activityError);
       return json({ok:true,customer_approved:true});
     }
-    if(action==='review_publish'){
+    if(action==='admin_publish_site'){
       if(!reviewSite.customer_approved)return json({error:'先にサイト内容を承認してください。'},409);
       if(!reviewSite.repo_full_name)return json({error:'公開先がまだ設定されていません。'},409);
       const repo=String(reviewSite.repo_full_name).split('/');
       if(repo.length!==2)return json({error:'公開先の設定が不正です。'},409);
-      const publicUrl=await requireStablePublicationUrl(reviewSite.repo_full_name,reviewSite.custom_domain);
       const {data:preflightOrder,error:preflightOrderError}=await admin.from('website_orders').select('plan,template_style').eq('site_id',siteId).maybeSingle();
       if(preflightOrderError)throw preflightOrderError;
       await verifyWebsiteBeforeDelivery(reviewSite.repo_full_name,reviewSite.preview_branch||reviewSite.publish_branch||'main',preflightOrder?.plan==='semi'?String(preflightOrder.template_style||''):'');
       await publishApprovedStagedBranch(reviewSite.repo_full_name,reviewSite.publish_branch||'main',reviewSite.preview_branch);
       await setGithubPagesSource(reviewSite.repo_full_name,reviewSite.publish_branch||'main',reviewSite.live_path||'/');
+      const targetUrl=reviewSite.custom_domain?normalizeCustomerHostname(reviewSite.custom_domain):String(reviewSite.public_url||await resolveFreeWebsiteUrl(siteId));
+      if(reviewSite.custom_domain)await setGithubPagesDomain(reviewSite.repo_full_name,reviewSite.custom_domain);
+      const publicUrl=await requireStablePublicationUrl(reviewSite.repo_full_name,targetUrl);
       const now=new Date(),published=now.toISOString();
       const {data:oldSiteDates,error:oldSiteDatesError}=await admin.from('website_sites').select('published_at,adjustment_free_until,update_free_until').eq('site_id',siteId).single();if(oldSiteDatesError)throw oldSiteDatesError;
       const firstPublication=!oldSiteDates.published_at;
@@ -380,7 +437,7 @@ Deno.serve(async(req)=>{
       await admin.from('website_activity').insert({site_id:siteId,actor_type:'customer_line',action:'published',detail:'お客様の承認を受けてサイトを公開。'});
       await notifyOwner('【サイト公開】SITE ID '+siteId+'\n'+publicUrl);
       const {data:lineLink}=await admin.from('website_line_links').select('line_user_id').eq('site_id',siteId).maybeSingle();
-      const updateUrl='https://sho-support.github.io/website-update.html?id='+encodeURIComponent(siteId)+'&key='+updateKey;
+      const updateUrl='https://sho-web-support.netlify.app/website-update.html?id='+encodeURIComponent(siteId)+'&key='+updateKey;
       const delivered=await linePush(lineLink?.line_user_id,'ホームページを公開しました。\n\n【公開サイト】\n'+publicUrl+'\n\n【更新・修正依頼】\n'+updateUrl+'\n\n公開日から無料期間が開始します。');
       if(delivered.skipped||delivered.ok===false)await notifyOwner('【要対応】SITE ID '+siteId+' の公開完了LINEを送信できませんでした。お客様の確認画面にもリンクを表示済みです。');
       return json({ok:true,status:'live',public_url:publicUrl,update_url:updateUrl});
@@ -392,7 +449,7 @@ Deno.serve(async(req)=>{
 
   const { data: site, error: siteError } = await admin
     .from('website_sites')
-    .select('site_id,site_name,status,updated_at,adjustment_free_until,update_free_until')
+    .select('site_id,site_name,status,updated_at,published_at,adjustment_free_until,update_free_until')
     .eq('site_id',siteId)
     .single();
   if(siteError) throw siteError;
@@ -410,7 +467,7 @@ Deno.serve(async(req)=>{
 
   if(action==='update_status'){
     let viewsTotal=0,viewsToday=0;
-    if(site.status==='live'&&site.published_at){
+    if(!cloudflareHostingEnabled()&&site.status==='live'&&site.published_at){
       const {data:rows,error:statsError}=await admin.from('website_pageviews').select('view_date,views').eq('site_id',siteId);
       if(!statsError){
         viewsTotal=(rows||[]).reduce((sum:number,r:any)=>sum+Number(r.views||0),0);
@@ -418,7 +475,7 @@ Deno.serve(async(req)=>{
         viewsToday=Number((rows||[]).find((r:any)=>r.view_date===day)?.views||0);
       }
     }
-    return json({ok:true,site,plan:order.plan,views_total:viewsTotal,views_today:viewsToday});
+    return json({ok:true,site,plan:order.plan,views_total:viewsTotal,views_today:viewsToday,analytics_available:!cloudflareHostingEnabled()});
   }
   if(action==='request_update'){
     if(site.status!=='live')return json({error:'公開中のサイトのみ更新を受け付けています。'},409);
@@ -437,6 +494,7 @@ Deno.serve(async(req)=>{
         safeFiles[f].push({path,name});
       }
     }
+    const problem=await intakeAssetProblem(admin,siteId,{files:safeFiles},true);if(problem)return json({error:problem.message},problem.status);
     const now=new Date(),jst=new Date(now.getTime()+9*3600000),start=new Date(Date.UTC(jst.getUTCFullYear(),jst.getUTCMonth(),1,-9,0,0));
     const {count,error:countError}=await admin.from('website_update_requests').select('id',{count:'exact',head:true}).eq('site_id',siteId).eq('billing_category','free_monthly').neq('status','cancelled').gte('created_at',start.toISOString());
     if(countError)throw countError;
@@ -460,6 +518,7 @@ Deno.serve(async(req)=>{
     const raw=JSON.stringify(body?.payload||{});
     if(raw.length>500000) return json({error:'入力内容が大きすぎます。'},413);
     const payload=forceOrderFields(body?.payload||{},order);
+    const problem=await intakeAssetProblem(admin,siteId,payload);if(problem)return json({error:problem.message},problem.status);
     const savedAt=new Date().toISOString();
     const {error}=await admin.from('website_intakes').upsert({
       site_id:siteId,payload,last_saved_at:savedAt
@@ -469,19 +528,15 @@ Deno.serve(async(req)=>{
   }
 
   if(action==='signed_upload'){
-    const folder=String(body?.folder||'');
-    if(!['top_photos','gallery_photos','logo_file','member_photos'].includes(folder)) return json({error:'アップロード先が不正です。'},400);
-    const safeName=String(body?.file_name||'file').replace(/[^A-Za-z0-9._-]+/g,'_').slice(-100)||'file';
-    const path=`${siteId}/secure-intake/${folder}/${crypto.randomUUID()}-${safeName}`;
-    const {data,error}=await admin.storage.from('website-intake-files').createSignedUploadUrl(path);
-    if(error) throw error;
-    return json({ok:true,path,token:data.token});
+    try{return json(await issueIntakeUpload(admin,siteId,String(body?.folder||''),String(body?.file_name||'')));}
+    catch(e){return json({error:e instanceof UploadGateError?e.message:'画像の送信準備に失敗しました。'},e instanceof UploadGateError?e.status:503);}
   }
 
   if(action==='submit_intake'){
     const raw=JSON.stringify(body?.payload||{});
     if(raw.length>500000) return json({error:'入力内容が大きすぎます。'},413);
     const payload=forceOrderFields(body?.payload||{},order);
+    const problem=await intakeAssetProblem(admin,siteId,payload,true);if(problem)return json({error:problem.message},problem.status);
     const f=payload.fields||{},checks=payload.checks||{};
     if(!String(f.site_name||'').trim()) return json({error:'サイト名 / バンド名 / 店名を入力してください。'},400);
     if(!Array.isArray(checks.rights)||!checks.rights.length) return json({error:'掲載権利の確認にチェックしてください。'},400);
@@ -527,11 +582,18 @@ Deno.serve(async(req)=>{
     await admin.from('website_activity').insert({
       site_id:siteId,actor_type:'customer_line',action:'intake_submitted',detail:'専用ヒアリングURLから送信。'
     });
-    await admin.from('website_jobs').insert({
+    const {error:queueError}=await admin.from('website_jobs').insert({
       site_id:siteId,kind:'initial_create',status:'queued',
       instruction:'最新のヒアリング内容をもとにサイトを制作してください。',
       payload:{source:'secure_intake'}
     });
+    if(queueError){
+      const {error:restoreError}=await admin.from('website_sites').update({
+        status:'request_waiting',current_note:'制作ジョブの登録に失敗。ヒアリングを再送してください。'
+      }).eq('site_id',siteId).eq('status','building');
+      if(restoreError)console.error('Secure intake recovery failed',restoreError);
+      return json({error:'制作受付の登録に失敗しました。再度送信してください。'},503);
+    }
     EdgeRuntime.waitUntil(triggerWebsiteWorker(siteId).catch((e)=>console.error('worker trigger',e)));
     const {data:orderLine}=await admin.from('website_orders').select('line_user_id').eq('site_id',siteId).maybeSingle();
     if(orderLine?.line_user_id){
