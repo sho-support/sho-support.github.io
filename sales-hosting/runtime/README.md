@@ -17,10 +17,13 @@ protocol, Cloudflare order writes and legacy mutations stop with
 read actions and the separate protected settings API can be tested. This is a
 connection checkpoint, **not** a full sales release or an end-to-end pass.
 
-Recovery/invitation mail from Cloudflare requires the exact password callback
-to be checked in Supabase Auth and `WEBSITE_AUTH_REDIRECT_ORIGIN` to be set to
-the verified Cloudflare origin. Until then it fails before consuming reset
-limits or sending mail. No flag or Auth configuration is changed by this code.
+The owner approved the Cloudflare password callback on 2026-11-15 and it was
+saved and verified in Supabase Auth. The two mail handlers use the public
+`_shared/auth-redirect-confirmation.ts` deployment configuration. No Secrets
+screen, existing secret, or environment flag needs to be accessed or changed.
+If the callback is removed or replaced, clear this confirmation before sending
+mail. The original authentication, Origin and reset-rate limits remain intact.
+Actual mail delivery and owner password recovery are not yet verified.
 
 `../runtime-baseline/*.json` preserves the original complete bundles for
 rollback. `../runtime-migration.json` records versions and per-file hashes.

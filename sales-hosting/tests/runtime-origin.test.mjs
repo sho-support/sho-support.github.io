@@ -13,7 +13,7 @@ const forbidden = () => { throw Error('Unexpected database mutation or external 
 
 // Run the exact deployment entrypoints. The SDK, database, messages, and network
 // are replaced at their boundaries; no real accounts or external service keys.
-async function runtime(slug, { admin = { from: forbidden, rpc: forbidden }, env = {}, user = null, fetcher = forbidden } = {}) {
+async function runtime(slug, { admin = { from: forbidden, rpc: forbidden }, env = {}, user = null, fetcher = forbidden, confirmedOrigin } = {}) {
   let handler;
   const messages = [], requests = [];
   const helpers = {
@@ -40,6 +40,7 @@ async function runtime(slug, { admin = { from: forbidden, rpc: forbidden }, env 
   }
   async function load(url) {
     if (cache.has(url)) return cache.get(url);
+    if (url.endsWith('/_shared/auth-redirect-confirmation.ts') && confirmedOrigin !== undefined) return synthetic(url, { CONFIRMED_RECOVERY_ORIGIN: confirmedOrigin });
     if (url.endsWith('/_shared/website.ts')) return synthetic(url, helpers);
     if (/^(https:\/\/esm.sh\/|npm:)@supabase\/supabase-js@2\.57\.4$/.test(url)) return synthetic(url, { createClient: () => admin });
     if (url === 'jsr:@supabase/functions-js/edge-runtime.d.ts') return synthetic(url, {});
@@ -154,7 +155,7 @@ test('preview HTML navigation stays on the trusted viewer without exposing keys 
 });
 
 test('Cloudflare recovery waits for confirmed Auth redirect configuration before consuming limits or sending mail', async () => {
-  const h = await runtime('website-password-recovery');
+  const h = await runtime('website-password-recovery', { confirmedOrigin: '' });
   const response = await h.request({ email: 'qa@example.test' });
   assert.equal(response.status, 503); assert.equal((await response.json()).error, 'auth_redirect_not_ready');
   assert.equal(h.requests.length, 0);
@@ -163,7 +164,7 @@ test('Cloudflare recovery waits for confirmed Auth redirect configuration before
 test('configured recovery uses its request origin and rejects cross-origin next URLs; legacy recovery stays available', async () => {
   const rpcCalls = [];
   const admin = { rpc: async (name, args) => { rpcCalls.push([name, args]); return { data: true, error: null }; } };
-  const h = await runtime('website-password-recovery', { admin, env: { WEBSITE_AUTH_REDIRECT_ORIGIN: cloud }, fetcher: async () => new Response('{}') });
+  const h = await runtime('website-password-recovery', { admin, fetcher: async () => new Response('{}') });
   for (const origin of [cloud, legacy]) {
     for (const next of [origin + '/admin/sales-settings', 'https://evil.invalid/steal', '//evil.invalid/steal']) {
       const response = await h.request({ email: 'qa@example.test', next }, origin);

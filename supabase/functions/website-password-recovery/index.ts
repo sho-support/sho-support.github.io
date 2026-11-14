@@ -1,3 +1,4 @@
+import { CONFIRMED_RECOVERY_ORIGIN } from '../_shared/auth-redirect-confirmation.ts';
 import { salesOrigin, salesUrl, authRedirectReady } from '../_shared/sales-origin.ts';
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
@@ -20,7 +21,7 @@ Deno.serve(async req=>{
     const data=await req.json();
     const email=typeof data?.email==="string"?data.email.trim().toLowerCase():"";
     if(email.length>254||email.length<5||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return response({error:"invalid_email"},400);
-    if(!authRedirectReady(req,Deno.env.get("WEBSITE_AUTH_REDIRECT_ORIGIN")||""))return response({error:"auth_redirect_not_ready"},503);
+    if(!authRedirectReady(req,CONFIRMED_RECOVERY_ORIGIN))return response({error:"auth_redirect_not_ready"},503);
     const admin=createClient(PROJECT_URL,SERVICE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
     const clientIp=(req.headers.get("x-forwarded-for")||req.headers.get("cf-connecting-ip")||"unknown").split(",")[0].trim().slice(0,100);
     const ipKey=await sha("ip:"+clientIp);

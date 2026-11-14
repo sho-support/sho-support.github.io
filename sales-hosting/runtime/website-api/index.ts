@@ -1,3 +1,4 @@
+import { CONFIRMED_RECOVERY_ORIGIN } from './_shared/auth-redirect-confirmation.ts';
 import { salesUrl, authRedirectReady, CLOUDFLARE_SALES_ORIGIN } from './_shared/sales-origin.ts';
 import { adminClient, corsHeaders, getUser, json, notifyOwner, siteRole, linePush, setGithubPagesDomain, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, triggerWebsiteWorker, requireStablePublicationUrl, normalizeCustomerHostname } from './_shared/website.ts';
 
@@ -123,7 +124,7 @@ Deno.serve(async (req) => {
       }
       let invited=false;
       if(!customerId){
-        if(!authRedirectReady(req,Deno.env.get('WEBSITE_AUTH_REDIRECT_ORIGIN')||''))return json({error:'招待メールの送信先設定を確認してください。'},503);
+        if(!authRedirectReady(req,CONFIRMED_RECOVERY_ORIGIN))return json({error:'招待メールの送信先設定を確認してください。'},503);
         const destination=new URL(salesUrl(req, '/website-password.html'));
         destination.searchParams.set('mode','recovery');
         destination.searchParams.set('next',salesUrl(req, '/website-portal.html'));
