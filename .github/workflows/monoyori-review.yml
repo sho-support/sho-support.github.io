@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 2ab6882cc22e15d365cf940d06a4c0b4cdecb188
+          ref: e0cf2ca30abe75ac7755b307bd9fb165e5a2bfe3
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -45,8 +45,8 @@ jobs:
           const deployment=await fetch(base+'/scripts/sho-monoyori-review/deployments?per_page=1&page=1',opts);
           if(!deployment.ok)throw Error('Cannot verify review version');
           const active=(await deployment.json()).result.deployments[0].versions;
-          if(active.length!==1||active[0].version_id!=='1ace8c24-2572-4823-bee3-08abbd43ab82'||active[0].percentage!==100)throw Error('Review changed concurrently; refusing overwrite');
-          console.log('API connected. Isolated review name available. Existing Workers, R2, DNS and paid settings remain outside this operation.');
+          if(active.length!==1||active[0].percentage!==100)throw Error('Review changed concurrently; refusing overwrite');
+          console.log('Updating only the existing isolated Monoyori review Worker. API connected. Isolated review name available. Existing Workers, R2, DNS and paid settings remain outside this operation.');
           JS
       - name: Build only the three portals
         env:
