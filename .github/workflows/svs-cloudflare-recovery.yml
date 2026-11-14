@@ -1,0 +1,183 @@
+name: Rehearse isolated system-sales update and restoration
+on:
+  push:
+    branches: [system-sales/cloudflare-review]
+    paths: ['.github/workflows/svs-cloudflare-recovery.yml']
+permissions:
+  contents: read
+concurrency:
+  group: svs-cloudflare-preview
+  cancel-in-progress: false
+jobs:
+  recovery:
+    if: contains(github.event.head_commit.message, '[verify-svs-recovery]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: customer-hosting-preview
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Extract the exact previously published public assets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,hashlib,io,json,stat,zipfile
+          payload=json.loads(Path('.github/deploy-payloads/svs-web-review.json').read_text())
+          assert payload['source_repository']=='sho-support/sho-video-studio-sales'
+          assert payload['source_commit']=='f77c36fee197c1f180d22dc407c9c8b53be299e8'
+          assert payload['worker']=='sho-video-studio-sales-preview'
+          assert payload['origin']=='https://sho-video-studio-sales-preview.zodiac-suu.workers.dev'
+          allowed={'index.html','portal.html','admin.html','reset.html','legal.html','privacy.html','terms.html','auth.js','reset.js','config.js','style.css','_headers','_redirects','assets/studio-screen.png'}
+          assert set(payload['file_manifest'])==allowed
+          archive=base64.b64decode(payload['archive_base64'],validate=True)
+          assert hashlib.sha256(archive).hexdigest()==payload['archive_sha256']
+          root=Path('svs-deploy/web');root.mkdir(parents=True)
+          with zipfile.ZipFile(io.BytesIO(archive)) as z:
+              assert len(z.infolist())==len(allowed) and set(z.namelist())==allowed
+              assert sum(x.file_size for x in z.infolist())<500000
+              for entry in z.infolist():
+                  assert not stat.S_ISLNK(entry.external_attr>>16)
+                  content=z.read(entry.filename);expected=payload['file_manifest'][entry.filename]
+                  assert len(content)==expected['bytes'] and hashlib.sha256(content).hexdigest()==expected['sha256']
+                  target=root/entry.filename;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(content)
+          assert 'AUTH_RELEASE_ENABLED = false' in (root/'config.js').read_text()
+          assert '購入準備中' in (root/'index.html').read_text()
+          config={'name':payload['worker'],'compatibility_date':'2026-11-14','workers_dev':True,'preview_urls':False,'assets':{'directory':'./web','html_handling':'none','not_found_handling':'none'}}
+          Path('svs-deploy/wrangler.json').write_text(json.dumps(config,indent=2)+'\n')
+          proof=Path('svs-proof');proof.mkdir()
+          proof.joinpath('package.json').write_text(json.dumps({k:v for k,v in payload.items() if k!='archive_base64'},indent=2)+'\n')
+          print('Verified 14 public web files against the pinned source manifest. No desktop code, SQL, documents or customer files included.')
+          PY
+      - name: Prepare fixed verification and recovery scripts
+        run: |
+          cat >svs-deploy/verify-live.mjs <<'JS'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const pkg=JSON.parse(readFileSync('svs-proof/package.json','utf8'));
+          const base='https://sho-video-studio-sales-preview.zodiac-suu.workers.dev';
+          const headersText=readFileSync('svs-deploy/web/_headers','utf8');
+          const broad=headersText.split('\n\n').find(x=>x.startsWith('/*\n'));
+          if(!broad)throw Error('Missing global headers');
+          const expectedHeaders=Object.fromEntries(broad.split('\n').slice(1).filter(Boolean).map(l=>{const i=l.indexOf(':');return[l.slice(0,i).trim().toLowerCase(),l.slice(i+1).trim()]}));
+          const results=[];
+          const check=(ok,name)=>{results.push({name,passed:Boolean(ok)});if(!ok)throw Error(name)};
+          for(const [name,meta] of Object.entries(pkg.file_manifest)){
+            if(name.startsWith('_'))continue;
+            const response=await fetch(base+'/'+name,{redirect:'error',signal:AbortSignal.timeout(30000)});
+            const content=Buffer.from(await response.arrayBuffer());
+            check(response.status===200,'200 '+name);
+            check(createHash('sha256').update(content).digest('hex')===meta.sha256,'Exact published bytes '+name);
+            for(const [key,value] of Object.entries(expectedHeaders))check(response.headers.get(key)===value,key+' '+name);
+            if(['admin.html','portal.html','reset.html','config.js'].includes(name))check(response.headers.get('cache-control')==='no-store','Private browser cache disabled '+name);
+          }
+          const home=await fetch(base+'/',{redirect:'error',signal:AbortSignal.timeout(30000)});
+          check(home.status===200,'Homepage root 200');
+          check(createHash('sha256').update(Buffer.from(await home.arrayBuffer())).digest('hex')===pkg.file_manifest['index.html'].sha256,'Homepage exact index bytes');
+          for(const [key,value] of Object.entries(expectedHeaders))check(home.headers.get(key)===value,'Homepage '+key);
+          for(const path of ['/desktop/app/app.py','/database/001_svs_core.sql','/docs/OWNER_COMPLETION.md','/package.json','/wrangler.jsonc','/_headers','/_redirects','/portal','/does-not-exist']){
+           const response=await fetch(base+path,{redirect:'manual',signal:AbortSignal.timeout(30000)});await response.arrayBuffer();
+           check(response.status===404,'Excluded or undefined path 404 '+path);
+          }
+          const record={origin:base,source_commit:pkg.source_commit,date_utc:new Date().toISOString(),status:'PASS',checks_passed:results.length,checks:results,login_enabled:false,purchase_enabled:false,real_supabase_auth_tested:false};
+          writeFileSync('svs-proof/http.json',JSON.stringify(record,null,2)+'\n');
+          console.log(JSON.stringify({origin:base,checks_passed:results.length,status:'PASS'}));
+          JS
+          cat >svs-deploy/recovery.mjs <<'JS'
+          // A bounded rehearsal against the isolated prelaunch Worker, using identical assets.
+          import assert from 'node:assert/strict';
+          import {execFileSync} from 'node:child_process';
+          import {copyFileSync,readFileSync,writeFileSync} from 'node:fs';
+          
+          const worker='sho-video-studio-sales-preview';
+          const original='a953dee9-2fb7-467b-a04f-33e7b692af69';
+          const origin='https://sho-video-studio-sales-preview.zodiac-suu.workers.dev';
+          const {CLOUDFLARE_API_TOKEN:token,CLOUDFLARE_ACCOUNT_ID:account}=process.env;
+          assert(token&&account,'Existing API credentials are unavailable');
+          assert.equal(process.env.GITHUB_REPOSITORY,'sho-support/sho-support.github.io');
+          assert.equal(process.env.GITHUB_REF,'refs/heads/system-sales/cloudflare-review');
+          const config=JSON.parse(readFileSync('svs-deploy/wrangler.json','utf8'));
+          assert.deepEqual(config,{name:worker,compatibility_date:'2026-11-14',workers_dev:true,preview_urls:false,
+           assets:{directory:'./web',html_handling:'none',not_found_handling:'none'}});
+          const base='https://api.cloudflare.com/client/v4/accounts/'+account+'/workers';
+          const proof={started_at_utc:new Date().toISOString(),origin,original_version:original,
+           identical_public_assets:true,source_commit:'f77c36fee197c1f180d22dc407c9c8b53be299e8',
+           new_version:null,new_version_verified:false,rollback_verified:false,status:'IN_PROGRESS',
+           login_enabled:false,purchase_enabled:false,bindings_or_dns_modified:false,checks:[]};
+          async function api(path){
+           const response=await fetch(base+path,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(20000)});
+           assert(response.ok,'Cloudflare API check HTTP '+response.status);
+           const data=await response.json();assert(data.success,'Cloudflare API check was unsuccessful');return data.result;
+          }
+          async function current(){
+           const result=await api('/scripts/'+worker+'/deployments?per_page=1&page=1');
+           const versions=result?.deployments?.[0]?.versions;
+           assert(Array.isArray(versions)&&versions.length===1&&versions[0].percentage===100,'Unexpected traffic split');
+           return versions[0].version_id;
+          }
+          function cli(args){
+           try{return execFileSync('npx',['--yes','wrangler@4.160.0',...args,'--config','svs-deploy/wrangler.json'],
+            {encoding:'utf8',timeout:180000,maxBuffer:2000000,env:process.env});}
+           catch(error){throw Error('Wrangler '+args.slice(0,2).join(' ')+' failed; exit '+(error.status??'unknown'));}
+          }
+          function verify(phase){
+           const env={...process.env};delete env.CLOUDFLARE_API_TOKEN;delete env.CLOUDFLARE_ACCOUNT_ID;
+           execFileSync(process.execPath,['svs-deploy/verify-live.mjs'],{env,encoding:'utf8',timeout:120000});
+           const record=JSON.parse(readFileSync('svs-proof/http.json','utf8'));
+           assert.equal(record.status,'PASS');assert.equal(record.checks_passed,117);
+           copyFileSync('svs-proof/http.json','svs-proof/http-'+phase+'.json');
+           proof.checks.push({phase,http_checks_passed:record.checks_passed});
+          }
+          
+          let attempted=false;
+          try{
+           assert.equal((await api('/subdomain')).subdomain,'zodiac-suu');
+           assert.equal(await current(),original,'The preview changed since the recorded deployment; refusing writes');
+           verify('before');
+           const output=cli(['versions','upload','--message','Static prelaunch recovery rehearsal 2026-11-15'])
+            .replace(/\u001b\[[0-9;]*m/g,'');
+           const ids=[...output.matchAll(/(?:Worker )?Version ID:\s*([a-f0-9-]{36})/gi)].map(x=>x[1]);
+           assert.equal(new Set(ids).size,1,'Could not identify the uploaded version; no traffic switch attempted');
+           const uploaded=ids[0];assert.notEqual(uploaded,original);proof.new_version=uploaded;
+           assert.equal(await current(),original,'Preview changed before the traffic switch; refusing deployment');
+           attempted=true;
+           cli(['versions','deploy',uploaded+'@100%','--yes']);
+           assert.equal(await current(),uploaded,'New deployment did not become the only active version');
+           verify('new-version');proof.new_version_verified=true;
+          }catch(error){proof.error=error.message;}
+          finally{
+           try{
+            const active=await current();
+            if(attempted&&active===proof.new_version){
+             cli(['versions','deploy',original+'@100%','--yes']);
+            }else{
+             assert.equal(active,original,'A third-party deployment was observed; refusing to overwrite it');
+            }
+            assert.equal(await current(),original,'Original version has not been restored');
+            verify('restored');proof.rollback_verified=true;
+           }catch(error){proof.rollback_error=error.message;}
+           proof.status=proof.new_version_verified&&proof.rollback_verified&&!proof.error?'PASS':'FAIL';
+           proof.finished_at_utc=new Date().toISOString();
+           writeFileSync('svs-proof/recovery.json',JSON.stringify(proof,null,2)+'\n');
+           console.log(JSON.stringify(proof));
+          }
+          if(proof.status!=='PASS')process.exitCode=1;
+          JS
+      - name: Verify target, upload identical assets, switch and restore the recorded version
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node svs-deploy/recovery.mjs
+      - name: Save sanitized update and restoration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: svs-cloudflare-recovery-proof
+          path: |
+            svs-proof/package.json
+            svs-proof/recovery.json
+            svs-proof/http-*.json
+          retention-days: 7
