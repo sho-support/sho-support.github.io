@@ -76,4 +76,4 @@ const proof = {
   existing_netlify_site_modified: false, dns_modified: false, customer_messages_or_orders_created: 0,
 };
 writeFileSync('test-results/sales-cloudflare/live.json', JSON.stringify(proof, null, 2) + '\n');
-console.log(JSON.stringify({ origin, static_checks_passed: checks.length, connected_preflights: apiChecks.length, authentication_required: true, new_frontend_legacy_mutations_enabled: false, auth_redirect_verified: false, production_cutover: false }));
+console.log(JSON.stringify({ origin, static_checks_passed: checks.length, connected_preflights: apiChecks.length, authentication_required: true, new_frontend_legacy_mutations_enabled: false, auth_redirect_verified_by_this_probe: false, production_cutover: false }));

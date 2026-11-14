@@ -28,15 +28,15 @@
     },
     {
       "slug": "website-password-recovery",
-      "version": 6,
+      "version": 7,
       "verify_jwt": false,
-      "sha256": "2b826d5181462fb604da6599f3b006a84cefa8ed625ce1bdbd584ea8770d24cf"
+      "sha256": "d34c091db897af9be64bb9ed6a99306ad3d529cf97b0789197f3a7822f9a8fb4"
     },
     {
       "slug": "website-api",
-      "version": 51,
+      "version": 52,
       "verify_jwt": true,
-      "sha256": "65e103071633bde2da183d0a46bf44592857980f47d0091406bb1538749cf2b7"
+      "sha256": "f2d30d89a24a11ceccbbe3cd25096cddeb354c3eea4f6f406f6f60e74ade2795"
     },
     {
       "slug": "website-preview",
@@ -126,7 +126,7 @@
     "mobile_live_verified_this_turn": false
   },
   "remaining": [
-    "confirm and save the prepared exact-host Auth recovery callback, then verify the environment flag and actual owner recovery",
+    "actual owner application sign-in or user-selected recovery, and seller/bank draft input",
     "actual owner application sign-in and seller/bank input",
     "formal controlled domain and production R2",
     "real encrypted off-provider backup and restoration",
@@ -336,7 +336,15 @@
     }
   ],
   "supabase_dashboard_authenticated": true,
-  "cloudflare_auth_redirect_registered": false,
-  "auth_redirect_save_pending_confirmation": true,
-  "auth_redirect_draft": "https://sho-web-support-preview.zodiac-suu.workers.dev/website-password.html**"
+  "cloudflare_auth_redirect_registered": true,
+  "auth_redirect_save_pending_confirmation": false,
+  "auth_redirect_draft": "https://sho-web-support-preview.zodiac-suu.workers.dev/website-password.html**",
+  "public_auth_configuration_deployed": true,
+  "public_auth_configuration_source_commit": "f7b96aeda421da23747a851b83ba19652c2434de",
+  "post_auth_configuration_ci": "https://github.com/sho-support/sho-support.github.io/actions/runs/43631866469",
+  "post_auth_configuration_ci_result": "success",
+  "existing_secrets_accessed": false,
+  "secrets_navigation_rejected_by_automatic_review": true,
+  "environment_flag_changed": false,
+  "actual_recovery_email_delivery_verified": false
 }

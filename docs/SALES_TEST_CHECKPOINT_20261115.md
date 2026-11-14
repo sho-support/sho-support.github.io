@@ -18,8 +18,8 @@ CI https://github.com/sho-support/sho-support.github.io/actions/runs/43629541197
 |---|---|---|---|
 | website-order-api | 17 | falseを維持 | ed95e63fae81529d90cca24417c43a6481a8a10a249e3d7d501af8abc85c55bd |
 | website-customer-access | 54 | falseを維持 | 2b4df5f3f994cf78d9213807f3bdc0b8ce9406212238ddd849df63ca6e58e457 |
-| website-password-recovery | 6 | falseを維持 | 2b826d5181462fb604da6599f3b006a84cefa8ed625ce1bdbd584ea8770d24cf |
-| website-api | 51 | trueを維持 | 65e103071633bde2da183d0a46bf44592857980f47d0091406bb1538749cf2b7 |
+| website-password-recovery | 7 | falseを維持 | d34c091db897af9be64bb9ed6a99306ad3d529cf97b0789197f3a7822f9a8fb4 |
+| website-api | 52 | trueを維持 | f2d30d89a24a11ceccbbe3cd25096cddeb354c3eea4f6f406f6f60e74ade2795 |
 | website-preview | 14 | falseを維持 | 0a4a8b59b22c0a4132b2b61fa2ec46e6423b9144ca578220bf28e52481f5277f |
 
 全5関数を配備後に再取得し、予定した全ファイルとの完全一致を確認。各旧 `_shared/website.ts` はバイト単位で不変。元バンドルは `sales-hosting/runtime-baseline`、配備ソースは `sales-hosting/runtime`、詳細は `runtime-migration.json`。
@@ -33,15 +33,15 @@ CI https://github.com/sho-support/sho-support.github.io/actions/runs/43629541197
 - 配備後の実HTTPSでは注文/顧客/設定/復旧の4件ともCloudflareを許可し、SDK Authorizationを許可。無効入力400、匿名管理読取401、無関係Origin403、旧Netlify維持を確認。注文・顧客サイトはともに0件のまま。
 - 新しい静的フロントの再配備と実HTTPS54項目の再検査も合格。CI https://github.com/sho-support/sho-support.github.io/actions/runs/43630074052 は全体成功。ソース `9d09725237ef295da5b50feec1edb94caa1883cd`、Worker版 `c964e1c0-333b-43f1-b077-a9b275165628`。検索対象外の検証公開を維持。
 
-## 本人確認が必要な具体的な箇所
+## 認証設定の現在地
 
-SupabaseコネクタにはAuth URL設定の読取/更新機能がないため管理画面を開き、本人が安全な認証画面でGitHubを選択してログインに成功した。HP販売プロジェクトのURL Configurationを実見し、SITE_URLは旧Netlify、既存Redirect URLsはGitHubとNetlifyの2件で、Cloudflareは未登録と確認した。Cloudflareのパスワード設定ページだけを許可する `https://sho-web-support-preview.zodiac-suu.workers.dev/website-password.html**` の追加欄を準備済み。認証の許可先を追加する保存操作は確認待ちで、まだ保存していない。既存2件/SITE_URL、復旧有効化フラグ、メール送信は未変更。Cloudflareのブラウザ再認証やAPI再作成は求めない。
+Supabase管理画面へ本人がGitHubを選択してログインし、HP販売プロジェクトのURL Configurationを実見した。承認されたCloudflareのパスワード設定ページ用パターンを保存し、既存GitHub/Netlifyの2件とSITE_URLを維持したまま3件になったことを確認した。
 
-認証後の設定先は、HP販売プロジェクトの Authentication → URL Configuration。
+復旧/招待の接続先は確認済みの公開URLとしてコード内の配備設定で管理する。Secrets画面へのアクセスや環境フラグの作成は不要。認証後の戻り先の許可設定を変える場合は先にこの公開確認設定を無効化し、再確認する。
 
-1. 復旧/招待で使う `https://sho-web-support-preview.zodiac-suu.workers.dev/website-password.html` とクエリ付きの戻り先を、公式のRedirect URLs仕様に合わせて確認する。SITE_URLを勝手に置き換えず旧URLも残す。
-2. 実際の許可先確認後だけ `WEBSITE_AUTH_REDIRECT_ORIGIN` を上記Cloudflareのオリジンに設定する。フラグの設定だけをAuthや実メール検証の代わりにしない。
-3. SHO WEB SUPPORT自身の管理者ログインと、本人の事業者情報/振込先の下書き保存を確認する。パスワードはチャットに出さない。実バックアップ未実施のチェックを代入しない。
+次の本人確認はSHO WEB SUPPORT自身の管理者ログインと設定保存であり、Supabase管理画面のGitHubログインとは別。登録済みアカウントを用い、本人の事業者情報/振込先を下書き保存する。実バックアップ未実施のチェックを代入しない。パスワードはチャットへ出さない。
+
+再設定を選ぶ場合、本人が登録アドレスへのメールを受け取り、本人操作でパスワードを入力する必要がある。実メール到着・パスワード変更は未確認であり、配備成功に読み替えない。
 
 ## 最終通し試験前の残件
 
@@ -53,3 +53,15 @@ SupabaseコネクタにはAuth URL設定の読取/更新機能がないため管
 - https://supabase.com/docs/guides/auth/redirect-urls
 - https://supabase.com/docs/guides/functions/cors
 - https://developers.cloudflare.com/workers/static-assets/
+
+## 承認後の復旧先設定
+
+本人が「最善ならいい」と承認したため、Cloudflareのパスワード設定ページ用パターンを保存。保存後の再読取でも3件の許可先と既存SITE_URLの維持を確認した。
+
+Secrets画面への移動は自動承認レビューが拒否した。既存の秘密情報へアクセスせず、実画面で確認した公開URLを `_shared/auth-redirect-confirmation.ts` の配備設定として扱う方式へ変更した。秘密値/環境フラグの読取・変更は行わない。認証・現在の管理者照合・厳密なOrigin・既存復旧回数制限は維持する。
+
+ソース `f7b96aeda421da23747a851b83ba19652c2434de`。配備後の読戻しで全ファイル一致。`website-password-recovery` v7 / SHA256 `d34c091db897af9be64bb9ed6a99306ad3d529cf97b0789197f3a7822f9a8fb4`、`website-api` v52 / SHA256 `f2d30d89a24a11ceccbbe3cd25096cddeb354c3eea4f6f406f6f60e74ade2795`。他3関数と静的Workerは再配備しない。
+
+CI https://github.com/sho-support/sho-support.github.io/actions/runs/43631866469 は全体成功。隔離48件/型検査/buildに加え、既存公開先の静的54項目と4 APIの安全な読取/検証も合格。実注文・メール・AI・決済は起こしていない。実メール到着とHP販売自身の本人ログインは、この結果に含めない。
+
+以後、以前の手順の `WEBSITE_AUTH_REDIRECT_ORIGIN` 作成は不要。Secrets画面へ入り直したり、承認レビューを回避する秘密情報取得をしない。Authの許可URLを変える場合は、先に公開確認設定を無効にして確認し直す。

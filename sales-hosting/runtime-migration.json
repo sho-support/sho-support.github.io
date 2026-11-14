@@ -48,10 +48,11 @@
         {
           "path": "index.ts",
           "before_sha256": "5a951b6decc47597ff4a67fe64aa5a6e9696d7981b5013f7dfaec04e8c722065",
-          "after_sha256": "e46c1a020cd286836306f90a28c5d735e6cc1ffbda7e92d3bb903387ff96a49b",
+          "after_sha256": "8ed3e3d1758ba8a49dd5dc6fdabcc956c5cef6679a45a1692877c3780abb2793",
           "changed": true
         }
-      ]
+      ],
+      "added_public_auth_confirmation": "_shared/auth-redirect-confirmation.ts"
     },
     {
       "function": "website-api",
@@ -61,7 +62,7 @@
         {
           "path": "index.ts",
           "before_sha256": "83f61cadebfa52709da3b8ab40b5555dd3f80d6b386f35c25143f9ec654d2f72",
-          "after_sha256": "25a91c950a08a99ca1518b865d150c9e15978995cb05f3cdee856b08ce9d5c1a",
+          "after_sha256": "629c2046a3092fe64a1c7ffb18c6793b0ebbf9910a1ba20acc54846c430f8e27",
           "changed": true
         },
         {
@@ -70,7 +71,8 @@
           "after_sha256": "5b82743744fbd0f7023bf414b0889ee5d84226c205fae4a87bd7c6a12d0e85c7",
           "changed": false
         }
-      ]
+      ],
+      "added_public_auth_confirmation": "_shared/auth-redirect-confirmation.ts"
     },
     {
       "function": "website-preview",
@@ -93,7 +95,7 @@
     }
   ],
   "new_frontend_legacy_mutations_enabled": false,
-  "auth_redirect_verified": false,
+  "auth_redirect_verified": true,
   "source_commit": "78f93f541c9ce200b6290602591207432f66d697",
   "deployments": [
     {
@@ -110,15 +112,15 @@
     },
     {
       "slug": "website-password-recovery",
-      "version": 6,
+      "version": 7,
       "verify_jwt": false,
-      "sha256": "2b826d5181462fb604da6599f3b006a84cefa8ed625ce1bdbd584ea8770d24cf"
+      "sha256": "d34c091db897af9be64bb9ed6a99306ad3d529cf97b0789197f3a7822f9a8fb4"
     },
     {
       "slug": "website-api",
-      "version": 51,
+      "version": 52,
       "verify_jwt": true,
-      "sha256": "65e103071633bde2da183d0a46bf44592857980f47d0091406bb1538749cf2b7"
+      "sha256": "f2d30d89a24a11ceccbbe3cd25096cddeb354c3eea4f6f406f6f60e74ade2795"
     },
     {
       "slug": "website-preview",
@@ -129,5 +131,8 @@
   ],
   "schema_modified": false,
   "full_sales_release": false,
-  "live_checks_passed": true
+  "live_checks_passed": true,
+  "public_auth_configuration_source_commit": "f7b96aeda421da23747a851b83ba19652c2434de",
+  "existing_secrets_accessed": false,
+  "environment_flag_changed": false
 }
