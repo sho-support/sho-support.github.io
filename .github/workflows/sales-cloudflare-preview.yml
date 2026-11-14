@@ -1,0 +1,73 @@
+name: Cloudflare sales hosting preview
+on:
+  push:
+    branches: [architecture/sales-cloudflare]
+    paths:
+      - 'sales-hosting/**'
+      - 'scripts/*sales-cloudflare*'
+      - 'scripts/guard-sales-preview.mjs'
+      - 'scripts/build-sales-netlify.mjs'
+      - 'website-*.html'
+      - 'website-*.js'
+      - 'website-*.css'
+      - 'admin/**'
+      - '.github/workflows/sales-cloudflare-preview.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --prefix customer-hosting-v2 --ignore-scripts --no-audit --no-fund
+      - run: node scripts/sync-hosting-offer.mjs --check
+      - run: node scripts/build-sales-cloudflare.mjs
+      - run: node customer-hosting-v2/node_modules/wrangler/bin/wrangler.js deploy --dry-run --config sales-hosting/wrangler.preview.json --outdir test-results/sales-cloudflare/dry-run
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sales-cloudflare-package-proof
+          path: test-results/sales-cloudflare
+          retention-days: 7
+  preview:
+    needs: package
+    if: ${{ github.ref == 'refs/heads/architecture/sales-cloudflare' && contains(github.event.head_commit.message, '[deploy-sales-preview]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    concurrency:
+      group: sales-cloudflare-preview
+      cancel-in-progress: false
+    environment: customer-hosting-preview
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --prefix customer-hosting-v2 --ignore-scripts --no-audit --no-fund
+      - run: node scripts/build-sales-cloudflare.mjs
+      - run: node scripts/guard-sales-preview.mjs
+      - name: Deploy isolated static sales preview
+        run: node customer-hosting-v2/node_modules/wrangler/bin/wrangler.js deploy --config sales-hosting/wrangler.preview.json 2>&1 | tee test-results/sales-cloudflare/deploy.log
+      - name: Check exact assets, routing, private-file exclusion and unmodified API origin restrictions
+        run: node scripts/verify-sales-cloudflare.mjs test-results/sales-cloudflare/deploy.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sales-cloudflare-live-proof
+          path: |
+            test-results/sales-cloudflare/package.json
+            test-results/sales-cloudflare/live.json
+          retention-days: 7

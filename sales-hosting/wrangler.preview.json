@@ -1,0 +1,12 @@
+{
+  "$schema": "../customer-hosting-v2/node_modules/wrangler/config-schema.json",
+  "name": "sho-web-support-preview",
+  "compatibility_date": "2026-11-07",
+  "workers_dev": true,
+  "preview_urls": false,
+  "routes": [],
+  "assets": {
+    "directory": "../dist-cloudflare",
+    "html_handling": "auto-trailing-slash"
+  }
+}

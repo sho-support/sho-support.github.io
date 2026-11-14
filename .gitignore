@@ -1,0 +1,4 @@
+/dist-cloudflare/
+/test-results/sales-cloudflare/
+/sales-hosting/.wrangler/
+/customer-hosting-v2/node_modules
