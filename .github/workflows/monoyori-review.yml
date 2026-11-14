@@ -1,0 +1,113 @@
+name: Publish isolated Monoyori review
+on:
+  push:
+    branches: [monoyori/cloudflare-review]
+    paths: [.github/workflows/monoyori-review.yml]
+permissions:
+  contents: read
+concurrency:
+  group: monoyori-review-deploy
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: customer-hosting-preview
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout pinned Monoyori source, independently of customer hosting
+        uses: actions/checkout@v4
+        with:
+          repository: sho-support/ai-trend-blog
+          ref: 1ee25fa73784d36eb1c0bb7938e5dd480571bae3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify API credentials and require a new, isolated Worker
+        run: |
+          node --input-type=module <<'JS'
+          const {CLOUDFLARE_API_TOKEN:token,CLOUDFLARE_ACCOUNT_ID:account}=process.env;
+          if(!token||!account)throw Error('Existing Cloudflare credentials are not available to this deployment environment');
+          const base='https://api.cloudflare.com/client/v4/accounts/'+account+'/workers';
+          const opts={headers:{Authorization:'Bearer '+token}};
+          const response=await fetch(base+'/subdomain',opts);
+          if(!response.ok)throw Error('Cloudflare account check HTTP '+response.status);
+          const data=await response.json();
+          if(!data.success||data.result.subdomain!=='zodiac-suu')throw Error('Unexpected Cloudflare account subdomain');
+          const existing=await fetch(base+'/scripts/sho-monoyori-review',opts);
+          if(existing.status!==404)throw Error('Reserved review Worker already exists or cannot be checked; refusing overwrite. HTTP '+existing.status);
+          console.log('API connected. Isolated review name available. Existing Workers, R2, DNS and paid settings remain outside this operation.');
+          JS
+      - name: Build only the three portals
+        env:
+          URL: https://sho-monoyori-review.zodiac-suu.workers.dev
+        run: python portal-tools/build_commercial_site.py
+      - name: Disable advertising navigation, analytics and search indexing for the review
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re,json
+          root=Path('dist')
+          for p in root.rglob('*.html'):
+              s=p.read_text()
+              s=re.sub(r'<script\b[^>]*>.*?</script>',lambda m:'' if any(x in m.group(0) for x in ['googletagmanager.com','dataLayer','gtag(']) else m.group(0),s,flags=re.S)
+              s=re.sub(r'<meta[^>]*name="robots"[^>]*>','',s)
+              s=s.replace('</head>','<meta name="robots" content="noindex,nofollow"><script defer src="/portal-assets/review-mode.js"></script></head>')
+              s=s.replace('<body>','<body><div style="background:#244a3b;color:white;padding:10px 18px;font-size:12px;text-align:center">公開確認版｜広告リンク・アクセス計測は停止中。掲載情報は取得時点のものです。</div>')
+              p.write_text(s)
+          (root/'robots.txt').write_text('User-agent: *\nDisallow: /\n')
+          (root/'_headers').write_text('/*\n  X-Robots-Tag: noindex, nofollow\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n')
+          (root/'portal-assets/review-mode.js').write_text('''(()=>{const blocked=a=>a.matches('[data-review-blocked],[data-buy],[data-deal-buy],[data-point-buy],[data-hotel]')||/hb\\.afl\\.rakuten|(?:px|rpx|ad)\\.a8\\.net/.test(a.href);const disable=()=>document.querySelectorAll('a').forEach(a=>{if(blocked(a)){a.href='#';a.dataset.reviewBlocked='true';a.setAttribute('aria-disabled','true');a.title='確認版では購入先への遷移を停止しています';}});document.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&blocked(a)){e.preventDefault();e.stopImmediatePropagation();}},true);disable();new MutationObserver(disable).observe(document.body,{childList:true,subtree:true});})();''')
+          assert all('googletagmanager.com' not in p.read_text() for p in root.rglob('*.html'))
+          config={'name':'sho-monoyori-review','compatibility_date':'2026-11-14','workers_dev':True,'preview_urls':False,'assets':{'directory':'./dist','html_handling':'auto-trailing-slash','not_found_handling':'404-page'}}
+          Path('wrangler.monoyori.json').write_text(json.dumps(config))
+          print('Review built: analytics off, ad navigation blocked, indexing off.')
+          PY
+      - name: Deploy static assets to the isolated review Worker
+        run: npx --yes wrangler@4.160.0 deploy --config wrangler.monoyori.json
+      - name: Verify public pages and record the actual response
+        run: |
+          python - <<'PY'
+          from urllib.request import urlopen
+          from pathlib import Path
+          import json
+          base='https://sho-monoyori-review.zodiac-suu.workers.dev'
+          results=[]
+          for path,word in [('/products/','モノより'),('/deals/','ポイント倍率'),('/events/','会場参考写真')]:
+              with urlopen(base+path,timeout=30) as r:
+                  s=r.read().decode();assert r.status==200 and word in s and 'noindex,nofollow' in s
+                  results.append({'url':r.url,'status':r.status})
+          Path('review-proof.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))
+          print(json.dumps(results,ensure_ascii=False))
+          PY
+      - name: Install isolated rendering tools
+        run: |
+          npm install --prefix /tmp/monoyori-qa --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          /tmp/monoyori-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Inspect rendered photos, ratings and mobile overflow
+        env:
+          NODE_PATH: /tmp/monoyori-qa/node_modules
+        run: |
+          mkdir -p review-proof
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{const browser=await chromium.launch({headless:true});const reports=[];
+          for(const width of [1440,390]){const page=await browser.newPage({viewport:{width,height:1000}});
+          for(const portal of ['products','deals','events']){await page.goto('https://sho-monoyori-review.zodiac-suu.workers.dev/'+portal+'/');await page.waitForTimeout(2500);const result=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,ratings:document.querySelectorAll('.review-summary').length,images:[...document.images].map(x=>({url:x.currentSrc,loaded:x.complete&&x.naturalWidth>0}))}));reports.push({width,portal,...result});if(result.overflow)throw Error('Horizontal overflow '+portal+' '+width);if(portal==='products'&&result.ratings!==3)throw Error('Missing marketplace ratings');await page.screenshot({path:'review-proof/'+portal+'-'+width+'.png',fullPage:true});}await page.close();}
+          require('fs').writeFileSync('review-proof/render.json',JSON.stringify(reports,null,2));console.log(JSON.stringify(reports));await browser.close();})().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - name: Save public review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monoyori-public-review-proof
+          path: |
+            review-proof.json
+            review-proof/
+          retention-days: 7
