@@ -49,6 +49,7 @@ jobs:
       WRANGLER_SEND_METRICS: 'false'
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      EXPECTED_SALES_PREVIEW_VERSION: 75dae493-44ef-4049-aaf6-e35604bc54a1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -67,6 +68,27 @@ jobs:
         if: always()
         with:
           name: sales-cloudflare-live-proof
+          path: |
+            test-results/sales-cloudflare/package.json
+            test-results/sales-cloudflare/live.json
+          retention-days: 7
+  verify-existing-preview:
+    needs: package
+    if: ${{ github.ref == 'refs/heads/architecture/sales-cloudflare' && contains(github.event.head_commit.message, '[verify-sales-preview]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/build-sales-cloudflare.mjs
+      - name: Recheck the existing deployment without redeploying or using credentials
+        run: node scripts/verify-sales-cloudflare.mjs sales-hosting/preview-deployment.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sales-cloudflare-recheck-proof
           path: |
             test-results/sales-cloudflare/package.json
             test-results/sales-cloudflare/live.json

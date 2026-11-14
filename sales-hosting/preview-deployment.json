@@ -1,0 +1,7 @@
+{
+  "origin": "https://sho-web-support-preview.zodiac-suu.workers.dev",
+  "source_commit": "d1ba1869629db8e6a1b8e1aafb1d09008558f3e7",
+  "version": "75dae493-44ef-4049-aaf6-e35604bc54a1",
+  "deployment_run": "https://github.com/sho-support/sho-support.github.io/actions/runs/43562183566",
+  "production_cutover": false
+}

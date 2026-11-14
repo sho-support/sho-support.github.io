@@ -25,6 +25,8 @@ for (const file of files) {
     for (const legacy of legacyPages) {
       html = html.replaceAll('href="' + legacy, 'href="' + legacyOrigin + legacy);
       html = html.replaceAll("href='" + legacy, "href='" + legacyOrigin + legacy);
+      html = html.replaceAll('src="' + legacy, 'src="' + legacyOrigin + legacy);
+      html = html.replaceAll("src='" + legacy, "src='" + legacyOrigin + legacy);
     }
     writeFileSync(target, html);
   } else {
@@ -60,6 +62,7 @@ const customerReviewHtml = readFileSync(join(root, 'website-customer-review.html
 const productionAdmin = readFileSync(join(root,'admin','index.html'),'utf8');
 const adminCustomers = readFileSync(join(root,'admin','customers.html'),'utf8');
 const checks = [
+  ['band example iframe stays on the band site', /<iframe\b[^>]*\bsrc=["']https:\/\/sho-support\.github\.io\/index\.html["']/.test(readFileSync(join(output, 'website-support.html'), 'utf8'))],
   ['three order plans', ['one','semi','full'].every(p => orderHtml.includes('data-plan="' + p + '"'))],
   ['ten selectable templates', (orderHtml.match(/data-template="/g) || []).length === 10],
   ['initial selections empty', orderHtml.includes("state={plan:'',template:'',update:''")],

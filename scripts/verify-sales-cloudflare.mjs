@@ -3,6 +3,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const log = readFileSync(process.argv[2], 'utf8');
+let deployment = null;
+try { deployment = JSON.parse(log); } catch { /* Wrangler deployment output is plain text. */ }
 const matches = [...log.matchAll(/https:\/\/sho-web-support-preview\.[a-z0-9-]+\.workers\.dev\b/g)];
 const origins = [...new Set(matches.map(m => m[0]))];
 assert.equal(origins.length, 1, 'Expected exactly one deployed sales preview URL');
@@ -51,13 +53,29 @@ for (const name of ['website-order-api', 'website-customer-access', 'website-sal
     signal: AbortSignal.timeout(15000),
   });
   const allowed = response.headers.get('access-control-allow-origin');
-  assert.equal(response.status, 403, `${name}: preview origin must remain blocked before activation`);
-  assert.notEqual(allowed, origin);
-  assert.notEqual(allowed, '*');
-  apiChecks.push({ function: name, method: 'OPTIONS', status: 403, preview_origin_allowed: false });
+  if (response.status === 403) {
+    assert.equal((await response.json()).error, 'Forbidden', name);
+  } else {
+    // An OPTIONS response may be 200 with the old origin, which the browser
+    // rejects for this preview. Do not mistake HTTP 200 for CORS permission.
+    assert.equal(response.status, 200, name);
+    assert.notEqual(allowed, origin);
+    assert.notEqual(allowed, '*');
+  }
+  // Also check the server's Origin guard using an unsupported, non-business
+  // action. Never submit an order or invoke a valid send/publish operation.
+  const denied = await fetch(`${apiBase}/functions/v1/${name}`, {
+    method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: '__cloudflare_migration_noop__' }), signal: AbortSignal.timeout(15000),
+  });
+  assert.equal(denied.status, 403, `${name}: foreign-origin operation must be denied`);
+  assert.equal((await denied.json()).error, 'Forbidden', name);
+  apiChecks.push({ function: name, preflight_status: response.status, response_allow_origin: allowed, noop_post_status: 403, request_accepted: false });
 }
 const proof = {
-  checked_at: new Date().toISOString(), source_commit: process.env.GITHUB_SHA || null, origin,
+  checked_at: new Date().toISOString(), verification_commit: process.env.GITHUB_SHA || null,
+  deployed_source_commit: deployment?.source_commit || process.env.GITHUB_SHA || null,
+  deployed_version: deployment?.version || log.match(/Current Version ID:\s*([a-f0-9-]{36})/)?.[1] || null, origin,
   static_check_count: checks.length, static_checks: checks, production_api_checks: apiChecks,
   production_cutover: false, production_apis_modified: false, authentication_and_commercial_flow_complete: false,
   existing_netlify_site_modified: false, dns_modified: false, customer_messages_or_orders_created: 0,
