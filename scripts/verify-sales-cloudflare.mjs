@@ -58,7 +58,7 @@ for (const [name, expectedError] of [['website-order-api', 'Forbidden'], ['websi
   } else {
     // An OPTIONS response may be 200 with the old origin, which the browser
     // rejects for this preview. Do not mistake HTTP 200 for CORS permission.
-    assert.equal(response.status, 200, name);
+    assert([200, 204].includes(response.status), `${name}: unexpected preflight status ${response.status}`);
     assert.notEqual(allowed, origin);
     assert.notEqual(allowed, '*');
   }
