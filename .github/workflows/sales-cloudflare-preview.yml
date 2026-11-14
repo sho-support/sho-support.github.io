@@ -49,7 +49,7 @@ jobs:
       WRANGLER_SEND_METRICS: 'false'
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      EXPECTED_SALES_PREVIEW_VERSION: 75dae493-44ef-4049-aaf6-e35604bc54a1
+      EXPECTED_SALES_PREVIEW_VERSION: 3a489aee-ffff-4160-8202-f773c3178dd7
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

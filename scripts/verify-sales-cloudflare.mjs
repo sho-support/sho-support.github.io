@@ -47,14 +47,14 @@ checks.push({ path: '/website-client.js', method: 'HEAD', status: 200 });
 const apiBase = readFileSync('website-config.js', 'utf8').match(/SUPABASE_URL\s*=\s*'([^']+)'/)?.[1];
 assert.equal(apiBase, 'https://tyhymvgjkoebetyypspj.supabase.co');
 const apiChecks = [];
-for (const name of ['website-order-api', 'website-customer-access', 'website-sales-setup']) {
+for (const [name, expectedError] of [['website-order-api', 'Forbidden'], ['website-customer-access', 'Forbidden'], ['website-sales-setup', 'Forbidden'], ['website-password-recovery', 'invalid_request']]) {
   const response = await fetch(`${apiBase}/functions/v1/${name}`, {
     method: 'OPTIONS', headers: { Origin: origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,content-type,apikey,x-client-info' },
     signal: AbortSignal.timeout(15000),
   });
   const allowed = response.headers.get('access-control-allow-origin');
   if (response.status === 403) {
-    assert.equal((await response.json()).error, 'Forbidden', name);
+    assert.equal((await response.json()).error, expectedError, name);
   } else {
     // An OPTIONS response may be 200 with the old origin, which the browser
     // rejects for this preview. Do not mistake HTTP 200 for CORS permission.
@@ -69,7 +69,7 @@ for (const name of ['website-order-api', 'website-customer-access', 'website-sal
     body: JSON.stringify({ action: '__cloudflare_migration_noop__' }), signal: AbortSignal.timeout(15000),
   });
   assert.equal(denied.status, 403, `${name}: foreign-origin operation must be denied`);
-  assert.equal((await denied.json()).error, 'Forbidden', name);
+  assert.equal((await denied.json()).error, expectedError, name);
   apiChecks.push({ function: name, preflight_status: response.status, response_allow_origin: allowed, noop_post_status: 403, request_accepted: false });
 }
 const proof = {

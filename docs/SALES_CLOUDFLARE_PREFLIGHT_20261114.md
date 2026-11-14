@@ -52,3 +52,9 @@ Developer Platformの条件ではコンテンツのホスティング、利用�
 通知/確認/素材/更新のリンクにもNetlify直書きがあるため、CORSだけ直して移行完了とは扱わない。`website-customer-access` のリンク生成と `website-preview` のプレビュー戻り先を、正式販売URL確定後に揃える必要がある。再試験と画面確認の結果は取得後に追記する。再試験専用ジョブは認証情報を使わず、再配備もしない。
 
 実ブラウザ確認で、制作実例のiframeが移行先自身の `index.html` を再帰表示する不具合を発見した。既存buildがバンド向けhrefだけを書き換え、srcを相対URLのまま残していたため。バンドページのsrcも既存GitHub Pagesへ向ける修正と、埋め込み先の回帰チェックを追加した。バンド本体のHTML・DNSは変更しない。
+
+修正後CI https://github.com/sho-support/sho-support.github.io/actions/runs/43562980229 は全体成功。ソース `3a46dae38a804ca5ada8041d6c3856ca6ea81f2a`、Worker版 `3a489aee-ffff-4160-8202-f773c3178dd7`。静的40ファイル/537,566バイト、build24項目、実HTTPS54項目、既存API3件の未許可Origin拒否を確認した。再配備前に初回版が100%配信中であることも照合した。
+
+実ブラウザでは幅1363pxで横はみ出しなし。修正後の実例枠がGuns N' Loses公式サイトを表示し、トップと申込画面の年6,000円/初年度込み/自動課金なしを確認。匿名で設定画面を開くと同じCloudflareオリジンの運営者ログインへ誘導された。ログイン実行・設定保存・実注文送信は未実施。今回のCloudflare公開先でのスマホ幅の実画面確認は未実施。
+
+追加の読み取りで `website-password-recovery` v5にもNetlify固定のOriginと復旧後URLがあることを確認した。これも正式URL確定後の変更対象。再配備不要の確認対象へ追加する。本番の既存API/worker/customer-access/preview/order-api/resource-qa/設定APIの版は変わらず、実DBの注文0・顧客サイト0も確認した。
