@@ -1,6 +1,6 @@
 {
   "prepared_at": "2026-11-15",
-  "status": "prepared; not yet deployed",
+  "status": "deployed; runtime source read back byte-for-byte; live preflight verification in progress",
   "functions": [
     {
       "function": "website-order-api",
@@ -93,5 +93,40 @@
     }
   ],
   "new_frontend_legacy_mutations_enabled": false,
-  "auth_redirect_verified": false
+  "auth_redirect_verified": false,
+  "source_commit": "78f93f541c9ce200b6290602591207432f66d697",
+  "deployments": [
+    {
+      "slug": "website-order-api",
+      "version": 17,
+      "verify_jwt": false,
+      "sha256": "ed95e63fae81529d90cca24417c43a6481a8a10a249e3d7d501af8abc85c55bd"
+    },
+    {
+      "slug": "website-customer-access",
+      "version": 54,
+      "verify_jwt": false,
+      "sha256": "2b4df5f3f994cf78d9213807f3bdc0b8ce9406212238ddd849df63ca6e58e457"
+    },
+    {
+      "slug": "website-password-recovery",
+      "version": 6,
+      "verify_jwt": false,
+      "sha256": "2b826d5181462fb604da6599f3b006a84cefa8ed625ce1bdbd584ea8770d24cf"
+    },
+    {
+      "slug": "website-api",
+      "version": 51,
+      "verify_jwt": true,
+      "sha256": "65e103071633bde2da183d0a46bf44592857980f47d0091406bb1538749cf2b7"
+    },
+    {
+      "slug": "website-preview",
+      "version": 14,
+      "verify_jwt": false,
+      "sha256": "0a4a8b59b22c0a4132b2b61fa2ec46e6423b9144ca578220bf28e52481f5277f"
+    }
+  ],
+  "schema_modified": false,
+  "full_sales_release": false
 }
