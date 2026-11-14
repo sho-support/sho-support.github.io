@@ -25,6 +25,7 @@ form.addEventListener('submit',async event=>{
       let code='';
       try{const details=await error.context.clone().json();code=details?.error||'';}catch{}
       if(httpStatus===429||code==='rate_limited'){const e=new Error('rate_limited');e.status=429;throw e;}
+      if(code==='auth_redirect_not_ready')throw new Error('recovery_not_ready');
       throw error;
     }
     if(data?.error){const e=new Error(data.error);if(data.error==='rate_limited')e.status=429;throw e;}
@@ -34,6 +35,8 @@ form.addEventListener('submit',async event=>{
   }catch(error){
     if(error?.status===429||/rate.limit|too.many/i.test(String(error?.code||error?.message||''))){
       message.textContent='このメールアドレスへの再設定メールは24時間に2回までです。送信回数の上限に達した場合は24時間経過後にお試しください。';
+    }else if(error?.message==='recovery_not_ready'){
+      message.textContent='現在、再設定メールの受付を準備中です。運営者にお問い合わせください。';
     }else{
       message.textContent='再設定メールを送信できませんでした。送信設定または通信状態を確認してください。';
     }

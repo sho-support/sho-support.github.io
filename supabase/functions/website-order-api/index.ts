@@ -1,7 +1,8 @@
+import { SALES_ORIGINS } from '../_shared/sales-origin.ts';
 import {HOSTING_OFFER} from '../_shared/hosting-offer.mjs';
 import { adminClient, json, notifyOwner } from '../_shared/website.ts';
 
-const allowedOrigins = new Set(['https://sho-support.github.io', 'https://sho-web-support.netlify.app']);
+const allowedOrigins = SALES_ORIGINS;
 
 async function requestHash(req:Request){
   const ip=req.headers.get('cf-connecting-ip')||req.headers.get('x-forwarded-for')||'';
@@ -50,7 +51,7 @@ Deno.serve(async(req)=>{
   if(origin&&!allowedOrigins.has(origin))return json({error:'Forbidden'},403);
   if(req.method==='OPTIONS') return new Response('ok',{headers:{
     'Access-Control-Allow-Origin':allowedOrigin,
-    'Access-Control-Allow-Headers':'content-type, apikey, x-client-info',
+    'Access-Control-Allow-Headers':'authorization, content-type, apikey, x-client-info',
     'Access-Control-Allow-Methods':'POST, OPTIONS',
   }});
   if(req.method!=='POST') return json({error:'Method not allowed'},405);

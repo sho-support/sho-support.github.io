@@ -1,3 +1,4 @@
+import { salesUrl, authRedirectReady } from '../_shared/sales-origin.ts';
 import {intakeAssetProblem} from '../_shared/intake-assets.ts';
 import {issueIntakeUpload,UploadGateError} from '../_shared/upload-gate.ts';
 import {handleHostingAction} from '../_shared/hosting-routes.ts';
@@ -130,9 +131,10 @@ Deno.serve(async (req) => {
       }
       let invited=false;
       if(!customerId){
-        const destination=new URL('https://sho-web-support.netlify.app/website-password.html');
+        if(!authRedirectReady(req,Deno.env.get('WEBSITE_AUTH_REDIRECT_ORIGIN')||''))return json({error:'招待メールの送信先設定を確認してください。'},503);
+        const destination=new URL(salesUrl(req, '/website-password.html'));
         destination.searchParams.set('mode','recovery');
-        destination.searchParams.set('next','https://sho-web-support.netlify.app/website-portal.html');
+        destination.searchParams.set('next',salesUrl(req, '/website-portal.html'));
         const {data,error:inviteError}=await admin.auth.admin.inviteUserByEmail(email,{redirectTo:destination.href});
         if(inviteError)return json({error:'招待メールを送信できませんでした。SMTPと送信上限を確認してください。'},502);
         if(!data?.user?.id)return json({error:'アカウントの作成結果を確認できませんでした。'},503);
@@ -508,7 +510,7 @@ Deno.serve(async (req) => {
       if(!site.repo_full_name)return json({error:'GitHub Repoが未設定です。'},409);
       await setGithubPagesSource(site.repo_full_name,site.publish_branch||'main','/docs');
       const key=randomReviewKey(),hash=await sha256Hex(key);
-      const url='https://sho-web-support.netlify.app/website-preview.html?id='+encodeURIComponent(siteId)+'&key='+key;
+      const url=salesUrl(req, '/website-preview.html?id=')+encodeURIComponent(siteId)+'&key='+key;
       const {error:updateError}=await admin.from('website_sites').update({preview_url:url,preview_access_token_hash:hash,preview_token_issued_at:new Date().toISOString()}).eq('site_id',siteId);
       if(updateError)throw updateError;
       return json({ok:true,preview_url:url,status:'secure_preview'});
@@ -784,8 +786,8 @@ Deno.serve(async (req) => {
         const key=randomReviewKey(),hash=await sha256Hex(key);
         const {error:tokenError}=await admin.from('website_sites').update({review_access_token_hash:hash}).eq('site_id',siteId);
         if(tokenError)throw tokenError;
-        const reviewUrl='https://sho-web-support.netlify.app/website-customer-review.html?id='+encodeURIComponent(siteId)+'&prod=1&key='+key;
-        const previewUrl='https://sho-web-support.netlify.app/website-preview.html?id='+encodeURIComponent(siteId)+'&key='+key;
+        const reviewUrl=salesUrl(req, '/website-customer-review.html?id=')+encodeURIComponent(siteId)+'&prod=1&key='+key;
+        const previewUrl=salesUrl(req, '/website-preview.html?id=')+encodeURIComponent(siteId)+'&key='+key;
         const sent=await linePush(link.line_user_id,'ホームページの制作案ができました。\n\n【サイトを見る】\n'+previewUrl+'\n\n【確認・修正依頼・内容承認】\n'+reviewUrl+'\n\n内容を確認し、修正がなければ承認してください。公開操作はSHO WEB SUPPORTが行います。');
         if(sent.skipped||sent.ok===false)return json({ok:true,status:body.status,warning:'最終確認URLのLINE送信に失敗しました。再送が必要です。'});
       }

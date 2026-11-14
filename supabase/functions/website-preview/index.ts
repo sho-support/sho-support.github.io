@@ -1,3 +1,4 @@
+import { salesOrigin } from '../_shared/sales-origin.ts';
 import {cloudflareHostingEnabled} from '../_shared/hosting-mode.ts';
 import {frozenPreviewFile} from '../_shared/hosting-service.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
@@ -17,13 +18,13 @@ function proxy(raw:string,path:string,base:string){
   return base+'&path='+encodeURIComponent(next)+(u.hash||'');
  }catch{return raw}
 }
-function rewrite(s:string,path:string,base:string,css:boolean){
+function rewrite(s:string,path:string,base:string,css:boolean,viewerOrigin:string){
  const viewer=(raw:string)=>{
   if(!/\.html?(?:[?#]|$)/i.test(raw))return proxy(raw,path,base);
   const ref=proxy(raw,path,base);
   if(ref===raw)return raw;
   const param=ref.slice(base.length+1);
-  return 'https://sho-web-support.netlify.app/website-preview.html?'+base.split('?')[1]+'&'+param;
+  return viewerOrigin+'/website-preview.html?'+base.split('?')[1]+'&'+param;
  };
  if(!css){
    s=s.replace(/\b(href|src|poster|action)\s*=\s*(["'])(.*?)\2/gi,(_,attr,q,v)=>attr+'='+q+(attr.toLowerCase()==='href'?viewer(v):proxy(v,path,base)).replace(/&/g,'&amp;')+q);
@@ -92,7 +93,7 @@ Deno.serve(async(req)=>{
    const publicRoot=new URL(Deno.env.get('SUPABASE_URL')||'');
    if(publicRoot.protocol!=='https:'||!publicRoot.hostname.endsWith('.supabase.co'))throw new Error('Invalid public Supabase URL');
    const base=publicRoot.origin+'/functions/v1/website-preview?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key);
-   const content=rewrite(new TextDecoder().decode(bytes),path,base,ext==='css');
+   const content=rewrite(new TextDecoder().decode(bytes),path,base,ext==='css',salesOrigin(req));
    return ext==='css'?new Response(content,{status:200,headers:{...noCache,'Content-Type':ct}}):new Response(JSON.stringify({html:content}),{status:200,headers:{...noCache,'Content-Type':'application/json; charset=utf-8'}});
   }
   return new Response(new Uint8Array(bytes).buffer,{status:200,headers:{...noCache,'Content-Type':ct}});

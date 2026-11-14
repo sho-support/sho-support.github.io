@@ -43,63 +43,37 @@ assert.equal(head.status, 200);
 assert.equal((await head.arrayBuffer()).byteLength, 0);
 checks.push({ path: '/website-client.js', method: 'HEAD', status: 200 });
 
-// Preflight only: do not create orders, send messages, or change production APIs.
-const apiBase = readFileSync('website-config.js', 'utf8').match(/SUPABASE_URL\s*=\s*'([^']+)'/)?.[1];
-assert.equal(apiBase, 'https://tyhymvgjkoebetyypspj.supabase.co');
+// Only preflight, malformed input and anonymous read requests. Never submit a
+// real order, invoke a send operation, or consume password-recovery rate limits.
+const apiBase = 'https://tyhymvgjkoebetyypspj.supabase.co';
 const apiChecks = [];
-for (const [name, expectedError, protectedSettings] of [['website-order-api', 'Forbidden', false], ['website-customer-access', 'Forbidden', false], ['website-sales-setup', 'Forbidden', true], ['website-password-recovery', 'invalid_request', false]]) {
-  const response = await fetch(`${apiBase}/functions/v1/${name}`, {
-    method: 'OPTIONS', headers: { Origin: origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,content-type,apikey,x-client-info' },
-    signal: AbortSignal.timeout(15000),
-  });
-  const allowed = response.headers.get('access-control-allow-origin');
-  if (protectedSettings) {
-    assert.equal(response.status, 200);
-    assert.equal(allowed, origin);
-    const anonymous = await fetch(`${apiBase}/functions/v1/${name}`, {
-      method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'admin_get_sales_settings' }), signal: AbortSignal.timeout(15000),
-    });
-    assert.equal(anonymous.status, 401, 'Settings still require an authenticated administrator');
-    assert.equal((await anonymous.json()).error, 'ログインが必要です。');
-    const foreign = await fetch(`${apiBase}/functions/v1/${name}`, {
-      method: 'OPTIONS', headers: { Origin: 'https://unrelated-sales-site.invalid' }, signal: AbortSignal.timeout(15000),
-    });
-    assert.equal(foreign.status, 403, 'An unrelated site must remain blocked');
-    const previous = await fetch(`${apiBase}/functions/v1/${name}`, {
-      method: 'OPTIONS', headers: { Origin: 'https://sho-web-support.netlify.app' }, signal: AbortSignal.timeout(15000),
-    });
-    assert.equal(previous.status, 200, 'Keep the existing sales site working during preparation');
-    assert.equal(previous.headers.get('access-control-allow-origin'), 'https://sho-web-support.netlify.app');
-    apiChecks.push({ function: name, origin_connected: true, anonymous_status: 401, foreign_origin_status: 403, previous_origin_status: 200, authentication_required: true });
-    continue;
-  }
-  if (response.status === 403) {
-    assert.equal((await response.json()).error, expectedError, name);
-  } else {
-    // An OPTIONS response may be 200 with the old origin, which the browser
-    // rejects for this preview. Do not mistake HTTP 200 for CORS permission.
-    assert([200, 204].includes(response.status), `${name}: unexpected preflight status ${response.status}`);
-    assert.notEqual(allowed, origin);
-    assert.notEqual(allowed, '*');
-  }
-  // Also check the server's Origin guard using an unsupported, non-business
-  // action. Never submit an order or invoke a valid send/publish operation.
-  const denied = await fetch(`${apiBase}/functions/v1/${name}`, {
-    method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: '__cloudflare_migration_noop__' }), signal: AbortSignal.timeout(15000),
-  });
-  assert.equal(denied.status, 403, `${name}: foreign-origin operation must be denied`);
-  assert.equal((await denied.json()).error, expectedError, name);
-  apiChecks.push({ function: name, preflight_status: response.status, response_allow_origin: allowed, noop_post_status: 403, request_accepted: false });
+for (const [name, body, expectedStatus] of [
+  ['website-order-api', { action: '__migration_invalid_input__' }, 400],
+  ['website-customer-access', { action: 'admin_list_orders' }, 401],
+  ['website-sales-setup', { action: 'admin_get_sales_settings' }, 401],
+  ['website-password-recovery', { email: '' }, 400],
+]) {
+  const headers = { Origin: origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,content-type,apikey,x-client-info' };
+  const response = await fetch(`${apiBase}/functions/v1/${name}`, { method: 'OPTIONS', headers, signal: AbortSignal.timeout(15000) });
+  assert([200, 204].includes(response.status), name + ': preflight must succeed');
+  assert.equal(response.headers.get('access-control-allow-origin'), origin);
+  for (const header of ['authorization', 'content-type', 'apikey', 'x-client-info']) assert(response.headers.get('access-control-allow-headers')?.toLowerCase().includes(header), name + ': missing SDK header ' + header);
+  const probe = await fetch(`${apiBase}/functions/v1/${name}`, { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(15000) });
+  assert.equal(probe.status, expectedStatus, name + ': retain validation/authentication');
+  const previous = await fetch(`${apiBase}/functions/v1/${name}`, { method: 'OPTIONS', headers: { ...headers, Origin: 'https://sho-web-support.netlify.app' }, signal: AbortSignal.timeout(15000) });
+  assert([200, 204].includes(previous.status));
+  assert.equal(previous.headers.get('access-control-allow-origin'), 'https://sho-web-support.netlify.app');
+  const foreign = await fetch(`${apiBase}/functions/v1/${name}`, { method: 'POST', headers: { Origin: 'https://unrelated-sales-site.invalid', 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(15000) });
+  assert.equal(foreign.status, 403);
+  apiChecks.push({ function: name, origin_connected: true, preflight_status: response.status, sdk_headers_allowed: true, safe_probe_status: probe.status, foreign_status: foreign.status, previous_origin_preserved: true });
 }
 const proof = {
   checked_at: new Date().toISOString(), verification_commit: process.env.GITHUB_SHA || null,
   deployed_source_commit: deployment?.source_commit || process.env.GITHUB_SHA || null,
   deployed_version: deployment?.version || log.match(/Current Version ID:\s*([a-f0-9-]{36})/)?.[1] || null, origin,
   static_check_count: checks.length, static_checks: checks, production_api_checks: apiChecks,
-  production_cutover: false, production_business_apis_modified: false, protected_settings_origin_updated: true, authentication_and_commercial_flow_complete: false,
+  production_cutover: false, production_business_apis_modified: true, protected_settings_origin_updated: true, authentication_and_commercial_flow_complete: false,
   existing_netlify_site_modified: false, dns_modified: false, customer_messages_or_orders_created: 0,
 };
 writeFileSync('test-results/sales-cloudflare/live.json', JSON.stringify(proof, null, 2) + '\n');
-console.log(JSON.stringify({ origin, static_checks_passed: checks.length, production_business_apis_still_blocked: apiChecks.filter(c => !c.origin_connected).length, protected_settings_connected: apiChecks.filter(c => c.origin_connected).length, production_cutover: false }));
+console.log(JSON.stringify({ origin, static_checks_passed: checks.length, connected_preflights: apiChecks.length, authentication_required: true, new_frontend_legacy_mutations_enabled: false, auth_redirect_verified: false, production_cutover: false }));

@@ -1,0 +1,97 @@
+{
+  "prepared_at": "2026-11-15",
+  "status": "prepared; not yet deployed",
+  "functions": [
+    {
+      "function": "website-order-api",
+      "before_version": 16,
+      "verify_jwt": false,
+      "files": [
+        {
+          "path": "index.ts",
+          "before_sha256": "1192a61745872e8650901235eaae3417ce7d400c15476834521935b3d2d40760",
+          "after_sha256": "99799b90df8438c1c4cdb8b721c243ba122a0e98d60b7e560e668bacfeeb2339",
+          "changed": true
+        },
+        {
+          "path": "_shared/website.ts",
+          "before_sha256": "3130621b6eadd0a39d6cb578d3592d872d63477f47989af388274ed4f2f19a72",
+          "after_sha256": "3130621b6eadd0a39d6cb578d3592d872d63477f47989af388274ed4f2f19a72",
+          "changed": false
+        }
+      ]
+    },
+    {
+      "function": "website-customer-access",
+      "before_version": 53,
+      "verify_jwt": false,
+      "files": [
+        {
+          "path": "index.ts",
+          "before_sha256": "3fbf19b0b896c5d961999eb02f7aa79fbfb39fb9143a24a3de478db0882a8e94",
+          "after_sha256": "f7a315515dc414a3297ec2cf1a10cbc31c42f7ee525e5f8834fbdc220d82a731",
+          "changed": true
+        },
+        {
+          "path": "_shared/website.ts",
+          "before_sha256": "3f2e11b2a8117ca14a685a7eecd1739889e8b2f5a28aebd66ff788ed683585e2",
+          "after_sha256": "3f2e11b2a8117ca14a685a7eecd1739889e8b2f5a28aebd66ff788ed683585e2",
+          "changed": false
+        }
+      ]
+    },
+    {
+      "function": "website-password-recovery",
+      "before_version": 5,
+      "verify_jwt": false,
+      "files": [
+        {
+          "path": "index.ts",
+          "before_sha256": "5a951b6decc47597ff4a67fe64aa5a6e9696d7981b5013f7dfaec04e8c722065",
+          "after_sha256": "e46c1a020cd286836306f90a28c5d735e6cc1ffbda7e92d3bb903387ff96a49b",
+          "changed": true
+        }
+      ]
+    },
+    {
+      "function": "website-api",
+      "before_version": 50,
+      "verify_jwt": true,
+      "files": [
+        {
+          "path": "index.ts",
+          "before_sha256": "83f61cadebfa52709da3b8ab40b5555dd3f80d6b386f35c25143f9ec654d2f72",
+          "after_sha256": "25a91c950a08a99ca1518b865d150c9e15978995cb05f3cdee856b08ce9d5c1a",
+          "changed": true
+        },
+        {
+          "path": "_shared/website.ts",
+          "before_sha256": "5b82743744fbd0f7023bf414b0889ee5d84226c205fae4a87bd7c6a12d0e85c7",
+          "after_sha256": "5b82743744fbd0f7023bf414b0889ee5d84226c205fae4a87bd7c6a12d0e85c7",
+          "changed": false
+        }
+      ]
+    },
+    {
+      "function": "website-preview",
+      "before_version": 13,
+      "verify_jwt": false,
+      "files": [
+        {
+          "path": "index.ts",
+          "before_sha256": "1e80527607ba6488413bd296ffab45b7284734efe7fe2b35a98f95fabf78ce7e",
+          "after_sha256": "460a4028c33bb5882bb975d9f6d905c2128291d6dfd8bfe35be691990f3b4276",
+          "changed": true
+        },
+        {
+          "path": "_shared/website.ts",
+          "before_sha256": "4621aee2de2b591e78eda664a7cfe528ad35b072a60f268bb65c70edd30f10d6",
+          "after_sha256": "4621aee2de2b591e78eda664a7cfe528ad35b072a60f268bb65c70edd30f10d6",
+          "changed": false
+        }
+      ]
+    }
+  ],
+  "new_frontend_legacy_mutations_enabled": false,
+  "auth_redirect_verified": false
+}

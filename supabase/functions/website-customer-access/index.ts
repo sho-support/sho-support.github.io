@@ -1,3 +1,4 @@
+import { SALES_ORIGINS, salesUrl } from '../_shared/sales-origin.ts';
 import {intakeAssetProblem} from '../_shared/intake-assets.ts';
 import {issueIntakeUpload,UploadGateError} from '../_shared/upload-gate.ts';
 import {handleHostingAction} from '../_shared/hosting-routes.ts';
@@ -5,7 +6,7 @@ import {cloudflareHostingEnabled} from '../_shared/hosting-mode.ts';
 import {reserveHostingUrl} from '../_shared/hosting-service.ts';
 import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, requireStablePublicationUrl, normalizeCustomerHostname, freeWebsiteUrl, resolveFreeWebsiteUrl, setGithubPagesDomain } from './_shared/website.ts';
 
-const allowedOrigins = new Set(['https://sho-support.github.io','https://sho-web-support.netlify.app']);
+const allowedOrigins = SALES_ORIGINS;
 
 async function sha256Hex(value: string) {
   const bytes = new TextEncoder().encode(value);
@@ -99,8 +100,8 @@ Deno.serve(async(req)=>{
         .update({review_access_token_hash:await sha256Hex(reviewKey)})
         .eq('site_id',targetSite);
       if(updateError)throw updateError;
-      const reviewUrl='https://sho-web-support.netlify.app/website-customer-review.html?id='+encodeURIComponent(targetSite)+'&prod=1&key='+encodeURIComponent(reviewKey);
-      const previewUrl='https://sho-web-support.netlify.app/website-preview.html?id='+encodeURIComponent(targetSite)+'&key='+encodeURIComponent(reviewKey);
+      const reviewUrl=salesUrl(req, '/website-customer-review.html?id=')+encodeURIComponent(targetSite)+'&prod=1&key='+encodeURIComponent(reviewKey);
+      const previewUrl=salesUrl(req, '/website-preview.html?id=')+encodeURIComponent(targetSite)+'&key='+encodeURIComponent(reviewKey);
       const delivered=await linePush(link.line_user_id,'ホームページの制作案ができました。\n\n【サイトを確認する】\n'+previewUrl+'\n\n【修正依頼・内容承認】\n'+reviewUrl+'\n\nサイトを確認し、修正がなければ内容を承認してください。公開作業はSHO WEB SUPPORTが行います。');
       if(delivered.skipped||delivered.ok===false)return json({error:'LINEへ確認URLを送信できませんでした。LINE設定やブロック状態を確認し、再送してください。'},502);
       return json({ok:true,review_url:reviewUrl});
@@ -260,7 +261,7 @@ Deno.serve(async(req)=>{
       const {data:resendSite,error:resendSiteError}=await admin.from('website_sites').select('status').eq('site_id',target.site_id).single();
       if(resendSiteError)throw resendSiteError;
       if(resendSite.status!=='request_waiting')return json({error:'初回ヒアリングはすでに受付終了です。公開後の更新フォームをご利用ください。'},409);
-      const newKey=randomAccessKey(),url='https://sho-web-support.netlify.app/website-intake.html?id='+encodeURIComponent(target.site_id)+'&prod=1&key='+encodeURIComponent(newKey);
+      const newKey=randomAccessKey(),url=salesUrl(req, '/website-intake.html?id=')+encodeURIComponent(target.site_id)+'&prod=1&key='+encodeURIComponent(newKey);
       const {error:tokenErr}=await admin.from('website_orders').update({customer_access_token_hash:await sha256Hex(newKey),access_token_created_at:new Date().toISOString()}).eq('order_code',resendCode);
       if(tokenErr)throw tokenErr;
       const sent=await linePush(target.line_user_id,'制作内容・写真の入力URLを再送します。最新のURLから入力してください。\n\n'+url);
@@ -327,7 +328,7 @@ Deno.serve(async(req)=>{
     }).eq('order_code',orderCode);
     if(updateError)throw updateError;
 
-    const url=`https://sho-web-support.netlify.app/website-intake.html?id=${encodeURIComponent(newSiteId)}&prod=1&key=${encodeURIComponent(newKey)}`;
+    const url=salesUrl(req, '/website-intake.html')+`?id=${encodeURIComponent(newSiteId)}&prod=1&key=${encodeURIComponent(newKey)}`;
     const sent=await linePush(target.line_user_id,`お振込みによるご入金を確認いたしました。\nこのたびは正式にご注文いただき、ありがとうございます。\n\nSITE ID：${newSiteId}\n\n下の専用URLから制作内容・写真をご入力ください。入力途中でも自動保存され、同じURLなら別端末・別ブラウザから続けられます。\n\n${url}`);
     const warning=sent.skipped||sent.ok===false?'お客様へのLINE送信に失敗しました。注文管理画面からURLを再送してください。':null;
     if(warning)await notifyOwner(`【要対応：制作案内LINE送信失敗】\n注文ID ${orderCode}\nSITE ID ${newSiteId}\n${warning}`);
@@ -348,7 +349,7 @@ Deno.serve(async(req)=>{
     }
     if(action==='review_load'){
       const {review_access_token_hash, ...publicReview}=reviewSite;
-      publicReview.preview_url='https://sho-web-support.netlify.app/website-preview.html?id='+encodeURIComponent(siteId)+'&key='+encodeURIComponent(key);
+      publicReview.preview_url=salesUrl(req, '/website-preview.html?id=')+encodeURIComponent(siteId)+'&key='+encodeURIComponent(key);
       return json({ok:true,site:publicReview});
     }
     if(reviewSite.status!=='customer_review')return json({error:'現在は最終確認を受け付ける状態ではありません。'},409);
@@ -437,7 +438,7 @@ Deno.serve(async(req)=>{
       await admin.from('website_activity').insert({site_id:siteId,actor_type:'customer_line',action:'published',detail:'お客様の承認を受けてサイトを公開。'});
       await notifyOwner('【サイト公開】SITE ID '+siteId+'\n'+publicUrl);
       const {data:lineLink}=await admin.from('website_line_links').select('line_user_id').eq('site_id',siteId).maybeSingle();
-      const updateUrl='https://sho-web-support.netlify.app/website-update.html?id='+encodeURIComponent(siteId)+'&key='+updateKey;
+      const updateUrl=salesUrl(req, '/website-update.html?id=')+encodeURIComponent(siteId)+'&key='+updateKey;
       const delivered=await linePush(lineLink?.line_user_id,'ホームページを公開しました。\n\n【公開サイト】\n'+publicUrl+'\n\n【更新・修正依頼】\n'+updateUrl+'\n\n公開日から無料期間が開始します。');
       if(delivered.skipped||delivered.ok===false)await notifyOwner('【要対応】SITE ID '+siteId+' の公開完了LINEを送信できませんでした。お客様の確認画面にもリンクを表示済みです。');
       return json({ok:true,status:'live',public_url:publicUrl,update_url:updateUrl});

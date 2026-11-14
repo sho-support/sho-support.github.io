@@ -6,6 +6,8 @@ on:
       - 'sales-hosting/**'
       - 'scripts/*sales-cloudflare*'
       - 'scripts/guard-sales-preview.mjs'
+      - 'supabase/functions/_shared/sales-origin.ts'
+      - 'supabase/functions/website-password-recovery/**'
       - 'scripts/build-sales-netlify.mjs'
       - 'website-*.html'
       - 'website-*.js'
@@ -28,6 +30,14 @@ jobs:
           cache: npm
           cache-dependency-path: customer-hosting-v2/package-lock.json
       - run: npm ci --prefix customer-hosting-v2 --ignore-scripts --no-audit --no-fund
+      - name: Verify the exact runtime adapters without external services
+        run: node --experimental-vm-modules --test sales-hosting/tests/runtime-origin.test.mjs
+      - name: Verify the full commercial HTTP routes on an isolated local database
+        run: npm run test:routes --prefix customer-hosting-v2
+      - name: Verify all three plans through the isolated SQL and R2 pipeline
+        run: npm run test:pipeline --prefix customer-hosting-v2
+      - name: Type-check the canonical Edge Functions
+        run: npm run check:edge --prefix customer-hosting-v2
       - run: node scripts/sync-hosting-offer.mjs --check
       - run: node scripts/build-sales-cloudflare.mjs
       - run: node customer-hosting-v2/node_modules/wrangler/bin/wrangler.js deploy --dry-run --config sales-hosting/wrangler.preview.json --outdir test-results/sales-cloudflare/dry-run
