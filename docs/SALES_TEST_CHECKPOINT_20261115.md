@@ -31,7 +31,7 @@ CI https://github.com/sho-support/sho-support.github.io/actions/runs/43629541197
 - SQL+workerd/R2の隔離試験11件合格。3プランの公開→更新→巻戻しと通信断時の回復を含む。実本番で通ったという意味ではない。
 - 正本Edge Functionsの型検査、料金9画面同期、build24項目、Wrangler配備前検査が合格。
 - 配備後の実HTTPSでは注文/顧客/設定/復旧の4件ともCloudflareを許可し、SDK Authorizationを許可。無効入力400、匿名管理読取401、無関係Origin403、旧Netlify維持を確認。注文・顧客サイトはともに0件のまま。
-- 新しい静的フロントの再配備と54項目の再検査はこの後に実施し、結果取得後に追記する。
+- 新しい静的フロントの再配備と実HTTPS54項目の再検査も合格。CI https://github.com/sho-support/sho-support.github.io/actions/runs/43630074052 は全体成功。ソース `9d09725237ef295da5b50feec1edb94caa1883cd`、Worker版 `c964e1c0-333b-43f1-b077-a9b275165628`。検索対象外の検証公開を維持。
 
 ## 本人確認が必要な具体的な箇所
 

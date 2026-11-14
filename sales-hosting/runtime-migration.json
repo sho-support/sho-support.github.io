@@ -1,6 +1,6 @@
 {
   "prepared_at": "2026-11-15",
-  "status": "deployed; runtime source read back byte-for-byte; live preflight verification in progress",
+  "status": "deployed; exact runtime source and safe live API checks passed",
   "functions": [
     {
       "function": "website-order-api",
@@ -128,5 +128,6 @@
     }
   ],
   "schema_modified": false,
-  "full_sales_release": false
+  "full_sales_release": false,
+  "live_checks_passed": true
 }

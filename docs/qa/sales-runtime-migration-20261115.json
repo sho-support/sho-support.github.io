@@ -1,0 +1,338 @@
+{
+  "date_jst": "2026-11-15",
+  "status": "connection checkpoint verified; final commercial release not ready",
+  "runtime_source_commit": "78f93f541c9ce200b6290602591207432f66d697",
+  "static_source_commit": "9d09725237ef295da5b50feec1edb94caa1883cd",
+  "static_version": "c964e1c0-333b-43f1-b077-a9b275165628",
+  "ci": "https://github.com/sho-support/sho-support.github.io/actions/runs/43630074052",
+  "ci_result": "success",
+  "tests": {
+    "runtime_adapter": 16,
+    "isolated_canonical_http": 21,
+    "isolated_sql_and_r2_pipeline": 11,
+    "live_static_http": 54,
+    "connected_preflights": 4
+  },
+  "runtime_functions": [
+    {
+      "slug": "website-order-api",
+      "version": 17,
+      "verify_jwt": false,
+      "sha256": "ed95e63fae81529d90cca24417c43a6481a8a10a249e3d7d501af8abc85c55bd"
+    },
+    {
+      "slug": "website-customer-access",
+      "version": 54,
+      "verify_jwt": false,
+      "sha256": "2b4df5f3f994cf78d9213807f3bdc0b8ce9406212238ddd849df63ca6e58e457"
+    },
+    {
+      "slug": "website-password-recovery",
+      "version": 6,
+      "verify_jwt": false,
+      "sha256": "2b826d5181462fb604da6599f3b006a84cefa8ed625ce1bdbd584ea8770d24cf"
+    },
+    {
+      "slug": "website-api",
+      "version": 51,
+      "verify_jwt": true,
+      "sha256": "65e103071633bde2da183d0a46bf44592857980f47d0091406bb1538749cf2b7"
+    },
+    {
+      "slug": "website-preview",
+      "version": 14,
+      "verify_jwt": false,
+      "sha256": "0a4a8b59b22c0a4132b2b61fa2ec46e6423b9144ca578220bf28e52481f5277f"
+    }
+  ],
+  "live_api": {
+    "connected_functions": 4,
+    "tests": [
+      {
+        "function": "website-order-api",
+        "preflight": 200,
+        "safe_probe": {
+          "status": 400,
+          "allow_origin": "*",
+          "allow_headers": "authorization, x-client-info, apikey, content-type",
+          "body": "{\"error\":\"注文内容を確認してください。\"}"
+        },
+        "foreign_status": 403,
+        "legacy_origin_preserved": true
+      },
+      {
+        "function": "website-customer-access",
+        "preflight": 200,
+        "safe_probe": {
+          "status": 401,
+          "allow_origin": "*",
+          "allow_headers": "authorization, x-client-info, apikey, content-type",
+          "body": "{\"error\":\"ログインが必要です。\"}"
+        },
+        "foreign_status": 403,
+        "legacy_origin_preserved": true
+      },
+      {
+        "function": "website-sales-setup",
+        "preflight": 200,
+        "safe_probe": {
+          "status": 401,
+          "allow_origin": "https://sho-web-support-preview.zodiac-suu.workers.dev",
+          "allow_headers": "authorization, content-type, apikey, x-client-info",
+          "body": "{\"error\":\"ログインが必要です。\"}"
+        },
+        "foreign_status": 403,
+        "legacy_origin_preserved": true
+      },
+      {
+        "function": "website-password-recovery",
+        "preflight": 204,
+        "safe_probe": {
+          "status": 400,
+          "allow_origin": "https://sho-web-support-preview.zodiac-suu.workers.dev",
+          "allow_headers": "authorization, x-client-info, apikey, content-type",
+          "body": "{\"error\":\"invalid_email\"}"
+        },
+        "foreign_status": 403,
+        "legacy_origin_preserved": true
+      }
+    ],
+    "customer_messages_sent": 0,
+    "orders_created": 0
+  },
+  "production": {
+    "orders": 0,
+    "customer_sites": 0,
+    "messages_sent": 0,
+    "emails_sent": 0,
+    "paid_ai_requests": 0,
+    "payments": 0,
+    "schema_modified": false,
+    "dns_modified": false,
+    "paid_plan_modified": false,
+    "cutover_complete": false
+  },
+  "new_frontend_legacy_mutations_enabled": false,
+  "auth_redirect_allowlist_verified": false,
+  "owner_app_login_verified": false,
+  "full_production_backup_complete": false,
+  "browser": {
+    "homepage_rendered": true,
+    "annual_fee_displayed": true,
+    "band_iframe_rendered": true,
+    "screenshot": "docs/qa/sales-cloudflare-20261115.jpg",
+    "screenshot_sha256": "e11a2fdc1a97cfe9180084508970e4bfa6f79b3f4994e9e031fc4fb54e92f1ac",
+    "screenshot_bytes": 111112,
+    "mobile_live_verified_this_turn": false
+  },
+  "remaining": [
+    "Supabase dashboard authentication and exact recovery callback configuration",
+    "actual owner application sign-in and seller/bank input",
+    "formal controlled domain and production R2",
+    "real encrypted off-provider backup and restoration",
+    "compatible full migrations/functions release",
+    "full user-facing three-plan transaction and device test"
+  ],
+  "static_files": [
+    {
+      "path": "admin/customers.html",
+      "bytes": 5627,
+      "sha256": "1b25b2d37d342b7c712e2fe59587a288ebca1fa0b3bf0ef4b6ebdd23a5608fe7"
+    },
+    {
+      "path": "admin/index.html",
+      "bytes": 39939,
+      "sha256": "c5d782ba067f96e9929233c46bd36b7ef72143952ef4c9fbff7696904229a809"
+    },
+    {
+      "path": "admin/orders.html",
+      "bytes": 34091,
+      "sha256": "6b2f83fc2464e32717d8efaf7899df5ec4ebf356d6b23036bd4ea34522c1fbf0"
+    },
+    {
+      "path": "admin/sales-settings.html",
+      "bytes": 8787,
+      "sha256": "a6e168d1b688b9a2ea4a3631683e62a1f6f3c262dc9bffc7c893a950f9649f75"
+    },
+    {
+      "path": "band-homepage.html",
+      "bytes": 19387,
+      "sha256": "ca314681743b66342741d75f5e796700b096dd808b67d9cc47f82d6822f61923"
+    },
+    {
+      "path": "index.html",
+      "bytes": 27393,
+      "sha256": "7c26b07ae9e2a9bb3c731cf29c5f9416d17a8c6c72a348a54d45d97c354b4a6e"
+    },
+    {
+      "path": "sho-support.html",
+      "bytes": 20366,
+      "sha256": "84910527bd9f30f005986ba5ff6d3127b51ded1cc857dadccef1685c5c3f8edc"
+    },
+    {
+      "path": "support.html",
+      "bytes": 19738,
+      "sha256": "911a08e9b489284064a99ef8b8cc7c94bc87e5709c25281df7dc3fb1f701a337"
+    },
+    {
+      "path": "website-client.js",
+      "bytes": 2234,
+      "sha256": "95f989b10786728460b0e7eabf8c66b66f3c6c65d37af80ab86111d974844ce4"
+    },
+    {
+      "path": "website-config.js",
+      "bytes": 162,
+      "sha256": "896045246ae2e27ab48469a646c6235d88cf67c6b35b3966a8e02157919e9732"
+    },
+    {
+      "path": "website-create.html",
+      "bytes": 14327,
+      "sha256": "8d6aa217f8decb024f3ad50e35fa8f4a6dacb2c6436dcef44b06acc7cb40c460"
+    },
+    {
+      "path": "website-customer-review.html",
+      "bytes": 16066,
+      "sha256": "317588c3649f525d7d3ab7e702dce9c2567f5998a762b8ba65b9cf7af0c0e188"
+    },
+    {
+      "path": "website-demo-semi-cyber.html",
+      "bytes": 12642,
+      "sha256": "2dca57854d85aecd00d1e96a44755de80499869652fcbe5114998a76e6c7ae78"
+    },
+    {
+      "path": "website-demo-semi-premium.html",
+      "bytes": 12641,
+      "sha256": "e03d6280757e226a390fa60792dd64cbf2ff0663c94888e24b808a34f485da4b"
+    },
+    {
+      "path": "website-demo-semi-rock.html",
+      "bytes": 12665,
+      "sha256": "57e81dda2c8ec8cca04dd155aeb3b89afc1bd812c28f6dd93b08dffa523a8ce9"
+    },
+    {
+      "path": "website-faq.html",
+      "bytes": 15737,
+      "sha256": "ab1b71ad2be44a2c8ca1df0c48a39777888c90097edca5334f058620ca0efe72"
+    },
+    {
+      "path": "website-hosting-offer.js",
+      "bytes": 259,
+      "sha256": "717b2e11f5ff2ebdcf84a8fc7768be89b781aec5b76d9753ecca39516b4a7f8d"
+    },
+    {
+      "path": "website-intake.html",
+      "bytes": 63020,
+      "sha256": "8e4b6c886b713ae2d957ef5d9d73670d92189140977a0657e3c62fcd41308345"
+    },
+    {
+      "path": "website-legal.html",
+      "bytes": 7545,
+      "sha256": "2c4d7972c0c41f0d0ab31cf369b84818053fdaf46f272ffbac5f5c28eb00c89f"
+    },
+    {
+      "path": "website-login.html",
+      "bytes": 2635,
+      "sha256": "1bdd2f3b02b9e49fccab0f13874245151bcc764bfc20229218e33fca7cae2c35"
+    },
+    {
+      "path": "website-login.js",
+      "bytes": 3505,
+      "sha256": "49c97e8afd4c57c480dc2a7095751f24a35fc1e66226b5193c778cf6ad69b247"
+    },
+    {
+      "path": "website-materials.js",
+      "bytes": 1568,
+      "sha256": "26f747dd713b549cb58b1d16f3a37fc1b04b7afb1ac248b58c2cb1ab66da4b50"
+    },
+    {
+      "path": "website-order-confirm.html",
+      "bytes": 20911,
+      "sha256": "3d1be1ebbb2966e6d2a76dc5e2ceb66655228018ce3f4b7db13f233569a74eab"
+    },
+    {
+      "path": "website-order.html",
+      "bytes": 36789,
+      "sha256": "5412ab0f4127989703171fb922304d7c6a08e7ae978198017a99ae7326c6e65e"
+    },
+    {
+      "path": "website-password.html",
+      "bytes": 6250,
+      "sha256": "af64e69639aac8849ffc9c982d80ea6e115739d487361bdc4844397d485613e9"
+    },
+    {
+      "path": "website-payment.html",
+      "bytes": 5871,
+      "sha256": "2fc1cba2fcf22aea1cd9c4f9dcd71745379f8700c95ec04e963a15cefa759004"
+    },
+    {
+      "path": "website-portal.html",
+      "bytes": 3646,
+      "sha256": "19975a618dbb73a9db8a03a9150a17b6990e44f88501a589c9fa58ea91b5d20d"
+    },
+    {
+      "path": "website-portal.js",
+      "bytes": 4009,
+      "sha256": "2866afb99430d9e7f14a404286212352db78149c64f58da9ad330f0dd01c37a8"
+    },
+    {
+      "path": "website-preview.html",
+      "bytes": 8671,
+      "sha256": "90b80231e79322c66cc12288aaa2303643044e65cb931776f95a966a2a41d7b6"
+    },
+    {
+      "path": "website-privacy.html",
+      "bytes": 5839,
+      "sha256": "02b91fe1a71d61bb72d48b98ed71716652a4d2df9fd2d122458047210b412b0c"
+    },
+    {
+      "path": "website-recover.html",
+      "bytes": 2177,
+      "sha256": "453ede7231a1b80aec15d581031803c1eb67a60ca1dea32f3a83dd47a4ad3979"
+    },
+    {
+      "path": "website-recover.js",
+      "bytes": 2548,
+      "sha256": "a8f78da9d44cecda9a3b43ee37ed1020d55a694de4a3da056f3d743e0e4444a5"
+    },
+    {
+      "path": "website-support.html",
+      "bytes": 27393,
+      "sha256": "7c26b07ae9e2a9bb3c731cf29c5f9416d17a8c6c72a348a54d45d97c354b4a6e"
+    },
+    {
+      "path": "website-template-preview.html",
+      "bytes": 14576,
+      "sha256": "e87bee28b173222867a05f11107d0dad2ee78fee130d3a379c4c99cb5c4f14da"
+    },
+    {
+      "path": "website-templates.html",
+      "bytes": 16359,
+      "sha256": "d465f69578e6c4c1e28abb9058bc208ce9a01f400206e5222f80bb3aa754e6a6"
+    },
+    {
+      "path": "website-terms.html",
+      "bytes": 9138,
+      "sha256": "3166e385c5ad844debde039c3fbb7b5bb9b62c10482e156a8878a4fae964d1e4"
+    },
+    {
+      "path": "website-theme.css",
+      "bytes": 5770,
+      "sha256": "7eea61a59c5b6f25b5f23143557361e960bec7b77ecc9945352ec75d27ca3da6"
+    },
+    {
+      "path": "website-track.js",
+      "bytes": 492,
+      "sha256": "7d561aa34a473f1fa49d9b6628018b863feca92a86be80c4c0ca5b9d58c1d93e"
+    },
+    {
+      "path": "website-update-demo.html",
+      "bytes": 18085,
+      "sha256": "2c3346074c6e248e5059e6eb872d7cd2c1a9de1b4d81318b8e4aa31d40aafc52"
+    },
+    {
+      "path": "website-update.html",
+      "bytes": 8974,
+      "sha256": "7a8bfcc1cc8af5b82f52787bf1ad85b64c9b0503d30409cb5ac42c16200edaaa"
+    }
+  ]
+}

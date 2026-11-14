@@ -59,7 +59,7 @@ jobs:
       WRANGLER_SEND_METRICS: 'false'
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      EXPECTED_SALES_PREVIEW_VERSION: 3a489aee-ffff-4160-8202-f773c3178dd7
+      EXPECTED_SALES_PREVIEW_VERSION: c964e1c0-333b-43f1-b077-a9b275165628
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -72,7 +72,7 @@ jobs:
       - run: node scripts/guard-sales-preview.mjs
       - name: Deploy isolated static sales preview
         run: node customer-hosting-v2/node_modules/wrangler/bin/wrangler.js deploy --config sales-hosting/wrangler.preview.json 2>&1 | tee test-results/sales-cloudflare/deploy.log
-      - name: Check exact assets, routing, private-file exclusion and unmodified API origin restrictions
+      - name: Check exact assets, routing, private-file exclusion and preserved API authentication
         run: node scripts/verify-sales-cloudflare.mjs test-results/sales-cloudflare/deploy.log
       - uses: actions/upload-artifact@v4
         if: always()
