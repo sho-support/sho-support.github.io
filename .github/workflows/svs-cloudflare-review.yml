@@ -1,0 +1,171 @@
+name: Publish isolated SHO VIDEO STUDIO preview
+on:
+  push:
+    branches: [system-sales/cloudflare-review]
+    paths:
+      - '.github/workflows/svs-cloudflare-review.yml'
+      - '.github/deploy-payloads/svs-web-review.json'
+permissions:
+  contents: read
+concurrency:
+  group: svs-cloudflare-preview
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: contains(github.event.head_commit.message, '[deploy-svs-preview]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: customer-hosting-preview
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Extract only the pinned public system-sales assets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,hashlib,io,json,stat,zipfile
+          payload=json.loads(Path('.github/deploy-payloads/svs-web-review.json').read_text())
+          assert payload['source_repository']=='sho-support/sho-video-studio-sales'
+          assert payload['source_commit']=='f77c36fee197c1f180d22dc407c9c8b53be299e8'
+          assert payload['worker']=='sho-video-studio-sales-preview'
+          assert payload['origin']=='https://sho-video-studio-sales-preview.zodiac-suu.workers.dev'
+          allowed={'index.html','portal.html','admin.html','reset.html','legal.html','privacy.html','terms.html','auth.js','reset.js','config.js','style.css','_headers','_redirects','assets/studio-screen.png'}
+          assert set(payload['file_manifest'])==allowed
+          archive=base64.b64decode(payload['archive_base64'],validate=True)
+          assert hashlib.sha256(archive).hexdigest()==payload['archive_sha256']
+          root=Path('svs-deploy/web');root.mkdir(parents=True)
+          with zipfile.ZipFile(io.BytesIO(archive)) as z:
+              assert len(z.infolist())==len(allowed) and set(z.namelist())==allowed
+              assert sum(x.file_size for x in z.infolist())<500000
+              for entry in z.infolist():
+                  assert not stat.S_ISLNK(entry.external_attr>>16)
+                  content=z.read(entry.filename);expected=payload['file_manifest'][entry.filename]
+                  assert len(content)==expected['bytes'] and hashlib.sha256(content).hexdigest()==expected['sha256']
+                  target=root/entry.filename;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(content)
+          assert 'AUTH_RELEASE_ENABLED = false' in (root/'config.js').read_text()
+          assert '購入準備中' in (root/'index.html').read_text()
+          config={'name':payload['worker'],'compatibility_date':'2026-11-14','workers_dev':True,'preview_urls':False,'assets':{'directory':'./web','html_handling':'none','not_found_handling':'none'}}
+          Path('svs-deploy/wrangler.json').write_text(json.dumps(config,indent=2)+'\n')
+          proof=Path('svs-proof');proof.mkdir()
+          proof.joinpath('package.json').write_text(json.dumps({k:v for k,v in payload.items() if k!='archive_base64'},indent=2)+'\n')
+          print('Verified 14 public web files against the pinned source manifest. No desktop code, SQL, documents or customer files included.')
+          PY
+      - name: Validate static-only Worker packaging without credentials
+        run: npx --yes wrangler@4.160.0 deploy --dry-run --config svs-deploy/wrangler.json --outdir svs-proof/dry-run
+      - name: Verify saved API credentials and refuse existing Worker overwrite
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node --input-type=module <<'JS'
+          const {CLOUDFLARE_API_TOKEN:token,CLOUDFLARE_ACCOUNT_ID:account}=process.env;
+          if(!token||!account)throw Error('Existing Cloudflare credentials unavailable in the deployment environment');
+          const base='https://api.cloudflare.com/client/v4/accounts/'+account+'/workers';
+          const opts={headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(30000)};
+          const response=await fetch(base+'/subdomain',opts);
+          if(!response.ok)throw Error('Cloudflare account check HTTP '+response.status);
+          const data=await response.json();
+          if(!data.success||data.result?.subdomain!=='zodiac-suu')throw Error('Unexpected Cloudflare account subdomain');
+          const existing=await fetch(base+'/scripts/sho-video-studio-sales-preview',{...opts,signal:AbortSignal.timeout(30000)});
+          if(existing.status!==404)throw Error('Reserved system-sales preview exists or cannot be checked; refusing overwrite. HTTP '+existing.status);
+          console.log('Existing API credentials connected; isolated system-sales Worker name available. No DNS, R2, other Workers or paid settings selected.');
+          JS
+      - name: Deploy the isolated static system-sales preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@4.160.0 deploy --config svs-deploy/wrangler.json
+      - name: Verify exact live bytes, security headers and private-file exclusion
+        run: |
+          node --input-type=module <<'JS'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const pkg=JSON.parse(readFileSync('svs-proof/package.json','utf8'));
+          const base='https://sho-video-studio-sales-preview.zodiac-suu.workers.dev';
+          const headersText=readFileSync('svs-deploy/web/_headers','utf8');
+          const broad=headersText.split('\n\n').find(x=>x.startsWith('/*\n'));
+          if(!broad)throw Error('Missing global headers');
+          const expectedHeaders=Object.fromEntries(broad.split('\n').slice(1).filter(Boolean).map(l=>{const i=l.indexOf(':');return[l.slice(0,i).trim().toLowerCase(),l.slice(i+1).trim()]}));
+          const results=[];
+          const check=(ok,name)=>{results.push({name,passed:Boolean(ok)});if(!ok)throw Error(name)};
+          for(const [name,meta] of Object.entries(pkg.file_manifest)){
+            if(name.startsWith('_'))continue;
+            const response=await fetch(base+'/'+name,{redirect:'error',signal:AbortSignal.timeout(30000)});
+            const content=Buffer.from(await response.arrayBuffer());
+            check(response.status===200,'200 '+name);
+            check(createHash('sha256').update(content).digest('hex')===meta.sha256,'Exact published bytes '+name);
+            for(const [key,value] of Object.entries(expectedHeaders))check(response.headers.get(key)===value,key+' '+name);
+            if(['admin.html','portal.html','reset.html','config.js'].includes(name))check(response.headers.get('cache-control')==='no-store','Private browser cache disabled '+name);
+          }
+          const home=await fetch(base+'/',{redirect:'error',signal:AbortSignal.timeout(30000)});
+          check(home.status===200,'Homepage root 200');
+          check(createHash('sha256').update(Buffer.from(await home.arrayBuffer())).digest('hex')===pkg.file_manifest['index.html'].sha256,'Homepage exact index bytes');
+          for(const [key,value] of Object.entries(expectedHeaders))check(home.headers.get(key)===value,'Homepage '+key);
+          for(const path of ['/desktop/app/app.py','/database/001_svs_core.sql','/docs/OWNER_COMPLETION.md','/package.json','/wrangler.jsonc','/_headers','/_redirects','/portal','/does-not-exist']){
+           const response=await fetch(base+path,{redirect:'manual',signal:AbortSignal.timeout(30000)});await response.arrayBuffer();
+           check(response.status===404,'Excluded or undefined path 404 '+path);
+          }
+          const record={origin:base,source_commit:pkg.source_commit,date_utc:new Date().toISOString(),status:'PASS',checks_passed:results.length,checks:results,login_enabled:false,purchase_enabled:false,real_supabase_auth_tested:false};
+          writeFileSync('svs-proof/http.json',JSON.stringify(record,null,2)+'\n');
+          console.log(JSON.stringify({origin:base,checks_passed:results.length,status:'PASS'}));
+          JS
+      - name: Install hosted browser verification tools
+        run: |
+          npm install --prefix /tmp/svs-hosted-qa --no-save --package-lock=false --ignore-scripts playwright@1.62.0
+          /tmp/svs-hosted-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify actual hosted PC and mobile pages with login and purchase disabled
+        env:
+          NODE_PATH: /tmp/svs-hosted-qa/node_modules
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          const fs=require('node:fs');
+          (async()=>{
+           const browser=await chromium.launch({headless:true});const reports=[];
+           const base='https://sho-video-studio-sales-preview.zodiac-suu.workers.dev';
+           const routes=['/','/portal.html','/admin.html','/reset.html','/legal.html','/privacy.html','/terms.html'];
+           for(const width of [1366,390,320]){
+            const page=await browser.newPage({viewport:{width,height:900}});
+            for(const route of routes){
+             const errors=[];const onError=e=>errors.push(e.message);page.on('pageerror',onError);
+             const response=await page.goto(base+route,{waitUntil:'networkidle',timeout:30000});
+             if(response.status()!==200)throw Error('Page status '+route+' '+width);
+             await page.locator('h1').waitFor({state:'visible'});
+             const state=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2,comparisonOverflow:(()=>{const t=document.querySelector('.compareTable');return t?t.scrollWidth>t.clientWidth+2:false})(),images:[...document.images].map(i=>i.complete&&i.naturalWidth>0)}));
+             if(state.overflow||state.comparisonOverflow||state.images.some(x=>!x)||errors.length)throw Error('Rendered page failed '+route+' '+width+' '+JSON.stringify({state,errors}));
+             if(route==='/'){
+              const buttons=page.getByRole('button',{name:'購入準備中'});
+              if(await buttons.count()!==2)throw Error('Purchase gates missing');
+              for(const button of await buttons.all())if(await button.isEnabled())throw Error('Purchase gate unexpectedly enabled');
+             }
+             if(['/portal.html','/admin.html'].includes(route)){
+              if(await page.locator('#auth-submit').isEnabled())throw Error('Authentication release gate unexpectedly enabled');
+              if(await page.locator('#dashboard').isVisible())throw Error('Dashboard unexpectedly visible');
+              if(!(await page.locator('#auth-message').innerText()).includes('公開前の最終検証中'))throw Error('Authentication script did not reach the expected gated state');
+             }
+             const screenshot=route==='/'?'sales-'+width+'.png':width===1366&&['/portal.html','/admin.html'].includes(route)?route.slice(1,-5)+'-'+width+'.png':null;
+             if(screenshot)await page.screenshot({path:'svs-proof/'+screenshot,fullPage:true});
+             reports.push({width,route,status:response.status(),...state,javascript_errors:errors,passed:true});page.off('pageerror',onError);
+            }
+            await page.close();
+           }
+           await browser.close();
+           fs.writeFileSync('svs-proof/browser.json',JSON.stringify({origin:base,backend_mocked:false,login_enabled:false,purchase_enabled:false,rendered_pages:reports.length,reports},null,2)+'\n');
+           console.log(JSON.stringify({status:'PASS',rendered_pages:reports.length,backend_mocked:false,login_enabled:false}));
+          })().catch(e=>{console.error(e.message);process.exitCode=1});
+          JS
+      - name: Save public preview evidence without credential values
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: svs-cloudflare-live-proof
+          path: |
+            svs-proof/package.json
+            svs-proof/http.json
+            svs-proof/browser.json
+            svs-proof/*.png
+          retention-days: 7
