@@ -1,5 +1,7 @@
 # 販売開始前の最終確認と引き継ぎ
 
+最新の再開先（2026-11-14）：`architecture/sales-cloudflare` ブランチと `docs/SALES_CLOUDFLARE_PREFLIGHT_20261114.md`。販売画面のCloudflare検証公開と本人設定API v2の接続を追加済み。Netlify有料化を必須として再開しない。実ログイン/本人情報保存、正式URL/業務API/Auth復旧経路、本番R2/実バックアップ/移行と販売フローの最終確認は未完了。以下は先行する検証結果として保持する。
+
 2026-11-13 JST。開発ブランチ `architecture/customer-hosting-v2`。本番サイトへの反映・正式顧客への販売開始は未完了。
 
 ## 今回の到達点

@@ -1,0 +1,317 @@
+{
+  "date_jst": "2026-11-14",
+  "status": "Cloudflare preview and protected owner settings connected; production cutover incomplete",
+  "decision": "Hold Netlify paid upgrade and validate Cloudflare for the sales frontend",
+  "branch": "architecture/sales-cloudflare",
+  "static_deployment": {
+    "origin": "https://sho-web-support-preview.zodiac-suu.workers.dev",
+    "source_commit": "3a46dae38a804ca5ada8041d6c3856ca6ea81f2a",
+    "version": "3a489aee-ffff-4160-8202-f773c3178dd7",
+    "files": 40,
+    "bytes": 537566,
+    "build_regression_checks": 24,
+    "checks_passed": 54,
+    "deployment_ci": "https://github.com/sho-support/sho-support.github.io/actions/runs/43562980229",
+    "worker_custom_code": false,
+    "storage_bindings": false,
+    "production_dns_routes": false,
+    "assets": [
+      {
+        "path": "admin/customers.html",
+        "bytes": 5627,
+        "sha256": "1b25b2d37d342b7c712e2fe59587a288ebca1fa0b3bf0ef4b6ebdd23a5608fe7"
+      },
+      {
+        "path": "admin/index.html",
+        "bytes": 39939,
+        "sha256": "c5d782ba067f96e9929233c46bd36b7ef72143952ef4c9fbff7696904229a809"
+      },
+      {
+        "path": "admin/orders.html",
+        "bytes": 34091,
+        "sha256": "6b2f83fc2464e32717d8efaf7899df5ec4ebf356d6b23036bd4ea34522c1fbf0"
+      },
+      {
+        "path": "admin/sales-settings.html",
+        "bytes": 8787,
+        "sha256": "a6e168d1b688b9a2ea4a3631683e62a1f6f3c262dc9bffc7c893a950f9649f75"
+      },
+      {
+        "path": "band-homepage.html",
+        "bytes": 19387,
+        "sha256": "ca314681743b66342741d75f5e796700b096dd808b67d9cc47f82d6822f61923"
+      },
+      {
+        "path": "index.html",
+        "bytes": 27393,
+        "sha256": "7c26b07ae9e2a9bb3c731cf29c5f9416d17a8c6c72a348a54d45d97c354b4a6e"
+      },
+      {
+        "path": "sho-support.html",
+        "bytes": 20366,
+        "sha256": "84910527bd9f30f005986ba5ff6d3127b51ded1cc857dadccef1685c5c3f8edc"
+      },
+      {
+        "path": "support.html",
+        "bytes": 19738,
+        "sha256": "911a08e9b489284064a99ef8b8cc7c94bc87e5709c25281df7dc3fb1f701a337"
+      },
+      {
+        "path": "website-client.js",
+        "bytes": 2234,
+        "sha256": "95f989b10786728460b0e7eabf8c66b66f3c6c65d37af80ab86111d974844ce4"
+      },
+      {
+        "path": "website-config.js",
+        "bytes": 162,
+        "sha256": "896045246ae2e27ab48469a646c6235d88cf67c6b35b3966a8e02157919e9732"
+      },
+      {
+        "path": "website-create.html",
+        "bytes": 14327,
+        "sha256": "8d6aa217f8decb024f3ad50e35fa8f4a6dacb2c6436dcef44b06acc7cb40c460"
+      },
+      {
+        "path": "website-customer-review.html",
+        "bytes": 16066,
+        "sha256": "317588c3649f525d7d3ab7e702dce9c2567f5998a762b8ba65b9cf7af0c0e188"
+      },
+      {
+        "path": "website-demo-semi-cyber.html",
+        "bytes": 12642,
+        "sha256": "2dca57854d85aecd00d1e96a44755de80499869652fcbe5114998a76e6c7ae78"
+      },
+      {
+        "path": "website-demo-semi-premium.html",
+        "bytes": 12641,
+        "sha256": "e03d6280757e226a390fa60792dd64cbf2ff0663c94888e24b808a34f485da4b"
+      },
+      {
+        "path": "website-demo-semi-rock.html",
+        "bytes": 12665,
+        "sha256": "57e81dda2c8ec8cca04dd155aeb3b89afc1bd812c28f6dd93b08dffa523a8ce9"
+      },
+      {
+        "path": "website-faq.html",
+        "bytes": 15737,
+        "sha256": "ab1b71ad2be44a2c8ca1df0c48a39777888c90097edca5334f058620ca0efe72"
+      },
+      {
+        "path": "website-hosting-offer.js",
+        "bytes": 259,
+        "sha256": "717b2e11f5ff2ebdcf84a8fc7768be89b781aec5b76d9753ecca39516b4a7f8d"
+      },
+      {
+        "path": "website-intake.html",
+        "bytes": 63020,
+        "sha256": "8e4b6c886b713ae2d957ef5d9d73670d92189140977a0657e3c62fcd41308345"
+      },
+      {
+        "path": "website-legal.html",
+        "bytes": 7545,
+        "sha256": "2c4d7972c0c41f0d0ab31cf369b84818053fdaf46f272ffbac5f5c28eb00c89f"
+      },
+      {
+        "path": "website-login.html",
+        "bytes": 2635,
+        "sha256": "1bdd2f3b02b9e49fccab0f13874245151bcc764bfc20229218e33fca7cae2c35"
+      },
+      {
+        "path": "website-login.js",
+        "bytes": 3505,
+        "sha256": "49c97e8afd4c57c480dc2a7095751f24a35fc1e66226b5193c778cf6ad69b247"
+      },
+      {
+        "path": "website-materials.js",
+        "bytes": 1568,
+        "sha256": "26f747dd713b549cb58b1d16f3a37fc1b04b7afb1ac248b58c2cb1ab66da4b50"
+      },
+      {
+        "path": "website-order-confirm.html",
+        "bytes": 20911,
+        "sha256": "3d1be1ebbb2966e6d2a76dc5e2ceb66655228018ce3f4b7db13f233569a74eab"
+      },
+      {
+        "path": "website-order.html",
+        "bytes": 36789,
+        "sha256": "5412ab0f4127989703171fb922304d7c6a08e7ae978198017a99ae7326c6e65e"
+      },
+      {
+        "path": "website-password.html",
+        "bytes": 6250,
+        "sha256": "af64e69639aac8849ffc9c982d80ea6e115739d487361bdc4844397d485613e9"
+      },
+      {
+        "path": "website-payment.html",
+        "bytes": 5871,
+        "sha256": "2fc1cba2fcf22aea1cd9c4f9dcd71745379f8700c95ec04e963a15cefa759004"
+      },
+      {
+        "path": "website-portal.html",
+        "bytes": 3646,
+        "sha256": "19975a618dbb73a9db8a03a9150a17b6990e44f88501a589c9fa58ea91b5d20d"
+      },
+      {
+        "path": "website-portal.js",
+        "bytes": 4009,
+        "sha256": "2866afb99430d9e7f14a404286212352db78149c64f58da9ad330f0dd01c37a8"
+      },
+      {
+        "path": "website-preview.html",
+        "bytes": 8671,
+        "sha256": "90b80231e79322c66cc12288aaa2303643044e65cb931776f95a966a2a41d7b6"
+      },
+      {
+        "path": "website-privacy.html",
+        "bytes": 5839,
+        "sha256": "02b91fe1a71d61bb72d48b98ed71716652a4d2df9fd2d122458047210b412b0c"
+      },
+      {
+        "path": "website-recover.html",
+        "bytes": 2177,
+        "sha256": "453ede7231a1b80aec15d581031803c1eb67a60ca1dea32f3a83dd47a4ad3979"
+      },
+      {
+        "path": "website-recover.js",
+        "bytes": 2282,
+        "sha256": "a940c1fd7fff2db05a7a368dc2a1f56d40a59a671bd2012cfc251fed617c6939"
+      },
+      {
+        "path": "website-support.html",
+        "bytes": 27393,
+        "sha256": "7c26b07ae9e2a9bb3c731cf29c5f9416d17a8c6c72a348a54d45d97c354b4a6e"
+      },
+      {
+        "path": "website-template-preview.html",
+        "bytes": 14576,
+        "sha256": "e87bee28b173222867a05f11107d0dad2ee78fee130d3a379c4c99cb5c4f14da"
+      },
+      {
+        "path": "website-templates.html",
+        "bytes": 16359,
+        "sha256": "d465f69578e6c4c1e28abb9058bc208ce9a01f400206e5222f80bb3aa754e6a6"
+      },
+      {
+        "path": "website-terms.html",
+        "bytes": 9138,
+        "sha256": "3166e385c5ad844debde039c3fbb7b5bb9b62c10482e156a8878a4fae964d1e4"
+      },
+      {
+        "path": "website-theme.css",
+        "bytes": 5770,
+        "sha256": "7eea61a59c5b6f25b5f23143557361e960bec7b77ecc9945352ec75d27ca3da6"
+      },
+      {
+        "path": "website-track.js",
+        "bytes": 492,
+        "sha256": "7d561aa34a473f1fa49d9b6628018b863feca92a86be80c4c0ca5b9d58c1d93e"
+      },
+      {
+        "path": "website-update-demo.html",
+        "bytes": 18085,
+        "sha256": "2c3346074c6e248e5059e6eb872d7cd2c1a9de1b4d81318b8e4aa31d40aafc52"
+      },
+      {
+        "path": "website-update.html",
+        "bytes": 8974,
+        "sha256": "7a8bfcc1cc8af5b82f52787bf1ad85b64c9b0503d30409cb5ac42c16200edaaa"
+      }
+    ]
+  },
+  "final_verification": {
+    "commit": "f9aaf2e6336079262bbbd296e7a4985cbd8282a0",
+    "ci": "https://github.com/sho-support/sho-support.github.io/actions/runs/43564662015",
+    "result": "success",
+    "job_summary": {
+      "origin": "https://sho-web-support-preview.zodiac-suu.workers.dev",
+      "static_checks_passed": 54,
+      "production_business_apis_still_blocked": 3,
+      "protected_settings_connected": 1,
+      "production_cutover": false
+    },
+    "job_summary_timestamp": "2026-11-14T06:06:33.8564639Z",
+    "reused_deployment": true,
+    "credentials_used": false
+  },
+  "protected_settings_api": {
+    "version": 2,
+    "sha256": "60fcbcf665c2d20c75a234f2f8f02d616c92c887fcea23470b5e2bea53d5ad65",
+    "verify_jwt": false,
+    "in_function_user_and_current_administrator_checks_preserved": true,
+    "changed_files": 1,
+    "change": "add exact verified Cloudflare preview origin",
+    "dependencies_changed": 0,
+    "anonymous_get_status": 401,
+    "unrelated_origin_status": 403,
+    "old_netlify_preflight_status": 200,
+    "read_or_save_by_actual_administrator_tested": false
+  },
+  "browser": {
+    "verified_origin": "https://sho-web-support-preview.zodiac-suu.workers.dev/",
+    "viewport_width": 1363,
+    "document_width": 1348,
+    "horizontal_overflow": false,
+    "band_example_iframe": "https://sho-support.github.io/index.html",
+    "band_example_rendered": true,
+    "annual_hosting_offer_displayed": true,
+    "anonymous_settings_redirect_to_admin_login": true,
+    "owner_sign_in_tested": false,
+    "real_order_submission_tested": false,
+    "mobile_on_cloudflare_tested": false,
+    "screenshot": "docs/qa/sales-cloudflare-preview-20261114.jpg",
+    "screenshot_sha256": "d190e32ffc2fb4898440f4d28055e9bf895b842a3ba8c5f07c2432fa877c04c0",
+    "screenshot_bytes": 107069
+  },
+  "prior_failed_checks": [
+    {
+      "ci": "https://github.com/sho-support/sho-support.github.io/actions/runs/43562183566",
+      "reason": "incorrect assumption that a 403 error response cannot carry a wildcard CORS header",
+      "deployment_succeeded": true,
+      "overall_passed": false
+    },
+    {
+      "ci": "https://github.com/sho-support/sho-support.github.io/actions/runs/43563918506",
+      "reason": "recovery endpoint returns valid OPTIONS 204 rather than 200",
+      "overall_passed": false
+    }
+  ],
+  "corrected_four_origin_baseline": {
+    "ci": "https://github.com/sho-support/sho-support.github.io/actions/runs/43564267619",
+    "result": "success"
+  },
+  "production": {
+    "main_commit_observed": "b24971dc4e7956a9bbfa68d5607189c3beaebb4b",
+    "netlify_release_branch_observed": "9c7f4dab3fa312d455968325ae1d951a8b5e3bfe",
+    "existing_netlify_site_modified": false,
+    "dns_modified": false,
+    "orders": 0,
+    "customer_sites": 0,
+    "customer_messages_or_payments_created": 0,
+    "paid_ai_used": false,
+    "paid_plan_changed": false,
+    "domain_purchased": false,
+    "full_production_backup_complete": false,
+    "unchanged_function_versions": {
+      "website-api": 50,
+      "website-worker": 46,
+      "website-order-api": 16,
+      "website-customer-access": 53,
+      "website-preview": 13,
+      "website-resource-qa": 16
+    }
+  },
+  "remaining": [
+    "actual administrator sign-in and real owner settings input",
+    "formal sales and customer domain choice/registration",
+    "exact-origin API and Auth recovery/invitation configuration",
+    "replace fixed Netlify notification/preview/update links",
+    "production R2, backup/restore, compatible migrations/functions",
+    "full three-plan transaction flow and real-device checks"
+  ],
+  "system_sales_migrated": false,
+  "sources": [
+    "https://developers.cloudflare.com/workers/static-assets/",
+    "https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/",
+    "https://www.cloudflare.com/service-specific-terms-developer-platform/"
+  ]
+}

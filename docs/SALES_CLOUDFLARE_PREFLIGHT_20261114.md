@@ -37,7 +37,7 @@ Developer Platformの条件ではコンテンツのホスティング、利用�
 1. 実配備のURLとHTTPS試験結果を記録し、PC/スマホ幅で表示を確認する。静的表示成功だけで販売可能とは扱わない。
 2. 正式な販売用URLを確定する。既存 `sho-support.com` のDNS・メール・バンドは変更しない。購入が必要なら名称・初年度/更新総額・名義を実見積りで確認する。
 3. 現在のAPIはNetlify/GitHubのOriginを許可している。検証先からのOPTIONSは403、またはHTTP200でも許可Originが旧URLのままでブラウザは接続できない。さらに、未対応の無処理アクションによるPOSTもサーバーが403にすることを確認する。全ドメイン許可や旧Originへの偽装プロキシで回避しない。正式URLが決まったら、その1件だけを対象にAPI許可先とAuthの戻り先を準備する。
-4. 実ユーザーのログイン・復旧メール・管理者権限、見積り/注文/素材/顧客確認、本人設定の保存を検証する。設定APIは現在v1で、今回本番関数は配備しない。
+4. 実ユーザーのログイン・復旧メール・管理者権限、見積り/注文/素材/顧客確認、本人設定の保存を検証する。後記のとおり設定APIだけをv2へ更新し、検証済みCloudflareオリジンを1件追加した。その他の本番関数は配備していない。
 5. 料金9画面、契約保存、実バックアップ、本番R2/独自ドメイン、追加migration等の既存残件を完了する。実通知・有料AI・決済を勝手に起こさない。
 6. 旧URLのリンク・通知・再送/復旧経路を照合し、戻せる状態で切り替える。その後にNetlifyの残し方を判断する。Cloudflareへ画面を置くだけで顧客URLやコード権利の引継ぎが完成するとは扱わない。
 
@@ -58,3 +58,18 @@ Developer Platformの条件ではコンテンツのホスティング、利用�
 実ブラウザでは幅1363pxで横はみ出しなし。修正後の実例枠がGuns N' Loses公式サイトを表示し、トップと申込画面の年6,000円/初年度込み/自動課金なしを確認。匿名で設定画面を開くと同じCloudflareオリジンの運営者ログインへ誘導された。ログイン実行・設定保存・実注文送信は未実施。今回のCloudflare公開先でのスマホ幅の実画面確認は未実施。
 
 追加の読み取りで `website-password-recovery` v5にもNetlify固定のOriginと復旧後URLがあることを確認した。これも正式URL確定後の変更対象。再配備不要の確認対象へ追加する。本番の既存API/worker/customer-access/preview/order-api/resource-qa/設定APIの版は変わらず、実DBの注文0・顧客サイト0も確認した。
+
+4件目の復旧APIはOPTIONSが204となる。HTTP200だけを想定した再試験 https://github.com/sho-support/sho-support.github.io/actions/runs/43563918506 は停止したため合格と扱わない。200/204の正常なpreflightと許可Originの不一致、無処理POSTの拒否を区別するよう修正し、https://github.com/sho-support/sho-support.github.io/actions/runs/43564267619 で54項目とAPI4件の未接続確認がすべて成功した。追加配備は行っていない。
+
+## 本人設定画面の接続だけを追加
+
+Netlifyの公開待ちで本人入力が止まらないよう、検証用Cloudflareオリジンを `website-sales-setup` の許可先に1件だけ追加した。既存v1の実配備ファイル15個を取得し、entrypointの許可先1行だけを変更。他14ファイル・getUser・現在の管理者照合・操作3種類の制限はそのまま。JWT検証設定も従来どおりで、関数内の実ユーザー認証と管理者権限が必要。
+
+- ソース：`f9aaf2e6336079262bbbd296e7a4985cbd8282a0`。
+- 配備済み設定API：v2、SHA256 `60fcbcf665c2d20c75a234f2f8f02d616c92c887fcea23470b5e2bea53d5ad65`。
+- CI https://github.com/sho-support/sho-support.github.io/actions/runs/43564662015 は成功。静的54項目、注文/顧客/復旧API3件の接続拒否と、設定APIのCloudflare接続・匿名読取401・無関係Origin403・旧Netlify接続維持を確認した。
+- この確認は認証情報を使わず、再配備も行わない。本人のログイン・実情報保存は未実施であり、本人入力が必要。新しい顧客見積りや公開を有効化しない。
+- 設定入力先：https://sho-web-support-preview.zodiac-suu.workers.dev/admin/sales-settings.html 。匿名時は同じCloudflareサイトの運営者ログインへ移動する。
+- 注文/顧客/復旧APIの接続、通知リンク、Authの復旧メールの戻り先、正式ドメイン/本番R2/実バックアップ等は残件。システム販売側は別管理のまま未移行。
+
+機械可読な証跡は `docs/qa/sales-cloudflare-preview-20261114.json`。実画面は同名の `.jpg`。今回のホスティング確認をもって販売開始完了とは扱わない。
