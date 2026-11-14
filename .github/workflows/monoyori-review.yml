@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 245f601624833cad6a351323088968f9ff35440c
+          ref: 4bb14c43a98d861cafc959f59716ffbde98422fa
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -73,6 +73,55 @@ jobs:
           Path('wrangler.monoyori.json').write_text(json.dumps(config))
           print('Review built: analytics off, ad navigation blocked, indexing off.')
           PY
+      - name: Install isolated rendering tools
+        run: |
+          npm install --prefix /tmp/monoyori-qa --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          /tmp/monoyori-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Check every category text block before deployment
+        env:
+          NODE_PATH: /tmp/monoyori-qa/node_modules
+        run: |
+          mkdir -p review-proof
+          node <<'JS'
+          const {chromium}=require('playwright');
+          const {spawn}=require('child_process');
+          const fs=require('fs');
+          (async()=>{
+            const server=spawn('python3',['-m','http.server','8765','--bind','127.0.0.1'],{cwd:'dist',stdio:'ignore'});
+            let browser;
+            try{
+              for(let i=0;i<30;i++){try{if((await fetch('http://127.0.0.1:8765/products/')).ok)break;}catch(_){}await new Promise(r=>setTimeout(r,100));}
+              browser=await chromium.launch({headless:true});
+              const results=[];
+              for(const width of [1920,1440,1024,768,600,390,320]){
+                const page=await browser.newPage({viewport:{width,height:1000}});
+                await page.goto('http://127.0.0.1:8765/products/');
+                await page.waitForLoadState('networkidle');
+                const result=await page.evaluate(()=>{
+                  const cards=[...document.querySelectorAll('#category-grid .category-card')];
+                  const issues=[];
+                  for(const card of cards){
+                    const title=card.querySelector('h2'),desc=card.querySelector('.category-context'),copy=card.querySelector('.category-copy');
+                    if(!title||!desc||!copy){issues.push('missing text block');continue;}
+                    const t=title.getBoundingClientRect(),d=desc.getBoundingClientRect(),c=copy.getBoundingClientRect();
+                    if(d.top<t.bottom+3)issues.push(title.textContent+': text overlap');
+                    if(t.top<c.top||d.bottom>c.bottom+1)issues.push(title.textContent+': text outside copy block');
+                  }
+                  const rows=new Map();
+                  for(const card of cards){const r=card.getBoundingClientRect();const k=Math.round(r.top);if(!rows.has(k))rows.set(k,[]);rows.get(k).push(r.height);}
+                  for(const heights of rows.values())if(Math.max(...heights)-Math.min(...heights)>1)issues.push('uneven row heights');
+                  if(document.documentElement.scrollWidth>innerWidth)issues.push('horizontal overflow');
+                  return {count:cards.length,issues};
+                });
+                if(result.count!==18||result.issues.length)throw Error(JSON.stringify({width,...result}));
+                results.push({width,...result});
+                if([1440,390,320].includes(width))await page.screenshot({path:'review-proof/category-layout-'+width+'.png',fullPage:true});
+                await page.close();
+              }
+              fs.writeFileSync('review-proof/category-layout.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results));
+            }finally{if(browser)await browser.close();server.kill();}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
       - name: Deploy static assets to the isolated review Worker
         run: npx --yes wrangler@4.160.0 deploy --config wrangler.monoyori.json
       - name: Verify public pages and record the actual response
@@ -91,10 +140,6 @@ jobs:
           Path('review-proof.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))
           print(json.dumps(results,ensure_ascii=False))
           PY
-      - name: Install isolated rendering tools
-        run: |
-          npm install --prefix /tmp/monoyori-qa --no-save --package-lock=false --ignore-scripts playwright@1.56.1
-          /tmp/monoyori-qa/node_modules/.bin/playwright install --with-deps chromium
       - name: Inspect rendered photos, ratings and mobile overflow
         env:
           NODE_PATH: /tmp/monoyori-qa/node_modules
