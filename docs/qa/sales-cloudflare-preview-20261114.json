@@ -255,12 +255,17 @@
     "band_example_rendered": true,
     "annual_hosting_offer_displayed": true,
     "anonymous_settings_redirect_to_admin_login": true,
-    "owner_sign_in_tested": false,
+    "owner_sign_in_tested": true,
     "real_order_submission_tested": false,
     "mobile_on_cloudflare_tested": false,
     "screenshot": "docs/qa/sales-cloudflare-preview-20261114.jpg",
     "screenshot_sha256": "d190e32ffc2fb4898440f4d28055e9bf895b842a3ba8c5f07c2432fa877c04c0",
-    "screenshot_bytes": 107069
+    "screenshot_bytes": 107069,
+    "owner_sign_in_succeeded": false,
+    "owner_sign_in_error_code": "invalid_credentials",
+    "password_or_token_values_read": false,
+    "automatic_authentication_retries": 0,
+    "owner_application_login_required_to_verify_ui": true
   },
   "prior_failed_checks": [
     {
@@ -313,5 +318,8 @@
     "https://developers.cloudflare.com/workers/static-assets/",
     "https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/",
     "https://www.cloudflare.com/service-specific-terms-developer-platform/"
-  ]
+  ],
+  "cloudflare_deployed_using_saved_api_token": true,
+  "cloudflare_browser_login_required_for_verified_deployment": false,
+  "owner_app_login_is_separate_from_cloudflare": true
 }
