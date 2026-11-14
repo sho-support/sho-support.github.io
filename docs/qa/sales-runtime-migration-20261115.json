@@ -113,7 +113,7 @@
     "cutover_complete": false
   },
   "new_frontend_legacy_mutations_enabled": false,
-  "auth_redirect_allowlist_verified": false,
+  "auth_redirect_allowlist_verified": true,
   "owner_app_login_verified": false,
   "full_production_backup_complete": false,
   "browser": {
@@ -126,7 +126,7 @@
     "mobile_live_verified_this_turn": false
   },
   "remaining": [
-    "Supabase dashboard authentication and exact recovery callback configuration",
+    "confirm and save the prepared exact-host Auth recovery callback, then verify the environment flag and actual owner recovery",
     "actual owner application sign-in and seller/bank input",
     "formal controlled domain and production R2",
     "real encrypted off-provider backup and restoration",
@@ -334,5 +334,9 @@
       "bytes": 8974,
       "sha256": "7a8bfcc1cc8af5b82f52787bf1ad85b64c9b0503d30409cb5ac42c16200edaaa"
     }
-  ]
+  ],
+  "supabase_dashboard_authenticated": true,
+  "cloudflare_auth_redirect_registered": false,
+  "auth_redirect_save_pending_confirmation": true,
+  "auth_redirect_draft": "https://sho-web-support-preview.zodiac-suu.workers.dev/website-password.html**"
 }

@@ -35,7 +35,7 @@ CI https://github.com/sho-support/sho-support.github.io/actions/runs/43629541197
 
 ## 本人確認が必要な具体的な箇所
 
-SupabaseコネクタにはAuth URL設定の読取/更新機能がないため、管理画面を開いたが、Supabase自身へのサインイン画面になった。設定変更、ログイン試行、メール送信はしていない。Cloudflareのブラウザログインとは別件であり、Cloudflareの再認証やAPI再作成は求めない。
+SupabaseコネクタにはAuth URL設定の読取/更新機能がないため管理画面を開き、本人が安全な認証画面でGitHubを選択してログインに成功した。HP販売プロジェクトのURL Configurationを実見し、SITE_URLは旧Netlify、既存Redirect URLsはGitHubとNetlifyの2件で、Cloudflareは未登録と確認した。Cloudflareのパスワード設定ページだけを許可する `https://sho-web-support-preview.zodiac-suu.workers.dev/website-password.html**` の追加欄を準備済み。認証の許可先を追加する保存操作は確認待ちで、まだ保存していない。既存2件/SITE_URL、復旧有効化フラグ、メール送信は未変更。Cloudflareのブラウザ再認証やAPI再作成は求めない。
 
 認証後の設定先は、HP販売プロジェクトの Authentication → URL Configuration。
 
