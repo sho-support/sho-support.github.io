@@ -34,6 +34,7 @@ const stub=`
    check(await input.getAttribute('type')==='password','Password initially masked');
    check(await input.getAttribute('minlength')==='8','Eight-character minimum');
    check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),'No horizontal overflow '+name+' '+width);
+   check(await page.locator('h1').evaluate(h=>{const range=document.createRange();range.selectNodeContents(h);return range.getClientRects().length===1;}),'Heading never leaves a single-character second line '+name+' '+width);
    const geometry=await eye.evaluate(button=>{const b=button.getBoundingClientRect(),svg=button.querySelector('svg').getBoundingClientRect(),field=button.parentElement.getBoundingClientRect();return {hit:b.width,height:b.height,icon:svg.width,iconHeight:svg.height,inside:b.left>=field.left&&b.right<=field.right+1};});
    check(geometry.icon<=18&&geometry.iconHeight<=18,'Eye stays compact');
    check(geometry.hit>=44&&geometry.height>=44&&geometry.inside,'Touch target stays usable inside the field');

@@ -9,5 +9,5 @@ try{
     ...await prepareProductionR2({token:process.env.CLOUDFLARE_API_TOKEN,accountId:process.env.CLOUDFLARE_ACCOUNT_ID,createIfAbsent:true})};
   await mkdir(new URL('../test-results/',import.meta.url),{recursive:true});await writeFile(out,JSON.stringify(proof,null,2)+'\n');
   console.log(JSON.stringify(proof));
-  if(!proof.ready&&proof.status!=='permission_blocked')process.exitCode=1;
+  if(!proof.ready)process.exitCode=1;
 }catch(error){console.error(JSON.stringify({ready:false,status:'not_verified',code:error?.code||'PRODUCTION_R2_PREPARATION_FAILED'}));process.exitCode=1;}
