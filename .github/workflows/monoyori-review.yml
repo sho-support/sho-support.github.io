@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 4bb14c43a98d861cafc959f59716ffbde98422fa
+          ref: 4f4c89b701da400bbd86e680e9cb0bb678644e54
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -116,6 +116,27 @@ jobs:
                 if(result.count!==18||result.issues.length)throw Error(JSON.stringify({width,...result}));
                 results.push({width,...result});
                 if([1440,390,320].includes(width))await page.screenshot({path:'review-proof/category-layout-'+width+'.png',fullPage:true});
+                await page.close();
+              }
+
+              for(const width of [1440,390,320]){
+                const page=await browser.newPage({viewport:{width,height:1000}});
+                await page.goto('http://127.0.0.1:8765/products/dumbbells.html');
+                await page.waitForLoadState('networkidle');
+                const check=await page.evaluate(()=>{
+                  const cards=[...document.querySelectorAll('#catalog-grid .product-card')];
+                  const issues=[];
+                  for(const card of cards){
+                    if(!card.querySelector('.review-summary,.review-count-only,.review-unverified'))issues.push('missing review state');
+                    const ps=[...card.querySelectorAll('.review-highlights p')];
+                    if(ps.length===2&&ps[1].getBoundingClientRect().top<ps[0].getBoundingClientRect().bottom)issues.push('overlapping reviews');
+                  }
+                  if(document.documentElement.scrollWidth>innerWidth)issues.push('overflow');
+                  return {cards:cards.length,ratings:document.querySelectorAll('#catalog-grid .review-summary').length,highlights:document.querySelectorAll('#catalog-grid .review-highlights').length,issues};
+                });
+                await page.screenshot({path:'review-proof/dumbbell-reviews-'+width+'.png',fullPage:true});
+                if(check.ratings<3||check.highlights<3||check.issues.length)throw Error(JSON.stringify({width,...check}));
+                results.push({page:'dumbbells',width,...check});
                 await page.close();
               }
               fs.writeFileSync('review-proof/category-layout.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results));
