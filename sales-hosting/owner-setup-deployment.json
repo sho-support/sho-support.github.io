@@ -1,0 +1,15 @@
+{
+  "project_id": "tyhymvgjkoebetyypspj",
+  "function": "website-sales-setup",
+  "version": 3,
+  "verify_jwt": false,
+  "bundle_sha256": "edfe3055fa3b92cca18d263113704190a9e0d59fe0587cd5947ca4aecc15054b",
+  "source_commit": "5be610022d37aa1b3424d70b274a00f442162687",
+  "all_deployed_files_match": true,
+  "administrator_authentication_preserved": true,
+  "test_bank_key": "bank_transfer_test",
+  "production_bank_key": "bank_transfer",
+  "test_bank_promoted_to_production": false,
+  "seller_or_contract_approved": false,
+  "production_cutover": false
+}
