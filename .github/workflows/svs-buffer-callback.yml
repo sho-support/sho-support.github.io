@@ -32,7 +32,7 @@ jobs:
           delta=json.loads(Path('.github/deploy-payloads/svs-buffer-callback.json').read_text())
           assert old['source_repository']==delta['source_repository']=='sho-support/sho-video-studio-sales'
           assert old['source_commit']=='f77c36fee197c1f180d22dc407c9c8b53be299e8'
-          assert delta['source_commit']=='4fcbe7a94ac8fcf5df6b60a225e70b62978a38e6'
+          assert delta['source_commit']=='6eac512e20cc21af0a77a2f45ddca8800c532f11'
           assert delta['expected_original_version']=='a953dee9-2fb7-467b-a04f-33e7b692af69'
           assert old['archive_sha256']==delta['original_archive_sha256']=='2b04f522d7bfd245ff59046c57954230de7017537b12a431c4fc63e9934a00e6'
           allowed={'index.html','portal.html','admin.html','reset.html','legal.html','privacy.html','terms.html','auth.js','reset.js','config.js','style.css','_headers','_redirects','assets/studio-screen.png'}
