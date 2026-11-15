@@ -15,9 +15,15 @@ test('actual sales setup HTTP endpoints protect private details and never send o
  const draft=await send({action:'admin_save_sales_settings',enable:false,seller:{legal_name:'下書きのみ'}});assert.equal(draft.status,200);assert.equal(draft.body.enabled,false);
  assert.equal((await send({action:'admin_commercial_policy_status'})).body.ready,false);
  const payload={action:'admin_save_sales_settings',enable:true,seller:{legal_name:'単体試験事業者',address:'検証県検証市検証区1-2-3',phone:'000-1234-5678',contact:'qa@example.test'},bank_message:'単体試験銀行／支店／普通1234567／試験名義',backup_reference:'単体試験のみ・復元確認記録20261113',confirm_terms:true,confirm_disclosure:true,confirm_backup:true};
+ const fake='【テスト専用・振込禁止】テスト銀行 テスト支店 普通0000000 テスト用';
+ const trial=await send({...payload,enable:false,bank_message:fake,bank_is_test:false});assert.equal(trial.status,200);assert.equal(trial.body.bank_is_test,true);
+ const trialRead=await send({action:'admin_get_sales_settings'});assert.equal(trialRead.body.bank_is_test,true);assert.equal(trialRead.body.bank_message,fake);
+ assert.equal((await db.query("select value->>'message' as message from public.website_settings where key='bank_transfer'")).rows[0].message,'');
+ assert.notEqual((await send({...payload,bank_message:fake,bank_is_test:false})).status,200);
  assert.notEqual((await send({...payload,confirm_backup:false})).status,200);
  const saved=await send(payload);assert.equal(saved.status,200,JSON.stringify(saved));assert.equal(saved.body.enabled,true);
  const read=await send({action:'admin_get_sales_settings'});assert.equal(read.body.seller.address,payload.seller.address);assert.equal(read.body.policy.approved_by,actor);assert.equal(read.body.policy.hosting.renewal_fee_jpy,6000);
+ assert.equal(read.body.bank_is_test,false);assert.equal(read.body.bank_message,payload.bank_message);
  const status=await send({action:'admin_commercial_policy_status'});assert.equal(status.body.ready,false);assert.equal(status.body.policy_ready,true);assert.match(status.body.reason,/本番切り替え/);
  const configured={WEBSITE_CUSTOMER_HOSTING:'cloudflare-r2',CUSTOMER_BASE_DOMAIN:'fixture.invalid',CUSTOMER_HOSTING_DOMAIN_READY:'fixture.invalid',CUSTOMER_R2_ACCOUNT_ID:'fixture',CUSTOMER_R2_BUCKET:'fixture',CUSTOMER_R2_ACCESS_KEY_ID:'fixture',CUSTOMER_R2_SECRET_ACCESS_KEY:'fixture'};
  for(const [env,expected,reason] of [[{WEBSITE_CUSTOMER_HOSTING:'cloudflare-r2'},false,/正式URL/],[{...configured,CUSTOMER_R2_SECRET_ACCESS_KEY:''},false,/R2/],[configured,true,null]]){

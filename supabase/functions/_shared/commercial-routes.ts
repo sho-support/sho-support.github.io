@@ -2,6 +2,7 @@ import {makeCommercialQuote,quoteRequest,sameQuoteRequest,validateCommercialPoli
 import {hostingHash,hostingRpc,reserveHostingUrl} from './hosting-service.ts';
 import {DEFAULT_TERMS,makeSalesSettings} from './commercial-setup.mjs';
 import {HOSTING_OFFER} from './hosting-offer.mjs';
+import {bankForSettings,isTestBankMessage} from './bank-transfer.mjs';
 const read=async(admin:any,table:string,key:string,value:string)=>{const r=await admin.from(table).select('*').eq(key,value).maybeSingle();if(r.error)throw r.error;return r.data;};
 // Called only AFTER the shared handler has authenticated a current administrator.
 export async function handleCommercialAction({body,admin,user,dependencies:d}:any):Promise<Response|null>{
@@ -9,18 +10,18 @@ export async function handleCommercialAction({body,admin,user,dependencies:d}:an
  if(!['admin_commercial_policy_status','admin_get_sales_settings','admin_save_sales_settings','admin_send_final_quote','admin_record_contract_acceptance','admin_contract_detail'].includes(action))return null;
  try{
   if(action==='admin_get_sales_settings'){
-   const [p,b,s,k]=await Promise.all([read(admin,'website_settings','key','commercial_policy'),read(admin,'website_settings','key','bank_transfer'),read(admin,'website_settings','key','sales_identity'),read(admin,'website_settings','key','sales_backup_attestation')]);
-   return d.json({ok:true,seller:s?.value||{},bank_message:b?.value?.message||'',backup:k?.value||{},policy:p?.value||null,default_terms:DEFAULT_TERMS,offer:HOSTING_OFFER});
+   const [p,b,s,k,t]=await Promise.all([read(admin,'website_settings','key','commercial_policy'),read(admin,'website_settings','key','bank_transfer'),read(admin,'website_settings','key','sales_identity'),read(admin,'website_settings','key','sales_backup_attestation'),read(admin,'website_settings','key','bank_transfer_test')]);
+   return d.json({ok:true,seller:s?.value||{},...bankForSettings(b?.value,t?.value),backup:k?.value||{},policy:p?.value||null,default_terms:DEFAULT_TERMS,offer:HOSTING_OFFER});
   }
   if(action==='admin_save_sales_settings'){
    const settings=makeSalesSettings(body,user.id);
    if(settings.policy.enabled)validateCommercialPolicy(settings.policy);
    const {error}=await admin.from('website_settings').upsert([
-    {key:'sales_identity',value:settings.seller},{key:'bank_transfer',value:{message:settings.bank}},
+    {key:'sales_identity',value:settings.seller},{key:settings.bank_is_test?'bank_transfer_test':'bank_transfer',value:{message:settings.bank,...(settings.bank_is_test?{is_test:true,order_codes:[]}:{})}},
     {key:'sales_backup_attestation',value:settings.backup},{key:'commercial_policy',value:settings.policy}
    ].map(x=>({...x,updated_at:new Date().toISOString()})),{onConflict:'key'});
    if(error)return d.json({error:'設定を保存できませんでした。時間を置いて再試行してください。'},503);
-   return d.json({ok:true,enabled:settings.policy.enabled,version:settings.policy.version});
+   return d.json({ok:true,enabled:settings.policy.enabled,bank_is_test:settings.bank_is_test,version:settings.policy.version});
   }
   if(action==='admin_commercial_policy_status'){
    const setting=await read(admin,'website_settings','key','commercial_policy');
@@ -34,6 +35,7 @@ export async function handleCommercialAction({body,admin,user,dependencies:d}:an
      if(!domain||Deno.env.get('CUSTOMER_HOSTING_DOMAIN_READY')!==domain)reason='正式URLの所有・DNS・HTTPS確認が未完了です。';
      else if(!['CUSTOMER_R2_ACCOUNT_ID','CUSTOMER_R2_BUCKET','CUSTOMER_R2_ACCESS_KEY_ID','CUSTOMER_R2_SECRET_ACCESS_KEY'].every(k=>!!Deno.env.get(k)))reason='本番R2の接続設定が未完了です。';
      else if(String(bank?.value?.message||'').trim().length<15)reason='振込先が未登録です。';
+     else if(isTestBankMessage(bank?.value?.message))reason='テスト用の振込先は本番販売に使用できません。';
      else if(backup?.value?.attested!==true||!backup.value.reference||backup.value.attested_by!==p.approved_by||backup.value.attested_at!==p.approved_at)reason='現在の販売条件に対応するバックアップの実施確認が未登録です。';
     }
     return d.json({ready:!reason,policy_ready:true,version:p.version,hosting:p.hosting,...(reason?{reason}:{})});

@@ -1,4 +1,5 @@
 import {HOSTING_OFFER} from './hosting-offer.mjs';
+import {isTestBankMessage} from './bank-transfer.mjs';
 export const DEFAULT_TERMS=Object.freeze({
  hosting:'SHO管理の標準URL・HTTPS・静的サイト配信・公開版保管と障害時復旧対応。契約期間中はサーバー変更を理由にURLを変更しません。永久利用権や完全無停止は保証しません。',
  cancellation:'入金前は無料。入金後・制作開始前は振込手数料と外部実費を除き返金。開始後は完了作業相当額と外部実費を控除します。公開・納品後は契約不一致の修正を除き原則返金なし。法令上の権利を妨げません。',
@@ -11,6 +12,8 @@ export const DEFAULT_TERMS=Object.freeze({
 const clean=(x,min,max,label)=>{if(typeof x!=='string'||x.trim().length<min||x.length>max||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(x)||/(?:__UNSET__|架空|テスト用|example\.com|XXXX)/i.test(x))throw Error(label+'を実際の情報で入力してください。');return x.trim();};
 export function makeSalesSettings(body,actor,now=new Date()){
  const enabled=body.enable===true,s=body.seller||{},bank=String(body.bank_message||'').trim(),reference=String(body.backup_reference||'').trim();
+ const bankIsTest=body.bank_is_test===true||isTestBankMessage(bank);
+ if(enabled&&bankIsTest)throw Error('テスト用の振込先では販売条件を確定できません。本番の口座へ差し替えてください。');
  if(bank.length>800||reference.length>240)throw Error('入力文字数が上限を超えています。');
  const seller={};for(const[k,max]of Object.entries({legal_name:100,address:240,phone:40,contact:180}))seller[k]=String(s[k]||'').trim().slice(0,max);
  const terms={...DEFAULT_TERMS};
@@ -24,5 +27,5 @@ export function makeSalesSettings(body,actor,now=new Date()){
   for(const[k,v]of Object.entries(terms))clean(v,12,450,k);
   provider='事業者：'+seller.legal_name+'／所在地：'+seller.address+'／電話：'+seller.phone+'／問い合わせ：'+seller.contact+'。請求時は契約判断前に遅滞なく開示します。';
  }
- return {seller,bank,backup:{reference,attested:enabled,attested_by:enabled?actor:null,attested_at:enabled?now.toISOString():null},policy:{schema:1,enabled,version:HOSTING_OFFER.version+'-'+now.getTime(),approved_by:enabled?actor:null,approved_at:enabled?now.toISOString():null,hosting:Object.fromEntries(Object.entries(HOSTING_OFFER).filter(([k])=>k!=='version')),terms:{provider,...terms}}};
+ return {seller,bank,bank_is_test:bankIsTest,backup:{reference,attested:enabled,attested_by:enabled?actor:null,attested_at:enabled?now.toISOString():null},policy:{schema:1,enabled,version:HOSTING_OFFER.version+'-'+now.getTime(),approved_by:enabled?actor:null,approved_at:enabled?now.toISOString():null,hosting:Object.fromEntries(Object.entries(HOSTING_OFFER).filter(([k])=>k!=='version')),terms:{provider,...terms}}};
 }

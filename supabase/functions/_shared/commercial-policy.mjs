@@ -1,4 +1,5 @@
 import {matchesHostingOffer} from './hosting-offer.mjs';
+import {isTestBankMessage} from './bank-transfer.mjs';
 // The owner-approved policy is loaded from server-side website_settings.
 // No draft price or browser-supplied approved flag can authorize a quotation.
 const plans={one:{name:'1ページ完結サイト',minimum:15000},semi:{name:'セミオーダーサイト',minimum:22000},full:{name:'フルオーダーサイト',minimum:30000}};
@@ -36,6 +37,7 @@ export function makeCommercialQuote({policy,order,request,publicUrl,bankMessage,
   const total=request.production_amount+p.hosting.initial_fee_jpy+update;
   if(total>3000000)throw Error('見積り合計額の上限を超えています。');
   const bank=text(bankMessage,15,800,'振込先');
+  if(isTestBankMessage(bank))throw Error('テスト用の振込先は正式見積りに使用できません。');
   const snapshot={schema:1,quote_id:quoteId,policy:p,order_code:order.order_code,plan:order.plan,update_plan:order.update_plan||'none',
     production_amount_jpy:request.production_amount,hosting_initial_fee_jpy:p.hosting.initial_fee_jpy,update_initial_fee_jpy:update,
     initial_total_jpy:total,public_url:url.href,delivery_terms:request.delivery_terms,payment_deadline:deadline,request:structuredClone(request)};

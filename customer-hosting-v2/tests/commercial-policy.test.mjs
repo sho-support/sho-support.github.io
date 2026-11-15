@@ -4,6 +4,9 @@ import {validateCommercialPolicy,quoteRequest,makeCommercialQuote,sameQuoteReque
 import {commercialPolicy,quoteInput} from './helpers/commercial-fixture.mjs';
 const make=(overrides={})=>makeCommercialQuote({policy:commercialPolicy(),order:{order_code:'P8100',plan:'one',amount_from:15000,update_plan:'none'},request:quoteRequest(quoteInput()),
  publicUrl:'https://s8100.customer-sites.example/',bankMessage:'銀行名・支店名・口座番号・名義の架空試験データ',quoteId:crypto.randomUUID(),...overrides});
+test('test bank labels and an all-zero account can never enter a formal quote',()=>{
+ for(const bankMessage of ['【テスト専用・振込禁止】テスト銀行 テスト支店 普通0000000 名義テスト用','銀行名・支店名・普通 0000000・口座名義'])assert.throws(()=>make({bankMessage}),/テスト用/);
+});
 test('unapproved, malformed, future-approved and automatic-renewal policies cannot produce an offer',()=>{
  for(const change of [()=>null,p=>({...p,enabled:false}),p=>({...p,approved_at:'2099-01-01'}),p=>({...p,approved_by:'browser-approved'}),p=>({...p,hosting:{...p.hosting,renewal:'auto'}}),p=>({...p,terms:{...p.terms,provider:'__UNSET__'}})])assert.throws(()=>validateCommercialPolicy(change(commercialPolicy())));
 });
