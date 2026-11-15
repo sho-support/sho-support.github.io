@@ -1,4 +1,7 @@
 import { websiteSupabase, currentSession } from './website-client.js';
+import { setupPasswordVisibility } from './website-password-visibility.js';
+
+setupPasswordVisibility();
 
 const form=document.getElementById('loginForm');
 const email=document.getElementById('email');
