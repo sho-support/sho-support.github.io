@@ -23,7 +23,7 @@ try{
  const fields=['credential_valid','official_account_matches','webhook_configured','webhook_active','signed_empty_webhook_verified','real_message_receipt_verified'];
  if(r.ok!==true||r.build!==process.env.GITHUB_SHA||fields.some(k=>typeof r.line?.[k]!=='boolean')||r.real_messages_sent!==0||r.configuration_changed!==false)throw Error('Unexpected LINE proof');
  const proof={checked_at:new Date().toISOString(),source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID,
-  ...Object.fromEntries(fields.map(k=>[k,r.line[k]])),reason:r.line.reason,real_messages_sent:0,configuration_changed:false,real_order_created:false,real_payment:false,production_cutover:false};
+  ...Object.fromEntries(fields.map(k=>[k,r.line[k]])),authentication_mode:r.line.authentication_mode,reason:r.line.reason,real_messages_sent:0,configuration_changed:false,real_order_created:false,real_payment:false,production_cutover:false};
  await mkdir('test-results',{recursive:true});await writeFile('test-results/sales-line-readiness.json',JSON.stringify(proof,null,2)+'\n');
  console.log('LINE_READINESS_RESULT',JSON.stringify(proof));
  if(!r.line.signed_empty_webhook_verified)process.exitCode=1;

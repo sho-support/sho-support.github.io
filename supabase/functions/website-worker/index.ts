@@ -1,4 +1,5 @@
 import {budgetedAI} from '../_shared/guarded-ai.ts';
+import {workerSalesLinks} from '../_shared/hosting-sales-links.mjs';
 import {requireIntakeAssets} from '../_shared/intake-assets.ts';
 import {cloudflareHostingEnabled,blockLegacyPages} from '../_shared/hosting-mode.ts';
 import {hostingMapping,freezeHostingRelease,beginHostingSourceBranch} from '../_shared/hosting-service.ts';
@@ -37,7 +38,7 @@ function outputText(d:any){if(typeof d.output_text==='string')return d.output_te
 async function officialSemiTemplate(style:string){
  const allowed=['rock','cafe','cute','minimal','premium','pop','vintage','cyber','organic','editorial'];
  if(!allowed.includes(style))return '';
- const url='https://sho-web-support.netlify.app/website-template-preview.html?style='+encodeURIComponent(style);
+ const url=workerSalesLinks(cloudflareHostingEnabled(),'',style).template;
  const res=await fetch(url,{signal:AbortSignal.timeout(12000),headers:{Accept:'text/html'}});
  if(!res.ok)throw new Error('注文済みのデザイン見本を取得できません。テンプレート確認後に制作を再実行してください。');
  const html=(await res.text()).slice(0,45000);
@@ -238,12 +239,12 @@ await putFile(ri.full,branch,'docs/index.html',offline(site.site_name),'Add offl
      }catch(e){preflightError=e;if(check<2)await new Promise(resolve=>setTimeout(resolve,(check+1)*700));}
    }
    if(preflightError)throw new Error('制作後のファイル検査に失敗：'+String(preflightError.message||preflightError));
-   const previewKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');const previewHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(previewKey))),b=>b.toString(16).padStart(2,'0')).join('');const preview='https://sho-web-support.netlify.app/website-preview.html?id='+encodeURIComponent(site.site_id)+'&key='+previewKey;const finished=new Date().toISOString(),payload={...(job.payload||{}),...(staged?{staged_full:{version:1,phase:'completed',page_count:stageResult.stagedState.plan.pages.length,usage:stageResult.usage,finished_at:finished}}:{}),ai:{model:ai.model,response_id:ai.response_id,usage:ai.usage},reference:{url:ref.url,ok:ref.ok,note:ref.note},github:{repo:ri.full,branch,preview_url:preview},summary:String(ai.summary||'').slice(0,5000)};
+   const previewKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');const previewHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(previewKey))),b=>b.toString(16).padStart(2,'0')).join('');const preview=workerSalesLinks(cloudflareHostingEnabled(),site.site_id).preview+'&key='+previewKey;const finished=new Date().toISOString(),payload={...(job.payload||{}),...(staged?{staged_full:{version:1,phase:'completed',page_count:stageResult.stagedState.plan.pages.length,usage:stageResult.usage,finished_at:finished}}:{}),ai:{model:ai.model,response_id:ai.response_id,usage:ai.usage},reference:{url:ref.url,ok:ref.ok,note:ref.note},github:{repo:ri.full,branch,preview_url:preview},summary:String(ai.summary||'').slice(0,5000)};
   const {error:siteFinishError}=await admin.from('website_sites').update({status:'sho_review',preview_url:preview,preview_access_token_hash:previewHash,preview_token_issued_at:finished,preview_branch:isLiveRevision?branch:null,current_note:'制作案の生成が完了。運営にて確認中。',customer_approved:false}).eq('site_id',site.site_id);
   if(siteFinishError)throw siteFinishError;
   if(cloudflareHostingEnabled())(payload as any).hosting=await freezeHostingRelease(admin,site,job,branch,verifyWebsiteBeforeDelivery,semi?String(intake.payload?.fields?.template_style||''):'');
   const {error:jobFinishError}=await admin.from('website_jobs').update({status:'sho_review',finished_at:finished,payload}).eq('id',job.id);if(jobFinishError)throw jobFinishError;
-  if(job.payload?.review_issue_id){const{error:issueErr}=await admin.from('website_review_issues').update({status:'ready_for_check',updated_at:finished}).eq('id',job.payload.review_issue_id).eq('site_id',site.site_id).eq('status','fixing');if(issueErr)throw issueErr;}await admin.from('website_activity').insert({site_id:site.site_id,actor_type:'ai',action:'ai_build_completed',detail:String(ai.summary||'AI制作完了').slice(0,5000),payload:{job_id:job.id,reference_ok:ref.ok}});if(!job.payload?.qa_rebuild)await notifyOwner(`【運営者向け：制作案完成】\nSITE ID ${site.site_id}\n${site.site_name}\n制作案の確認はこちら：\nhttps://sho-support.github.io/admin/index.html?site=${encodeURIComponent(site.site_id)}`)
+  if(job.payload?.review_issue_id){const{error:issueErr}=await admin.from('website_review_issues').update({status:'ready_for_check',updated_at:finished}).eq('id',job.payload.review_issue_id).eq('site_id',site.site_id).eq('status','fixing');if(issueErr)throw issueErr;}await admin.from('website_activity').insert({site_id:site.site_id,actor_type:'ai',action:'ai_build_completed',detail:String(ai.summary||'AI制作完了').slice(0,5000),payload:{job_id:job.id,reference_ok:ref.ok}});if(!job.payload?.qa_rebuild)await notifyOwner(`【運営者向け：制作案完成】\nSITE ID ${site.site_id}\n${site.site_name}\n制作案の確認はこちら：\n${workerSalesLinks(cloudflareHostingEnabled(),site.site_id).review}`)
  }catch(e:any){
     const m=String(e.message||e).slice(0,4000);
     console.error('website-worker',m);

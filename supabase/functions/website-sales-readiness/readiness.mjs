@@ -24,15 +24,19 @@ export function readinessAuthorization({admin,verifyCi=async(_token)=>false}){
  };
 }
 
-export async function checkLineConnection({token,fetch:transport=globalThis.fetch}){
+export async function checkLineConnection({token,channelId,channelSecret,fetch:transport=globalThis.fetch}){
  const proof={credential_valid:false,official_account_matches:false,webhook_configured:false,webhook_active:false,
   signed_empty_webhook_verified:false,real_message_receipt_verified:false,real_messages_sent:0,configuration_changed:false};
- if(typeof token!=='string'||!token)return {...proof,reason:'LINE_TOKEN_MISSING'};
+ let accessToken=typeof token==='string'?token:'';
+ proof.authentication_mode=accessToken?'fixed':channelId&&channelSecret?'stateless':'missing';
+ if(!accessToken&&(!channelId||!channelSecret))return {...proof,reason:'LINE_CREDENTIALS_MISSING'};
  async function api(path,method='GET'){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);let response;
   try{
-   response=await transport('https://api.line.me/v2/bot/'+path,{method,redirect:'error',signal:controller.signal,
-    headers:{authorization:'Bearer '+token,'content-type':'application/json'},...(method==='POST'?{body:'{}'}:{})});
+   const exchange=path==='__stateless_token';
+   response=await transport(exchange?'https://api.line.me/oauth2/v3/token':'https://api.line.me/v2/bot/'+path,{method,redirect:'error',signal:controller.signal,
+    headers:exchange?{'content-type':'application/x-www-form-urlencoded'}:{authorization:'Bearer '+accessToken,'content-type':'application/json'},
+    ...(method==='POST'?{body:exchange?new URLSearchParams({grant_type:'client_credentials',client_id:channelId,client_secret:channelSecret}).toString():'{}'}:{})});
    if(!response.ok)return {status:response.status};
    const reader=response.body?.getReader();if(!reader)return {status:response.status};
    const parts=[];let size=0;
@@ -42,6 +46,11 @@ export async function checkLineConnection({token,fetch:transport=globalThis.fetc
    return {status:response.status,data:JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))};
   }catch{return {status:0};}
   finally{clearTimeout(timer);await response?.body?.cancel().catch(()=>{});}
+ }
+ if(!accessToken){
+  const exchange=await api('__stateless_token','POST');
+  if(exchange.status!==200||typeof exchange.data?.access_token!=='string'||!exchange.data.access_token||exchange.data.access_token.length>12000)return {...proof,reason:'LINE_AUTHENTICATION_FAILED'};
+  accessToken=exchange.data.access_token;
  }
  const info=await api('info');
  proof.credential_valid=info.status===200&&typeof info.data?.basicId==='string';
@@ -77,14 +86,14 @@ export function createReadinessHandler({authorize,admin,env,fetch:transport=glob
    if(body?.action==='line_check'){
     const fresh=cached&&now()-cachedAt<60000;
     if(!fresh){
-     if(!pending)pending=checkLineConnection({token:env('LINE_CHANNEL_ACCESS_TOKEN'),fetch:transport}).then(result=>{cached=result;cachedAt=now();return result;}).finally(()=>{pending=null;});
+     if(!pending)pending=checkLineConnection({token:env('LINE_CHANNEL_ACCESS_TOKEN'),channelId:env('LINE_CHANNEL_ID'),channelSecret:env('LINE_CHANNEL_SECRET'),fetch:transport}).then(result=>{cached=result;cachedAt=now();return result;}).finally(()=>{pending=null;});
      await pending;
     }
     return json({ok:true,line:cached,cached:!!fresh,build,real_messages_sent:0,configuration_changed:false});
    }
    if(auth.kind==='ci')return json({error:'Forbidden'},403);
    if(body?.action!=='status')return json({error:'Unsupported action'},400);
-   const {data:rows,error}=await admin.from('website_settings').select('key,value').in('key',['sales_identity','commercial_policy','sales_backup_attestation','bank_transfer','bank_transfer_test']);
+   const {data:rows,error}=await admin.from('website_settings').select('key,value').in('key',['sales_identity','commercial_policy','sales_backup_attestation','bank_transfer','bank_transfer_test','line_owner']);
    if(error)return json({error:'設定状態を確認できませんでした。'},503);
    const settings=Object.fromEntries((rows||[]).map(x=>[x.key,x.value]));
    const schema=await admin.from('website_hosting_sites').select('site_id',{head:true,count:'exact'}).limit(0);
@@ -95,6 +104,7 @@ export function createReadinessHandler({authorize,admin,env,fetch:transport=glob
    const bank=String(settings.bank_transfer?.message||'');
    return json({ok:true,build,configuration:{seller_saved:['legal_name','address','phone','contact'].every(k=>!!settings.sales_identity?.[k]),
     commercial_policy_approved:settings.commercial_policy?.enabled===true,backup_attested:settings.sales_backup_attestation?.attested===true,
+    owner_notifications_configured:!!env('LINE_OWNER_USER_ID')||!!settings.line_owner?.user_id,
     test_bank_saved:!!settings.bank_transfer_test?.message,production_bank_saved:!!bank&&!/(?:テスト|架空|0000000)/.test(bank),
     hosting_schema_installed:schema.error?(['PGRST205','42P01'].includes(schema.error.code)?false:null):true,
     hosting_mode_enabled:env('WEBSITE_CUSTOMER_HOSTING')==='cloudflare-r2',production_storage_configured:productionStorage,stable_domain_configured:stableDomain},

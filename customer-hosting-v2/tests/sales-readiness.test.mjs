@@ -12,7 +12,7 @@ test('LINE connection test uses only bot metadata and the empty-webhook validato
  assert.equal(f.calls[2].body,'{}');assert.ok(!f.calls.some(x=>/message|profile|followers/.test(x.url)));
 });
 test('missing, invalid and wrong-account credentials cannot reach webhook validation',async()=>{
- const missing=lineFixture([]);assert.equal((await checkLineConnection({token:'',fetch:missing.fetch})).reason,'LINE_TOKEN_MISSING');assert.equal(missing.calls.length,0);
+ const missing=lineFixture([]);assert.equal((await checkLineConnection({token:'',fetch:missing.fetch})).reason,'LINE_CREDENTIALS_MISSING');assert.equal(missing.calls.length,0);
  for(const response of [new Response('secret diagnostics',{status:401}),ok({basicId:'@another-account'})]){
   const f=lineFixture([response]),r=await checkLineConnection({token:'fixture-secret',fetch:f.fetch});assert.equal(r.signed_empty_webhook_verified,false);assert.equal(f.calls.length,1);assert.ok(!JSON.stringify(r).includes('secret'));
  }
@@ -51,7 +51,17 @@ test('temporary CI claims default closed and require the exact short-lived repos
 test('temporary CI can only check LINE and cannot read private setup state',async()=>{
  let queried=false;const handler=createReadinessHandler({authorize:async()=>({kind:'ci'}),admin:{from(){queried=true;throw Error();}},env:()=>''});
  assert.equal((await handler(request({action:'status'}))).status,403);assert.equal(queried,false);
- const result=await (await handler(request({action:'line_check'}))).json();assert.equal(result.line.reason,'LINE_TOKEN_MISSING');assert.equal(result.real_messages_sent,0);
+ const result=await (await handler(request({action:'line_check'}))).json();assert.equal(result.line.reason,'LINE_CREDENTIALS_MISSING');assert.equal(result.real_messages_sent,0);
+});
+test('existing channel-ID/secret authentication uses only a 15-minute stateless token without rotating credentials',async()=>{
+ const f=lineFixture([ok({access_token:'EPHEMERAL-PRIVATE-TOKEN',expires_in:900,token_type:'Bearer'}),ok({basicId:'@144dlsxp'}),ok({endpoint:WEBHOOK,active:true}),ok({success:true,statusCode:200})]);
+ const r=await checkLineConnection({channelId:'123456',channelSecret:'PRIVATE-CHANNEL-SECRET',fetch:f.fetch});
+ assert.equal(r.authentication_mode,'stateless');assert.equal(r.signed_empty_webhook_verified,true);assert.equal(r.configuration_changed,false);assert.equal(f.calls.length,4);
+ assert.equal(f.calls[0].url,'https://api.line.me/oauth2/v3/token');assert.equal(f.calls[0].method,'POST');assert.equal(new URLSearchParams(f.calls[0].body).get('grant_type'),'client_credentials');
+ assert.ok(!JSON.stringify(r).includes('EPHEMERAL-PRIVATE-TOKEN'));assert.ok(!JSON.stringify(r).includes('PRIVATE-CHANNEL-SECRET'));
+});
+test('invalid channel credentials stop after one authentication request and never expose its error body',async()=>{
+ const f=lineFixture([new Response('PRIVATE-CHANNEL-SECRET',{status:401})]);const r=await checkLineConnection({channelId:'123456',channelSecret:'PRIVATE-CHANNEL-SECRET',fetch:f.fetch});assert.equal(r.reason,'LINE_AUTHENTICATION_FAILED');assert.equal(f.calls.length,1);assert.ok(!JSON.stringify(r).includes('PRIVATE-CHANNEL-SECRET'));
 });
 test('owner status returns booleans and cannot export saved personal details or preview credentials',async()=>{
  const privateValue='PRIVATE-OWNER-DATA';
