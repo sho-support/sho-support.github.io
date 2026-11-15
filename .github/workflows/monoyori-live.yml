@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: a7a63f13653d5df17cc5351bf8fbec757004d85c
+          ref: 6858dd5eefab3327d471fcf0b767efd45ac273e7
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -161,6 +161,10 @@ jobs:
               if(result.canonical!=='https://sho-monoyori-review.zodiac-suu.workers.dev'+path)throw Error('Wrong canonical origin');
               results.push({path,status:response.status(),...result});
             }
+            const verification=await page.goto('https://sho-monoyori-review.zodiac-suu.workers.dev/googlef88713eb67c8713b.html');
+            const verificationBody=(await verification.text()).trim();
+            if(verification.status()!==200||verificationBody!=='google-site-verification: googlef88713eb67c8713b.html'||!page.url().startsWith('https://sho-monoyori-review.zodiac-suu.workers.dev/'))throw Error('Google ownership file is not publicly readable');
+            results.push({verification_file:true,status:verification.status(),url:page.url(),body_matches:true});
             fs.writeFileSync('review-proof/live-checks.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results));
           }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1)});
           JS
