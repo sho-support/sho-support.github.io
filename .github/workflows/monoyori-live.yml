@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 8adecf2df84d1360e4346a72209303c127cd5193
+          ref: 5cdc1abb51d3dba1b4bc931b58b5ee16dd68c642
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -174,7 +174,9 @@ jobs:
           JS
       - name: Notify search engines of live sitemap URLs
         continue-on-error: true
-        run: python portal-tools/notify_live_search.py
+        env:
+          NODE_PATH: /tmp/monoyori-qa/node_modules
+        run: node portal-tools/notify_live_search.js
       - name: Save public review evidence
         if: always()
         uses: actions/upload-artifact@v4
