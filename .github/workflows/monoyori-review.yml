@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 181292fb096ac3e9303e191dbe415d86ff87613b
+          ref: 8ad4ca40afb726269d84d33c78eaa641ccc4f57b
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -52,27 +52,23 @@ jobs:
         env:
           URL: https://sho-monoyori-review.zodiac-suu.workers.dev
         run: python portal-tools/build_commercial_site.py
-      - name: Disable advertising navigation, analytics and search indexing for the review
+      - name: Refresh approved public product feed without renewing old offers
         run: |
+          curl --fail --silent --show-error --max-time 40 https://raw.githubusercontent.com/sho-support/ai-trend-blog/main/portal-assets/rakuten-feed.json -o /tmp/monoyori-current-feed.json
           python - <<'PY'
+          import sys,json
           from pathlib import Path
-          import re,json
-          root=Path('dist')
-          for p in root.rglob('*.html'):
-              s=p.read_text()
-              s=re.sub(r'<script\b[^>]*>.*?</script>',lambda m:'' if any(x in m.group(0) for x in ['googletagmanager.com','dataLayer','gtag(']) else m.group(0),s,flags=re.S)
-              s=re.sub(r'<meta[^>]*name="robots"[^>]*>','',s)
-              s=s.replace('</head>','<meta name="robots" content="noindex,nofollow"><script defer src="/portal-assets/review-mode.js"></script></head>')
-              s=s.replace('<body>','<body><div style="background:#244a3b;color:white;padding:10px 18px;font-size:12px;text-align:center">公開確認版｜広告リンク・アクセス計測は停止中。掲載情報は取得時点のものです。</div>')
-              p.write_text(s)
-          (root/'robots.txt').write_text('User-agent: *\nDisallow: /\n')
-          (root/'_headers').write_text('/*\n  X-Robots-Tag: noindex, nofollow\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n')
-          (root/'portal-assets/review-mode.js').write_text('''(()=>{const blocked=a=>a.matches('[data-review-blocked],[data-buy],[data-deal-buy],[data-point-buy],[data-hotel]')||/hb\\.afl\\.rakuten|(?:px|rpx|ad)\\.a8\\.net/.test(a.href);const disable=()=>document.querySelectorAll('a').forEach(a=>{if(blocked(a)){a.href='#';a.dataset.reviewBlocked='true';a.setAttribute('aria-disabled','true');a.title='確認版では購入先への遷移を停止しています';}});document.addEventListener('click',e=>{const a=e.target.closest('a');if(a&&blocked(a)){e.preventDefault();e.stopImmediatePropagation();}},true);disable();new MutationObserver(disable).observe(document.body,{childList:true,subtree:true});})();''')
-          assert all('googletagmanager.com' not in p.read_text() for p in root.rglob('*.html'))
-          config={'name':'sho-monoyori-review','compatibility_date':'2026-11-14','workers_dev':True,'preview_urls':False,'assets':{'directory':'./dist','html_handling':'auto-trailing-slash','not_found_handling':'404-page'}}
-          Path('wrangler.monoyori.json').write_text(json.dumps(config))
-          print('Review built: analytics off, ad navigation blocked, indexing off.')
+          sys.path.insert(0,'portal-tools')
+          from prepare_live import merge_feed
+          p=Path('portal-assets/rakuten-feed.json')
+          p.write_text(json.dumps(merge_feed(json.loads(Path('/tmp/monoyori-current-feed.json').read_text()),json.loads(p.read_text())),ensure_ascii=False,indent=2))
+          # This origin has not been registered for the separate A8 programme.
+          Path('portal-assets/a8-approved.json').write_text('{"items":[]}')
           PY
+          URL=https://sho-monoyori-review.zodiac-suu.workers.dev python portal-tools/build_commercial_site.py
+          python portal-tools/prepare_live.py
+          python portal-tools/test_live_promotion.py
+          python portal-tools/test_ratings.py
       - name: Install isolated rendering tools
         run: |
           npm install --prefix /tmp/monoyori-qa --no-save --package-lock=false --ignore-scripts playwright@1.56.1
@@ -135,7 +131,7 @@ jobs:
                   return {cards:cards.length,ratings:document.querySelectorAll('#catalog-grid .review-summary').length,highlights:document.querySelectorAll('#catalog-grid .review-highlights').length,issues};
                 });
                 await page.screenshot({path:'review-proof/dumbbell-reviews-'+width+'.png',fullPage:true});
-                if(check.ratings!==check.cards||check.highlights!==check.cards||check.issues.length)throw Error(JSON.stringify({width,...check}));
+                if(check.cards<1||check.ratings!==check.cards||check.highlights!==check.cards||check.issues.length)throw Error(JSON.stringify({width,...check}));
                 results.push({page:'dumbbells',width,...check});
                 await page.close();
               }
@@ -156,7 +152,7 @@ jobs:
           results=[]
           for path,word in [('/products/','モノより'),('/deals/','ポイント倍率'),('/events/','イベント')]:
               with urlopen(base+path,timeout=30) as r:
-                  s=r.read().decode();assert r.status==200 and word in s and 'noindex,nofollow' in s
+                  s=r.read().decode();assert r.status==200 and word in s and 'review-mode.js' not in s and 'googletagmanager.com' in s
                   results.append({'url':r.url,'status':r.status})
           Path('review-proof.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))
           print(json.dumps(results,ensure_ascii=False))
