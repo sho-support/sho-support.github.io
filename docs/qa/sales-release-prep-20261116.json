@@ -1,0 +1,49 @@
+{
+  "date_jst": "2026-11-16",
+  "source_commit": "6fbcb83f106e7e24b835e289a10de275ca8dbf83",
+  "workflow_run": 43766274412,
+  "architecture_jobs_passed": [
+    "contract",
+    "publication-database",
+    "sales-regression"
+  ],
+  "password_ui": {
+    "checks": 198,
+    "widths": [
+      320,
+      360,
+      390,
+      430,
+      768,
+      1366
+    ],
+    "browser": "Chromium",
+    "real_auth_requests": 0,
+    "real_password_changes": 0,
+    "auth_server_policy_modified": false
+  },
+  "live_deployment": {
+    "version": "44f44dd9-ee83-4973-bf90-b0aed8aff9e3",
+    "workflow_run": 43766274382,
+    "static_checks_passed": 56,
+    "connected_preflights": 4,
+    "authentication_required": true,
+    "new_frontend_legacy_mutations_enabled": false,
+    "production_cutover": false
+  },
+  "real_database_privacy": {
+    "settings_rls_enabled": true,
+    "settings_client_policies": 0,
+    "anon_readable_private_settings": 0,
+    "fictional_authenticated_subject_readable_private_settings": 0,
+    "personal_values_exported": false
+  },
+  "production_r2": {
+    "ready": false,
+    "creation_status": 403,
+    "creation_attempts": 1,
+    "retried_after_denial": false
+  },
+  "production_backup_restore": false,
+  "real_customer_order_to_publish_test": false
+}

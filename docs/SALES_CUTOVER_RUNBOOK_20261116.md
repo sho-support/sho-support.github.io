@@ -6,7 +6,7 @@
 
 - [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `90178af9150285fed86ed197f17aec7dad83d339` の6関数・全ローカル依存ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。過去のプレビュー配備を本番切替済みと扱わない。
 - JWT設定は `website-api` と `website-worker` がtrue、`website-customer-access`、`website-order-api`、`website-preview`、`website-sales-setup` がfalse。falseの関数も内部の本人・管理者確認を維持する。
-- 公開フロントは `f83de541-4bb2-4ccf-9f7f-df01e482fb1f`、配備元は `5be610022d37aa1b3424d70b274a00f442162687`。今回フロントを再配備していない。
+- 公開フロントは `44f44dd9-ee83-4973-bf90-b0aed8aff9e3`、配備元は `6fbcb83f106e7e24b835e289a10de275ca8dbf83`。狭い画面の見出しを修正し、42ファイルの配備後に56静的検査・4 API preflightを確認。商用機能の本番切替ではない。
 
 ## 実行前に必要なこと
 

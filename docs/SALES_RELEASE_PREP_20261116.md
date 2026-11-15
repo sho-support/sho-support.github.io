@@ -27,6 +27,8 @@
 
 コミット `5beb398e304d58440bc5653dc1b4f75fd4899b23` の[追加CI](https://github.com/sho-support/sho-support.github.io/actions/runs/43765504325)でも全体3ジョブが成功。ログイン/再設定画面の専用検査186件を6画面幅で追加実行し、8文字の入力、7文字の送信停止、確認欄の不一致、18pxの目アイコン、44pxのタップ領域、独立した表示切替、キーボード操作、リセット時の消去・再マスクが通った。Authはローカルモックであり、実パスワード変更・実メール送信は0件。Authサーバーの最小文字数設定を変更した検査ではない。
 
+その後320px画像の目視で見つけた、見出しの最後の1文字だけが折り返す点を修正。[最終CI](https://github.com/sho-support/sho-support.github.io/actions/runs/43766274412)の全体3ジョブが成功し、見出しが1行に収まる検査を含むパスワード画面198件が合格。[Cloudflare配備](https://github.com/sho-support/sho-support.github.io/actions/runs/43766274382)も成功し、versionは `44f44dd9-ee83-4973-bf90-b0aed8aff9e3`。56静的検査と4 APIの接続・認証保持も確認した。
+
 2026-11-16 02:30 JSTのR2準備結果は `permission_blocked / create / HTTP 403`。バケット未作成、オブジェクト書込み・鍵作成・公開設定変更・Worker変更はいずれも0。ワークフローの成功表示だけをバケット準備完了と読まない。今後の準備CLIは権限不足も非ゼロ終了にし、準備未完了を成功表示にしない。今回は同じ作成要求を再実行しない。
 
 本番6関数の35依存ファイルと3migrationは[候補manifest](../sales-hosting/release-candidate.json)へ固定した。配備順序と戻し方は[切替手順](SALES_CUTOVER_RUNBOOK_20261116.md)に記録した。
