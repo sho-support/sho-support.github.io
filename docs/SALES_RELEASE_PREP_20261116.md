@@ -1,0 +1,31 @@
+# HP販売リリース準備（2026-11-16 JST）
+
+## 今回の作業
+
+- 実DBのHP用10テーブルから88列・32個の主キー/一意/外部キー/CHECK制約だけを読み取り、架空データ専用の移行試験へ保存。販売者情報・顧客データ・鍵・Authレコードは取得も掲載もしない。
+- 3件の未適用migrationを隔離DBへ適用し、トランザクション取り消し、下書き保持、既存制約保持、3プランの見積り/同意記録/案件作成、サーバー専用権限、課金・アップロード初期停止を検証。
+- このfixtureはAuthの最小外部キースタブと合成Storageを使用。履歴index・既存RLS・既存trigger・データ全件は含めない。完全な本番バックアップや本番復元の証拠には使用しない。
+- 全体テストを現在の `architecture/sales-cloudflare` ブランチにも有効化。従来の外部QA・プレビュー配備ジョブは旧ブランチ/明示マーカー限定のまま。
+- 本番用 `sho-customer-sites-production` だけを対象とする準備処理を追加。既存権限でメタデータを検査し、不在時に空のStandardバケットを1回だけ作成要求する。オブジェクト書込み、公開化、Worker変更、鍵作成、DNS変更は行わない。権限不足・応答不明は証拠へ記録し、自動再試行しない。
+
+## 検証の区別
+
+ローカルの移行試験は43成功・2スキップ（独立DB接続とネイティブdump/restoreはCIのPostgreSQLで確認する）。今回追加の移行試験8件とR2準備処理7件を含む。CI実行結果とCloudflare実応答は実行後に追記する。
+
+本番DBへのmigration、正式見積り送信、入金処理、顧客サイト公開、実バックアップ取得は今回まだ行っていない。テスト銀行は本番振込先に昇格しない。
+
+## 現在の残件
+
+1. 本番DB/Auth/Storage/R2の完全な別保管と空環境への復元確認。安全なDB接続と本人管理の非公開保管先が必要。
+2. 本番用R2バケットと、そのバケットだけに限定したS3鍵の準備・検証。プレビュー用鍵を本番へ流用しない。
+3. 標準URL用ドメインの決定・購入承認と、DNS/TLS設定。プレビューURLを永久納品URLとして案内しない。
+4. 本番の振込先への差替えと、販売条件の承認。販売者情報は保存済み。開業時に事業用電話へ変更する予定。
+5. 保全後の本番migration・正式バックエンド切替と、許可された架空注文による実サービス通し試験。
+
+## 関連
+
+- [本人設定の保存確認](SALES_OWNER_SETUP_20261116.md)
+- [実バックアップ・復元手順](../customer-hosting-v2/BACKUP_OPERATIONS.md)
+- [全体CI](https://github.com/sho-support/sho-support.github.io/actions/workflows/customer-hosting-v2-tests.yml)
+- [R2作成API](https://developers.cloudflare.com/api/resources/r2/subresources/buckets/methods/create/)
+- [R2権限](https://developers.cloudflare.com/r2/api/tokens/)

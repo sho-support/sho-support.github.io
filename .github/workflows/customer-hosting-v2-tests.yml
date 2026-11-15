@@ -3,11 +3,14 @@ on:
   push:
     branches:
       - architecture/customer-hosting-v2
+      - architecture/sales-cloudflare
     paths:
       - 'customer-hosting-v2/**'
+      - 'sales-hosting/prepare-production-r2.mjs'
       - 'supabase/functions/_shared/customer-r2.*'
       - 'supabase/functions/_shared/hosting-*'
       - 'supabase/functions/_shared/commercial-*'
+      - 'supabase/functions/_shared/bank-transfer.mjs'
       - 'supabase/functions/_shared/intake-assets.*'
       - 'supabase/functions/_shared/upload-gate.ts'
       - 'supabase/functions/_shared/guarded-ai.*'
@@ -43,6 +46,8 @@ on:
       - 'website-portal.js'
       - 'website-materials.js'
       - 'website-client.js'
+      - 'website-password-visibility.js'
+      - 'website-password-visibility.css'
   workflow_dispatch:
     inputs:
       inspect_preview:
@@ -158,6 +163,34 @@ jobs:
           name: customer-hosting-sales-regression
           path: /tmp/sho-browser-screenshots
           retention-days: 3
+  prepare-sales-production-r2:
+    if: ${{ github.ref == 'refs/heads/architecture/sales-cloudflare' && github.event_name == 'push' && contains(github.event.head_commit.message, '[prepare-sales-production-r2]') }}
+    needs: [contract, publication-database, sales-regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    concurrency:
+      group: sales-production-r2-preparation
+      cancel-in-progress: false
+    environment: customer-hosting-preview
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare only the private HP production bucket using existing permissions
+        # No objects, tokens, Worker deployments, domains, or public-access changes.
+        # A permission_blocked proof is an observed blocker, never a ready verdict.
+        run: node sales-hosting/prepare-production-r2.mjs
+      - name: Preserve sanitized production bucket preparation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sales-production-r2-preparation-proof
+          path: test-results/sales-production-r2.json
+          retention-days: 7
   supabase-storage-preview:
     if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-supabase-storage-preview]') }}
     needs: [contract, publication-database, sales-regression]
