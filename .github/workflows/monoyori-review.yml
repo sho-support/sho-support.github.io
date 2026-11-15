@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 4f4c89b701da400bbd86e680e9cb0bb678644e54
+          ref: 181292fb096ac3e9303e191dbe415d86ff87613b
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -135,7 +135,7 @@ jobs:
                   return {cards:cards.length,ratings:document.querySelectorAll('#catalog-grid .review-summary').length,highlights:document.querySelectorAll('#catalog-grid .review-highlights').length,issues};
                 });
                 await page.screenshot({path:'review-proof/dumbbell-reviews-'+width+'.png',fullPage:true});
-                if(check.ratings<3||check.highlights<3||check.issues.length)throw Error(JSON.stringify({width,...check}));
+                if(check.ratings!==check.cards||check.highlights!==check.cards||check.issues.length)throw Error(JSON.stringify({width,...check}));
                 results.push({page:'dumbbells',width,...check});
                 await page.close();
               }
