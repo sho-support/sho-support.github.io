@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-11-15T17:30:48.778Z",
+  "source_commit": "90178af9150285fed86ed197f17aec7dad83d339",
+  "workflow_run": 43741391002,
+  "workflow_job": 132895459537,
+  "bucket": "sho-customer-sites-production",
+  "ready": false,
+  "created": false,
+  "creation_attempted": true,
+  "status": "permission_blocked",
+  "stage": "create",
+  "http_status": 403,
+  "objects_written": false,
+  "public_access_changed": false,
+  "worker_changed": false,
+  "credentials_created": false,
+  "automatic_retry_performed": false,
+  "evidence": "Sanitized GitHub Actions job log; a successful workflow is not production readiness."
+}

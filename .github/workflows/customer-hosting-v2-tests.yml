@@ -39,6 +39,7 @@ on:
       - 'admin/orders.html'
       - 'admin/sales-settings.html'
       - 'tests/website-hosting-fees.cjs'
+      - 'tests/website-password-ui.cjs'
       - 'scripts/sync-hosting-offer.mjs'
       - 'website-hosting-offer.js'
       - 'website-*.html'
@@ -156,6 +157,7 @@ jobs:
           node tests/website-intake-materials.cjs
           node tests/website-contract-ui.cjs
           node tests/website-hosting-fees.cjs
+          node tests/website-password-ui.cjs
       - name: Keep rendered screenshots for visual inspection
         if: always()
         uses: actions/upload-artifact@v4
