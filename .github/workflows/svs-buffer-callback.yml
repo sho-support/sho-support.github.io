@@ -1,0 +1,220 @@
+name: Prepare SHO owner Buffer callback
+on:
+  push:
+    branches: [system-sales/cloudflare-review]
+    paths:
+      - '.github/workflows/svs-buffer-callback.yml'
+      - '.github/deploy-payloads/svs-buffer-callback.json'
+permissions:
+  contents: read
+concurrency:
+  group: svs-cloudflare-preview
+  cancel-in-progress: false
+jobs:
+  callback:
+    if: contains(github.event.head_commit.message, '[deploy-svs-callback]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: customer-hosting-preview
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the existing public archive and bounded delta
+        run: |
+          python3 - <<'PY'
+          import base64,hashlib,io,json,stat,zipfile
+          from pathlib import Path
+          old=json.loads(Path('.github/deploy-payloads/svs-web-review.json').read_text())
+          delta=json.loads(Path('.github/deploy-payloads/svs-buffer-callback.json').read_text())
+          assert old['source_repository']==delta['source_repository']=='sho-support/sho-video-studio-sales'
+          assert old['source_commit']=='f77c36fee197c1f180d22dc407c9c8b53be299e8'
+          assert delta['source_commit']=='4fcbe7a94ac8fcf5df6b60a225e70b62978a38e6'
+          assert delta['expected_original_version']=='a953dee9-2fb7-467b-a04f-33e7b692af69'
+          assert old['archive_sha256']==delta['original_archive_sha256']=='2b04f522d7bfd245ff59046c57954230de7017537b12a431c4fc63e9934a00e6'
+          allowed={'index.html','portal.html','admin.html','reset.html','legal.html','privacy.html','terms.html','auth.js','reset.js','config.js','style.css','_headers','_redirects','assets/studio-screen.png'}
+          assert set(old['file_manifest'])==allowed
+          archive=base64.b64decode(old['archive_base64'],validate=True)
+          assert hashlib.sha256(archive).hexdigest()==old['archive_sha256']
+          with zipfile.ZipFile(io.BytesIO(archive)) as z:
+           assert set(z.namelist())==allowed and len(z.infolist())==len(allowed)
+           assert sum(i.file_size for i in z.infolist())<500000
+           assert not any(stat.S_ISLNK(i.external_attr>>16) for i in z.infolist())
+           files={n:z.read(n) for n in z.namelist()}
+          for n,b in files.items():
+           assert hashlib.sha256(b).hexdigest()==old['file_manifest'][n]['sha256']
+          assert set(delta['files'])==set(delta['file_sha256'])=={'_headers','buffer-connected.html','buffer-connected.js'}
+          for n,v in delta['files'].items():
+           raw=v.encode();assert hashlib.sha256(raw).hexdigest()==delta['file_sha256'][n];files[n]=raw
+          assert set(files)==allowed|{'buffer-connected.html','buffer-connected.js'}
+          assert b'AUTH_RELEASE_ENABLED = false' in files['config.js']
+          assert b'fetch(' not in files['buffer-connected.js']
+          root=Path('svs-deploy/web');root.mkdir(parents=True)
+          for n,b in files.items():
+           p=root/n;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+          config={'name':'sho-video-studio-sales-preview','compatibility_date':'2026-11-14','workers_dev':True,'preview_urls':False,'assets':{'directory':'./web','html_handling':'none','not_found_handling':'none'}}
+          Path('svs-deploy/wrangler.json').write_text(json.dumps(config,indent=2)+'\n')
+          proof=Path('svs-proof');proof.mkdir()
+          previous={k:v for k,v in old.items() if k!='archive_base64'}
+          proof.joinpath('previous-package.json').write_text(json.dumps(previous,indent=2)+'\n')
+          pkg={**previous,'source_commit':delta['source_commit'],'file_manifest':{n:{'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()} for n,b in files.items()}}
+          proof.joinpath('package.json').write_text(json.dumps(pkg,indent=2)+'\n')
+          print('Verified prior public files and 3 bounded changes. Login and purchase remain disabled.')
+          PY
+      - name: Prepare the guarded deployment program
+        run: |
+          cat > svs-deploy/update-buffer-callback.mjs <<'JS'
+          // Only the isolated preview Worker; restore the known version on failed verification.
+          import assert from 'node:assert/strict';
+          import {execFileSync} from 'node:child_process';
+          import {createHash} from 'node:crypto';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const worker='sho-video-studio-sales-preview',original='a953dee9-2fb7-467b-a04f-33e7b692af69';
+          const origin='https://sho-video-studio-sales-preview.zodiac-suu.workers.dev';
+          const {CLOUDFLARE_API_TOKEN:token,CLOUDFLARE_ACCOUNT_ID:account}=process.env;
+          assert(token&&account);assert.equal(process.env.GITHUB_REPOSITORY,'sho-support/sho-support.github.io');
+          assert.equal(process.env.GITHUB_REF,'refs/heads/system-sales/cloudflare-review');
+          const config=JSON.parse(readFileSync('svs-deploy/wrangler.json','utf8'));
+          assert.deepEqual(config,{name:worker,compatibility_date:'2026-11-14',workers_dev:true,preview_urls:false,
+           assets:{directory:'./web',html_handling:'none',not_found_handling:'none'}});
+          const previous=JSON.parse(readFileSync('svs-proof/previous-package.json','utf8'));
+          const next=JSON.parse(readFileSync('svs-proof/package.json','utf8'));
+          const proof={origin,original_version:original,new_version:null,status:'IN_PROGRESS',login_enabled:false,purchase_enabled:false,
+           bindings_or_dns_modified:false,source_commit:next.source_commit,started_at_utc:new Date().toISOString(),phases:[]};
+          async function api(path){
+           const r=await fetch('https://api.cloudflare.com/client/v4/accounts/'+account+'/workers'+path,
+            {headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(20000)});
+           assert(r.ok,'Cloudflare API HTTP '+r.status);const j=await r.json();assert(j.success);return j.result;
+          }
+          async function current(){
+           const r=await api('/scripts/'+worker+'/deployments?per_page=1&page=1');
+           const v=r?.deployments?.[0]?.versions;
+           assert(Array.isArray(v)&&v.length===1&&v[0].percentage===100,'Unexpected traffic split');
+           return v[0].version_id;
+          }
+          function cli(args){
+           try{return execFileSync('npx',['--yes','wrangler@4.160.0',...args,'--config','svs-deploy/wrangler.json'],
+            {encoding:'utf8',timeout:180000,maxBuffer:2000000,env:process.env});}
+           catch(error){throw Error('Wrangler '+args.slice(0,2).join(' ')+' failed; exit '+(error.status??'unknown'));}
+          }
+          async function verify(pkg,phase){
+           let checks=0;const check=(ok,label)=>{assert(ok,label);checks++};
+           for(const [name,meta] of Object.entries(pkg.file_manifest)){
+            if(name.startsWith('_'))continue;
+            const r=await fetch(origin+'/'+name,{redirect:'error',signal:AbortSignal.timeout(30000)});
+            check(r.status===200,'HTTP '+name);
+            check(createHash('sha256').update(Buffer.from(await r.arrayBuffer())).digest('hex')===meta.sha256,'Bytes '+name);
+            check(r.headers.get('x-content-type-options')==='nosniff','nosniff '+name);
+            check(r.headers.get('x-frame-options')==='DENY','frame '+name);
+            check(r.headers.get('x-robots-tag')==='noindex, nofollow','noindex '+name);
+            check((r.headers.get('content-security-policy')||'').includes("frame-ancestors 'none'"),'CSP '+name);
+            if(['admin.html','portal.html','reset.html','config.js','buffer-connected.html','buffer-connected.js'].includes(name))
+             check(r.headers.get('cache-control')==='no-store','no-store '+name);
+            if(name.startsWith('buffer-connected.'))check(r.headers.get('referrer-policy')==='no-referrer','referrer '+name);
+           }
+           const home=await fetch(origin+'/',{redirect:'error',signal:AbortSignal.timeout(30000)});
+           check(home.status===200,'Homepage');
+           check(createHash('sha256').update(Buffer.from(await home.arrayBuffer())).digest('hex')===pkg.file_manifest['index.html'].sha256,'Homepage bytes');
+           for(const path of ['/desktop/app/START_STUDIO.py','/database/001_svs_core.sql','/docs/OWNER_COMPLETION.md','/package.json','/wrangler.jsonc','/_headers','/_redirects','/does-not-exist']){
+            const r=await fetch(origin+path,{redirect:'manual',signal:AbortSignal.timeout(30000)});await r.arrayBuffer();check(r.status===404,'Excluded '+path);
+           }
+           const record={phase,status:'PASS',checks_passed:checks,source_commit:pkg.source_commit};
+           writeFileSync('svs-proof/http-'+phase+'.json',JSON.stringify(record,null,2)+'\n');proof.phases.push(record);
+          }
+          let attempted=false;
+          try{
+           assert.equal((await api('/subdomain')).subdomain,'zodiac-suu');
+           assert.equal(await current(),original,'The preview changed; refusing writes');
+           await verify(previous,'before');
+           const output=cli(['versions','upload','--message','Add isolated Buffer return page 2026-11-16']).replace(/\u001b\[[0-9;]*m/g,'');
+           const ids=[...output.matchAll(/(?:Worker )?Version ID:\s*([a-f0-9-]{36})/gi)].map(x=>x[1]);
+           assert.equal(new Set(ids).size,1);proof.new_version=ids[0];assert.notEqual(proof.new_version,original);
+           assert.equal(await current(),original,'Preview changed before switch');
+           attempted=true;cli(['versions','deploy',proof.new_version+'@100%','--yes']);
+           assert.equal(await current(),proof.new_version);
+           await verify(next,'updated');
+           const env={...process.env};delete env.CLOUDFLARE_API_TOKEN;delete env.CLOUDFLARE_ACCOUNT_ID;
+           execFileSync(process.execPath,['svs-deploy/verify-buffer-callback.cjs'],{env,encoding:'utf8',timeout:180000});
+           proof.status='PASS';
+          }catch(error){
+           proof.error=error.message;proof.status='FAIL';
+           try{
+            const active=await current();
+            if(attempted&&active===proof.new_version)cli(['versions','deploy',original+'@100%','--yes']);
+            else assert.equal(active,original,'Unexpected third-party deployment; refusing rollback');
+            assert.equal(await current(),original);await verify(previous,'restored');proof.rollback_verified=true;
+           }catch(rollback){proof.rollback_error=rollback.message;}
+          }finally{
+           proof.finished_at_utc=new Date().toISOString();
+           writeFileSync('svs-proof/update.json',JSON.stringify(proof,null,2)+'\n');
+           console.log(JSON.stringify(proof));
+          }
+          if(proof.status!=='PASS')process.exitCode=1;
+          JS
+          cat > svs-deploy/verify-buffer-callback.cjs <<'JS'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const {chromium}=require('playwright');
+          (async()=>{
+           const base='https://sho-video-studio-sales-preview.zodiac-suu.workers.dev';
+           const browser=await chromium.launch({headless:true});
+           const results=[];
+           for(const width of [1366,390,320]){
+            for(const scenario of ['missing','allowed','denied']){
+             const context=await browser.newContext({viewport:{width,height:900},permissions:['clipboard-read','clipboard-write']});
+             const page=await context.newPage();const errors=[];const requests=[];
+             page.on('pageerror',e=>errors.push(e.message));
+             page.on('request',r=>requests.push(r.url()));
+             const query=scenario==='allowed'?'?code=TEST_CODE_NOT_A_CREDENTIAL&state=TEST_STATE_NOT_A_CREDENTIAL':scenario==='denied'?'?error=access_denied&state=TEST_STATE_NOT_A_CREDENTIAL':'';
+             const response=await page.goto(base+'/buffer-connected.html'+query,{waitUntil:'networkidle'});
+             assert.equal(response.status(),200);assert.equal(response.headers()['cache-control'],'no-store');
+             assert.equal(await page.locator('h1').isVisible(),true);
+             assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+2),true);
+             assert.equal(await page.locator('#copy-callback').isEnabled(),scenario==='allowed');
+             if(scenario==='allowed'){
+              assert.equal(new URL(page.url()).search,'');
+              await page.locator('#copy-callback').click();
+              assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),base+'/buffer-connected.html'+query);
+              assert.match(await page.locator('#copy-status').innerText(),/コピーしました/);
+             }
+             assert.equal(errors.length,0);
+             assert(requests.every(url=>new URL(url).origin===base));
+             assert(requests.slice(1).every(url=>!url.includes('TEST_CODE')));
+             if(width===390&&scenario==='allowed')await page.screenshot({path:'svs-proof/buffer-callback-mobile.png',fullPage:true});
+             results.push({width,scenario,passed:true,external_requests:0,javascript_errors:0});
+             await context.close();
+            }
+           }
+           await browser.close();
+           fs.writeFileSync('svs-proof/callback-browser.json',JSON.stringify({status:'PASS',rendered_states:results.length,real_oauth_used:false,results},null,2)+'\n');
+           console.log('Callback page: 9 browser states passed; synthetic values only.');
+          })().catch(error=>{console.error(error.message);process.exitCode=1});
+          JS
+      - name: Validate packaging before using existing credentials
+        run: npx --yes wrangler@4.160.0 deploy --dry-run --config svs-deploy/wrangler.json --outdir svs-proof/dry-run
+      - name: Prepare browser checks before changing traffic
+        run: |
+          npm install --prefix /tmp/svs-callback-qa --no-save --package-lock=false --ignore-scripts playwright@1.62.0
+          /tmp/svs-callback-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Deploy only the isolated callback and verify, restoring on failure
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NODE_PATH: /tmp/svs-callback-qa/node_modules
+        run: node svs-deploy/update-buffer-callback.mjs
+      - name: Save synthetic verification evidence without credentials
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: svs-buffer-callback-proof
+          path: |
+            svs-proof/package.json
+            svs-proof/previous-package.json
+            svs-proof/update.json
+            svs-proof/http-*.json
+            svs-proof/callback-browser.json
+            svs-proof/buffer-callback-mobile.png
+          retention-days: 7
