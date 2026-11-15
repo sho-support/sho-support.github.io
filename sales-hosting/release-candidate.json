@@ -3,8 +3,8 @@
   "prepared_on_jst": "2026-11-16",
   "project_id": "tyhymvgjkoebetyypspj",
   "status": "prepared_only",
-  "source_commit": "90178af9150285fed86ed197f17aec7dad83d339",
-  "source_tree": "b28d27426b8bcf745e5e5f730df91517563c02a4",
+  "source_commit": "3c32111266e6b2cf57cf350e57f81078482131c0",
+  "source_tree": "682b78618ca552d91655b3b4ab654d3cd21a7f6e",
   "all_source_files_match_pinned_commit": true,
   "functions": [
     {
@@ -226,6 +226,12 @@
           "sha256": "90225bca77bdd3051961c9be30ffd5223976b10330be8f1d16564bbbd5c030bd"
         },
         {
+          "path": "supabase/functions/_shared/hosting-sales-links.mjs",
+          "bytes": 759,
+          "git_blob_sha": "dccb914e147342816473d4e8ebf86143941fe281",
+          "sha256": "de0c5a1135a12ac716c17bf110cf024f4fc4ce796caa26b3c2f9db1e7ce557e6"
+        },
+        {
           "path": "supabase/functions/_shared/hosting-service.ts",
           "bytes": 7161,
           "git_blob_sha": "bda4282bbb1b3fea345dcb29be8736cb9ea27bd2",
@@ -244,6 +250,12 @@
           "sha256": "394c84ac7759a948f6a207e673bb25dbb29c3f1f8eb5be8c50e04858fb309d42"
         },
         {
+          "path": "supabase/functions/_shared/sales-origin.ts",
+          "bytes": 1576,
+          "git_blob_sha": "d638f5bb2419552917fa607d4a0d85217442d4ce",
+          "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+        },
+        {
           "path": "supabase/functions/website-worker/_shared/website.ts",
           "bytes": 17832,
           "git_blob_sha": "4be3e4ac76859a26e29810f174566b4e4c46efae",
@@ -251,9 +263,9 @@
         },
         {
           "path": "supabase/functions/website-worker/index.ts",
-          "bytes": 36533,
-          "git_blob_sha": "8441c22cde2af43f6873c281a97dd4baff1af0b7",
-          "sha256": "b836324ccd511234961a13ee3f8fb297251aa132c7cfdc23ae5017dde06a3f3c"
+          "bytes": 36514,
+          "git_blob_sha": "ef35997ff15f0dc234a5ad1f4113826b0a617094",
+          "sha256": "5e014e2b6216e16fffa4945864e34b11958d3fca62ccc1e7effa58119a1a13a1"
         },
         {
           "path": "supabase/functions/website-worker/semi-template.mjs",
@@ -682,8 +694,8 @@
     }
   ],
   "verification": {
-    "workflow_run": 43741391002,
-    "unit_tests_passed": 129,
+    "workflow_run": 43769822529,
+    "unit_tests_passed": 144,
     "native_postgres_tests_passed": 47,
     "synthetic_native_backup_restore_passed": true,
     "production_backup_restore_passed": false,
@@ -696,7 +708,9 @@
       1366
     ],
     "real_line_messages_sent": 0,
-    "real_payments": 0
+    "real_payments": 0,
+    "line_connection_workflow_run": 43769822519,
+    "line_signed_empty_webhook_verified": true
   },
   "deployment": {
     "functions_replaced": false,

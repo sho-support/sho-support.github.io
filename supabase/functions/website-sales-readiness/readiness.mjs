@@ -24,6 +24,17 @@ export function readinessAuthorization({admin,verifyCi=async(_token)=>false}){
  };
 }
 
+export async function ownerLineFixture(fixture,order){
+ if(fixture?.schema!==1||fixture?.purpose!=='line_connection_acceptance_only'||fixture.order_code!=='9000001001'
+  ||!/^[a-f0-9]{40}$/.test(fixture.link_token||'')||order?.selections?.qa_purpose!=='line_connection_acceptance_only'
+  ||!['pending_line','pending_payment'].includes(order?.status))return null;
+ const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(fixture.link_token)));
+ const hash=Array.from(digest,b=>b.toString(16).padStart(2,'0')).join('');
+ if(hash!==order.line_link_token_hash)return null;
+ const text='【HP販売・接続テスト専用／実注文ではありません】\n注文ID: '+fixture.order_code+'\n連携コード: '+fixture.link_token+'\n要望: テスト用の1ページサイト。黒背景と赤を基調に、紹介と問い合わせ欄を確認します。\n実際の契約・振込・公開は行いません。';
+ return {order_code:fixture.order_code,line_linked:!!order.line_user_id,open_line_url:'https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(text),real_order:false,real_payment:false};
+}
+
 export async function checkLineConnection({token,channelId,channelSecret,fetch:transport=globalThis.fetch}){
  const proof={credential_valid:false,official_account_matches:false,webhook_configured:false,webhook_active:false,
   signed_empty_webhook_verified:false,real_message_receipt_verified:false,real_messages_sent:0,configuration_changed:false};
@@ -93,7 +104,7 @@ export function createReadinessHandler({authorize,admin,env,fetch:transport=glob
    }
    if(auth.kind==='ci')return json({error:'Forbidden'},403);
    if(body?.action!=='status')return json({error:'Unsupported action'},400);
-   const {data:rows,error}=await admin.from('website_settings').select('key,value').in('key',['sales_identity','commercial_policy','sales_backup_attestation','bank_transfer','bank_transfer_test','line_owner']);
+   const {data:rows,error}=await admin.from('website_settings').select('key,value').in('key',['sales_identity','commercial_policy','sales_backup_attestation','bank_transfer','bank_transfer_test','line_owner','owner_line_acceptance_fixture']);
    if(error)return json({error:'設定状態を確認できませんでした。'},503);
    const settings=Object.fromEntries((rows||[]).map(x=>[x.key,x.value]));
    const schema=await admin.from('website_hosting_sites').select('site_id',{head:true,count:'exact'}).limit(0);
@@ -102,13 +113,18 @@ export function createReadinessHandler({authorize,admin,env,fetch:transport=glob
    const keys=['CUSTOMER_R2_ACCOUNT_ID','CUSTOMER_R2_BUCKET','CUSTOMER_R2_ACCESS_KEY_ID','CUSTOMER_R2_SECRET_ACCESS_KEY'];
    const productionStorage=keys.every(k=>!!env(k))&&env('CUSTOMER_R2_ACCOUNT_ID')==='bdb1bb4a771be8595d5564d5d78cb1d4'&&env('CUSTOMER_R2_BUCKET')==='sho-customer-sites-production';
    const bank=String(settings.bank_transfer?.message||'');
+   let lineTest=null;
+   if(settings.owner_line_acceptance_fixture?.order_code==='9000001001'){
+    const {data:order,error:orderError}=await admin.from('website_orders').select('status,line_user_id,line_link_token_hash,selections').eq('order_code','9000001001').maybeSingle();
+    if(!orderError)lineTest=await ownerLineFixture(settings.owner_line_acceptance_fixture,order);
+   }
    return json({ok:true,build,configuration:{seller_saved:['legal_name','address','phone','contact'].every(k=>!!settings.sales_identity?.[k]),
     commercial_policy_approved:settings.commercial_policy?.enabled===true,backup_attested:settings.sales_backup_attestation?.attested===true,
     owner_notifications_configured:!!env('LINE_OWNER_USER_ID')||!!settings.line_owner?.user_id,
     test_bank_saved:!!settings.bank_transfer_test?.message,production_bank_saved:!!bank&&!/(?:テスト|架空|0000000)/.test(bank),
     hosting_schema_installed:schema.error?(['PGRST205','42P01'].includes(schema.error.code)?false:null):true,
     hosting_mode_enabled:env('WEBSITE_CUSTOMER_HOSTING')==='cloudflare-r2',production_storage_configured:productionStorage,stable_domain_configured:stableDomain},
-    order_to_delivery_live_test_verified:false,real_messages_sent:0,configuration_changed:false});
+    line_test:lineTest,order_to_delivery_live_test_verified:false,real_messages_sent:0,configuration_changed:false});
   }catch{return json({error:'接続確認を完了できませんでした。'},503);}
  };
 }

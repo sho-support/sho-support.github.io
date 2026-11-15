@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-11-15T22:32:29.999Z",
+  "source_commit": "3c32111266e6b2cf57cf350e57f81078482131c0",
+  "run_id": "43769822519",
+  "credential_valid": true,
+  "official_account_matches": true,
+  "webhook_configured": true,
+  "webhook_active": true,
+  "signed_empty_webhook_verified": true,
+  "real_message_receipt_verified": false,
+  "authentication_mode": "stateless",
+  "reason": "LINE_CONNECTION_VERIFIED",
+  "real_messages_sent": 0,
+  "configuration_changed": false,
+  "real_order_created": false,
+  "real_payment": false,
+  "production_cutover": false
+}

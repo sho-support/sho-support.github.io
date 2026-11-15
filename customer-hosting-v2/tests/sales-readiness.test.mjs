@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {allowedReadinessClaims,checkLineConnection,createReadinessHandler,readinessAuthorization,SALES_ORIGIN,WEBHOOK} from '../../supabase/functions/website-sales-readiness/readiness.mjs';
+import {allowedReadinessClaims,checkLineConnection,createReadinessHandler,readinessAuthorization,ownerLineFixture,SALES_ORIGIN,WEBHOOK} from '../../supabase/functions/website-sales-readiness/readiness.mjs';
 const ok=data=>new Response(JSON.stringify(data),{status:200,headers:{'content-type':'application/json'}});
 function lineFixture(responses){const calls=[];return {calls,fetch:async(url,options)=>{calls.push({url,...options});assert.equal(options.redirect,'error');const next=responses.shift();if(next instanceof Error)throw next;assert.ok(next,'Unexpected extra LINE call');return next;}};}
 const request=(body={},token='owner',origin=SALES_ORIGIN)=>new Request('https://fixture.invalid',{method:'POST',headers:{origin,authorization:'Bearer '+token},body:JSON.stringify(body)});
@@ -70,4 +70,12 @@ test('owner status returns booleans and cannot export saved personal details or 
  const handler=createReadinessHandler({authorize:async()=>({kind:'administrator'}),admin,env:name=>values[name]});
  const r=await handler(request({action:'status'})),data=await r.json();assert.equal(r.status,200);assert.equal(data.configuration.seller_saved,true);assert.equal(data.configuration.hosting_schema_installed,false);assert.equal(data.configuration.production_storage_configured,false);assert.equal(data.configuration.test_bank_saved,true);
  assert.ok(!JSON.stringify(data).includes(privateValue));assert.ok(!JSON.stringify(data).includes('PRIVATE-KEY'));assert.equal(data.order_to_delivery_live_test_verified,false);
+});
+test('the owner-only LINE link is limited to a marked reserved test order and its exact pairing token',async()=>{
+ const token='a'.repeat(40),hash=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token))).toString('hex');
+ const fixture={schema:1,purpose:'line_connection_acceptance_only',order_code:'9000001001',link_token:token};
+ const order={status:'pending_line',line_link_token_hash:hash,selections:{qa_purpose:'line_connection_acceptance_only'}};
+ const result=await ownerLineFixture(fixture,order);assert.equal(result.real_order,false);assert.equal(result.real_payment,false);assert.equal(result.line_linked,false);assert.equal(new URL(result.open_line_url).hostname,'line.me');assert.match(decodeURIComponent(new URL(result.open_line_url).search),/実注文ではありません/);
+ for(const changed of [{...fixture,order_code:'1000'},{...fixture,link_token:'b'.repeat(40)},{...fixture,purpose:'production'}])assert.equal(await ownerLineFixture(changed,order),null);
+ assert.equal(await ownerLineFixture(fixture,{...order,status:'site_created'}),null);assert.equal(await ownerLineFixture(fixture,{...order,selections:{}}),null);
 });

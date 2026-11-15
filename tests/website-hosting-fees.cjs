@@ -16,7 +16,7 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
    window.__settingsCalls=[];let saved=null;
    window.__mockSales=async body=>{
     window.__settingsCalls.push(body);
-    if(body.action==='status')return{data:{ok:true,configuration:{seller_saved:true,test_bank_saved:true,hosting_schema_installed:false,hosting_mode_enabled:false,production_storage_configured:false,stable_domain_configured:false,backup_attested:false,commercial_policy_approved:false,production_bank_saved:false},order_to_delivery_live_test_verified:false}};
+    if(body.action==='status')return{data:{ok:true,line_test:{order_code:'9000001001',line_linked:false,real_order:false,open_line_url:'https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent('【HP販売 接続テスト】実注文ではありません。')},configuration:{seller_saved:true,test_bank_saved:true,hosting_schema_installed:false,hosting_mode_enabled:false,production_storage_configured:false,stable_domain_configured:false,backup_attested:false,commercial_policy_approved:false,production_bank_saved:false},order_to_delivery_live_test_verified:false}};
     if(body.action==='line_check')return{data:{ok:true,line:{credential_valid:true,official_account_matches:true,webhook_configured:true,webhook_active:true,signed_empty_webhook_verified:true,real_message_receipt_verified:false,real_messages_sent:0}}};
     if(body.action==='admin_get_sales_settings')return{data:{ok:true,seller:saved?.seller||{},bank_message:saved?.bank_message||'',backup:{reference:saved?.backup_reference||''},policy:saved?{terms:saved.terms}:null,default_terms:terms}};
     if(body.action==='admin_commercial_policy_status')return{data:{ready:false,reason:'公開基盤の切り替え前です。'}};
@@ -53,6 +53,9 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
   if(process.env.QA_SCREENSHOTS_DIR){mkdirSync(process.env.QA_SCREENSHOTS_DIR,{recursive:true});await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'sales-setup-'+width+'.png'),fullPage:true});await page.goto(base+'website-order-confirm.html');await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'annual-hosting-confirm-'+width+'.png'),fullPage:true});}
   await page.goto(base+'admin/readiness.html',{waitUntil:'domcontentloaded'});await page.locator('#privateChecks').waitFor();
   check((await page.locator('#journeyStatus').innerText()).includes('未確認'),'Configuration cannot claim completed order-to-delivery testing');
+  check(await page.locator('#lineFixture').isVisible(),'Owner can start the isolated LINE acceptance test');
+  check(new URL(await page.locator('#openLineFixture').getAttribute('href')).origin==='https://line.me','Fixture opens only the official LINE link');
+  check((await page.locator('#lineFixture').innerText()).includes('実注文・契約・請求・サイト公開は発生しません'),'Fixture cannot be confused with a real purchase');
   check((await page.locator('#configuration').innerText()).includes('本番用の公開ストレージ設定'),'Production storage blocker is visible');
   check((await page.locator('#configuration').innerText()).includes('未確認'),'Missing configuration stays visible');
   await page.locator('#checkLine').click();await page.waitForFunction(()=>document.querySelector('#lineResults').children.length===6);
