@@ -1,0 +1,47 @@
+name: HP official LINE connection readiness
+on:
+  push:
+    branches: [architecture/sales-cloudflare]
+    paths:
+      - 'supabase/functions/website-sales-readiness/**'
+      - 'sales-hosting/verify-line-readiness.mjs'
+      - 'customer-hosting-v2/tests/sales-readiness.test.mjs'
+      - '.github/workflows/sales-line-readiness.yml'
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --prefix customer-hosting-v2 --ignore-scripts --no-audit --no-fund
+      - run: node --test customer-hosting-v2/tests/sales-readiness.test.mjs
+      - name: Type check the private readiness function
+        run: npm run check:edge --prefix customer-hosting-v2
+  live-connection:
+    needs: contract
+    if: ${{ contains(github.event.head_commit.message, '[verify-line-readiness]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify LINE credentials and the existing signed empty webhook; send no messages
+        run: node sales-hosting/verify-line-readiness.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sales-line-readiness-proof
+          path: test-results/sales-line-readiness.json
+          retention-days: 7

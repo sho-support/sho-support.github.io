@@ -16,6 +16,8 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
    window.__settingsCalls=[];let saved=null;
    window.__mockSales=async body=>{
     window.__settingsCalls.push(body);
+    if(body.action==='status')return{data:{ok:true,configuration:{seller_saved:true,test_bank_saved:true,hosting_schema_installed:false,hosting_mode_enabled:false,production_storage_configured:false,stable_domain_configured:false,backup_attested:false,commercial_policy_approved:false,production_bank_saved:false},order_to_delivery_live_test_verified:false}};
+    if(body.action==='line_check')return{data:{ok:true,line:{credential_valid:true,official_account_matches:true,webhook_configured:true,webhook_active:true,signed_empty_webhook_verified:true,real_message_receipt_verified:false,real_messages_sent:0}}};
     if(body.action==='admin_get_sales_settings')return{data:{ok:true,seller:saved?.seller||{},bank_message:saved?.bank_message||'',backup:{reference:saved?.backup_reference||''},policy:saved?{terms:saved.terms}:null,default_terms:terms}};
     if(body.action==='admin_commercial_policy_status')return{data:{ready:false,reason:'公開基盤の切り替え前です。'}};
     if(body.action==='admin_save_sales_settings'){saved=body;return{data:{ok:true,enabled:body.enable}};}
@@ -49,6 +51,17 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),'Setup form fits '+width);
   check(errors.length===0,'No script failures: '+errors.join(';'));
   if(process.env.QA_SCREENSHOTS_DIR){mkdirSync(process.env.QA_SCREENSHOTS_DIR,{recursive:true});await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'sales-setup-'+width+'.png'),fullPage:true});await page.goto(base+'website-order-confirm.html');await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'annual-hosting-confirm-'+width+'.png'),fullPage:true});}
+  await page.goto(base+'admin/readiness.html',{waitUntil:'domcontentloaded'});await page.locator('#privateChecks').waitFor();
+  check((await page.locator('#journeyStatus').innerText()).includes('未確認'),'Configuration cannot claim completed order-to-delivery testing');
+  check((await page.locator('#configuration').innerText()).includes('本番用の公開ストレージ設定'),'Production storage blocker is visible');
+  check((await page.locator('#configuration').innerText()).includes('未確認'),'Missing configuration stays visible');
+  await page.locator('#checkLine').click();await page.waitForFunction(()=>document.querySelector('#lineResults').children.length===6);
+  check((await page.locator('#status').innerText()).includes('実際の問い合わせ・納品通知'),'Signed empty webhook cannot claim real message delivery');
+  check(await page.locator('#lineResults div').filter({hasText:'実際の問い合わせの受信'}).locator('dd').innerText()==='未確認','Real message receipt remains explicitly unverified');
+  check(await page.evaluate(()=>window.__settingsCalls.filter(x=>x.action==='line_check').length===1),'One explicit LINE inspection only');
+  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),'Readiness page fits '+width);
+  check(errors.length===0,'No readiness script failures: '+errors.join(';'));
+  if(process.env.QA_SCREENSHOTS_DIR)await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'sales-readiness-'+width+'.png'),fullPage:true});
   await context.close();
  }}finally{await browser.close();}
  console.log('HOSTING_FEES_UI_QA_PASS',JSON.stringify({checks,widths,real_notifications:0,real_payments:0}));
