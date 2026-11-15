@@ -6,9 +6,9 @@ export function setupPasswordVisibility(root=document){
     const label=button.dataset.passwordLabel||'パスワード';
     function setVisible(visible){
       input.type=visible?'text':'password';
-      button.textContent=visible?'非表示':'表示';
       button.setAttribute('aria-pressed',String(visible));
       button.setAttribute('aria-label',label+(visible?'を隠す':'を表示'));
+      button.title=label+(visible?'を隠す':'を表示');
     }
     setVisible(false);
     button.addEventListener('click',()=>setVisible(input.type==='password'));
