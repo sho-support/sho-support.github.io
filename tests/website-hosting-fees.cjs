@@ -74,6 +74,7 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
   check(await page.locator('[data-line-test] [data-quote],[data-line-test] [data-activate],[data-line-test] [data-resend],[data-line-test] [data-accept-contract]').count()===0,'Test fixture has no commercial action buttons');
   check(await page.locator('#nLine').innerText()==='0'&&await page.locator('#nPay').innerText()==='0'&&await page.locator('#nDone').innerText()==='0','Test fixture is excluded from real order counts');
   check(await page.locator('[data-line-test] a').getAttribute('href')==='readiness.html','Test fixture links back to its receipt test');
+  check(await page.locator('[data-line-test] a').evaluate(el=>el.getBoundingClientRect().height>=44),'Receipt test link keeps a comfortable mobile touch target');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),'Test order fits '+width);
   check(errors.length===0,'No test-order script failures: '+errors.join(';'));
   if(process.env.QA_SCREENSHOTS_DIR)await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'line-test-order-'+width+'.png'),fullPage:true});

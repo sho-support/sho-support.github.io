@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "checked_on_jst": "2026-11-16",
+  "project_id": "tyhymvgjkoebetyypspj",
+  "backend_source_commit": "81a7580cb2d1ebf74ef5fd8119ab0bca8d7cc13d",
+  "changes": {
+    "line_receipt_fixture_order_code": "9000001001",
+    "commercial_actions_blocked": true,
+    "authentication_preserved": true,
+    "existing_provider_helpers_preserved": true,
+    "numeric_order_ids_preserved": true,
+    "fixture_requires_test_bank_allowlist": true
+  },
+  "functions": [
+    {
+      "slug": "website-customer-access",
+      "version": 55,
+      "verify_jwt": false,
+      "bundle_sha256": "ee91aff44d32e9bafd255404d1d8917ed569713e9be5ea41cc34e0259551ac94",
+      "files": 4,
+      "all_deployed_files_match": true,
+      "rollback_source": "runtime-baseline/website-customer-access-54.json"
+    },
+    {
+      "slug": "website-line-webhook",
+      "version": 21,
+      "verify_jwt": false,
+      "bundle_sha256": "d337e5a77492cfa0e654f23af1a3b53633cf4363fd8f74afff4efe256c9bcc21",
+      "files": 3,
+      "all_deployed_files_match": true,
+      "rollback_source": "runtime-baseline/website-line-webhook-20.json"
+    }
+  ],
+  "verification": {
+    "workflow_run": 43843684358,
+    "unit_tests": 147,
+    "canonical_http_tests": 22,
+    "runtime_adapter_tests": 24,
+    "synthetic_postgres_tests": 47,
+    "chromium_widths": [
+      320,
+      360,
+      390,
+      430,
+      768,
+      1366
+    ],
+    "hosting_fee_and_receipt_screen_checks": 366,
+    "real_line_messages_sent": 0,
+    "real_payment": false,
+    "real_customer_order_created": false,
+    "current_webhook_signed_live_recheck_pending": true
+  },
+  "schema_changed": false,
+  "production_cutover": false,
+  "order_to_delivery_live_test_verified": false
+}

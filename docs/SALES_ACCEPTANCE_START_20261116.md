@@ -1,5 +1,7 @@
 # HP販売：最初の実機テスト（2026-11-16 JST）
 
+> 最新追記：[テスト注文の本番処理への混入防止と残る本人設定](SALES_TEST_ISOLATION_20261116.md)。接続テストの制限をサーバーにも反映し、注文一覧では実注文と別表示にした。以下の配備番号と検査件数は各確認時点の記録。
+
 ## 現在開始できること
 
 [接続・受入テスト画面](https://sho-web-support-preview.zodiac-suu.workers.dev/admin/readiness.html)へ、既存の管理者アカウントでログインする。

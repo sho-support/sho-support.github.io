@@ -3,8 +3,8 @@
   "prepared_on_jst": "2026-11-16",
   "project_id": "tyhymvgjkoebetyypspj",
   "status": "prepared_only",
-  "source_commit": "3c32111266e6b2cf57cf350e57f81078482131c0",
-  "source_tree": "682b78618ca552d91655b3b4ab654d3cd21a7f6e",
+  "source_commit": "81a7580cb2d1ebf74ef5fd8119ab0bca8d7cc13d",
+  "source_tree": "020a9480aae964e016277d958c5e6ef3a1d2d50d",
   "all_source_files_match_pinned_commit": true,
   "functions": [
     {
@@ -103,9 +103,9 @@
         },
         {
           "path": "supabase/functions/_shared/hosting-routes.ts",
-          "bytes": 14563,
-          "git_blob_sha": "4920f9e49d66a9e1ec7fbad38626fe83be8f0b97",
-          "sha256": "fdfc330dac3c7ba0a75357718db1422d7d1bb8547e83bf563fe26691073eb33e"
+          "bytes": 14758,
+          "git_blob_sha": "d86e4d69149c6f71a1ea797eb29af1caf59954c6",
+          "sha256": "b432233301a83b18451b6713b5a7a1ed817091a497126a1e1197a2fab599284b"
         },
         {
           "path": "supabase/functions/_shared/hosting-service.ts",
@@ -124,6 +124,12 @@
           "bytes": 893,
           "git_blob_sha": "b9d2ac1adcf120899ac17f62375d4c4dcd87ebd9",
           "sha256": "394c84ac7759a948f6a207e673bb25dbb29c3f1f8eb5be8c50e04858fb309d42"
+        },
+        {
+          "path": "supabase/functions/_shared/line-receipt-test.mjs",
+          "bytes": 1546,
+          "git_blob_sha": "5a3a4a7721fd680812c4830a0acd515dc0a0faed",
+          "sha256": "397de8657532cbb250f245ff2c9bd9cc9772b72080b9477355c22b6b8f93f637"
         },
         {
           "path": "supabase/functions/_shared/sales-origin.ts",
@@ -334,9 +340,9 @@
       "slug": "website-customer-access",
       "before": {
         "slug": "website-customer-access",
-        "version": 54,
+        "version": 55,
         "verify_jwt": false,
-        "bundle_sha256": "2b4df5f3f994cf78d9213807f3bdc0b8ce9406212238ddd849df63ca6e58e457"
+        "bundle_sha256": "ee91aff44d32e9bafd255404d1d8917ed569713e9be5ea41cc34e0259551ac94"
       },
       "entrypoint": "supabase/functions/website-customer-access/index.ts",
       "files": [
@@ -420,9 +426,9 @@
         },
         {
           "path": "supabase/functions/_shared/hosting-routes.ts",
-          "bytes": 14563,
-          "git_blob_sha": "4920f9e49d66a9e1ec7fbad38626fe83be8f0b97",
-          "sha256": "fdfc330dac3c7ba0a75357718db1422d7d1bb8547e83bf563fe26691073eb33e"
+          "bytes": 14758,
+          "git_blob_sha": "d86e4d69149c6f71a1ea797eb29af1caf59954c6",
+          "sha256": "b432233301a83b18451b6713b5a7a1ed817091a497126a1e1197a2fab599284b"
         },
         {
           "path": "supabase/functions/_shared/hosting-service.ts",
@@ -441,6 +447,12 @@
           "bytes": 893,
           "git_blob_sha": "b9d2ac1adcf120899ac17f62375d4c4dcd87ebd9",
           "sha256": "394c84ac7759a948f6a207e673bb25dbb29c3f1f8eb5be8c50e04858fb309d42"
+        },
+        {
+          "path": "supabase/functions/_shared/line-receipt-test.mjs",
+          "bytes": 1546,
+          "git_blob_sha": "5a3a4a7721fd680812c4830a0acd515dc0a0faed",
+          "sha256": "397de8657532cbb250f245ff2c9bd9cc9772b72080b9477355c22b6b8f93f637"
         },
         {
           "path": "supabase/functions/_shared/sales-origin.ts",
@@ -462,9 +474,9 @@
         },
         {
           "path": "supabase/functions/website-customer-access/index.ts",
-          "bytes": 44715,
-          "git_blob_sha": "a344949d86ab37f9454008e26354a80050685378",
-          "sha256": "632a80c61d83635e39782b80e7a36a7e9ac63a68c3739014cae10ec869c0be6f"
+          "bytes": 44915,
+          "git_blob_sha": "a78106045688782493394e6744779100fd6fc454",
+          "sha256": "48a3c8ad28a4f2ec3f8e7e271d284985dc1bd8ce167fe58e84d79eb67d6e8d85"
         }
       ],
       "external_imports": [
@@ -694,8 +706,8 @@
     }
   ],
   "verification": {
-    "workflow_run": 43769822529,
-    "unit_tests_passed": 144,
+    "workflow_run": 43843684358,
+    "unit_tests_passed": 147,
     "native_postgres_tests_passed": 47,
     "synthetic_native_backup_restore_passed": true,
     "production_backup_restore_passed": false,
@@ -710,7 +722,11 @@
     "real_line_messages_sent": 0,
     "real_payments": 0,
     "line_connection_workflow_run": 43769822519,
-    "line_signed_empty_webhook_verified": true
+    "line_signed_empty_webhook_verified": true,
+    "http_route_tests_passed": 22,
+    "line_webhook_version_at_connection_check": 20,
+    "current_line_webhook_version": 21,
+    "current_line_webhook_signed_recheck_pending": true
   },
   "deployment": {
     "functions_replaced": false,
