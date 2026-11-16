@@ -40,9 +40,15 @@ test('default, expired, browser, unauthenticated and caller-selected requests ca
  for(const [handler,request,status] of [[createProductionR2Handler({...args,run:'__ALLOWED_RUN_ID__'}),make(),403],[createProductionR2Handler({...args,until:now*1000-1}),make(),403],[createProductionR2Handler(args),make(undefined,undefined,'https://evil.invalid'),403],[createProductionR2Handler(args),make(undefined,'invalid'),401],[createProductionR2Handler(args),make('{"action":"verify","bucket":"other"}'),400]])assert.equal((await handler(request)).status,status);
  assert.equal(checked,0);assert.equal((await createProductionR2Handler(args)(make())).status,200);assert.equal(checked,1);
 });
-test('configuration mismatch and enabled commercial hosting make no storage requests',async()=>{
- for(const replacements of [{CUSTOMER_R2_BUCKET:'sho-customer-sites-preview'},{CUSTOMER_R2_ACCOUNT_ID:'f'.repeat(32)},{CUSTOMER_R2_SECRET_ACCESS_KEY:''},{WEBSITE_CUSTOMER_HOSTING:'cloudflare-r2'}]){
+test('missing credentials and enabled commercial hosting make no storage requests',async()=>{
+ for(const replacements of [{CUSTOMER_R2_ACCOUNT_ID:''},{CUSTOMER_R2_BUCKET:''},{CUSTOMER_R2_SECRET_ACCESS_KEY:''},{WEBSITE_CUSTOMER_HOSTING:'cloudflare-r2'}]){
   const f=fixture();const r=await verifyProductionR2({run,sha,sign,env:name=>({...values,...replacements})[name],fetch:f.fetch});assert.equal(r.ok,false);assert.equal(r.failed_step,'configuration');assert.equal(f.calls.length,0);
+ }
+});
+test('identifier mistakes never select another target or count as ready configuration',async()=>{
+ for(const [replacements,issue] of [[{CUSTOMER_R2_ACCOUNT_ID:ACCOUNT+' '},'surrounding_whitespace'],[{CUSTOMER_R2_ACCOUNT_ID:'"'+ACCOUNT+'"'},'quoted_value'],[{CUSTOMER_R2_ACCOUNT_ID:'CUSTOMER_R2_ACCOUNT_ID='+ACCOUNT},'assignment_in_value'],[{CUSTOMER_R2_ACCOUNT_ID:'f'.repeat(64)},'digest_shaped_value']]){
+  const f=fixture();const r=await verifyProductionR2({run,sha,sign,env:name=>({...values,...replacements,CUSTOMER_R2_BUCKET:'sho-customer-sites-preview'})[name],fetch:f.fetch});
+  assert.equal(r.ok,false);assert.equal(r.storage_access_verified,true);assert.equal(r.failed_step,'configuration');assert.equal(r.identifier_issues.account,issue);assert.equal(r.identifier_issues.bucket,'previous_preview_bucket');assert.equal(f.objects.size,0);
  }
 });
 test('real transport contract verifies read/write/checksum, rejects preview access and removes only its synthetic object',async()=>{

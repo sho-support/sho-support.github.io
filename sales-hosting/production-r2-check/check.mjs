@@ -3,6 +3,16 @@ export const ACCOUNT='bdb1bb4a771be8595d5564d5d78cb1d4';
 export const BUCKET='sho-customer-sites-production';
 const encoder=new TextEncoder();
 const digest=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value))),x=>x.toString(16).padStart(2,'0')).join('');
+function identifierIssue(value,expected,name){
+ if(value===expected)return 'matches';
+ if(typeof value!=='string'||!value)return 'missing';
+ if(value.trim()===expected)return 'surrounding_whitespace';
+ if(value.trim()==='"'+expected+'"'||value.trim()==="'"+expected+"'")return 'quoted_value';
+ if(value.trim()===name+'='+expected)return 'assignment_in_value';
+ if(value==='sho-customer-sites-preview')return 'previous_preview_bucket';
+ if(/^[a-f0-9]{64}$/.test(value))return 'digest_shaped_value';
+ return 'different_value';
+}
 
 export function allowedProductionR2Claims(c,run,sha,now=Math.floor(Date.now()/1000)){
  return /^\d{8,20}$/.test(run)&&/^[a-f0-9]{40}$/.test(sha)
@@ -36,10 +46,13 @@ export async function verifyProductionR2({env,run,sha,sign,fetch:transport=globa
  const names=['CUSTOMER_R2_ACCOUNT_ID','CUSTOMER_R2_BUCKET','CUSTOMER_R2_ACCESS_KEY_ID','CUSTOMER_R2_SECRET_ACCESS_KEY'];
  const proof={ok:false,configured:Object.fromEntries(names.map(name=>[name,!!env(name)])),
   account_matches:env(names[0])===ACCOUNT,bucket_matches:env(names[1])===BUCKET,
+  identifier_issues:{account:identifierIssue(env(names[0]),ACCOUNT,names[0]),bucket:identifierIssue(env(names[1]),BUCKET,names[1])},
   hosting_enabled:env('WEBSITE_CUSTOMER_HOSTING')==='cloudflare-r2',
   write_verified:false,head_verified:false,read_back_verified:false,preview_access_denied:false,
-  cleanup_verified:false,customer_data_accessed:false,public_access_changed:false,production_cutover:false};
- if(!Object.values(proof.configured).every(Boolean)||!proof.account_matches||!proof.bucket_matches||proof.hosting_enabled
+  cleanup_verified:false,storage_access_verified:false,customer_data_accessed:false,public_access_changed:false,production_cutover:false};
+ // Endpoint and bucket remain the fixed, independently verified production target.
+ // Separately report identifier mistakes; never treat a successful credential check as ready configuration.
+ if(!Object.values(proof.configured).every(Boolean)||proof.hosting_enabled
    ||!/^\d{8,20}$/.test(run)||!/^[a-f0-9]{40}$/.test(sha))return {...proof,failed_step:'configuration'};
  const site='9000001002',release=await digest(run+':'+sha+':'+crypto.randomUUID());
  const key=`sites/${site}/releases/${release}/connectivity-check.json`;
@@ -77,7 +90,8 @@ export async function verifyProductionR2({env,run,sha,sign,fetch:transport=globa
    proof.cleanup_verified=[200,204].includes(deleted)&&await store.head(key)===null;
   }catch{proof.cleanup_verified=false;}}
  }
- proof.ok=proof.write_verified&&proof.head_verified&&proof.read_back_verified&&proof.preview_access_denied&&proof.cleanup_verified;
- if(!proof.ok&&!proof.failed_step)proof.failed_step='cleanup';
+ proof.storage_access_verified=proof.write_verified&&proof.head_verified&&proof.read_back_verified&&proof.preview_access_denied&&proof.cleanup_verified;
+ proof.ok=proof.storage_access_verified&&proof.account_matches&&proof.bucket_matches;
+ if(!proof.ok&&!proof.failed_step)proof.failed_step=proof.storage_access_verified?'configuration':'cleanup';
  return proof;
 }

@@ -1,7 +1,7 @@
 import {mkdir,writeFile} from 'node:fs/promises';
 import {prepareProductionR2} from '../customer-hosting-v2/src/production-r2.mjs';
 const endpoint='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/website-production-r2-check';
-const flags=['account_matches','bucket_matches','hosting_enabled','write_verified','head_verified','read_back_verified','preview_access_denied','cleanup_verified','customer_data_accessed','public_access_changed','production_cutover'];
+const flags=['account_matches','bucket_matches','hosting_enabled','write_verified','head_verified','read_back_verified','preview_access_denied','cleanup_verified','storage_access_verified','customer_data_accessed','public_access_changed','production_cutover'];
 const secrets=['CUSTOMER_R2_ACCOUNT_ID','CUSTOMER_R2_BUCKET','CUSTOMER_R2_ACCESS_KEY_ID','CUSTOMER_R2_SECRET_ACCESS_KEY'];
 async function json(url,options={}){
  const response=await fetch(url,{...options,redirect:'error',signal:AbortSignal.timeout(100000)});
@@ -27,6 +27,8 @@ try{
   ||flags.some(k=>typeof result[k]!=='boolean')||secrets.some(k=>typeof result.configured?.[k]!=='boolean'))throw Error('Unexpected proof');
  const proof={checked_at:new Date().toISOString(),source_commit:result.source_commit,run_id:result.run_id,ok:result.ok===true,
   configured:Object.fromEntries(secrets.map(k=>[k,result.configured[k]])),...Object.fromEntries(flags.map(k=>[k,result[k]]))};
+ const issues=['matches','missing','surrounding_whitespace','quoted_value','assignment_in_value','previous_preview_bucket','digest_shaped_value','different_value'];
+ if(issues.includes(result.identifier_issues?.account)&&issues.includes(result.identifier_issues?.bucket))proof.identifier_issues={account:result.identifier_issues.account,bucket:result.identifier_issues.bucket};
  if(['configuration','initial_absence','write','head','read_back','preview_scope','cleanup'].includes(result.failed_step))proof.failed_step=result.failed_step;
  if(Number.isInteger(result.provider_status)&&result.provider_status>=400&&result.provider_status<=599)proof.provider_status=result.provider_status;
  // REST read token only. Never call the create path or alter public access.
