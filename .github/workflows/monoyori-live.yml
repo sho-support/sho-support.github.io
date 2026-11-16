@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 45400bb4c4daa5c0b81d04b1c901a9f72a89909e
+          ref: 393a4f3cae913242d928b820cab2aea25ae04b28
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -142,6 +142,28 @@ jobs:
             }finally{if(browser)await browser.close();server.kill();}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
+      - name: Verify unit-price calculator and input boundaries
+        env:
+          NODE_PATH: /tmp/monoyori-qa/node_modules
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');const {spawn}=require('child_process');
+          (async()=>{const server=spawn('python3',['-m','http.server','8766','--bind','127.0.0.1'],{cwd:'dist',stdio:'ignore'});let browser;
+          try{for(let i=0;i<30;i++){try{if((await fetch('http://127.0.0.1:8766/products/tools/unit-price.html')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
+          browser=await chromium.launch();const page=await browser.newPage({viewport:{width:390,height:900}});await page.goto('http://127.0.0.1:8766/products/tools/unit-price.html');
+          const expect=async(text)=>{if(!(await page.locator('#unit-verdict').innerText()).includes(text))throw Error('Expected '+text+': '+await page.locator('#unit-verdict').innerText());};
+          await expect('候補B');if(!(await page.locator('#result-b').innerText()).includes('55.00'))throw Error('Wrong initial unit cost');
+          await page.locator('#b-ship').fill('300');await expect('候補A');
+          await page.locator('#b-discount').fill('600');await expect('候補B');
+          await page.locator('#b-count').fill('0');await expect('入力が揃う');
+          await page.locator('#b-count').fill('48');await page.locator('#b-discount').fill('999999');await expect('入力が揃う');
+          await page.locator('#b-discount').fill('0');await page.locator('#b-ship').fill('240');await expect('同じ');
+          await page.locator('#b-price').fill('');await expect('入力が揃う');
+          await page.locator('#b-price').fill('0');await page.locator('#b-ship').fill('0');await expect('候補B');
+          for(const width of [320,390,1440]){await page.setViewportSize({width,height:900});if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Calculator overflow '+width);}
+          console.log('PASS unit cost: shipping, coupon, equality, zero price, zero count, excessive discount, empty value and 3 viewport widths');
+          }finally{if(browser)await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1)});
+          JS
       - name: Deploy static assets to the isolated review Worker
         run: npx --yes wrangler@4.160.0 deploy --config wrangler.monoyori.json
       - name: Verify public crawling, canonical routes and analytics
@@ -152,7 +174,7 @@ jobs:
           const {chromium}=require('playwright');const fs=require('fs');
           (async()=>{const browser=await chromium.launch();const results=[];
           try{const page=await browser.newPage();
-            for(const path of ['/products/','/deals/','/events/','/products/tents','/products/stories/','/products/stories/adjustable-dumbbells-how-to-choose','/products/stories/tent-first-buying-guide']){
+            for(const path of ['/products/','/deals/','/events/','/products/tents','/products/stories/','/products/stories/adjustable-dumbbells-how-to-choose','/products/stories/tent-first-buying-guide','/products/tools/unit-price']){
               const response=await page.goto('https://sho-monoyori-review.zodiac-suu.workers.dev'+path+'?qa=1');await page.waitForLoadState('networkidle');
               const result=await page.evaluate(()=>({canonical:document.querySelector('link[rel="canonical"]')?.href,blocked:!!document.querySelector('script[src*="review-mode"]'),noindex:!!document.querySelector('meta[name="robots"][content*="noindex"]'),analytics:!!document.querySelector('script[src*="G-J5ZDLF30CS"]'),overflow:document.documentElement.scrollWidth>innerWidth}));
               if(path==='/products/tents'){
