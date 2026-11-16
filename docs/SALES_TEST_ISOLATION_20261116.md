@@ -12,11 +12,11 @@
 
 ## 確認できた範囲
 
-[検査済みソースのCI](https://github.com/sho-support/sho-support.github.io/actions/runs/43843684358)で、単体147件、workerd14件、Supabaseラッパー3件、組込みSQL43件（ネイティブ限定2件スキップ）、PostgreSQL本体47件、SQL/R2通し11件、実HTTPハンドラー22件が成功した。
+[検査済みソースのCI](https://github.com/sho-support/sho-support.github.io/actions/runs/43844824494)で、単体147件、workerd14件、Supabaseラッパー3件、組込みSQL43件（ネイティブ限定2件スキップ）、PostgreSQL本体47件、SQL/R2通し11件、実HTTPハンドラー22件が成功した。
 
 実配備用のエントリーポイントを動かす隔離検査24件も成功。署名付きの架空LINE入力、連携コード不一致、別LINEからの再連携拒否、通常の数字注文IDの受付、旧管理経路でのテスト注文拒否、既存ヘルパーの全バイト保持を確認した。外部LINEへの実トーク送信ではない。
 
-同CIで6画面幅の契約156件・維持費/受付テスト画面366件・パスワード198件が成功し、320px/1366pxのテスト注文カードを目視した。新しい戻りリンクは44px以上のタップ領域を追加して再検査する。配備内容は[機械可読記録](../sales-hosting/line-test-isolation-deployment.json)を参照。
+同CIで6画面幅の契約156件・維持費/受付テスト画面372件・パスワード198件が成功し、320px/1366pxのテスト注文カードを目視した。戻りリンクのタップ領域が44px以上あることも6画面幅で検査済み。最終の320px/1366px画像を再度目視した。[配備後の実配信検査](https://github.com/sho-support/sho-support.github.io/actions/runs/43844824570)では57静的検査、5 APIの認証保持、署名なしWebhookの401拒否も確認した。配備内容は[機械可読記録](../sales-hosting/line-test-isolation-deployment.json)を参照。
 
 以前の実LINE接続検査はWebhook v20の記録。v21のHMAC処理は変更していないが、その過去の記録をv21で再検査済みとは扱わない。管理者用画面の「LINE接続を確認する」はLINEから署名付き空Webhookを送る接続検査で、顧客へのトーク送信ではない。
 

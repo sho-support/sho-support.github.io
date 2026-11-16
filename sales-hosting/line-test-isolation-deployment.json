@@ -32,7 +32,7 @@
     }
   ],
   "verification": {
-    "workflow_run": 43843684358,
+    "workflow_run": 43844824494,
     "unit_tests": 147,
     "canonical_http_tests": 22,
     "runtime_adapter_tests": 24,
@@ -45,13 +45,22 @@
       768,
       1366
     ],
-    "hosting_fee_and_receipt_screen_checks": 366,
+    "hosting_fee_and_receipt_screen_checks": 372,
     "real_line_messages_sent": 0,
     "real_payment": false,
     "real_customer_order_created": false,
-    "current_webhook_signed_live_recheck_pending": true
+    "current_webhook_signed_live_recheck_pending": true,
+    "mobile_link_minimum_height_px": 44,
+    "static_checks": 57,
+    "protected_api_preflights": 5,
+    "unsigned_line_webhook_status": 401,
+    "live_verification_run": 43844824570
   },
   "schema_changed": false,
   "production_cutover": false,
-  "order_to_delivery_live_test_verified": false
+  "order_to_delivery_live_test_verified": false,
+  "preview": {
+    "source_commit": "c7bf35fb5c2305aaec3e8bc135e417d6033e15d3",
+    "version": "7e9ff205-321a-4fc9-946b-10a5e17245e1"
+  }
 }

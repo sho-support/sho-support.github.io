@@ -6,7 +6,7 @@
 
 - [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `81a7580cb2d1ebf74ef5fd8119ab0bca8d7cc13d` の6関数・依存を含む37ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。接続テストの分離修正後、現行のcustomer-accessはv55となったため、その配備SHAも候補manifestの切替前照合へ更新。過去のプレビュー配備を本番切替済みと扱わない。
 - JWT設定は `website-api` と `website-worker` がtrue、`website-customer-access`、`website-order-api`、`website-preview`、`website-sales-setup` がfalse。falseの関数も内部の本人・管理者確認を維持する。
-- 公開フロントは `35df2e6f-3e51-4bcd-ba27-1f5519498822`、配備元は `df21c3f6fbd826c920a6a5a289b480634b2e77f6`。LINE受付の管理者用テスト画面を追加し、43ファイルの配備後に57静的検査・4 API preflightを確認。[実機テストの範囲と手順](SALES_ACCEPTANCE_START_20261116.md)を参照。商用機能の本番切替ではない。
+- 公開フロントは `7e9ff205-321a-4fc9-946b-10a5e17245e1`、配備元は `c7bf35fb5c2305aaec3e8bc135e417d6033e15d3`。テスト注文を実注文と分離し、43ファイルの配備後に57静的検査・5 API preflight・署名なしWebhookの401拒否を確認。[実機テストの範囲と残る本人設定](SALES_TEST_ISOLATION_20261116.md)を参照。商用機能の本番切替ではない。
 
 ## 実行前に必要なこと
 
