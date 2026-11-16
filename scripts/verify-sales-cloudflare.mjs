@@ -68,13 +68,16 @@ for (const [name, body, expectedStatus] of [
   assert.equal(foreign.status, 403);
   apiChecks.push({ function: name, origin_connected: true, preflight_status: response.status, sdk_headers_allowed: true, safe_probe_status: probe.status, foreign_status: foreign.status, previous_origin_preserved: true });
 }
+// An unsigned empty webhook must be rejected before any order lookup or reply.
+const unsignedWebhook = await fetch(`${apiBase}/functions/v1/website-line-webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"events":[]}', signal: AbortSignal.timeout(15000) });
+assert.equal(unsignedWebhook.status, 401, 'LINE webhook must retain signature verification');
 const proof = {
   checked_at: new Date().toISOString(), verification_commit: process.env.GITHUB_SHA || null,
   deployed_source_commit: deployment?.source_commit || process.env.GITHUB_SHA || null,
   deployed_version: deployment?.version || log.match(/Current Version ID:\s*([a-f0-9-]{36})/)?.[1] || null, origin,
-  static_check_count: checks.length, static_checks: checks, production_api_checks: apiChecks,
+  static_check_count: checks.length, static_checks: checks, production_api_checks: apiChecks, unsigned_line_webhook_status: unsignedWebhook.status,
   production_cutover: false, production_business_apis_modified: true, protected_settings_origin_updated: true, authentication_and_commercial_flow_complete: false,
   existing_netlify_site_modified: false, dns_modified: false, customer_messages_or_orders_created: 0,
 };
 writeFileSync('test-results/sales-cloudflare/live.json', JSON.stringify(proof, null, 2) + '\n');
-console.log(JSON.stringify({ origin, static_checks_passed: checks.length, connected_preflights: apiChecks.length, authentication_required: true, new_frontend_legacy_mutations_enabled: false, auth_redirect_verified_by_this_probe: false, production_cutover: false }));
+console.log(JSON.stringify({ origin, static_checks_passed: checks.length, connected_preflights: apiChecks.length, unsigned_line_webhook_status: unsignedWebhook.status, authentication_required: true, new_frontend_legacy_mutations_enabled: false, auth_redirect_verified_by_this_probe: false, production_cutover: false }));

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { stripTypeScriptTypes } from 'node:module';
 import { readFile } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 
 const cloud = 'https://sho-web-support-preview.zodiac-suu.workers.dev';
 const legacy = 'https://sho-web-support.netlify.app';
@@ -18,6 +18,7 @@ async function runtime(slug, { admin = { from: forbidden, rpc: forbidden }, env 
   const messages = [], requests = [];
   const helpers = {
     adminClient: () => admin, getUser: async () => user,
+    getLineMessagingToken: async () => 'synthetic-line-token-only',
     corsHeaders: { 'Access-Control-Allow-Origin': '*' },
     json: (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }),
     notifyOwner: async text => { messages.push(text); return { ok: true }; },
@@ -197,4 +198,83 @@ test('runtime dependencies retain every original helper byte and JWT setting', a
     }
     assert.equal(await readFile(new URL(`../runtime/${slug}/_shared/sales-origin.ts`, import.meta.url), 'utf8'), await readFile(new URL('../../supabase/functions/_shared/sales-origin.ts', import.meta.url), 'utf8'));
   }
+});
+
+test('receipt-only orders cannot enter quotation, URL reservation, payment or intake through legacy and origin-less requests',async()=>{
+  const admin=rowsFixture({website_admins:[{user_id:'synthetic-admin'}]});
+  const h=await runtime('website-customer-access',{admin,user:{id:'synthetic-admin'}});
+  for(const origin of [legacy,'https://sho-support.github.io',''])for(const action of ['admin_send_final_quote','admin_activate_order','admin_resend_intake','admin_resolve_free_url']){
+    const r=await h.request({action,order_code:' 9000001001 '},origin);
+    assert.equal(r.status,409);assert.equal((await r.json()).code,'line_receipt_test_only');
+  }
+  assert.equal(h.messages.length,0);assert.equal(h.requests.length,0);
+});
+
+test('receipt-only guards still authenticate administrators before returning the reserved-order response',async()=>{
+  for(const [user,status]of [[null,401],[{id:'synthetic-stranger'},403]]){
+    const h=await runtime('website-customer-access',{admin:rowsFixture({}),user});
+    assert.equal((await h.request({action:'admin_activate_order',order_code:'9000001001'},legacy)).status,status);
+    assert.equal(h.messages.length,0);assert.equal(h.requests.length,0);
+  }
+});
+
+function receiptDatabase({code='9000001001',allow=true,linked=false}={}){
+  const token='a'.repeat(40),order={id:'synthetic-order-id',order_code:code,status:linked?'pending_payment':'pending_line',plan:'one',amount_from:15000,line_user_id:linked?'U_OTHER':null,line_link_token_hash:hash(token)};
+  const reads=[],writes=[];
+  return {token,order,reads,writes,from(table){
+    let filters=[],values=null;
+    const result=()=>{
+      reads.push({table,filters});
+      if(table==='website_orders')return{data:order,error:null};
+      if(table==='website_settings'){
+        const key=filters.find(([k])=>k==='key')?.[1];
+        if(key==='bank_transfer_test')return{data:{value:{order_codes:allow?['9000001001']:[],message:'テスト銀行・普通0000000（架空）'}},error:null};
+        if(key==='bank_transfer')return{data:{value:{message:'SYNTHETIC_REAL_BANK_MUST_NOT_ENTER_TEST_REPLY'}},error:null};
+      }
+      throw Error('Unexpected fixture query');
+    };
+    const chain={select(){return chain;},eq(k,v){filters.push([k,v]);return chain;},maybeSingle:async()=>result(),update(v){values=v;return chain;},then(resolve,reject){if(!values)throw Error('Unexpected fixture mutation');writes.push({table,values});Object.assign(order,values);return Promise.resolve({error:null}).then(resolve,reject);}};
+    return chain;
+  }};
+}
+async function lineReceipt({db=receiptDatabase(),signature=true,token=db.token}={}){
+  const replies=[],secret='synthetic-HMAC-secret-only';
+  const h=await runtime('website-line-webhook',{admin:db,env:{LINE_CHANNEL_SECRET:secret},fetcher:async(url,options)=>{
+    if(url==='https://api.line.me/v2/bot/profile/U_FIXTURE')return Response.json({displayName:'Synthetic LINE sender'});
+    if(url==='https://api.line.me/v2/bot/message/reply'){replies.push(JSON.parse(options.body));return Response.json({});}
+    throw Error('Unexpected provider operation');
+  }});
+  const raw=JSON.stringify({events:[{type:'message',message:{type:'text',text:'注文ID: '+db.order.order_code+'\n連携コード: '+token},source:{userId:'U_FIXTURE'},replyToken:'synthetic-reply-token'}]});
+  const r=await h.handler(new Request('https://fixture.supabase.co/functions/v1/website-line-webhook',{method:'POST',headers:{'x-line-signature':signature?createHmac('sha256',secret).update(raw).digest('base64'):'not-a-valid-signature'},body:raw}));
+  return {r,db,replies,h,text:replies.flatMap(x=>x.messages.map(m=>m.text)).join('\n')};
+}
+test('the exact signed LINE handler accepts the numeric fixture and always labels it as a non-commercial test',async()=>{
+  const {r,db,replies,text}=await lineReceipt();assert.equal(r.status,200);assert.equal(replies.length,1);
+  assert.match(text,/9000001001/);assert.match(text,/接続テスト専用/);assert.match(text,/テスト用・架空口座/);assert.match(text,/実際に振り込まない/);
+  assert.ok(!text.includes('SYNTHETIC_REAL_BANK'));assert.ok(!db.reads.some(x=>x.filters.some(([k,v])=>k==='key'&&v==='bank_transfer')));
+  assert.equal(db.writes.length,1);assert.equal(db.order.status,'pending_payment');assert.equal(db.order.line_user_id,'U_FIXTURE');
+});
+test('missing fixture allowlist stays explicitly test-only even when a production bank is configured',async()=>{
+  const {r,text}=await lineReceipt({db:receiptDatabase({allow:false})});assert.equal(r.status,200);
+  assert.match(text,/接続テスト専用/);assert.match(text,/未設定/);assert.ok(!text.includes('0000000'));assert.ok(!text.includes('正式なお見積り'));
+});
+test('ordinary numeric orders preserve the existing non-test receipt flow',async()=>{
+  const {r,text,db}=await lineReceipt({db:receiptDatabase({code:'1001'})});assert.equal(r.status,200);
+  assert.match(text,/正式なお見積り/);assert.ok(!text.includes('接続テスト専用'));assert.ok(!text.includes('0000000'));assert.equal(db.writes.length,1);
+});
+test('unsigned LINE requests cannot read orders or write pairing state',async()=>{
+  const {r,db,h,replies}=await lineReceipt({signature:false});assert.equal(r.status,401);assert.equal(db.reads.length,0);assert.equal(db.writes.length,0);assert.equal(h.requests.length,0);assert.equal(replies.length,0);
+});
+test('the receipt fixture still requires its matching pairing code and refuses a different LINE account',async()=>{
+  const wrong=await lineReceipt({token:'b'.repeat(40)});assert.equal(wrong.r.status,200);assert.equal(wrong.db.writes.length,0);assert.match(wrong.text,/連携コードを確認できません/);
+  const other=await lineReceipt({db:receiptDatabase({linked:true})});assert.equal(other.r.status,200);assert.equal(other.db.writes.length,0);assert.match(other.text,/別のLINEアカウント/);
+});
+test('LINE and customer runtime deployment retain provider helper bytes, and test logic matches canonical source',async()=>{
+  for(const [slug,version]of [['website-line-webhook',20],['website-customer-access',54]]){
+    const before=JSON.parse(await readFile(new URL(`../runtime-baseline/${slug}-${version}.json`,import.meta.url),'utf8'));
+    for(const file of before.files.filter(f=>f.name!=='index.ts'))assert.equal(await readFile(new URL(`../runtime/${slug}/${file.name}`,import.meta.url),'utf8'),file.content);
+    assert.equal(await readFile(new URL(`../runtime/${slug}/_shared/line-receipt-test.mjs`,import.meta.url),'utf8'),await readFile(new URL('../../supabase/functions/_shared/line-receipt-test.mjs',import.meta.url),'utf8'));
+  }
+  const canonical=await readFile(new URL('../../supabase/functions/website-line-webhook/index.ts',import.meta.url),'utf8');
+  assert.equal(await readFile(new URL('../runtime/website-line-webhook/index.ts',import.meta.url),'utf8'),canonical.replaceAll("from '../_shared/","from './_shared/"));
 });

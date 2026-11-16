@@ -1,4 +1,5 @@
 import { SALES_ORIGINS, salesUrl, CLOUDFLARE_SALES_ORIGIN } from './_shared/sales-origin.ts';
+import {blocksLineReceiptMutation,LINE_RECEIPT_TEST_ERROR} from './_shared/line-receipt-test.mjs';
 import { adminClient, getUser, json, linePush, notifyOwner, triggerWebsiteWorker, setGithubPagesSource, publishApprovedStagedBranch, verifyWebsiteBeforeDelivery, requireStablePublicationUrl, normalizeCustomerHostname, freeWebsiteUrl, resolveFreeWebsiteUrl, setGithubPagesDomain } from './_shared/website.ts';
 
 const allowedOrigins = SALES_ORIGINS;
@@ -74,6 +75,7 @@ Deno.serve(async(req)=>{
     const user=await getUser(req,admin);
     if(!user)return json({error:'ログインが必要です。'},401);
     if(!(await isAdmin(admin,user.id)))return json({error:'管理者権限が必要です。'},403);
+    if(blocksLineReceiptMutation(action,body?.order_code))return json(LINE_RECEIPT_TEST_ERROR,409);
 
     if(action==='admin_send_review'){
       const targetSite=String(body?.site_id||'');

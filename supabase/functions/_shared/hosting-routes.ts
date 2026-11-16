@@ -2,6 +2,7 @@ import {cloudflareHostingEnabled} from './hosting-mode.ts';
 import {hostingHash,hostingMapping,hostingPublisher,hostingRpc,reserveHostingUrl} from './hosting-service.ts';
 import {PublicationUncertainError,supabaseHostingDatabase} from './hosting-publication.mjs';
 import {handleCommercialAction} from './commercial-routes.ts';
+import {blocksLineReceiptMutation,LINE_RECEIPT_TEST_ERROR} from './line-receipt-test.mjs';
 
 const root='https://sho-web-support.netlify.app/';
 const randomKey=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
@@ -60,6 +61,7 @@ export async function handleHostingAction({req,body,admin,user,dependencies:d}:a
       if(!user)return d.json({error:'ログインが必要です。'},401);
       const adminRow=await one(admin,'website_admins','user_id',user.id);
       if(!adminRow)return d.json({error:'管理者権限が必要です。'},403);
+      if(blocksLineReceiptMutation(action,body?.order_code))return d.json(LINE_RECEIPT_TEST_ERROR,409);
     }
     const commercial=await handleCommercialAction({body,admin,user,dependencies:d});
     if(commercial)return commercial;

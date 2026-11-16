@@ -1,0 +1,251 @@
+import { adminClient, json, linePush, notifyOwner, getLineMessagingToken } from './_shared/website.ts';
+import {isLineReceiptTestCode,lineReceiptTestReply} from './_shared/line-receipt-test.mjs';
+
+async function sha256Hex(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');}
+
+function base64Bytes(value: string) {
+  try {
+    const raw = atob(value);
+    return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+  } catch {
+    return new Uint8Array();
+  }
+}
+
+async function verifySignature(rawBody: string, signature: string, secret: string) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const digest = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(rawBody)));
+  const received = base64Bytes(signature);
+  if (digest.length !== received.length) return false;
+  let diff = 0;
+  for (let i = 0; i < digest.length; i++) diff |= digest[i] ^ received[i];
+  return diff === 0;
+}
+
+async function reply(replyToken: string | undefined, text: string | string[]) {
+  const token = await getLineMessagingToken();
+  if (!token || !replyToken) return;
+  const texts = (Array.isArray(text) ? text : [text]).filter(Boolean).slice(0, 5);
+  const response = await fetch('https://api.line.me/v2/bot/message/reply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ replyToken, messages: texts.map((t) => ({ type: 'text', text: String(t).slice(0, 5000) })) }),
+  });
+  if (!response.ok) console.error('LINE reply failed', response.status, await response.text());
+}
+
+async function profile(lineUserId: string) {
+  const token = await getLineMessagingToken();
+  if (!token) return null;
+  const response = await fetch(`https://api.line.me/v2/bot/profile/${encodeURIComponent(lineUserId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) return null;
+  return await response.json().catch(() => null);
+}
+
+Deno.serve(async (req) => {
+  if (req.method !== 'POST') return json({ ok: true });
+
+  try {
+    const raw = await req.text();
+    const secret = Deno.env.get('LINE_CHANNEL_SECRET') || '';
+    const signature = req.headers.get('x-line-signature') || '';
+    if (!secret || !(await verifySignature(raw, signature, secret))) {
+      return new Response('Invalid signature', { status: 401 });
+    }
+
+    const payload = JSON.parse(raw);
+    const events = Array.isArray(payload?.events) ? payload.events : [];
+    const admin = adminClient();
+    const ownerLineUserId = Deno.env.get('LINE_OWNER_USER_ID') || '';
+
+    for (const event of events) {
+      if (event?.type !== 'message' || event?.message?.type !== 'text') continue;
+      const lineUserId = String(event?.source?.userId || '');
+      if (!lineUserId) continue;
+
+      const text = String(event.message.text || '').trim();
+
+      const adminCode = Deno.env.get('LINE_ADMIN_LINK_CODE') || '';
+      const adminLink = text.match(/^SHO\s+ADMIN\s+LINK\s+(.+)$/i);
+      if (adminLink && adminCode && adminLink[1].trim() === adminCode) {
+        const p = await profile(lineUserId);
+        const { error: settingError } = await admin.from('website_settings').upsert({
+          key: 'line_owner',
+          value: { user_id: lineUserId, display_name: p?.displayName || null },
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'key' });
+        if (settingError) throw settingError;
+        await reply(event.replyToken, 'SHO WEB SUPPORTの自動通知先として、このLINEを登録しました。');
+        continue;
+      }
+
+      const orderMatch = text.match(/注文ID\s*[:：]?\s*((?:[FSP]\d{4,6}|\d{4,10}))/i) || text.match(/\b([FSP]\d{4,6})\b/i);
+      if (orderMatch) {
+        const orderCode = String(orderMatch[1] || orderMatch[0]).toUpperCase();
+        const { data: order, error: orderError } = await admin
+          .from('website_orders')
+          .select('id,order_code,status,plan,template_style,update_plan,custom_domain,amount_from,line_user_id,line_link_token_hash')
+          .eq('order_code', orderCode)
+          .maybeSingle();
+        if (orderError) throw orderError;
+
+        if (order) {
+          if(order.status==='pending_line'){
+            const match=text.match(/連携コード\s*[:：]\s*([a-f0-9]{40})/i);
+            if(!match||!order.line_link_token_hash||(await sha256Hex(match[1].toLowerCase()))!==order.line_link_token_hash){
+              await reply(event.replyToken,'注文IDと連携コードを確認できませんでした。お申込み完了画面の「公式LINEを開く」から送り直してください。');
+              continue;
+            }
+          }
+          if(order.line_user_id&&order.line_user_id!==lineUserId){await reply(event.replyToken,'この注文IDは別のLINEアカウントに紐づいています。ご本人確認が必要な場合は管理者へご相談ください。');continue;}
+          const p = await profile(lineUserId);
+          const { error: orderUpdateError } = await admin
+            .from('website_orders')
+            .update({
+              status: order.status === 'pending_line' ? 'pending_payment' : order.status,
+              line_user_id: lineUserId,
+              line_display_name: p?.displayName || null,
+              line_linked_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', order.id);
+          if (orderUpdateError) throw orderUpdateError;
+
+          if(isLineReceiptTestCode(order.order_code)){
+            const {data:testBank,error:testBankError}=await admin.from('website_settings').select('value').eq('key','bank_transfer_test').maybeSingle();
+            if(testBankError)throw testBankError;
+            await reply(event.replyToken,lineReceiptTestReply(order.order_code,testBank?.value));
+            continue;
+          }
+
+          const planLabel = order.plan === 'one' ? '1ページサイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
+          const templateLine = order.template_style ? `\nテンプレート: ${order.template_style}` : '';
+          const { data: bankSetting } = await admin
+            .from('website_settings')
+            .select('value')
+            .eq('key', 'bank_transfer')
+            .maybeSingle();
+          const bankMessage = String(bankSetting?.value?.message || '').trim();
+          // When no real bank account is configured, show fictional bank details
+          // only for explicitly allowlisted test orders. Never show them to real buyers.
+          const { data: bankTestSetting } = bankMessage
+            ? { data: null }
+            : await admin.from('website_settings').select('value').eq('key', 'bank_transfer_test').maybeSingle();
+          const testOrderCodes = Array.isArray(bankTestSetting?.value?.order_codes)
+            ? bankTestSetting.value.order_codes
+            : [];
+          const testBankMessage = testOrderCodes.includes(order.order_code)
+            ? String(bankTestSetting?.value?.message || '').trim()
+            : '';
+
+          // Never request a bank transfer on the basis of a starting price alone.
+          // Final price and payment instructions are sent only after operator approval.
+          if (testBankMessage) {
+            await reply(
+              event.replyToken,
+              `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\n【振込先（テスト用・架空口座）】\n${testBankMessage}\n\n※これは動作テスト用の架空口座です。実際に振り込まないでください。\n本番ではこの位置に正式な振込先を表示します。`,
+            );
+          } else {
+            await reply(
+              event.replyToken,
+              `ご注文を受け付けました。\n注文ID: ${order.order_code}\n${planLabel} ¥${Number(order.amount_from || 0).toLocaleString()}〜${templateLine}\n\nまず制作内容を確認し、確定した合計金額と振込先を改めてこのLINEでご案内します。正式なお見積り前にお振込みいただく必要はありません。入金確認後、SITE IDと制作ヒアリングURLをお送りします。`,
+            );
+          }
+          continue;
+        }
+      }
+
+      const idMatch = text.match(/SITE\s*ID\s*[:：]?\s*([A-Za-z0-9_-]{3,32})/i);
+
+      let siteId: string | null = null;
+      let newlyLinked = false;
+
+      if (idMatch) {
+        const candidate = idMatch[1];
+        const { data: site, error: siteError } = await admin
+          .from('website_sites')
+          .select('site_id')
+          .eq('site_id', candidate)
+          .maybeSingle();
+        if (siteError) throw siteError;
+
+        if (site) {
+          siteId = site.site_id;
+          const p = await profile(lineUserId);
+          const { data: previous } = await admin
+            .from('website_line_links')
+            .select('line_user_id')
+            .eq('site_id', siteId)
+            .maybeSingle();
+
+          const {data:orderOwner,error:orderOwnerError}=await admin.from('website_orders').select('line_user_id').eq('site_id',siteId).maybeSingle();
+          if(orderOwnerError)throw orderOwnerError;
+          if((previous?.line_user_id&&previous.line_user_id!==lineUserId)||(!previous&&orderOwner?.line_user_id!==lineUserId)){
+            await reply(event.replyToken,'このSITE IDは現在のLINEアカウントと紐づけできません。管理者へご相談ください。');
+            siteId=null;
+            continue;
+          }
+          const { error: linkError } = await admin.from('website_line_links').upsert({
+            site_id: siteId,
+            line_user_id: lineUserId,
+            line_display_name: p?.displayName || null,
+          }, { onConflict: 'site_id' });
+          if (linkError) throw linkError;
+          newlyLinked = !previous || previous.line_user_id !== lineUserId;
+        }
+      }
+
+      if (!siteId) {
+        const { data: links, error: linkError } = await admin
+          .from('website_line_links')
+          .select('site_id')
+          .eq('line_user_id', lineUserId)
+          .order('linked_at', { ascending: false })
+          .limit(2);
+        if (linkError) throw linkError;
+        if ((links || []).length > 1) {
+          await reply(
+            event.replyToken,
+            '複数のホームページが登録されています。相談内容に「SITE ID 1242」のように、対象のSITE IDを添えてお送りください。',
+          );
+          continue;
+        }
+        siteId = links?.[0]?.site_id || null;
+      }
+
+      if (!siteId) continue;
+
+      await admin.from('website_activity').insert({
+        site_id: siteId,
+        actor_type: 'customer_line',
+        action: 'line_message',
+        detail: text.slice(0, 5000),
+        payload: { line_user_id: lineUserId, message_id: event?.message?.id || null },
+      });
+
+      if (newlyLinked) {
+        await reply(
+          event.replyToken,
+          `SITE ID ${siteId} とこのLINEを紐づけました。ご相談の際は対象のSITE IDを添えてお送りください。`,
+        );
+      }
+
+      if (lineUserId !== ownerLineUserId) {
+        await notifyOwner(`【LINE相談 / SITE ID ${siteId}】\n${text.slice(0, 1500)}`);
+      }
+    }
+
+    return json({ ok: true });
+  } catch (error) {
+    console.error('LINE webhook error', error);
+    return json({ ok: false }, 500);
+  }
+});

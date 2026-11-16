@@ -1,4 +1,5 @@
 import { SALES_ORIGINS, salesUrl } from '../_shared/sales-origin.ts';
+import {blocksLineReceiptMutation,LINE_RECEIPT_TEST_ERROR} from '../_shared/line-receipt-test.mjs';
 import {intakeAssetProblem} from '../_shared/intake-assets.ts';
 import {issueIntakeUpload,UploadGateError} from '../_shared/upload-gate.ts';
 import {handleHostingAction} from '../_shared/hosting-routes.ts';
@@ -80,6 +81,7 @@ Deno.serve(async(req)=>{
     const user=await getUser(req,admin);
     if(!user)return json({error:'ログインが必要です。'},401);
     if(!(await isAdmin(admin,user.id)))return json({error:'管理者権限が必要です。'},403);
+    if(blocksLineReceiptMutation(action,body?.order_code))return json(LINE_RECEIPT_TEST_ERROR,409);
 
     if(action==='admin_send_review'){
       const targetSite=String(body?.site_id||'');

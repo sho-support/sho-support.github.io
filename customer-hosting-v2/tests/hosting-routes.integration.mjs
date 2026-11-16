@@ -12,6 +12,18 @@ const ADMIN='11111111-1111-4111-8111-111111111111',CUSTOMER='22222222-2222-4222-
 const DOMAIN='routes.example';
 const hash=async x=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(x))),b=>b.toString(16).padStart(2,'0')).join('');
 const page=title=>'<!doctype html><html lang="ja"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title></head><body><h1>'+title+'</h1></body></html>';
+test('both canonical HTTP entrypoints reject receipt-only commercial actions before DB writes or messages',async()=>{
+ const admin={from(table){assert.equal(table,'website_admins');const chain={select(){return chain;},eq(){return chain;},maybeSingle:async()=>({data:{user_id:ADMIN},error:null})};return chain;},rpc(){throw Error('Reserved fixture reached a database mutation');}};
+ for(const mode of [undefined,'cloudflare-r2'])for(const slug of ['website-api/index.ts','website-customer-access/index.ts']){
+  const h=await edgeHarness({slug,admin,users:{admin:{id:ADMIN}},env:{WEBSITE_CUSTOMER_HOSTING:mode}});
+  const actions=['admin_send_final_quote','admin_activate_order','admin_record_contract_acceptance',...(slug.startsWith('website-customer-access')?['admin_resend_intake','admin_resolve_free_url']:[])];
+  for(const action of actions){
+   const r=await h.handler(new Request('https://fixture.supabase.co',{method:'POST',headers:{authorization:'Bearer admin','content-type':'application/json'},body:JSON.stringify({action,order_code:'9000001001'})}));
+   assert.equal(r.status,409);assert.equal((await r.json()).code,'line_receipt_test_only');
+  }
+  assert.equal(h.messages.length,0);assert.equal(h.background.length,0);assert.equal(h.requests.length,0);
+ }
+});
 test('actual Supabase HTTP handlers use the shared Cloudflare protocol',async t=>{
   const sql=new PGlite();const runtime=new Miniflare(convertV4MiniflareOptions({
     modules:['../worker.mjs','../src/site-router.mjs'].map(path=>({type:'ESModule',path:fileURLToPath(new URL(path,import.meta.url))})),

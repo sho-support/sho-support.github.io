@@ -16,6 +16,8 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
    window.__settingsCalls=[];let saved=null;
    window.__mockSales=async body=>{
     window.__settingsCalls.push(body);
+    if(body.action==='admin_list_orders')return{data:{orders:[{order_code:'9000001001',status:'pending_payment',plan:'one',amount_from:15000,line_user_id:'U_SYNTHETIC_TEST',selections:{qa_purpose:'line_connection_acceptance_only'}}]}};
+    if(body.action==='admin_bank_settings')return{data:{message:''}};
     if(body.action==='status')return{data:{ok:true,line_test:{order_code:'9000001001',line_linked:false,real_order:false,open_line_url:'https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent('【HP販売 接続テスト】実注文ではありません。')},configuration:{seller_saved:true,test_bank_saved:true,hosting_schema_installed:false,hosting_mode_enabled:false,production_storage_configured:false,stable_domain_configured:false,backup_attested:false,commercial_policy_approved:false,production_bank_saved:false},order_to_delivery_live_test_verified:false}};
     if(body.action==='line_check')return{data:{ok:true,line:{credential_valid:true,official_account_matches:true,webhook_configured:true,webhook_active:true,signed_empty_webhook_verified:true,real_message_receipt_verified:false,real_messages_sent:0}}};
     if(body.action==='admin_get_sales_settings')return{data:{ok:true,seller:saved?.seller||{},bank_message:saved?.bank_message||'',backup:{reference:saved?.backup_reference||''},policy:saved?{terms:saved.terms}:null,default_terms:terms}};
@@ -65,6 +67,16 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),'Readiness page fits '+width);
   check(errors.length===0,'No readiness script failures: '+errors.join(';'));
   if(process.env.QA_SCREENSHOTS_DIR)await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'sales-readiness-'+width+'.png'),fullPage:true});
+  await page.goto(base+'admin/orders.html',{waitUntil:'domcontentloaded'});await page.locator('[data-line-test]').waitFor();
+  await page.locator('[data-line-test] > summary').click();
+  check((await page.locator('[data-line-test]').innerText()).includes('テスト専用'),'Receipt fixture is visibly separate from real orders');
+  check((await page.locator('[data-line-test]').innerText()).includes('実際の注文・契約・請求・制作・公開は発生しません'),'Test order explains its limits');
+  check(await page.locator('[data-line-test] [data-quote],[data-line-test] [data-activate],[data-line-test] [data-resend],[data-line-test] [data-accept-contract]').count()===0,'Test fixture has no commercial action buttons');
+  check(await page.locator('#nLine').innerText()==='0'&&await page.locator('#nPay').innerText()==='0'&&await page.locator('#nDone').innerText()==='0','Test fixture is excluded from real order counts');
+  check(await page.locator('[data-line-test] a').getAttribute('href')==='readiness.html','Test fixture links back to its receipt test');
+  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),'Test order fits '+width);
+  check(errors.length===0,'No test-order script failures: '+errors.join(';'));
+  if(process.env.QA_SCREENSHOTS_DIR)await page.screenshot({path:join(process.env.QA_SCREENSHOTS_DIR,'line-test-order-'+width+'.png'),fullPage:true});
   await context.close();
  }}finally{await browser.close();}
  console.log('HOSTING_FEES_UI_QA_PASS',JSON.stringify({checks,widths,real_notifications:0,real_payments:0}));

@@ -1,4 +1,5 @@
-import { adminClient, json, linePush, notifyOwner, getLineMessagingToken } from './_shared/website.ts';
+import { adminClient, json, linePush, notifyOwner, getLineMessagingToken } from '../_shared/website.ts';
+import {isLineReceiptTestCode,lineReceiptTestReply} from '../_shared/line-receipt-test.mjs';
 
 async function sha256Hex(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');}
 
@@ -86,7 +87,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const orderMatch = text.match(/注文ID\s*[:：]?\s*([FSP]\d{4,6})/i) || text.match(/\b([FSP]\d{4,6})\b/i);
+      const orderMatch = text.match(/注文ID\s*[:：]?\s*((?:[FSP]\d{4,6}|\d{4,10}))/i) || text.match(/\b([FSP]\d{4,6})\b/i);
       if (orderMatch) {
         const orderCode = String(orderMatch[1] || orderMatch[0]).toUpperCase();
         const { data: order, error: orderError } = await admin
@@ -117,6 +118,13 @@ Deno.serve(async (req) => {
             })
             .eq('id', order.id);
           if (orderUpdateError) throw orderUpdateError;
+
+          if(isLineReceiptTestCode(order.order_code)){
+            const {data:testBank,error:testBankError}=await admin.from('website_settings').select('value').eq('key','bank_transfer_test').maybeSingle();
+            if(testBankError)throw testBankError;
+            await reply(event.replyToken,lineReceiptTestReply(order.order_code,testBank?.value));
+            continue;
+          }
 
           const planLabel = order.plan === 'one' ? '1ページサイト' : order.plan === 'semi' ? 'セミオーダーサイト' : 'フルオーダーサイト';
           const templateLine = order.template_style ? `\nテンプレート: ${order.template_style}` : '';
