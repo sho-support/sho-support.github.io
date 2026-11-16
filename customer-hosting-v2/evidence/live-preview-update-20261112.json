@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "site_id": "9000001000",
+  "fixture_only": true,
+  "approval_source": "server_owned_test_fixture",
+  "production_approval_verified": false,
+  "separate_provider_backup_verified": false,
+  "active_release": "e6b98198c7267a0ec9e4b0ff",
+  "checks": [
+    "existing_fictional_fixture_verified",
+    "staged_and_unapproved_content_stays_private",
+    "approved_fixture_html_and_css_served_over_https",
+    "complete_update_switches_html_and_css",
+    "concurrent_publication_has_exactly_one_winner",
+    "rollback_restores_previous_html_and_css",
+    "verified_export_bytes_restore_as_a_new_release",
+    "interrupted_upload_cannot_replace_last_good_release",
+    "public_reader_rejects_writes_and_cross_customer_selection"
+  ],
+  "usage": {
+    "writes": 22,
+    "reads": 76,
+    "uploaded_bytes": 10997
+  },
+  "url": "https://sho-customer-sites-preview.zodiac-suu.workers.dev",
+  "verified_at": "2026-11-11T16:32:34.186Z",
+  "source_commit": "a3aeda4cf312f45240581d11d1d9f72e2bcddb99"
+}

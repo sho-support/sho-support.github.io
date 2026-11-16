@@ -1,4 +1,5 @@
-import { adminClient, json, notifyOwner } from './_shared/website.ts';
+import {HOSTING_OFFER} from '../_shared/hosting-offer.mjs';
+import { adminClient, json, notifyOwner } from '../_shared/website.ts';
 
 const allowedOrigins = new Set(['https://sho-support.github.io', 'https://sho-web-support.netlify.app']);
 
@@ -15,6 +16,7 @@ async function requestHash(req:Request){
 function validBody(body:any){
   const plan=String(body?.plan||'');
   if(!['one','semi','full'].includes(plan)) return null;
+  if(body?.hosting_offer_version!==HOSTING_OFFER.version||body?.hosting_offer_acknowledged!==true)return null;
   const templateStyle=String(body?.template_style||'').slice(0,32);
   if(plan==='semi'&&!['rock','cafe','cute','minimal','premium','pop','vintage','cyber','organic','editorial'].includes(templateStyle)) return null;
   const requestId=String(body?.client_request_id||'').trim().toLowerCase();
@@ -60,8 +62,9 @@ Deno.serve(async(req)=>{
   let body:any; try{body=JSON.parse(raw)}catch{return json({error:'Invalid request'},400)}
   if(String(body?.website||'')) return json({ok:true},200);
 
-  const v=validBody(body);
-  if(!v) return json({error:'注文内容を確認してください。'},400);
+  const checked=validBody(body);
+  if(!checked) return json({error:'注文内容と公開維持費への確認を見直し、画面を再読み込みしてください。'},400);
+  const v=checked;
 
   const amount=v.plan==='one'?15000:v.plan==='semi'?22000:30000;
   const admin=adminClient();
@@ -113,6 +116,7 @@ Deno.serve(async(req)=>{
     custom_domain_note:v.custom_domain_note,
     extra_request:v.extra_request,
     source:'website-order',
+    hosting_offer:{...HOSTING_OFFER,acknowledged:true,acknowledged_at:new Date().toISOString()},
     ...(v.client_request_id?{client_request_id:v.client_request_id}:{}),
   };
 
