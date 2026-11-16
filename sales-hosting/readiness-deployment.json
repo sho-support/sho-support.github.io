@@ -1,10 +1,10 @@
 {
   "project_id": "tyhymvgjkoebetyypspj",
   "function": "website-sales-readiness",
-  "version": 4,
+  "version": 9,
   "verify_jwt": false,
-  "bundle_sha256": "3bb5be787210a4aba88ee930e996c5582b51ad1e60809b1ee1c33913c094dce4",
-  "source_commit": "df21c3f6fbd826c920a6a5a289b480634b2e77f6",
+  "bundle_sha256": "beb8da30596beb0de14609d2b0f82fd3875c968d1fc82d94d8b4b7deb6f12d80",
+  "source_commit": "c3c3af8114773a22b3f4d442dc0888908d02ee1e",
   "all_deployed_files_match": true,
   "administrator_authentication_preserved": true,
   "temporary_ci_authorization_enabled": false,
@@ -22,5 +22,7 @@
     "real_payment": false
   },
   "order_to_delivery_live_test_verified": false,
-  "production_cutover": false
+  "production_cutover": false,
+  "production_r2_identifiers_ignore_surrounding_whitespace": true,
+  "production_r2_live_verification_run": "https://github.com/sho-support/sho-support.github.io/actions/runs/43886319809"
 }

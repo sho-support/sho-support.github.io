@@ -3,8 +3,8 @@
   "prepared_on_jst": "2026-11-16",
   "project_id": "tyhymvgjkoebetyypspj",
   "status": "prepared_only",
-  "source_commit": "81a7580cb2d1ebf74ef5fd8119ab0bca8d7cc13d",
-  "source_tree": "020a9480aae964e016277d958c5e6ef3a1d2d50d",
+  "source_commit": "c3c3af8114773a22b3f4d442dc0888908d02ee1e",
+  "source_tree": "0f3794cd9e3a415c9e4e419380a4e2b52d2a6ecf",
   "all_source_files_match_pinned_commit": true,
   "functions": [
     {
@@ -49,9 +49,9 @@
         },
         {
           "path": "supabase/functions/_shared/customer-r2.mjs",
-          "bytes": 8585,
-          "git_blob_sha": "586e16577bb16996f8019bbd1a1a1151eca5deac",
-          "sha256": "439cfb0b8636b0a3ca0d7de7546bb81786ff317982f908dd12cff832808b4e50"
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
         },
         {
           "path": "supabase/functions/_shared/customer-r2.ts",
@@ -173,9 +173,9 @@
       "files": [
         {
           "path": "supabase/functions/_shared/customer-r2.mjs",
-          "bytes": 8585,
-          "git_blob_sha": "586e16577bb16996f8019bbd1a1a1151eca5deac",
-          "sha256": "439cfb0b8636b0a3ca0d7de7546bb81786ff317982f908dd12cff832808b4e50"
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
         },
         {
           "path": "supabase/functions/_shared/customer-r2.ts",
@@ -372,9 +372,9 @@
         },
         {
           "path": "supabase/functions/_shared/customer-r2.mjs",
-          "bytes": 8585,
-          "git_blob_sha": "586e16577bb16996f8019bbd1a1a1151eca5deac",
-          "sha256": "439cfb0b8636b0a3ca0d7de7546bb81786ff317982f908dd12cff832808b4e50"
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
         },
         {
           "path": "supabase/functions/_shared/customer-r2.ts",
@@ -496,9 +496,9 @@
       "files": [
         {
           "path": "supabase/functions/_shared/customer-r2.mjs",
-          "bytes": 8585,
-          "git_blob_sha": "586e16577bb16996f8019bbd1a1a1151eca5deac",
-          "sha256": "439cfb0b8636b0a3ca0d7de7546bb81786ff317982f908dd12cff832808b4e50"
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
         },
         {
           "path": "supabase/functions/_shared/customer-r2.ts",
@@ -608,9 +608,9 @@
         },
         {
           "path": "supabase/functions/_shared/customer-r2.mjs",
-          "bytes": 8585,
-          "git_blob_sha": "586e16577bb16996f8019bbd1a1a1151eca5deac",
-          "sha256": "439cfb0b8636b0a3ca0d7de7546bb81786ff317982f908dd12cff832808b4e50"
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
         },
         {
           "path": "supabase/functions/_shared/customer-r2.ts",
@@ -706,7 +706,7 @@
     }
   ],
   "verification": {
-    "workflow_run": 43844824494,
+    "workflow_run": 43886319719,
     "unit_tests_passed": 147,
     "native_postgres_tests_passed": 47,
     "synthetic_native_backup_restore_passed": true,
@@ -726,7 +726,11 @@
     "http_route_tests_passed": 22,
     "line_webhook_version_at_connection_check": 20,
     "current_line_webhook_version": 21,
-    "current_line_webhook_signed_recheck_pending": true
+    "current_line_webhook_signed_recheck_pending": true,
+    "supabase_wrapper_tests_passed": 4,
+    "production_r2_workflow_run": 43886319809,
+    "production_r2_synthetic_read_write_and_cleanup_passed": true,
+    "production_r2_preview_bucket_access_denied": true
   },
   "deployment": {
     "functions_replaced": false,
@@ -737,8 +741,8 @@
   },
   "gates": {
     "production_backup_and_empty_restore": false,
-    "production_r2_private_bucket": false,
-    "production_bucket_scoped_s3_credentials": false,
+    "production_r2_private_bucket": true,
+    "production_bucket_scoped_s3_credentials": true,
     "stable_customer_domain": false,
     "production_bank": false,
     "approved_commercial_policy": false

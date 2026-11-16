@@ -1,0 +1,17 @@
+{
+  "project_id": "tyhymvgjkoebetyypspj",
+  "function": "website-production-r2-check",
+  "version": 6,
+  "bundle_sha256": "90d05c54ebea9c33ad778b7716d932fbd9bba706b5857c8b23918fddc8eb5ce2",
+  "all_files_match": true,
+  "temporary_ci_authorization_enabled": false,
+  "closed_response_status": 403,
+  "closure_verified_by": "full_deployed_source_readback",
+  "verification_source_commit": "c3c3af8114773a22b3f4d442dc0888908d02ee1e",
+  "verification_workflow_run": "https://github.com/sho-support/sho-support.github.io/actions/runs/43886319809",
+  "production_storage_access_verified": true,
+  "private_bucket_metadata_verified": true,
+  "preview_bucket_head_denied": true,
+  "synthetic_object_deleted": true,
+  "production_cutover": false
+}

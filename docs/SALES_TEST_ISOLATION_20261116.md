@@ -22,30 +22,25 @@
 
 ## 残る本人設定と止まっている理由
 
-### 1. 本番用R2
+### 1. 本番用R2：接続検証完了
 
-登録済みのREST APIを使った前回の空バケット作成はHTTP 403で拒否された。作成済みとは確認できておらず、同じ権限で再試行はしていない。プレビュー用バケットやその限定キーを本番へ昇格しない。
+本人が作成した `sho-customer-sites-production` と本番バケット限定キーを使い、[実環境の検証](https://github.com/sho-support/sho-support.github.io/actions/runs/43886319809)に成功した。
 
-1. [CloudflareのR2一覧](https://dash.cloudflare.com/bdb1bb4a771be8595d5564d5d78cb1d4/r2/overview)を開く。
-2. 「バケットを作成」で `sho-customer-sites-production`、ストレージクラス **Standard** を指定する。
-3. 公開URL・r2.dev・カスタムドメインは有効にせず、非公開のまま作る。
-4. R2のAPIトークン作成で **Object Read & Write**、**特定のバケットのみ**を選び、このバケットだけを指定する。
-5. 発行した2つのキーはチャットへ送らず、[対象プロジェクトのSecrets](https://supabase.com/dashboard/project/tyhymvgjkoebetyypspj/functions/secrets)へ設定する。
+- RESTメタデータでStandard・r2.dev無効・有効なカスタムドメイン0件を確認した。作成APIの再実行や公開設定変更はしていない。
+- Supabaseに保存したキーで、予約済みの架空ID `9000001002` のランダムな検証用オブジェクトだけを条件付き作成し、HEAD・SHA-256・全バイトの読み戻しを検査した。最後に同じオブジェクトだけを削除し、HEADの404を確認した。公開pointerや顧客データには触れていない。
+- 同じキーでプレビュー用バケットの検証用パスをHEADし、403拒否を確認した。キーの値・長さ・ハッシュは出力していない。
+- 保存したアカウントIDとバケット名には前後の空白があった。共通S3トランスポートと管理者用準備確認でこの2項目だけをtrimするよう修正し、保存済み設定のまま再検証に成功した。認証キーの値は変更していない。準備確認関数v9は配備・全ファイル照合済み。商用バックエンド6関数は修正済み候補であり、切替は未実施。
+- 検証の一時CI権限は解除し、専用関数v6は常時403を返す閉鎖済みソースへ置換した。全配備ソースを読み戻して照合した。汎用resource-qaは閉じたまま。
 
-| Secret名 | 値 |
-|---|---|
-| CUSTOMER_R2_ACCOUNT_ID | bdb1bb4a771be8595d5564d5d78cb1d4 |
-| CUSTOMER_R2_BUCKET | sho-customer-sites-production |
-| CUSTOMER_R2_ACCESS_KEY_ID | 今回作成したバケット限定キーのAccess Key ID |
-| CUSTOMER_R2_SECRET_ACCESS_KEY | 同じキーのSecret Access Key |
+[検証記録](qa/sales-production-r2-connectivity-20261116.json)と[閉鎖記録](../sales-hosting/production-r2-verification.json)を保存した。[修正後の全体CI](https://github.com/sho-support/sho-support.github.io/actions/runs/43886319719)も成功。単体147件、Supabase実ラッパー4件、PostgreSQL本体47件、実HTTPハンドラー22件と6画面幅のUI検査を再確認した。
 
-キー設定だけでは本番受付を開始しない。`WEBSITE_CUSTOMER_HOSTING` は別の切替手順で最後に有効化する。
+追加のキー再入力は不要。`WEBSITE_CUSTOMER_HOSTING` は無効のまま保持している。
 
 ### 2. 正式URLと保全
 
 顧客用標準URLのドメインの選択・所有・DNS/HTTPS確認が必要。未承認のドメイン購入はしていない。バンド用ドメインを変更せず、プレビューURLを永続納品URLとして固定しない。
 
-実DB/Auth/Storage/R2の別保管と空環境への復元も必要。現時点では安全なDB接続と本人管理の保管先が未設定。合成DBの暗号化復元試験、Edge Functionのソース控え、GitHubのコード保管を実データ全件のバックアップとして代用しない。
+実DB/Auth/Storage/R2の別保管と空環境への復元も必要。実環境の接続・全量取得・本人管理の別保管先・空環境への復元は、まだ一式の実行証拠を確認していない。合成DBの暗号化復元試験、Edge Functionのソース控え、GitHubのコード保管を実データ全件のバックアップとして代用しない。
 
 これらの準備後に、3migrationと互換バックエンドを[切替手順](SALES_CUTOVER_RUNBOOK_20261116.md)で反映し、受付→制作→SHO承認→顧客確認→公開/納品の実サービス通し試験へ進む。本番販売開始には実口座と販売条件の承認も必要。テスト銀行0000000と保存済み販売者情報は現在のまま保持する。
 

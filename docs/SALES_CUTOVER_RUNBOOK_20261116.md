@@ -4,15 +4,15 @@
 
 ## 固定した候補
 
-- [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `81a7580cb2d1ebf74ef5fd8119ab0bca8d7cc13d` の6関数・依存を含む37ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。接続テストの分離修正後、現行のcustomer-accessはv55となったため、その配備SHAも候補manifestの切替前照合へ更新。過去のプレビュー配備を本番切替済みと扱わない。
+- [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `c3c3af8114773a22b3f4d442dc0888908d02ee1e` の6関数・依存を含む37ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。接続テストの分離修正後、現行のcustomer-accessはv55となったため、その配備SHAも候補manifestの切替前照合へ更新。過去のプレビュー配備を本番切替済みと扱わない。
 - JWT設定は `website-api` と `website-worker` がtrue、`website-customer-access`、`website-order-api`、`website-preview`、`website-sales-setup` がfalse。falseの関数も内部の本人・管理者確認を維持する。
 - 公開フロントは `7e9ff205-321a-4fc9-946b-10a5e17245e1`、配備元は `c7bf35fb5c2305aaec3e8bc135e417d6033e15d3`。テスト注文を実注文と分離し、43ファイルの配備後に57静的検査・5 API preflight・署名なしWebhookの401拒否を確認。[実機テストの範囲と残る本人設定](SALES_TEST_ISOLATION_20261116.md)を参照。商用機能の本番切替ではない。
 
 ## 実行前に必要なこと
 
 1. [バックアップ手順](../customer-hosting-v2/BACKUP_OPERATIONS.md)どおりに実環境の保全・別保管・空環境での復元を終える。合成DBの47テストやコードの保存を代用しない。
-2. `sho-customer-sites-production` がStandard・非公開であることを検証。2026-11-16 02:30 JSTの既存REST APIによる作成要求はHTTP 403で拒否された。作成済みとは扱わない。メタデータ閲覧用APIとS3オブジェクト用鍵は別の権限である。
-3. 上記バケットだけに限定したObject Read & WriteのS3鍵を安全なSecrets入力で設定。チャットや公開Gitに貼らない。プレビュー用の鍵を流用しない。
+2. `sho-customer-sites-production` は本人作成後にStandard・非公開を実検証済み。[検証記録](qa/sales-production-r2-connectivity-20261116.json)を切替時点の対象と照合する。過去の作成APIの403を現在のバケット不存在と扱わない。
+3. 上記バケット限定のObject Read & Write鍵は本人がSecrets保存済み。実際の書込み・メタデータ・全バイトの読戻し・削除と、プレビューバケットHEADの403拒否を検証済み。ID/バケット名の前後空白だけを除去する修正を候補へ含めた。鍵自体は加工せず、チャットや公開Gitに貼らない。
 4. 本人が承認したドメインの所有・DNS・HTTPS・配信Workerを検証し、標準URLを固定。ドメイン購入は未承認。`workers.dev`等を永久納品先にしない。
 5. 本番振込先へ差し替え、契約原案と実バックアップの確認記録を本人が承認。テスト銀行 `0000000` のまま販売条件を有効化しない。
 
@@ -35,6 +35,9 @@
 - `WEBSITE_CUSTOMER_HOSTING`を空に戻すとレガシー経路が再度選ばれる可能性があるため、フラグだけを消して運用再開しない。
 
 ## 一次資料・実行証拠
+
+- [本番R2の実接続・限定キー検証](https://github.com/sho-support/sho-support.github.io/actions/runs/43886319809)
+- [空白対応後の全体検査](https://github.com/sho-support/sho-support.github.io/actions/runs/43886319719)
 
 - [全体検査結果](https://github.com/sho-support/sho-support.github.io/actions/runs/43741391002)
 - [R2作成APIと必須権限](https://developers.cloudflare.com/api/resources/r2/subresources/buckets/methods/create/)

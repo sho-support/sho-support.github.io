@@ -1,0 +1,43 @@
+{
+  "checked_at": "2026-11-16T14:30:28.539Z",
+  "source_commit": "c3c3af8114773a22b3f4d442dc0888908d02ee1e",
+  "run_id": "43886319809",
+  "ok": true,
+  "configured": {
+    "CUSTOMER_R2_ACCOUNT_ID": true,
+    "CUSTOMER_R2_BUCKET": true,
+    "CUSTOMER_R2_ACCESS_KEY_ID": true,
+    "CUSTOMER_R2_SECRET_ACCESS_KEY": true
+  },
+  "account_matches": true,
+  "bucket_matches": true,
+  "hosting_enabled": false,
+  "write_verified": true,
+  "head_verified": true,
+  "read_back_verified": true,
+  "preview_access_denied": true,
+  "cleanup_verified": true,
+  "storage_access_verified": true,
+  "customer_data_accessed": false,
+  "public_access_changed": false,
+  "production_cutover": false,
+  "identifier_issues": {
+    "account": "surrounding_whitespace",
+    "bucket": "surrounding_whitespace"
+  },
+  "bucket_metadata": {
+    "account_id": "bdb1bb4a771be8595d5564d5d78cb1d4",
+    "bucket": "sho-customer-sites-production",
+    "ready": true,
+    "created": false,
+    "creation_attempted": false,
+    "objects_written": false,
+    "public_access_changed": false,
+    "worker_changed": false,
+    "credentials_created": false,
+    "status": "private_bucket_verified",
+    "storage_class": "Standard",
+    "r2_dev_enabled": false,
+    "enabled_custom_domain_count": 0
+  }
+}
