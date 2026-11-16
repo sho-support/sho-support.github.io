@@ -4,9 +4,9 @@
 
 ## 固定した候補
 
-- [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `90178af9150285fed86ed197f17aec7dad83d339` の6関数・全ローカル依存ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。過去のプレビュー配備を本番切替済みと扱わない。
+- [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `3c32111266e6b2cf57cf350e57f81078482131c0` の6関数・依存を含む36ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。過去のプレビュー配備を本番切替済みと扱わない。
 - JWT設定は `website-api` と `website-worker` がtrue、`website-customer-access`、`website-order-api`、`website-preview`、`website-sales-setup` がfalse。falseの関数も内部の本人・管理者確認を維持する。
-- 公開フロントは `44f44dd9-ee83-4973-bf90-b0aed8aff9e3`、配備元は `6fbcb83f106e7e24b835e289a10de275ca8dbf83`。狭い画面の見出しを修正し、42ファイルの配備後に56静的検査・4 API preflightを確認。商用機能の本番切替ではない。
+- 公開フロントは `35df2e6f-3e51-4bcd-ba27-1f5519498822`、配備元は `df21c3f6fbd826c920a6a5a289b480634b2e77f6`。LINE受付の管理者用テスト画面を追加し、43ファイルの配備後に57静的検査・4 API preflightを確認。[実機テストの範囲と手順](SALES_ACCEPTANCE_START_20261116.md)を参照。商用機能の本番切替ではない。
 
 ## 実行前に必要なこと
 

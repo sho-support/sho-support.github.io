@@ -1,0 +1,26 @@
+{
+  "project_id": "tyhymvgjkoebetyypspj",
+  "function": "website-sales-readiness",
+  "version": 4,
+  "verify_jwt": false,
+  "bundle_sha256": "3bb5be787210a4aba88ee930e996c5582b51ad1e60809b1ee1c33913c094dce4",
+  "source_commit": "df21c3f6fbd826c920a6a5a289b480634b2e77f6",
+  "all_deployed_files_match": true,
+  "administrator_authentication_preserved": true,
+  "temporary_ci_authorization_enabled": false,
+  "line_live_verification_run": "https://github.com/sho-support/sho-support.github.io/actions/runs/43769822519",
+  "line_credential_valid": true,
+  "line_official_account_matches": true,
+  "line_signed_empty_webhook_verified": true,
+  "line_customer_message_receipt_verified": false,
+  "owner_test_fixture": {
+    "order_code": "9000001001",
+    "purpose": "line_connection_acceptance_only",
+    "pairing_token_in_public_source": false,
+    "public_url_reservation_rejected_in_isolated_sql": true,
+    "real_order": false,
+    "real_payment": false
+  },
+  "order_to_delivery_live_test_verified": false,
+  "production_cutover": false
+}

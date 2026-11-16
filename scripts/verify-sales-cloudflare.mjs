@@ -51,6 +51,7 @@ for (const [name, body, expectedStatus] of [
   ['website-order-api', { action: '__migration_invalid_input__' }, 400],
   ['website-customer-access', { action: 'admin_list_orders' }, 401],
   ['website-sales-setup', { action: 'admin_get_sales_settings' }, 401],
+  ['website-sales-readiness', { action: 'status' }, 401],
   ['website-password-recovery', { email: '' }, 400],
 ]) {
   const headers = { Origin: origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,content-type,apikey,x-client-info' };

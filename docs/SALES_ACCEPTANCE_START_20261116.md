@@ -19,7 +19,15 @@
 - メッセージの実送信は0件。顧客や管理者宛のトーク送信APIは呼んでいない。実機の受信確認は上記の本人テストで行う。
 - 認証方式は既存のstateless方式。固定トークンだけを見る最初の検査結果 `LINE_TOKEN_MISSING` は、LINE未接続の根拠として扱わない。
 - 通知先は既存の非公開設定に保存済みであることを、値を出さず確認した。
-- 疎通検査用の一時CI権限は、結果取得後に無効化する。通常は本人確認済みの管理者だけが接続確認を実行できる。
+- 疎通検査用の一時CI権限は、結果取得後に無効化済み。稼働中の接続確認関数v4の全2ファイルを読み戻して管理者専用ソースと一致することを確認した。通常は本人確認済みの管理者だけが接続確認を実行できる。
+
+## このテスト画面の配備・検査
+
+- 配備元は `df21c3f6fbd826c920a6a5a289b480634b2e77f6`、Cloudflare versionは `35df2e6f-3e51-4bcd-ba27-1f5519498822`。[配備と実配信の照合](https://github.com/sho-support/sho-support.github.io/actions/runs/43771124818)で43ファイル・57静的検査と既存4 APIの接続/認証保持が成功した。DNS変更・本番切替はしていない。
+- [同一ソースのCI](https://github.com/sho-support/sho-support.github.io/actions/runs/43771124740)で、単体145件、workerd14件、Supabaseラッパー3件、組込みSQL43件（ネイティブ限定2件スキップ）、PostgreSQL本体47件、SQL/R2通し11件、HTTPルート21件が成功した。外部サービスをつないだ顧客納品完了の証拠とは区別する。
+- 6画面幅で契約156件・維持費/LINEテスト画面324件・パスワード198件のブラウザ検査が成功。320pxと1366pxの画面画像も目視した。画像はモック設定を使い、実際の販売者情報や連携コードは含まない。
+- 予約テスト注文IDの商用URL作成拒否を隔離SQLで追加確認し、URL予約が0件のままであることを検査した。
+- 予約テスト注文は1件、作成時点の実注文と顧客サイトは0件。LINEの実受信確認は本人が上記手順を実行するまで未確認。
 
 ## 制作・承認・納品の状態
 
@@ -31,7 +39,7 @@
 
 ## 証拠・一次資料
 
-- [修正後の全体CI](https://github.com/sho-support/sho-support.github.io/actions/runs/43769822529)
+- [テスト画面を含む全体CI](https://github.com/sho-support/sho-support.github.io/actions/runs/43771124740)
 - [実LINE検査の機械可読記録](qa/sales-line-connection-20261116.json)
 - [LINE Messaging API](https://developers.line.biz/ja/reference/messaging-api/)
 - [LINE Webhook受信と署名確認](https://developers.line.biz/ja/docs/messaging-api/receiving-messages/)
