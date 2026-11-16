@@ -28,7 +28,7 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
   },{terms:DEFAULT_TERMS});
   await context.route('**/*',route=>{
    const url=route.request().url();
-   if(url===base+'website-client.js')return route.fulfill({status:200,contentType:'text/javascript',body:"export async function requireWebsiteSession(){return true;}export const websiteSupabase={functions:{invoke:async(name,{body})=>window.__mockSales(body)}};"});
+   if(url===base+'website-client.js')return route.fulfill({status:200,contentType:'text/javascript',body:"export async function requireWebsiteSession(){return true;}export async function websiteApi(){throw Error('Receipt tests cannot invoke production APIs');}export const websiteSupabase={functions:{invoke:async(name,{body})=>window.__mockSales(body)}};"});
    return url.startsWith(base)||url.startsWith('data:')?route.continue():route.abort();
   });
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
