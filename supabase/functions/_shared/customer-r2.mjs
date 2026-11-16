@@ -81,6 +81,8 @@ async function readObject(response, info, limit) {
 }
 
 export function createR2S3Store({accountId, bucketName, siteId, sign, fetch: transport = globalThis.fetch, timeoutMs = 20000}) {
+  accountId = typeof accountId === 'string' ? accountId.trim() : accountId;
+  bucketName = typeof bucketName === 'string' ? bucketName.trim() : bucketName;
   if (!/^[a-f0-9]{32}$/.test(accountId || '') || !/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucketName || '')
       || !ID.test(String(siteId || '')) || typeof sign !== 'function' || typeof transport !== 'function'
       || !Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30000) {

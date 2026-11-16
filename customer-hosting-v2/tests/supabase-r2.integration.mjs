@@ -62,3 +62,12 @@ test('configured Supabase wrapper signs the private request and keeps it site-sc
   await assert.rejects(store.get('sites/9000001001/active.json'));
   assert.equal(requests.length,1);
 });
+
+test('copied identifier whitespace is ignored by the real wrapper without weakening destination validation',async()=>{
+  const {customerR2Store,requests}=await loadWrapper({...fakeSecrets,CUSTOMER_R2_ACCOUNT_ID:'\n'+fakeSecrets.CUSTOMER_R2_ACCOUNT_ID+' ',CUSTOMER_R2_BUCKET:' '+fakeSecrets.CUSTOMER_R2_BUCKET+'\r\n'});
+  assert.equal(await customerR2Store('9000001000').head('sites/9000001000/active.json'),null);
+  assert.equal(requests[0].request.url,'https://'+fakeSecrets.CUSTOMER_R2_ACCOUNT_ID+'.r2.cloudflarestorage.com/'+fakeSecrets.CUSTOMER_R2_BUCKET+'/sites/9000001000/active.json');
+  for(const invalid of [' ../other-bucket ',' sho-sites-preview/evil ',' "sho-sites-preview" ']){
+    const f=await loadWrapper({...fakeSecrets,CUSTOMER_R2_BUCKET:invalid});assert.throws(()=>f.customerR2Store('9000001000'));assert.equal(f.requests.length,0);
+  }
+});

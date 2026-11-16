@@ -70,6 +70,8 @@ test('owner status returns booleans and cannot export saved personal details or 
  const handler=createReadinessHandler({authorize:async()=>({kind:'administrator'}),admin,env:name=>values[name]});
  const r=await handler(request({action:'status'})),data=await r.json();assert.equal(r.status,200);assert.equal(data.configuration.seller_saved,true);assert.equal(data.configuration.hosting_schema_installed,false);assert.equal(data.configuration.production_storage_configured,false);assert.equal(data.configuration.test_bank_saved,true);
  assert.ok(!JSON.stringify(data).includes(privateValue));assert.ok(!JSON.stringify(data).includes('PRIVATE-KEY'));assert.equal(data.order_to_delivery_live_test_verified,false);
+ values.CUSTOMER_R2_ACCOUNT_ID=' '+values.CUSTOMER_R2_ACCOUNT_ID+'\n';values.CUSTOMER_R2_BUCKET=' sho-customer-sites-production\r\n';
+ const normalized=await (await handler(request({action:'status'}))).json();assert.equal(normalized.configuration.production_storage_configured,true);assert.equal(normalized.order_to_delivery_live_test_verified,false);
 });
 test('the owner-only LINE link is limited to a marked reserved test order and its exact pairing token',async()=>{
  const token='a'.repeat(40),hash=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token))).toString('hex');

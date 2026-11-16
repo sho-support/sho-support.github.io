@@ -111,7 +111,7 @@ export function createReadinessHandler({authorize,admin,env,fetch:transport=glob
    const domain=env('CUSTOMER_BASE_DOMAIN')||'';
    const stableDomain=!!domain&&domain===env('CUSTOMER_HOSTING_DOMAIN_READY')&&!/(?:workers\.dev|pages\.dev|github\.io|netlify\.app|\.invalid|\.example)$/.test(domain);
    const keys=['CUSTOMER_R2_ACCOUNT_ID','CUSTOMER_R2_BUCKET','CUSTOMER_R2_ACCESS_KEY_ID','CUSTOMER_R2_SECRET_ACCESS_KEY'];
-   const productionStorage=keys.every(k=>!!env(k))&&env('CUSTOMER_R2_ACCOUNT_ID')==='bdb1bb4a771be8595d5564d5d78cb1d4'&&env('CUSTOMER_R2_BUCKET')==='sho-customer-sites-production';
+   const productionStorage=keys.every(k=>!!env(k))&&String(env('CUSTOMER_R2_ACCOUNT_ID')||'').trim()==='bdb1bb4a771be8595d5564d5d78cb1d4'&&String(env('CUSTOMER_R2_BUCKET')||'').trim()==='sho-customer-sites-production';
    const bank=String(settings.bank_transfer?.message||'');
    let lineTest=null;
    if(settings.owner_line_acceptance_fixture?.order_code==='9000001001'){

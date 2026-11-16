@@ -45,19 +45,18 @@ export function createProductionR2Handler({run,sha,until,verify,check,now=()=>Da
 export async function verifyProductionR2({env,run,sha,sign,fetch:transport=globalThis.fetch}){
  const names=['CUSTOMER_R2_ACCOUNT_ID','CUSTOMER_R2_BUCKET','CUSTOMER_R2_ACCESS_KEY_ID','CUSTOMER_R2_SECRET_ACCESS_KEY'];
  const proof={ok:false,configured:Object.fromEntries(names.map(name=>[name,!!env(name)])),
-  account_matches:env(names[0])===ACCOUNT,bucket_matches:env(names[1])===BUCKET,
+  account_matches:String(env(names[0])||'').trim()===ACCOUNT,bucket_matches:String(env(names[1])||'').trim()===BUCKET,
   identifier_issues:{account:identifierIssue(env(names[0]),ACCOUNT,names[0]),bucket:identifierIssue(env(names[1]),BUCKET,names[1])},
   hosting_enabled:env('WEBSITE_CUSTOMER_HOSTING')==='cloudflare-r2',
   write_verified:false,head_verified:false,read_back_verified:false,preview_access_denied:false,
   cleanup_verified:false,storage_access_verified:false,customer_data_accessed:false,public_access_changed:false,production_cutover:false};
- // Endpoint and bucket remain the fixed, independently verified production target.
- // Separately report identifier mistakes; never treat a successful credential check as ready configuration.
- if(!Object.values(proof.configured).every(Boolean)||proof.hosting_enabled
+ // Match the independently verified production target after normalizing identifier whitespace only.
+ if(!Object.values(proof.configured).every(Boolean)||!proof.account_matches||!proof.bucket_matches||proof.hosting_enabled
    ||!/^\d{8,20}$/.test(run)||!/^[a-f0-9]{40}$/.test(sha))return {...proof,failed_step:'configuration'};
  const site='9000001002',release=await digest(run+':'+sha+':'+crypto.randomUUID());
  const key=`sites/${site}/releases/${release}/connectivity-check.json`;
  const contents=JSON.stringify({purpose:'synthetic-production-r2-connectivity',real_order:false,real_payment:false});
- const store=createR2S3Store({accountId:ACCOUNT,bucketName:BUCKET,siteId:site,sign,fetch:transport,timeoutMs:10000});
+ const store=createR2S3Store({accountId:env(names[0]),bucketName:env(names[1]),siteId:site,sign,fetch:transport,timeoutMs:10000});
  let step='initial_absence',cleanup=false;
  async function request(bucket,method){
   const url=`https://${ACCOUNT}.r2.cloudflarestorage.com/${bucket}/${key}`;
