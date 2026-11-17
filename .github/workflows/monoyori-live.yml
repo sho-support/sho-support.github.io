@@ -174,9 +174,17 @@ jobs:
           const {chromium}=require('playwright');const fs=require('fs');
           (async()=>{const browser=await chromium.launch();const results=[];
           try{const page=await browser.newPage();
-            for(const path of ['/products/','/deals/','/events/','/products/tents','/products/stories/','/products/stories/adjustable-dumbbells-how-to-choose','/products/stories/tent-first-buying-guide','/products/tools/unit-price','/products/tools/gift-quantity']){
+            for(const path of ['/products/','/deals/','/events/','/products/tents','/products/stories/','/products/stories/adjustable-dumbbells-how-to-choose','/products/stories/tent-first-buying-guide','/products/stories/sparkling-water-case-cost','/products/tools/unit-price','/products/tools/gift-quantity']){
               const response=await page.goto('https://sho-monoyori-review.zodiac-suu.workers.dev'+path+'?qa=1');await page.waitForLoadState('networkidle');
               const result=await page.evaluate(()=>({canonical:document.querySelector('link[rel="canonical"]')?.href,blocked:!!document.querySelector('script[src*="review-mode"]'),noindex:!!document.querySelector('meta[name="robots"][content*="noindex"]'),analytics:!!document.querySelector('script[src*="G-J5ZDLF30CS"]'),overflow:document.documentElement.scrollWidth>innerWidth}));
+              if(path==='/products/stories/sparkling-water-case-cost'){
+                for(const width of [390,1440]){
+                  await page.setViewportSize({width,height:1000});
+                  const proof=await page.evaluate(()=>({text:document.querySelector('.product-story')?.innerText||'',photos:[...document.querySelectorAll('.story-cover img')].filter(x=>x.complete&&x.naturalWidth>0).length,buy:document.querySelectorAll('[data-buy]').length,overflow:document.documentElement.scrollWidth>innerWidth}));
+                  if(!proof.text.includes('60日以上')||!proof.text.includes('96日')||!proof.text.includes('11月17日付')||!proof.photos||!proof.buy||proof.overflow)throw Error('Water guide verification failed '+JSON.stringify(proof));
+                  results.push({water_guide:true,width,photos:proof.photos,buy:proof.buy,overflow:proof.overflow});
+                }
+              }
               if(path==='/products/tents'){
                 const shelf=await page.evaluate(()=>({cards:document.querySelectorAll('#catalog-grid .product-card').length,ratings:document.querySelectorAll('#catalog-grid .review-summary').length,photos:[...document.querySelectorAll('#catalog-grid img')].filter(x=>x.complete&&x.naturalWidth>0).length}));
                 if(shelf.cards<10)throw Error('Expanded tent selection not published: '+JSON.stringify(shelf));
