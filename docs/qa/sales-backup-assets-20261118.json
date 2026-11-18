@@ -55,5 +55,43 @@
     "temporary_qa_buckets": 0
   },
   "full_platform_backup_complete": false,
-  "pending": "Transfer the sealed assets component to the owner's private off-provider files and verify decryption when an execution environment is available; do not delete the temporary encrypted object first"
+  "pending": "Transfer the sealed assets component to the owner's private off-provider files and verify decryption when an execution environment is available; do not delete the temporary encrypted object first",
+  "function_closed_http_verified": true,
+  "closed_endpoints_verification": {
+    "purpose": "private-backup-endpoints-closed",
+    "source_commit": "ef1ccbc96682b445c1303e4fa43219adca16472e",
+    "run_id": "44325277615",
+    "ok": true,
+    "endpoints": [
+      {
+        "target": "website-private-assets-backup",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      },
+      {
+        "target": "website-production-r2-check",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      },
+      {
+        "target": "website-resource-qa",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      }
+    ],
+    "credentials_used": false,
+    "source_data_changed": false
+  }
 }
