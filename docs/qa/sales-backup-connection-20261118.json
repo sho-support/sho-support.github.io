@@ -1,22 +1,26 @@
 {
   "checked_on_jst": "2026-11-18",
+  "ok": true,
+  "purpose": "hp-backup-connection-only",
   "project_ref": "tyhymvgjkoebetyypspj",
-  "source_commit": "6a6143f6adbae19d21d9f615e9c66182665187a6",
-  "workflow_run": 44304835649,
-  "contract_tests": {
-    "passed": 8,
-    "failed": 0
+  "credential_mode": "temporary-read-only",
+  "temporary_login_issued": true,
+  "connection_verified": true,
+  "tls_certificate_verified": true,
+  "read_only_transaction_verified": true,
+  "database_password_changed": false,
+  "database_exported": false,
+  "restore_verified": false,
+  "configuration_changed": true,
+  "postgres_major": 17,
+  "counts": {
+    "database_bytes": 13948595,
+    "hp_orders": 1,
+    "auth_users": 1,
+    "storage_objects": 9
   },
-  "live_connection": {
-    "ok": false,
-    "reason": "DATABASE_PASSWORD_REQUIRED",
-    "fixed_session_pooler_uri_validation_passed": true,
-    "connection_attempted": false,
-    "connection_verified": false,
-    "temporary_login_issued": false,
-    "database_exported": false,
-    "restore_verified": false,
-    "configuration_changed": false
-  },
-  "next_required": "Register project-scoped SUPABASE_BACKUP_ACCESS_TOKEN in GitHub Actions Secrets; live temporary login route remains unverified"
+  "source_commit": "0a75cda129d52b8c6a269ba00ea0dcd47af971f9",
+  "run_id": "44307189278",
+  "next_required": "No owner re-entry required; complete Storage/R2 byte preservation, platform recovery and remaining release gates",
+  "full_platform_backup_complete": false
 }

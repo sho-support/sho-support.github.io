@@ -35,3 +35,9 @@ test('weak recipients, empty payloads, malformed encoding and wrong projects fai
  const object=JSON.parse(sealPrivateDelivery(payload,keys.publicKey,source));object.wrapped_key='invalid!';
  assert.throws(()=>openPrivateDelivery(Buffer.from(JSON.stringify(object)),keys.privateKey,source));
 });
+test('assets and SQL envelopes have distinct authenticated purposes',()=>{
+ const envelope=sealPrivateDelivery(payload,keys.publicKey,source,'assets');
+ assert.deepEqual(openPrivateDelivery(envelope,keys.privateKey,source,'assets'),payload);
+ assert.throws(()=>openPrivateDelivery(envelope,keys.privateKey,source));
+ assert.throws(()=>sealPrivateDelivery(payload,keys.publicKey,source,'other'));
+});

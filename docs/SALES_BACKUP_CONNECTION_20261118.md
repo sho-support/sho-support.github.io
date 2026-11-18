@@ -1,63 +1,32 @@
-# HP販売：実バックアップ接続の準備（2026-11-18 JST）
+# HP販売：実バックアップ接続（2026-11-18 JST）
 
-状態：本人がSession pooler URIを `SUPABASE_BACKUP_DB_URL` に保存済みと報告。DBパスワードは不明で、別Secretへの保存は未確認。既存パスワードのリセットを必要としない、限定APIトークンによる一時接続の経路を追加した。実接続・実バックアップ取得・別保管・空環境への復元は未完了。
+状態：本人が保存したSession pooler URIとプロジェクト限定トークンで実接続に成功。URI・DBパスワードの再入力は不要。DBの実バックアップ・空DBへの復元・暗号化した別保管と復号検査まで完了した。全基盤の復旧完了とは区別する。
 
-## 本人が用意する設定
+## 保存済み設定と対象
 
-Supabaseアカウントのログイン用パスワードと、プロジェクト作成時のDBパスワードは別。DBパスワードが不明な場合、既存アプリへの影響を調べずに「Reset database password」を押さない。パスワード・完成した接続文字列はチャットへ送らない。
+- GitHub Actions Secret `SUPABASE_BACKUP_DB_URL`：`sho-web-support` の東京Session pooler、port 5432、database postgres。パスワードのプレースホルダーはそのまま利用する。
+- `SUPABASE_BACKUP_ACCESS_TOKEN`：本人が登録した7日間のプロジェクト限定トークン。対象は `tyhymvgjkoebetyypspj` のみ、Database Read-writeのみ。Guns N’ Losesという所属組織名は確認済みのもので、対象プロジェクトを別事業へ切り替えたことを意味しない。
+- 既存のpostgresパスワードは変更していない。`SUPABASE_BACKUP_DB_PASSWORD` は今回の経路では使用していない。接続文字列・トークン・パスワードをチャットへ貼らない。
 
-現在のDBパスワードはSupabase管理画面で再表示できない。作成時に保存した記録があれば確認できるが、今回、本人がその値を受領・保管していた記録は確認できていない。本人が覚えているという前提にしない。
+## 実接続と安全な検査
 
-### DBパスワードが不明な場合
+[接続成功の実行44307189278](https://github.com/sho-support/sho-support.github.io/actions/runs/44307189278) で、公式一時ログインAPIによるread-only接続、TLSの証明書・ホスト名検証、読み取り専用トランザクション、固定プロジェクトを確認した。注文1件はテスト用、Auth利用者1件、Storageファイル9件だった。接続成功だけをバックアップ完了とは扱わない。
 
-保存済みURIはそのまま使い、次のトークン1つをGitHub Actions Repository Secretへ追加する。既存の `SUPABASE_BACKUP_DB_PASSWORD` は不要。R2トークンとは別。
+Supabase Root 2021 CAを公式Studioが案内する公開URLから取得し、PEMのSHA256、証明書フィンガープリント、CA属性、自己署名、有効期限を固定して検査する。`rejectUnauthorized:false` やTLS検証の無効化は使用しない。
 
-1. [Supabase Access Tokens](https://supabase.com/dashboard/account/tokens) で新しいトークンを作成する。
-2. 名前は `hp-backup-read-check`。対象は `sho-web-support`（`tyhymvgjkoebetyypspj`）だけ。権限は Database の Read-write のみ。全アカウント権限のLegacyトークンは使用しない。期限を選べる場合は短期間を選び、今回の保全作業後に失効させる。
-3. [GitHubの新規Secret設定](https://github.com/sho-support/sho-support.github.io/settings/secrets/actions/new) のNameを `SUPABASE_BACKUP_ACCESS_TOKEN`、Secretを生成したトークン値にして保存する。値をチャットへ送らない。
+read-only一時ロールは後続の再接続で認証に失敗したため、SQL dumpでは公式CLIと同じ `read_only:false` の期限付き `cli_login_postgres` を使用し、元DBを読む全セッションとトランザクションを明示的にread-onlyへ固定した。実際に返された一時接続の期限は300秒。既存のパスワード、JIT、SSL強制、ネットワーク制限は変更せず、共有されるCLIログインロールの一括削除も行わない。
 
-トークンにDatabase Read-write権限が必要なのは、Supabase管理の一時ログイン情報を発行するため。実際の接続は公式beta API `/v1/projects/{ref}/cli/login-role` に `read_only:true` を渡す。固定プロジェクトだけを対象に、リダイレクト・意図しないロール・長すぎる有効期限・過大な応答を拒否する。想定する一時ロール以外を受け取ったら停止し、権限の拡大やrootパスワードへの切り替えは行わない。
+## 実バックアップの確認結果
 
-一時接続情報の発行は認証ロールを作成・更新する操作なので、証跡の `temporary_login_issued` と `configuration_changed` に記録する。既存のpostgresパスワード・アプリ設定・JIT設定・SSL強制設定・ネットワーク制限は変更しない。共有されうるCLIログインロールの一括DELETEも行わない。有効期限はAPIが返す値（30〜3600秒の範囲）を検査する。beta APIの実接続成功はまだ未確認であり、この経路を用意しただけでバックアップ可能・完了とは判定しない。
+[SQL復元成功の実行44322113678](https://github.com/sho-support/sho-support.github.io/actions/runs/44322113678) で実データを取得し、ネットワーク隔離した空のPostgreSQL 17に復元した。64テーブルの永続データ、所有者、RLS、実効ACL、カスタム関数、トリガー、シーケンスを照合し、暗号化SQLを本人専用の非公開保管先へ保存した。保存後のハッシュ一致・本人用秘密鍵による復号も確認済み。
 
-### DBパスワードが分かる場合
+復元対象外にしたのはpg_netのTTL付きHTTP応答キャッシュのみ。補足した拡張機能の所有者/ACL、形式、復元順、未確認項目は [実データの保全・復元証跡](SALES_BACKUP_RESTORE_20261118.md) に記録した。元のアプリテーブルや他事業の既存データを変更していない。転送用に新規作成した所有者専用の暗号化Large Objectは、別保管後にその1件だけを削除した。
 
-別経路として次の2つのGitHub Actions Repository Secretを使える。スマートフォンではURIを編集せず、Connect画面の文字列をそのままコピーする。パスワードを別のSecretで渡すため、本人が特殊文字をURIエンコードする必要はない。
-
-- [対象リポジトリの新規Secret設定](https://github.com/sho-support/sho-support.github.io/settings/secrets/actions/new)
-- Name：`SUPABASE_BACKUP_DB_URL`／Secret：Connect画面のSession poolerの接続URI。`[YOUR-PASSWORD]` のままでよい。
-- Name：`SUPABASE_BACKUP_DB_PASSWORD`／Secret：DB作成時のパスワード。そのままの文字列で保存し、前後の空白除去などの加工をしない。
-- 対象プロジェクト：`tyhymvgjkoebetyypspj`、東京リージョンの共有pooler、ポート5432、DB `postgres`。
-
-これはSupabase Edge Function SecretsやR2のキーを上書きする操作ではない。
-
-## 読み取り専用の実接続検査
-
-`.github/workflows/sales-backup-preflight.yml` は固定のHP販売ブランチ上で検査する。通常のpushではオフライン契約テストだけを実行する。本人の登録後、`sales-hosting/backup/` 内の検査依頼記録を更新し、コミットメッセージへ `[verify-hp-backup-connection]` を付けたpushだけで実接続を行う。実行の再試行は自動では行わない。
-
-検査は、固定プロジェクト・固定リージョンのSession pooler以外を拒否する。接続URIのオプションにかかわらずTLS証明書を検証し、読み取り専用のセッションおよびトランザクションで、PostgreSQLバージョン・DB名・件数だけを確認する。一時接続の場合は `supabase_read_only_user` にロールを切り替える。URI・APIトークン・一時パスワード・行データ・プロバイダーのエラー詳細をログへ出さない。トランザクションをROLLBACKし接続を終了する。トークンが登録されている場合は一時接続を優先し、失敗しても既存パスワードへ自動で切り替えない。
-
-この接続検査が通っても、バックアップ作成済み・復元試験済みとは扱わない。実バックアップは[保全と復元の手順](../customer-hosting-v2/BACKUP_OPERATIONS.md)に従い、暗号化して本人管理の非公開保管先へ保存する。公開Git・公開Actions artifactに実データを置かない。既存のバンド用データ・公開環境・他サービスの設定は変更しない。
-
-## 2026-11-18 の確認結果
-
-- 変更後の8項目のオフラインテストはローカルおよびGitHub CIで成功。
-- [保存済み設定による実接続検査](https://github.com/sho-support/sho-support.github.io/actions/runs/44304835649) は `DATABASE_PASSWORD_REQUIRED` で接続前に停止。固定の対象URI検査は通過したが、利用できるDBパスワードは得られなかった。URIの再登録は要求しない。
-- 同実行では限定トークン経路は未使用。一時ログイン情報の発行・DB接続・データ出力・復元・既存パスワード変更は行われていない。
-- 次の本人操作は `SUPABASE_BACKUP_ACCESS_TOKEN` の登録。その後に実接続を検査する。
-
-## 限定トークン登録後の確認
-
-- 本人が `SUPABASE_BACKUP_ACCESS_TOKEN` を登録したと報告。
-- [実行44306371357](https://github.com/sho-support/sho-support.github.io/actions/runs/44306371357)：限定トークンの認証および一時ログイン情報の発行は成功。DB接続前のTLS証明書検証で停止した。既存パスワードの変更・データ取得・復元は行っていない。
-- 検査クライアントにSupabaseの専用CAが設定されていなかったため、公式Studioが使用する公開CAを追加。証明書のCA属性・自己署名・有効期間・SHA256フィンガープリントを検査する。TLS証明書とホスト名の検証は無効化しない。
-- CAの取得元は公式Studioソース `supabase/supabase@b58913895ceadfe7d14fada7e0b8436c0357b4fb:apps/studio/hooks/custom-content/custom-content.json` の `ssl:certificate_url`。公式ダッシュボードのDownload certificateと同じURLから取得した公開証明書であり、秘密鍵は含まない。
-- PEMファイルSHA256：`700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7`。証明書フィンガープリント：`80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA`。有効期限2031-04-26。
+Storage/R2のファイル本体、実際のAuthサービスログイン、外部連携を含む全基盤の復旧がすべて通るまでは、`production_backup_and_empty_restore` を成功にしない。正式URL・正式口座・契約条件も別の未完了ゲートである。
 
 ## 公式資料
 
-- [Supabaseの限定APIトークン](https://supabase.com/docs/guides/platform/personal-access-tokens)
-- [Supabaseの一時ログイン情報発行API](https://supabase.com/docs/reference/api/v1-create-login-role)
-- [Supabaseの接続方法](https://supabase.com/docs/guides/database/connecting-to-postgres)
-- [Supabaseのバックアップと復元](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore)
-- [GitHub ActionsのSecret設定](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets)
+- [Supabase限定APIトークン](https://supabase.com/docs/guides/platform/personal-access-tokens)
+- [Supabase一時ログインAPI](https://supabase.com/docs/reference/api/v1-create-login-role)
+- [Supabase TLS](https://supabase.com/docs/guides/platform/ssl-enforcement)
+- [Supabaseバックアップと復元](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore)

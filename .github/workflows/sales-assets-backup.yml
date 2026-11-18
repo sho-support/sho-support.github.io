@@ -1,0 +1,55 @@
+name: HP private Storage and R2 assets backup
+on:
+  push:
+    branches: [architecture/sales-cloudflare]
+    paths:
+      - 'sales-hosting/private-assets-backup/**'
+      - 'sales-hosting/backup/assets-export.mjs'
+      - 'sales-hosting/backup/private-delivery.mjs'
+      - 'sales-hosting/verify-assets-backup.mjs'
+      - 'sales-hosting/tests/assets-export.test.mjs'
+      - 'sales-hosting/tests/private-delivery.test.mjs'
+      - '.github/workflows/sales-assets-backup.yml'
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --prefix customer-hosting-v2 --ignore-scripts --no-audit --no-fund
+      - run: node --test sales-hosting/tests/assets-export.test.mjs sales-hosting/tests/private-delivery.test.mjs
+      - run: node --check sales-hosting/verify-assets-backup.mjs
+      - name: Check isolated backup function types
+        run: |
+          ln -s customer-hosting-v2/node_modules node_modules
+          cd customer-hosting-v2
+          npx --yes deno@2.9.6 check --config deno.qa.json --no-remote --no-lock ../supabase/functions/_shared/edge-runtime.d.ts ../sales-hosting/private-assets-backup/index.ts
+  live:
+    needs: contract
+    if: ${{ contains(github.event.head_commit.message, '[verify-hp-assets-backup]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    concurrency:
+      group: hp-private-assets-backup
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix customer-hosting-v2 --ignore-scripts --no-audit --no-fund
+      - name: Export source file bytes, restore only into a new private QA bucket and seal for the owner
+        env:
+          SUPABASE_BACKUP_DB_URL: ${{ secrets.SUPABASE_BACKUP_DB_URL }}
+          SUPABASE_BACKUP_ACCESS_TOKEN: ${{ secrets.SUPABASE_BACKUP_ACCESS_TOKEN }}
+        run: node sales-hosting/verify-assets-backup.mjs
