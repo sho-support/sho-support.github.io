@@ -9,6 +9,7 @@ import {join,resolve} from 'node:path';
 import {createRequire} from 'node:module';
 import {createHash,randomBytes,createCipheriv,createDecipheriv} from 'node:crypto';
 import {PROJECT,backupConnectionOptions} from './backup/connection-preflight.mjs';
+import {checkBackupTemporaryAccess} from './backup/temporary-access.mjs';
 import {withoutEphemeralCliRoles} from './backup/restore-roles.mjs';
 
 // Official Supabase Docker Hub release 17.12.0.000, immutable manifest digest.
@@ -80,22 +81,21 @@ try{
   await new Promise(r=>setTimeout(r,500));
  }
  if(!ready)throw fail('EMPTY_TARGET_NOT_READY');
+ delete proof.command_failure_category;
  const empty=await queryTarget("select count(*) from pg_tables where schemaname not like 'pg_%' and schemaname <> 'information_schema';");
  if(empty.trim()!=='0')throw fail('TARGET_NOT_EMPTY');
  proof.empty_target_verified=true;proof.target_network_isolated=true;
  stage='temporary-source-login';
- const response=await fetch(`https://api.supabase.com/v1/projects/${PROJECT}/cli/login-role`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(15000),
-  headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({read_only:true})});
- if(response.status!==201){await response.body?.cancel();throw fail('TEMPORARY_SOURCE_LOGIN_NOT_ISSUED');}
- proof.temporary_login_issued=true;
- const text=await response.text();if(text.length>16384)throw fail('INVALID_LOGIN_RESPONSE');
- const login=JSON.parse(text);
- if(login?.role!=='cli_login_supabase_read_only_user'||typeof login.password!=='string'||!login.password.length||login.password.length>4096||/[\r\n\0]/.test(login.password)
-  ||!Number.isSafeInteger(login.ttl_seconds)||login.ttl_seconds<60||login.ttl_seconds>3600)throw fail('INVALID_LOGIN_RESPONSE');
- const config={...base,user:login.role+'.'+PROJECT,password:login.password,query_timeout:90000,
-  options:'-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'};
+ let config;
+ const checked=await checkBackupTemporaryAccess({value,accessToken:token,createClient:c=>{config=c;return new Client(c);}});
+ proof.temporary_login_issued=checked.temporary_login_issued;
+ if(!checked.ok){proof.source_connection_failure=checked.reason;throw fail('SOURCE_CONNECTION_NOT_VERIFIED');}
+ if(!config||/[\r\n\0]/.test(config.password))throw fail('INVALID_LOGIN_RESPONSE');
+ stage='source-connect';
  client=new Client(config);client.on('error',()=>{});await client.connect();proof.tls_certificate_verified=true;
+ stage='source-role';
  await client.query('SET SESSION ROLE supabase_read_only_user');
+ stage='source-transaction';
  await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');transaction=true;
  const identity=(await client.query("select current_database() as db, current_setting('server_version_num') as version, current_setting('transaction_read_only') as readonly")).rows[0];
  if(identity?.db!=='postgres'||identity.readonly!=='on'||!/^17[0-9]{4}$/.test(String(identity.version)))throw fail('SOURCE_IDENTITY_NOT_VERIFIED');
@@ -109,7 +109,7 @@ try{
  const sourcePolicies=(await client.query("select coalesce(jsonb_agg(to_jsonb(p) order by p.schemaname,p.tablename,p.policyname),'[]'::jsonb)::text as policies from pg_policies p")).rows[0].policies;
  stage='sql-snapshot';
  const ca=resolve('sales-hosting/backup/supabase-root-2021.crt'),envFile=join(dir,'private','source.env');
- await writeFile(envFile,[`PGHOST=${config.host}`,'PGPORT=5432',`PGUSER=${config.user}`,`PGPASSWORD=${login.password}`,'PGDATABASE=postgres','PGSSLMODE=verify-full','PGSSLROOTCERT=/hp-root.crt',
+ await writeFile(envFile,[`PGHOST=${config.host}`,'PGPORT=5432',`PGUSER=${config.user}`,`PGPASSWORD=${config.password}`,'PGDATABASE=postgres','PGSSLMODE=verify-full','PGSSLROOTCERT=/hp-root.crt',
   'PGCONNECT_TIMEOUT=10','PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'].join('\n')+'\n',{mode:0o600,flag:'wx'});
  const sourceArgs=['run','--rm','--network','host','--env-file',envFile,'-v',ca+':/hp-root.crt:ro'];
  stage='export-db-snapshot';
@@ -151,7 +151,8 @@ try{
  proof.table_owners_and_rls_match=true;proof.ok=true;
 }catch(error){
  proof.failed_stage=stage;
- proof.reason=['FIXED_CI_CONTEXT_REQUIRED','SCOPED_TOKEN_REQUIRED','EMPTY_TARGET_NOT_READY','TARGET_NOT_EMPTY','TEMPORARY_SOURCE_LOGIN_NOT_ISSUED','INVALID_LOGIN_RESPONSE','SOURCE_IDENTITY_NOT_VERIFIED','INVALID_SOURCE_SNAPSHOT','TABLE_SNAPSHOT_LIMIT','SQL_EXPORT_LIMIT','ENCRYPTION_ROUND_TRIP_NOT_VERIFIED','RESTORED_TABLE_DATA_MISMATCH','RESTORED_OWNERS_OR_RLS_MISMATCH'].includes(error?.safeCode)?error.safeCode:'SQL_RESTORE_REHEARSAL_NOT_VERIFIED';
+ if(['28P01','28000','42501','ECONNRESET','ECONNREFUSED','ETIMEDOUT','ENOTFOUND','EHOSTUNREACH','CERT_HAS_EXPIRED','SELF_SIGNED_CERT_IN_CHAIN','ERR_TLS_CERT_ALTNAME_INVALID'].includes(error?.code))proof.source_error_code=error.code;
+ proof.reason=['FIXED_CI_CONTEXT_REQUIRED','SCOPED_TOKEN_REQUIRED','EMPTY_TARGET_NOT_READY','TARGET_NOT_EMPTY','TEMPORARY_SOURCE_LOGIN_NOT_ISSUED','SOURCE_CONNECTION_NOT_VERIFIED','INVALID_LOGIN_RESPONSE','SOURCE_IDENTITY_NOT_VERIFIED','INVALID_SOURCE_SNAPSHOT','TABLE_SNAPSHOT_LIMIT','SQL_EXPORT_LIMIT','ENCRYPTION_ROUND_TRIP_NOT_VERIFIED','RESTORED_TABLE_DATA_MISMATCH','RESTORED_OWNERS_OR_RLS_MISMATCH'].includes(error?.safeCode)?error.safeCode:'SQL_RESTORE_REHEARSAL_NOT_VERIFIED';
 }finally{
  let cleaned=true;
  if(transaction&&client)try{await client.query('ROLLBACK');}catch{cleaned=false;}
