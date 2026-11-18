@@ -37,4 +37,5 @@ jobs:
         env:
           SUPABASE_BACKUP_DB_URL: ${{ secrets.SUPABASE_BACKUP_DB_URL }}
           SUPABASE_BACKUP_DB_PASSWORD: ${{ secrets.SUPABASE_BACKUP_DB_PASSWORD }}
+          SUPABASE_BACKUP_ACCESS_TOKEN: ${{ secrets.SUPABASE_BACKUP_ACCESS_TOKEN }}
         run: node sales-hosting/verify-backup-connection.mjs

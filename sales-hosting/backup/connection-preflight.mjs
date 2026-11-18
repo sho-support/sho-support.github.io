@@ -1,8 +1,8 @@
 export const PROJECT='tyhymvgjkoebetyypspj';
 const fail=code=>Object.assign(new Error(code),{safeCode:code});
-const safeCodes=new Set(['BACKUP_CONNECTION_NOT_CONFIGURED','INVALID_BACKUP_CONNECTION','FIXED_SESSION_POOLER_REQUIRED','DATABASE_PASSWORD_REQUIRED','DATABASE_IDENTITY_NOT_VERIFIED','INVALID_COUNT_RESPONSE']);
+const safeCodes=new Set(['BACKUP_CONNECTION_NOT_CONFIGURED','INVALID_BACKUP_CONNECTION','FIXED_SESSION_POOLER_REQUIRED','DATABASE_PASSWORD_REQUIRED','INVALID_TEMPORARY_LOGIN','DATABASE_IDENTITY_NOT_VERIFIED','INVALID_COUNT_RESPONSE']);
 
-export function backupConnectionOptions(value,passwordValue){
+export function backupConnectionOptions(value,passwordValue,temporaryLogin){
  if(typeof value!=='string'||!value.trim())throw fail('BACKUP_CONNECTION_NOT_CONFIGURED');
  if(value.length>16000)throw fail('INVALID_BACKUP_CONNECTION');
  let u,user,password;try{u=new URL(value.trim());user=decodeURIComponent(u.username);password=decodeURIComponent(u.password);}catch{throw fail('INVALID_BACKUP_CONNECTION');}
@@ -10,7 +10,12 @@ export function backupConnectionOptions(value,passwordValue){
   ||!/^aws-[0-9]+-ap-northeast-1\.pooler\.supabase\.com$/.test(u.hostname)
   ||u.port!=='5432'||u.pathname!=='/postgres'||u.hash)throw fail('FIXED_SESSION_POOLER_REQUIRED');
  if(typeof passwordValue==='string'&&passwordValue.length)password=passwordValue;
- if(!password||/\[(?:YOUR[-_]PASSWORD|password)\]/i.test(password))throw fail('DATABASE_PASSWORD_REQUIRED');
+ if(temporaryLogin){
+  if(temporaryLogin.role!=='cli_login_supabase_read_only_user'||typeof temporaryLogin.password!=='string'||!temporaryLogin.password.length||temporaryLogin.password.length>4096
+   ||!Number.isSafeInteger(temporaryLogin.ttl_seconds)||temporaryLogin.ttl_seconds<30||temporaryLogin.ttl_seconds>3600)throw fail('INVALID_TEMPORARY_LOGIN');
+  user=temporaryLogin.role+'.'+PROJECT;password=temporaryLogin.password;
+ }
+ if(!password||/\[(?:YOUR[-_](?:DATABASE[-_])?PASSWORD|password)\]/i.test(password))throw fail('DATABASE_PASSWORD_REQUIRED');
  return {host:u.hostname,port:5432,database:'postgres',user,password,
   ssl:{rejectUnauthorized:true},application_name:'hp-backup-connection-preflight',
   connectionTimeoutMillis:10000,query_timeout:15000,
@@ -25,14 +30,15 @@ const SQL=`select current_database() as database_name,
  (select count(*) from auth.users) as auth_users,
  (select count(*) from storage.objects) as storage_objects;`;
 
-export async function checkBackupConnection({value,passwordValue,createClient}){
+export async function checkBackupConnection({value,passwordValue,temporaryLogin,createClient}){
  const proof={ok:false,purpose:'hp-backup-connection-only',project_ref:PROJECT,
   connection_verified:false,tls_certificate_verified:false,read_only_transaction_verified:false,
   database_exported:false,restore_verified:false,configuration_changed:false};
  let client,began=false;
  try{
-  const config=backupConnectionOptions(value,passwordValue);client=createClient(config);client.on?.('error',()=>{});
+  const config=backupConnectionOptions(value,passwordValue,temporaryLogin);client=createClient(config);client.on?.('error',()=>{});
   await client.connect();proof.connection_verified=true;proof.tls_certificate_verified=true;
+  if(temporaryLogin)await client.query('SET SESSION ROLE supabase_read_only_user');
   await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');began=true;
   const {rows}=await client.query(SQL),row=rows?.[0];
   if(row?.database_name!=='postgres'||row.transaction_read_only!=='on'||!/^17[0-9]{4}$/.test(String(row.postgres_version_num)))throw fail('DATABASE_IDENTITY_NOT_VERIFIED');
