@@ -57,7 +57,7 @@
   },
   "full_platform_backup_complete": false,
   "pending": "Full-platform recovery, Auth service login, canonical application cutover and remaining commercial release gates are not yet verified",
-  "function_closed_http_verified": false,
+  "function_closed_http_verified": true,
   "all_file_hashes_verified": true,
   "saved_component": {
     "encrypted_bytes": 7455309,
@@ -129,5 +129,55 @@
     "version": 2,
     "package": "8875de2a8e445b88487d760761dfdec2f8c46905cd3b4a29ab767578f3bda087",
     "source_verified": true
-  }
+  },
+  "closed_endpoints_verification": {
+    "checked_at": "2026-11-18T15:43:30.665Z",
+    "project_ref": "tyhymvgjkoebetyypspj",
+    "purpose": "private-backup-endpoints-closed",
+    "source_commit": "0a556d48701272ac7a340d5805062337fa5af97c",
+    "run_id": "44338740794",
+    "ok": true,
+    "endpoints": [
+      {
+        "target": "website-backup-crypto-check",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      },
+      {
+        "target": "website-private-assets-backup",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      },
+      {
+        "target": "website-production-r2-check",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      },
+      {
+        "target": "website-resource-qa",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      }
+    ],
+    "credentials_used": false,
+    "source_data_changed": false
+  },
+  "backup_retained": true,
+  "private_transfer_object_removed": true
 }

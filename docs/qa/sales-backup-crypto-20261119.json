@@ -24,5 +24,53 @@
     "version": 3,
     "package": "8c32b5ff5e95727df8b5f2130b5a607f4eb1a3380af869c0b44e6c8fdf0be4f7",
     "source_verified": true
+  },
+  "closed_endpoints_verification": {
+    "checked_at": "2026-11-18T15:43:30.665Z",
+    "project_ref": "tyhymvgjkoebetyypspj",
+    "purpose": "private-backup-endpoints-closed",
+    "source_commit": "0a556d48701272ac7a340d5805062337fa5af97c",
+    "run_id": "44338740794",
+    "ok": true,
+    "endpoints": [
+      {
+        "target": "website-backup-crypto-check",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      },
+      {
+        "target": "website-private-assets-backup",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      },
+      {
+        "target": "website-production-r2-check",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      },
+      {
+        "target": "website-resource-qa",
+        "statuses": [
+          403,
+          403,
+          403
+        ],
+        "closed": true
+      }
+    ],
+    "credentials_used": false,
+    "source_data_changed": false
   }
 }
