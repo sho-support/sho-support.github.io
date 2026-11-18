@@ -1,0 +1,10 @@
+{
+  "purpose": "Actual SQL snapshot restore on disposable network-isolated PostgreSQL; no retained archive",
+  "requested_on_jst": "2026-11-18",
+  "project_ref": "tyhymvgjkoebetyypspj",
+  "request_number": 1,
+  "source_database_write": false,
+  "production_restore": false,
+  "public_backup_upload": false,
+  "off_provider_preservation": false
+}
