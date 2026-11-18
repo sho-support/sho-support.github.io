@@ -33,6 +33,11 @@ async function command(file,args,options={}){
   proof.command_failure_category=[[/manifest unknown|not found: manifest|no matching manifest/i,'IMAGE_NOT_AVAILABLE'],[/permission denied/i,'PERMISSION_DENIED'],[/could not access file|extension .* is not available/i,'EXTENSION_NOT_AVAILABLE'],[/already exists/i,'DUPLICATE_OBJECT'],[/could not translate host name|network is unreachable/i,'NETWORK_UNAVAILABLE'],[/No such file or directory|not found in \$PATH|executable file not found/i,'EXECUTABLE_OR_FILE_MISSING']].find(([pattern])=>pattern.test(detail))?.[1]||'PRIVATE_COMMAND_ERROR';
   const specific=[[/permission denied to grant role/i,'ROLE_GRANT_NOT_ALLOWED'],[/permission denied to set role/i,'ROLE_SWITCH_NOT_ALLOWED'],[/permission denied for schema/i,'SCHEMA_PERMISSION_DENIED'],[/permission denied for table/i,'TABLE_PERMISSION_DENIED'],[/permission denied to create extension/i,'EXTENSION_CREATE_NOT_ALLOWED'],[/must be owner/i,'OBJECT_OWNERSHIP_NOT_ALLOWED'],[/must be superuser/i,'SUPERUSER_REQUIRED']].find(([pattern])=>pattern.test(detail));
   if(specific)proof.private_command_diagnostic=specific[1];
+  const archiveIssue=[[/shared_preload_libraries/i,'EXTENSION_PRELOAD_REQUIRED'],[/could not load library|could not open extension control file/i,'EXTENSION_LIBRARY_MISSING'],[/unrecognized configuration parameter/i,'UNSUPPORTED_CONFIGURATION'],[/type .* does not exist/i,'TYPE_MISSING'],[/function .* does not exist/i,'FUNCTION_MISSING'],[/schema .* does not exist/i,'SCHEMA_MISSING'],[/column .* does not exist/i,'COLUMN_MISSING'],[/syntax error/i,'SQL_SYNTAX_NOT_ACCEPTED']].find(([pattern])=>pattern.test(detail));
+  if(archiveIssue)proof.private_command_diagnostic=archiveIssue[1];
+  const sqlState=detail.match(/ERROR:\s+([0-9A-Z]{5}):/);if(sqlState)proof.postgres_sqlstate=sqlState[1];
+  const restoreLine=detail.match(/restore\.sql:(\d+):\s*ERROR:/);if(restoreLine)proof.restore_error_line=Number(restoreLine[1]);
+  const entry=detail.match(/from TOC entry \d+; \d+ \d+ ([A-Z ]+)/);if(entry)proof.restore_entry_kind=entry[1].trim();
   const role=detail.match(/role "(postgres|supabase_admin|supabase_read_only_user|supabase_auth_admin|supabase_storage_admin|cli_login_postgres|cli_login_supabase_read_only_user)"/);if(role)proof.failed_managed_role=role[1];
   throw fail('COMMAND_NOT_VERIFIED');
  }
@@ -147,7 +152,8 @@ try{
  stage='restore-roles';
  await command('docker',['exec',target,'psql','-X','-q','-v','ON_ERROR_STOP=1','-U','supabase_admin','-d','postgres','-f','/tmp/roles.sql']);
  stage='restore-archive';
- await command('docker',['exec',target,'pg_restore','--exit-on-error','--single-transaction','--no-tablespaces','-U','supabase_admin','-d','postgres','/tmp/restore.dump'],{timeout:180000});
+ await command('docker',['exec',target,'pg_restore','--no-tablespaces','--file=/tmp/restore.sql','/tmp/restore.dump'],{timeout:180000});
+ await command('docker',['exec',target,'psql','-X','-q','--single-transaction','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-U','supabase_admin','-d','postgres','-f','/tmp/restore.sql'],{timeout:180000});
  proof.sql_empty_restore_verified=true;
  stage='restored-fingerprints';
  const targetQuery=async sql=>JSON.parse((await queryTarget(`select coalesce(jsonb_agg(to_jsonb(hp_row)),'[]'::jsonb)::text from (${sql}) hp_row;`)).trim());
