@@ -9,7 +9,7 @@ import {join,resolve} from 'node:path';
 import {createRequire} from 'node:module';
 import {createHash,randomBytes,createCipheriv,createDecipheriv} from 'node:crypto';
 import {PROJECT,backupConnectionOptions} from './backup/connection-preflight.mjs';
-import {withoutEphemeralCliRoles} from './backup/restore-roles.mjs';
+import {rolesForIsolatedSupabase} from './backup/restore-roles.mjs';
 
 // Official Supabase Docker Hub release 17.12.0.000, immutable manifest digest.
 // Same PostgreSQL major as the hosted source; no production upgrade is made.
@@ -45,7 +45,7 @@ async function queryTarget(sql){
  try{
   await command('docker',['cp',path,target+':/tmp/'+name]);
   await command('docker',['exec','--user','0',target,'chown','postgres:postgres','/tmp/'+name]);
-  return (await command('docker',['exec',target,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','hp_restore_admin','-d','postgres','-f','/tmp/'+name])).stdout.toString();
+  return (await command('docker',['exec',target,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','supabase_admin','-d','postgres','-f','/tmp/'+name])).stdout.toString();
  }finally{await rm(path,{force:true});}
 }
 async function fingerprints(query){
@@ -72,17 +72,20 @@ try{
  if(!/^sha256:[a-f0-9]{64}$/.test(proof.restore_image_id))throw fail('IMAGE_ID_NOT_VERIFIED');
  stage='isolated-target';target='sho-hp-restore-'+process.env.GITHUB_RUN_ID;
  // No TCP port, external network, production service key or production password.
- const startup='set -euo pipefail; initdb -D /tmp/hp-empty-pg --username=hp_restore_admin --auth=trust >/tmp/hp-init.log 2>&1; exec postgres -D /tmp/hp-empty-pg -c listen_addresses= -c shared_preload_libraries= -c log_statement=none -c log_min_error_statement=panic';
+ const startup='set -euo pipefail; initdb -D /tmp/hp-empty-pg --username=supabase_admin --auth=trust >/tmp/hp-init.log 2>&1; exec postgres -D /tmp/hp-empty-pg -c listen_addresses= -c shared_preload_libraries= -c log_statement=none -c log_min_error_statement=panic';
  await command('docker',['run','-d','--network','none','--user','postgres','--name',target,'--entrypoint','/bin/bash',image,'-c',startup]);
  let ready=false;
  for(let i=0;i<40;i++){
-  try{await command('docker',['exec',target,'pg_isready','-U','hp_restore_admin','-d','postgres'],{timeout:3000});ready=true;break;}catch{}
+  try{await command('docker',['exec',target,'pg_isready','-U','supabase_admin','-d','postgres'],{timeout:3000});ready=true;break;}catch{}
   await new Promise(r=>setTimeout(r,500));
  }
  if(!ready)throw fail('EMPTY_TARGET_NOT_READY');
  delete proof.command_failure_category;
  const empty=await queryTarget("select count(*) from pg_tables where schemaname not like 'pg_%' and schemaname <> 'information_schema';");
  if(empty.trim()!=='0')throw fail('TARGET_NOT_EMPTY');
+ const superuser=await queryTarget('select rolsuper::text from pg_roles where rolname=current_user;');
+ if(superuser.trim()!=='true')throw fail('TARGET_BOOTSTRAP_SUPERUSER_REQUIRED');
+ proof.target_bootstrap_superuser_verified=true;
  proof.empty_target_verified=true;proof.target_network_isolated=true;
  stage='temporary-source-login';
  // Match Supabase CLI's temporary login for pg_dump, while forcing every
@@ -122,7 +125,7 @@ try{
  const archive=(await command('docker',[...sourceArgs,'--entrypoint','pg_dump',image,'--format=custom','--quote-all-identifiers','--role=postgres','--snapshot='+snapshot],{timeout:180000})).stdout;
  stage='export-roles';
  const rawRoles=(await command('docker',[...sourceArgs,'--entrypoint','pg_dumpall',image,'--roles-only','--no-role-passwords','--role=postgres'],{timeout:60000})).stdout;
- const roleExport=withoutEphemeralCliRoles(rawRoles.toString()),roles=Buffer.from(roleExport.text);proof.ephemeral_cli_role_statements_excluded=roleExport.excluded;
+ const roleExport=rolesForIsolatedSupabase(rawRoles.toString()),roles=Buffer.from(roleExport.text);proof.ephemeral_cli_role_statements_excluded=roleExport.excluded;proof.bootstrap_role_create_already_satisfied=roleExport.bootstrap_create_already_satisfied;
  if(archive.length<100||archive.length>35*1024*1024||roles.length<100||roles.length>1024*1024)throw fail('SQL_EXPORT_LIMIT');
  proof.sql_snapshot_exported=true;proof.archive_bytes=archive.length;proof.roles_bytes=roles.length;
  await rm(envFile,{force:true});
@@ -142,9 +145,9 @@ try{
  await command('docker',['cp',archivePath,target+':/tmp/restore.dump']);await command('docker',['cp',rolesPath,target+':/tmp/roles.sql']);
  await command('docker',['exec','--user','0',target,'chown','postgres:postgres','/tmp/restore.dump','/tmp/roles.sql']);
  stage='restore-roles';
- await command('docker',['exec',target,'psql','-X','-q','-v','ON_ERROR_STOP=1','-U','hp_restore_admin','-d','postgres','-f','/tmp/roles.sql']);
+ await command('docker',['exec',target,'psql','-X','-q','-v','ON_ERROR_STOP=1','-U','supabase_admin','-d','postgres','-f','/tmp/roles.sql']);
  stage='restore-archive';
- await command('docker',['exec',target,'pg_restore','--exit-on-error','--single-transaction','--no-tablespaces','-U','hp_restore_admin','-d','postgres','/tmp/restore.dump'],{timeout:180000});
+ await command('docker',['exec',target,'pg_restore','--exit-on-error','--single-transaction','--no-tablespaces','-U','supabase_admin','-d','postgres','/tmp/restore.dump'],{timeout:180000});
  proof.sql_empty_restore_verified=true;
  stage='restored-fingerprints';
  const targetQuery=async sql=>JSON.parse((await queryTarget(`select coalesce(jsonb_agg(to_jsonb(hp_row)),'[]'::jsonb)::text from (${sql}) hp_row;`)).trim());

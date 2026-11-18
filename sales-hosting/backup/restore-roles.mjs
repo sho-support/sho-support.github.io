@@ -15,3 +15,14 @@ export function withoutEphemeralCliRoles(sql){
  }).join('\n');
  return {text,excluded};
 }
+export function rolesForIsolatedSupabase(sql){
+ const result=withoutEphemeralCliRoles(sql);let bootstrap=0;
+ const text=result.text.split('\n').filter(line=>{
+  if(!/^CREATE ROLE (?:supabase_admin|"supabase_admin");$/.test(line))return true;
+  bootstrap++;return false;
+ }).join('\n');
+ if(bootstrap!==1)throw Error('Expected exactly one Supabase bootstrap role');
+ // Keep its ALTER ROLE attributes and grants. Only CREATE is already satisfied
+ // by initdb, which must use Supabase's reserved bootstrap superuser identity.
+ return {text,excluded:result.excluded,bootstrap_create_already_satisfied:true};
+}
