@@ -10,6 +10,7 @@ import {createRequire} from 'node:module';
 import {createHash,randomBytes,createCipheriv,createDecipheriv} from 'node:crypto';
 import {PROJECT,backupConnectionOptions} from './backup/connection-preflight.mjs';
 import {rolesForIsolatedSupabase} from './backup/restore-roles.mjs';
+import {sealPrivateDelivery,recipientFingerprint} from './backup/private-delivery.mjs';
 
 // Official Supabase Docker Hub release 17.12.0.000, immutable manifest digest.
 // Same PostgreSQL major as the hosted source; no production upgrade is made.
@@ -139,6 +140,11 @@ try{
  const sourceLayout=(await client.query("select coalesce(jsonb_agg(to_jsonb(t) order by t.schemaname,t.tablename),'[]'::jsonb)::text as layout from (select schemaname,tablename,tableowner,rowsecurity from pg_tables where schemaname not like 'pg_%' and schemaname <> 'information_schema') t")).rows[0].layout;
  const sourcePolicies=(await client.query("select coalesce(jsonb_agg(to_jsonb(p) order by p.schemaname,p.tablename,p.policyname),'[]'::jsonb)::text as policies from pg_policies p")).rows[0].policies;
  const sourceMetadata={};for(const [kind,sql] of Object.entries(metadataSql))sourceMetadata[kind]=(await client.query(sql)).rows[0].value;
+ const supplementalSequences=(await client.query(`select s.schemaname,s.sequencename,s.last_value::text as last_value from pg_sequences s
+  join pg_namespace n on n.nspname=s.schemaname join pg_class c on c.relnamespace=n.oid and c.relname=s.sequencename and c.relkind='S'
+  join pg_depend d on d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e' and d.refclassid='pg_extension'::regclass
+  join pg_extension e on e.oid=d.refobjid where e.extname='pg_net' and n.nspname='net' and not(c.oid=any(coalesce(e.extconfig,array[]::oid[])))
+  order by s.schemaname,s.sequencename`)).rows;
  const responseCacheOwned=(await client.query("select exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace join pg_depend d on d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e' join pg_extension e on e.oid=d.refobjid and d.refclassid='pg_extension'::regclass where n.nspname='net' and c.relname='_http_response' and e.extname='pg_net') as expected")).rows[0].expected;
  if(responseCacheOwned!==true)throw fail('UNEXPECTED_RESPONSE_CACHE_OWNERSHIP');
  stage='sql-snapshot';
@@ -175,6 +181,15 @@ try{
  await command('docker',['exec',target,'pg_restore','--no-tablespaces','--file=/tmp/restore.sql','/tmp/restore.dump'],{timeout:180000});
  await command('docker',['exec',target,'psql','-X','-q','--single-transaction','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-U','supabase_admin','-d','postgres','-f','/tmp/restore.sql'],{timeout:180000});
  proof.sql_empty_restore_verified=true;
+ stage='extension-sequence-state';
+ for(const sequence of supplementalSequences){
+  if(sequence.schemaname!=='net'||!/^[-]?[0-9]{1,20}$/.test(sequence.last_value||'')){
+   if(sequence.last_value===null)continue;throw fail('INVALID_EXTENSION_SEQUENCE_STATE');
+  }
+  const qualified=quote(sequence.schemaname)+'.'+quote(sequence.sequencename);
+  await queryTarget("select pg_catalog.setval('"+qualified.replaceAll("'","''")+"'::regclass,'"+sequence.last_value+"'::bigint,true);");
+ }
+ proof.extension_sequence_states_supplemented=supplementalSequences.filter(s=>s.last_value!==null).length;
  stage='restored-fingerprints';
  const targetQuery=async sql=>JSON.parse((await queryTarget(`select coalesce(jsonb_agg(to_jsonb(hp_row)),'[]'::jsonb)::text from (${sql}) hp_row;`)).trim());
  const targetRows=await fingerprints(targetQuery);
@@ -200,7 +215,32 @@ try{
   if(restored!==sourceMetadata[kind]){proof.metadata_mismatch=kind;throw fail('RESTORED_SECURITY_METADATA_MISMATCH');}
   proof[kind+'_match']=true;
  }
- proof.table_owners_and_rls_match=true;proof.ok=true;
+ proof.table_owners_and_rls_match=true;
+ if(process.env.HP_SQL_BACKUP_RETAIN==='true'){
+  stage='private-owner-delivery';
+  const recipient=await readFile(new URL('./backup/recovery-recipient.pem',import.meta.url),'utf8');
+  const fingerprint=recipientFingerprint(recipient);
+  if(fingerprint!=='88a0dc3d153b25ad499b646014d28aea55348c9fb575017097e0bbdb8f3910e3')throw fail('RECOVERY_RECIPIENT_NOT_VERIFIED');
+  const ownerPayload=Buffer.from(JSON.stringify({schema:1,kind:'database-snapshot',project_ref:PROJECT,created_at:new Date().toISOString(),source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID,
+   archive:archive.toString('base64'),roles:roles.toString('base64'),archive_sha256:hash(archive),roles_sha256:hash(roles),managed_sequences:supplementalSequences,
+   source_table_fingerprints:sourceRows,source_security_metadata:sourceMetadata,verification:{...proof}}));
+  const sealed=sealPrivateDelivery(ownerPayload,recipient,{project_ref:PROJECT,source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID});
+  if(sealed.length>70*1024*1024)throw fail('PRIVATE_DELIVERY_LIMIT');
+  const writer=new Client({...config,options:'-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'});writer.on('error',()=>{});let writing=false;
+  try{
+   await writer.connect();await writer.query('SET SESSION ROLE postgres');await writer.query('BEGIN READ WRITE');writing=true;
+   // Only a new opaque encrypted database object is written. No application
+   // table, schema, service configuration or pre-existing object is modified.
+   const oid=Number((await writer.query('select pg_catalog.lo_from_bytea(0,$1) as oid',[sealed])).rows[0]?.oid);
+   if(!Number.isInteger(oid)||oid<16384||oid>4294967295)throw fail('INVALID_DELIVERY_OBJECT');
+   await writer.query(`REVOKE ALL ON LARGE OBJECT ${oid} FROM PUBLIC,anon,authenticated,authenticator,service_role,supabase_read_only_user`);
+   const access=(await writer.query(`select pg_catalog.has_largeobject_privilege('anon',${oid},'SELECT') as anon,pg_catalog.has_largeobject_privilege('authenticated',${oid},'SELECT') as customer,pg_catalog.has_largeobject_privilege('service_role',${oid},'SELECT') as service_role,pg_catalog.has_largeobject_privilege('supabase_read_only_user',${oid},'SELECT') as readonly`)).rows[0];
+   if(Object.values(access).some(x=>x!==false))throw fail('PRIVATE_DELIVERY_ACCESS_NOT_VERIFIED');
+   proof.private_delivery={oid,encrypted_bytes:sealed.length,sha256:hash(sealed),recipient_fingerprint:fingerprint,nonowner_read_denied:true,committed:false};
+   await writer.query('COMMIT');writing=false;proof.private_delivery.committed=true;proof.source_database_changed=true;proof.source_application_tables_changed=false;
+  }finally{if(writing)await writer.query('ROLLBACK').catch(()=>{});await writer.end();}
+ }
+ proof.ok=true;
 }catch(error){
  proof.failed_stage=stage;
  if(['28P01','28000','42501','ECONNRESET','ECONNREFUSED','ETIMEDOUT','ENOTFOUND','EHOSTUNREACH','CERT_HAS_EXPIRED','SELF_SIGNED_CERT_IN_CHAIN','ERR_TLS_CERT_ALTNAME_INVALID'].includes(error?.code))proof.source_error_code=error.code;

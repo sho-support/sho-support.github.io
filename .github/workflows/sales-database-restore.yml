@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test sales-hosting/tests/backup-preflight.test.mjs sales-hosting/tests/restore-roles.test.mjs
+      - run: node --test sales-hosting/tests/backup-preflight.test.mjs sales-hosting/tests/restore-roles.test.mjs sales-hosting/tests/private-delivery.test.mjs
       - run: node --check sales-hosting/verify-database-restore.mjs
   rehearsal:
     needs: contract
@@ -41,4 +41,5 @@ jobs:
         env:
           SUPABASE_BACKUP_DB_URL: ${{ secrets.SUPABASE_BACKUP_DB_URL }}
           SUPABASE_BACKUP_ACCESS_TOKEN: ${{ secrets.SUPABASE_BACKUP_ACCESS_TOKEN }}
+          HP_SQL_BACKUP_RETAIN: ${{ contains(github.event.head_commit.message, '[retain-hp-sql-backup]') && 'true' || 'false' }}
         run: node sales-hosting/verify-database-restore.mjs
