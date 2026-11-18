@@ -32,3 +32,13 @@
 - [Supabaseのバックアップと復元](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore)
 - [PostgreSQL拡張機能のdump対象とACL](https://www.postgresql.org/docs/17/extend-extensions.html)
 - [PostgreSQL Large Objectの所有権・アクセス権](https://www.postgresql.org/docs/17/lo-implementation.html)
+
+## Storage/R2の実ファイル復元（同日追記）
+
+[実行44324013481](https://github.com/sho-support/sho-support.github.io/actions/runs/44324013481)、ソース `c1bd916b010457cd6ed1145620946ff46fe293a5` で、Storageの2バケット・9ファイル・4,186,232 bytesを全件列挙し、新規の非公開QAバケットへコピーした。全件のサイズとSHA256を照合し、元ファイルの再読込SHA256も一致。元の一覧・設定は変更していない。QAバケットは削除し、元ファイル9件と一時バケット0件をDBから確認した。
+
+本番R2バケットも先頭から末尾まで列挙し、前後とも0件だった。元のR2オブジェクトへの書込・削除は行っていない。0件という確認を、実顧客サイトのR2復元試験済みとは表現しない。
+
+ファイル本体と元のメタデータを本人の公開鍵へ暗号化済み。暗号化コンポーネント7,455,309 bytes、SHA256 `ccac9521b0d7a9bb12b4e0d4a21a94d9228454f635bc88ca02e62c5e183a8320`。元プロジェクト上の新規・所有者専用Large Objectに一時保管し、通常ユーザー3役割で読取拒否、所有者のみのACLも確認した。**作業実行環境への接続が失われたため、別保管先への転送と本人キーでの復号検査は未完了。暗号化済みデータを別保管するまで、この一時保管だけを削除しない。**
+
+検査用 `website-private-assets-backup` はv2の閉鎖コードへ戻し、全4ファイルの取得し直しで完全一致を確認した。既存のR2検査用・resource QAは再開していない。HTTPによる閉鎖確認は別の資格情報なし検査で行う。[ファイル検査の証跡](qa/sales-backup-assets-20261118.json)。全基盤バックアップゲートは未完了のまま維持する。

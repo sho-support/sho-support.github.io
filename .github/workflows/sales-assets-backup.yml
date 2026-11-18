@@ -7,6 +7,7 @@ on:
       - 'sales-hosting/backup/assets-export.mjs'
       - 'sales-hosting/backup/private-delivery.mjs'
       - 'sales-hosting/verify-assets-backup.mjs'
+      - 'sales-hosting/verify-assets-closed.mjs'
       - 'sales-hosting/tests/assets-export.test.mjs'
       - 'sales-hosting/tests/private-delivery.test.mjs'
       - '.github/workflows/sales-assets-backup.yml'
@@ -53,3 +54,16 @@ jobs:
           SUPABASE_BACKUP_DB_URL: ${{ secrets.SUPABASE_BACKUP_DB_URL }}
           SUPABASE_BACKUP_ACCESS_TOKEN: ${{ secrets.SUPABASE_BACKUP_ACCESS_TOKEN }}
         run: node sales-hosting/verify-assets-backup.mjs
+
+  closed:
+    needs: contract
+    if: ${{ contains(github.event.head_commit.message, '[verify-hp-assets-closed]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify all temporary backup and QA endpoints deny unauthenticated requests
+        run: node sales-hosting/verify-assets-closed.mjs
