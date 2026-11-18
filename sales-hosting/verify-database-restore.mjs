@@ -1,6 +1,6 @@
-// A disposable SQL restore rehearsal, NOT a retained full-platform backup.
-// Real rows and SQL are confined to the private runner filesystem/memory.
-// No artifacts, outbound notifications, source writes or production restore.
+// A disposable SQL restore rehearsal, optionally sealed for the owner's backup.
+// Real rows and SQL stay private; optional delivery writes only a new encrypted
+// owner-only Large Object. No application writes, public artifacts or cutover.
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {mkdtemp,writeFile,readFile,rm,mkdir} from 'node:fs/promises';
@@ -11,6 +11,7 @@ import {createHash,randomBytes,createCipheriv,createDecipheriv} from 'node:crypt
 import {PROJECT,backupConnectionOptions} from './backup/connection-preflight.mjs';
 import {rolesForIsolatedSupabase} from './backup/restore-roles.mjs';
 import {sealPrivateDelivery,recipientFingerprint} from './backup/private-delivery.mjs';
+import {extensionSecurityRestore} from './backup/restore-extension-security.mjs';
 
 // Official Supabase Docker Hub release 17.12.0.000, immutable manifest digest.
 // Same PostgreSQL major as the hosted source; no production upgrade is made.
@@ -19,6 +20,11 @@ const require=createRequire(new URL('../customer-hosting-v2/package.json',import
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const quote=x=>'"'+String(x).replaceAll('"','""')+'"';
 const fail=code=>Object.assign(new Error(code),{safeCode:code});
+const extensionSecuritySql=`select coalesce(jsonb_agg(to_jsonb(m) order by m.schema collate "C",m.name collate "C"),'[]'::jsonb)::text as value from (
+ select n.nspname as schema,c.relname as name,e.extname as extension,c.relkind as kind,pg_get_userbyid(c.relowner) as owner,c.relacl is not null as acl_present,
+  coalesce((select jsonb_agg(jsonb_build_object('grantor',pg_get_userbyid(a.grantor),'grantee',case when a.grantee=0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end,'privilege',a.privilege_type,'grantable',a.is_grantable) order by a.grantee,a.privilege_type) from aclexplode(c.relacl) a),'[]'::jsonb) as grants
+ from pg_class c join pg_namespace n on n.oid=c.relnamespace join pg_depend d on d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e' and d.refclassid='pg_extension'::regclass
+ join pg_extension e on e.oid=d.refobjid where c.relkind in ('r','v','S') and n.nspname not like 'pg_%') m`;
 const metadataSql={
  sequences:"select coalesce(jsonb_agg(to_jsonb(s) order by s.schemaname collate \"C\",s.sequencename collate \"C\"),'[]'::jsonb)::text as value from pg_sequences s",
  grants:`select coalesce(jsonb_agg(to_jsonb(m) order by m.schema collate "C",m.name collate "C"),'[]'::jsonb)::text as value from (
@@ -140,6 +146,7 @@ try{
  const sourceLayout=(await client.query("select coalesce(jsonb_agg(to_jsonb(t) order by t.schemaname,t.tablename),'[]'::jsonb)::text as layout from (select schemaname,tablename,tableowner,rowsecurity from pg_tables where schemaname not like 'pg_%' and schemaname <> 'information_schema') t")).rows[0].layout;
  const sourcePolicies=(await client.query("select coalesce(jsonb_agg(to_jsonb(p) order by p.schemaname,p.tablename,p.policyname),'[]'::jsonb)::text as policies from pg_policies p")).rows[0].policies;
  const sourceMetadata={};for(const [kind,sql] of Object.entries(metadataSql))sourceMetadata[kind]=(await client.query(sql)).rows[0].value;
+ const extensionSecurity=JSON.parse((await client.query(extensionSecuritySql)).rows[0].value);
  const supplementalSequences=(await client.query(`select s.schemaname,s.sequencename,s.last_value::text as last_value from pg_sequences s
   join pg_namespace n on n.nspname=s.schemaname join pg_class c on c.relnamespace=n.oid and c.relname=s.sequencename and c.relkind='S'
   join pg_depend d on d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e' and d.refclassid='pg_extension'::regclass
@@ -181,6 +188,11 @@ try{
  await command('docker',['exec',target,'pg_restore','--no-tablespaces','--file=/tmp/restore.sql','/tmp/restore.dump'],{timeout:180000});
  await command('docker',['exec',target,'psql','-X','-q','--single-transaction','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-U','supabase_admin','-d','postgres','-f','/tmp/restore.sql'],{timeout:180000});
  proof.sql_empty_restore_verified=true;
+ stage='extension-relation-security';
+ const restoredExtensionSecurity=JSON.parse(JSON.parse((await queryTarget(`select coalesce(jsonb_agg(to_jsonb(hp_row)),'[]'::jsonb)::text from (${extensionSecuritySql}) hp_row;`)).trim())[0].value);
+ const extensionSecuritySqlRestore=extensionSecurityRestore(extensionSecurity,restoredExtensionSecurity);
+ await queryTarget(extensionSecuritySqlRestore);
+ proof.extension_relation_security_supplemented=extensionSecurity.length;
  stage='extension-sequence-state';
  for(const sequence of supplementalSequences){
   if(sequence.schemaname!=='net'||!/^[-]?[0-9]{1,20}$/.test(sequence.last_value||'')){
@@ -212,7 +224,12 @@ try{
  if(layout!==sourceLayout||policies!==sourcePolicies)throw fail('RESTORED_OWNERS_OR_RLS_MISMATCH');
  for(const [kind,sql] of Object.entries(metadataSql)){
   const restored=(await targetQuery(sql))[0].value;
-  if(restored!==sourceMetadata[kind]){proof.metadata_mismatch=kind;throw fail('RESTORED_SECURITY_METADATA_MISMATCH');}
+  if(restored!==sourceMetadata[kind]){
+   proof.metadata_mismatch=kind;
+   const expected=JSON.parse(sourceMetadata[kind]),actual=JSON.parse(restored),key=r=>[r.schema,r.name,r.arguments||r.table_name||''].join('.');
+   proof.metadata_difference_fields=expected.flatMap(s=>{const t=actual.find(x=>key(x)===key(s));return !t?[{schema:s.schema,name:s.name,fields:['missing']}]:Object.keys(s).some(k=>JSON.stringify(s[k])!==JSON.stringify(t[k]))?[{schema:s.schema,name:s.name,fields:Object.keys(s).filter(k=>JSON.stringify(s[k])!==JSON.stringify(t[k]))}]:[];});
+   throw fail('RESTORED_SECURITY_METADATA_MISMATCH');
+  }
   proof[kind+'_match']=true;
  }
  proof.table_owners_and_rls_match=true;
@@ -222,7 +239,7 @@ try{
   const fingerprint=recipientFingerprint(recipient);
   if(fingerprint!=='88a0dc3d153b25ad499b646014d28aea55348c9fb575017097e0bbdb8f3910e3')throw fail('RECOVERY_RECIPIENT_NOT_VERIFIED');
   const ownerPayload=Buffer.from(JSON.stringify({schema:1,kind:'database-snapshot',project_ref:PROJECT,created_at:new Date().toISOString(),source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID,
-   archive:archive.toString('base64'),roles:roles.toString('base64'),archive_sha256:hash(archive),roles_sha256:hash(roles),managed_sequences:supplementalSequences,
+   archive:archive.toString('base64'),roles:roles.toString('base64'),archive_sha256:hash(archive),roles_sha256:hash(roles),managed_sequences:supplementalSequences,extension_relation_security:extensionSecurity,extension_relation_security_sql:extensionSecuritySqlRestore,
    source_table_fingerprints:sourceRows,source_security_metadata:sourceMetadata,verification:{...proof}}));
   const sealed=sealPrivateDelivery(ownerPayload,recipient,{project_ref:PROJECT,source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID});
   if(sealed.length>70*1024*1024)throw fail('PRIVATE_DELIVERY_LIMIT');
