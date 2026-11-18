@@ -19,6 +19,12 @@ test('actual sales setup HTTP endpoints protect private details and never send o
  const trial=await send({...payload,enable:false,bank_message:fake,bank_is_test:false});assert.equal(trial.status,200);assert.equal(trial.body.bank_is_test,true);
  const trialRead=await send({action:'admin_get_sales_settings'});assert.equal(trialRead.body.bank_is_test,true);assert.equal(trialRead.body.bank_message,fake);
  assert.equal((await db.query("select value->>'message' as message from public.website_settings where key='bank_transfer'")).rows[0].message,'');
+ const fixture={message:fake,is_test:true,order_codes:['9000001001']};
+ await db.query("update public.website_settings set value=$1 where key='bank_transfer_test'",[JSON.stringify(fixture)]);
+ const changedDraft=await send({...payload,enable:false,bank_message:fake,seller:{...payload.seller,legal_name:'下書きの変更'}});
+ assert.equal(changedDraft.status,200);
+ assert.deepEqual((await db.query("select value from public.website_settings where key='bank_transfer_test'")).rows[0].value,fixture);
+ assert.equal((await send({action:'admin_get_sales_settings'})).body.seller.legal_name,'下書きの変更');
  assert.notEqual((await send({...payload,bank_message:fake,bank_is_test:false})).status,200);
  assert.notEqual((await send({...payload,confirm_backup:false})).status,200);
  const saved=await send(payload);assert.equal(saved.status,200,JSON.stringify(saved));assert.equal(saved.body.enabled,true);
@@ -49,4 +55,23 @@ test('public order endpoint rejects missing or outdated hosting acknowledgement 
   const r=await h.handler(new Request('https://fixture.supabase.co/functions/v1/website-order-api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({plan:'one',update_plan:'none',...extra})}));assert.equal(r.status,400);
  }
  assert.equal(h.requests.length,0);assert.equal(h.messages.length,0);
+});
+
+test('the Cloudflare sales frontend stays paused before the hosting switch',async()=>{
+ const origin='https://sho-web-support-preview.zodiac-suu.workers.dev';
+ const cases=[
+  ['website-order-api/index.ts',{plan:'one',update_plan:'none',hosting_offer_version:'hosting-20261113',hosting_offer_acknowledged:true}],
+  ['website-customer-access/index.ts',{action:'admin_resend_intake',order_code:'1001'}],
+  ['website-api/index.ts',{action:'admin_transition',site_id:'1001',status:'live'}]
+ ];
+ for(const [slug,body] of cases){
+  const admin=new Proxy({},{get(_target,key){assert.fail('Paused route attempted '+String(key));}});
+  const h=await edgeHarness({slug,admin,users:{admin:{id:actor}}});
+  const r=await h.handler(new Request('https://fixture.supabase.co/functions/v1/'+slug.split('/')[0],{
+   method:'POST',headers:{'content-type':'application/json',authorization:'Bearer admin',origin},body:JSON.stringify(body)
+  }));
+  assert.equal(r.status,409);
+  assert.equal((await r.json()).code,'sales_release_pending');
+  assert.equal(h.requests.length+h.messages.length+h.background.length,0);
+ }
 });

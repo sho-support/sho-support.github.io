@@ -2,6 +2,8 @@
 
 本書は実行準備であり、切替完了の記録ではない。対象は `tyhymvgjkoebetyypspj` のHP販売だけ。バンド、他の販売サービス、TrendBlog、現在のDNSを一括で変更しない。
 
+実環境の最新照合、Authの隔離復旧、復元DBでの3migration、修正後の候補は[2026-11-19の記録](SALES_RECOVERY_AND_CUTOVER_20261119.md)を参照。以下のバージョン番号は当時の記録。
+
 ## 固定した候補
 
 - [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `c3c3af8114773a22b3f4d442dc0888908d02ee1e` の6関数・依存を含む37ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。接続テストの分離修正後、現行のcustomer-accessはv55となったため、その配備SHAも候補manifestの切替前照合へ更新。過去のプレビュー配備を本番切替済みと扱わない。
@@ -29,6 +31,7 @@
 ## 戻し方
 
 - 送信・制作・公開を止め、新規の注文や承認を受け付けない。未解決の公開処理を別処理で上書きせず、DBとR2の操作IDを照合する。
+- migrationの途中で失敗したら、成功済みの版と失敗した版を履歴・実体の双方から読む。アップロードと有料AIの停止を確認し、隔離DBで原因を確かめてから次の適用を判断する。正式関数の配備とホスティングモードの切替は保留する。
 - 現状の `sales-hosting/runtime/` が、Cloudflareからの未対応書込みを409で止める接続用コード。API52/顧客54/注文17/プレビュー14の動作へ戻すときは、それぞれ固有の`_shared`を取り違えない。設定関数3は配備記録と照合する。
 - Worker46の全4ファイルは [runtime-baseline/website-worker.json](../sales-hosting/runtime-baseline/website-worker.json) に保存。これはソースだけの復旧用で、DB/Auth/Storage/R2バックアップではない。復旧配備では新しいversion番号になる。
 - 関数復旧後も、新設テーブルや契約記録を自動DROPしない。書込みが発生した後は、確定したURL・見積り・同意・入金情報を守り、実バックアップと照合して別途復旧を判断する。

@@ -16,10 +16,23 @@ export async function handleCommercialAction({body,admin,user,dependencies:d}:an
   if(action==='admin_save_sales_settings'){
    const settings=makeSalesSettings(body,user.id);
    if(settings.policy.enabled)validateCommercialPolicy(settings.policy);
-   const {error}=await admin.from('website_settings').upsert([
-    {key:'sales_identity',value:settings.seller},{key:settings.bank_is_test?'bank_transfer_test':'bank_transfer',value:{message:settings.bank,...(settings.bank_is_test?{is_test:true,order_codes:[]}:{})}},
-    {key:'sales_backup_attestation',value:settings.backup},{key:'commercial_policy',value:settings.policy}
-   ].map(x=>({...x,updated_at:new Date().toISOString()})),{onConflict:'key'});
+   const updatedAt=new Date().toISOString();
+   const rows:{key:string,value:object}[]=[
+    {key:'sales_identity',value:settings.seller},
+    {key:'sales_backup_attestation',value:settings.backup},
+    {key:'commercial_policy',value:settings.policy}
+   ];
+   if(settings.bank_is_test){
+    // The receipt fixture owns its allowlist. A draft save may initialize the
+    // test setting but must never replace an existing fixture.
+    const {error}=await admin.from('website_settings').upsert({
+     key:'bank_transfer_test',value:{message:settings.bank,is_test:true,order_codes:[]},updated_at:updatedAt
+    },{onConflict:'key',ignoreDuplicates:true});
+    if(error)return d.json({error:'設定を保存できませんでした。時間を置いて再試行してください。'},503);
+   }else{
+    rows.push({key:'bank_transfer',value:{message:settings.bank}});
+   }
+   const {error}=await admin.from('website_settings').upsert(rows.map(row=>({...row,updated_at:updatedAt})),{onConflict:'key'});
    if(error)return d.json({error:'設定を保存できませんでした。時間を置いて再試行してください。'},503);
    return d.json({ok:true,enabled:settings.policy.enabled,bank_is_test:settings.bank_is_test,version:settings.policy.version});
   }

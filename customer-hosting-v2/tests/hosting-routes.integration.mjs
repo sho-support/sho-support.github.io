@@ -10,6 +10,7 @@ import {commercialPolicy,quoteInput} from './helpers/commercial-fixture.mjs';
 
 const ADMIN='11111111-1111-4111-8111-111111111111',CUSTOMER='22222222-2222-4222-8222-222222222222',STRANGER='33333333-3333-4333-8333-333333333333';
 const DOMAIN='routes.example';
+const SALES_ORIGIN='https://sho-web-support-preview.zodiac-suu.workers.dev';
 const hash=async x=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(x))),b=>b.toString(16).padStart(2,'0')).join('');
 const page=title=>'<!doctype html><html lang="ja"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title></head><body><h1>'+title+'</h1></body></html>';
 test('both canonical HTTP entrypoints reject receipt-only commercial actions before DB writes or messages',async()=>{
@@ -31,14 +32,27 @@ test('actual Supabase HTTP handlers use the shared Cloudflare protocol',async t=
   }));
   t.after(async()=>{await runtime.dispose();await sql.close();});
   await sql.exec(await readFile(new URL('./fixtures/hosting-base.sql',import.meta.url),'utf8'));
+  await sql.exec("alter table public.website_orders add column custom_domain boolean, add column custom_domain_note text, add column extra_request text, add column request_hash text, add column line_link_token_hash text, add column created_at timestamptz not null default now()");
+  await sql.exec("alter table public.website_intakes add column last_saved_at timestamptz, add column submitted_at timestamptz");
+  await sql.exec("create table public.website_profiles(site_id text primary key references public.website_sites(site_id),industry text,summary text,preferences jsonb,decisions jsonb); grant select,insert,update on public.website_profiles to service_role;");
   await sql.exec(await readFile(new URL('../../supabase/migrations/20261112053755_website_cloudflare_publication_protocol.sql',import.meta.url),'utf8'));
   await sql.exec(await readFile(new URL('../../supabase/migrations/20261112170006_website_commercial_quote_protocol.sql',import.meta.url),'utf8'));
   await sql.exec('set role service_role');
   await sql.query("insert into public.website_settings(key,value) values('commercial_policy',$1),('bank_transfer',$2)",[JSON.stringify(commercialPolicy()),JSON.stringify({message:'架空の銀行・支店・口座・名義（実サービスへの通知はありません）'})]);
   const admin=postgrestFixture(sql),raw=await runtime.getR2Bucket('SITES');
+  admin.storage={from(bucket){
+    assert.equal(bucket,'website-intake-files');
+    return {async info(path){
+      assert.match(path,/^\d{4}\/secure-intake\/top_photos\/fixture\.png$/);
+      return {data:{size:68,contentType:'image/png'},error:null};
+    }};
+  }};
   const env={WEBSITE_CUSTOMER_HOSTING:'cloudflare-r2',CUSTOMER_BASE_DOMAIN:DOMAIN,CUSTOMER_HOSTING_DOMAIN_READY:DOMAIN,
     SUPABASE_URL:'https://fixtureproject.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'synthetic-not-a-real-key',LINE_OWNER_USER_ID:'U_FAKE_OWNER'};
   const users={admin:{id:ADMIN},customer:{id:CUSTOMER},stranger:{id:STRANGER}};
+  let orderNumber;
+  const intake=await edgeHarness({slug:'website-order-api/index.ts',users,env,
+    admin:{...admin,rpc:(name,args)=>name==='next_website_order_number'?{data:orderNumber,error:null}:admin.rpc(name,args)}});
   const access=await edgeHarness({slug:'website-customer-access/index.ts',admin,bucket:raw,users,env});
   const api=await edgeHarness({slug:'website-api/index.ts',admin,bucket:raw,users,env});
   const preview=await edgeHarness({slug:'website-preview/index.ts',admin,bucket:raw,users,env});
@@ -48,22 +62,55 @@ test('actual Supabase HTTP handlers use the shared Cloudflare protocol',async t=
     return {status:response.status,body:await response.json()};
   };
   async function order(n,plan){
-    const code=({one:'P',semi:'S',full:'F'}[plan])+n;
     const amount=plan==='one'?15000:plan==='semi'?22000:30000;
-    await sql.query('insert into public.website_orders(order_code,plan,line_user_id,amount_from) values($1,$2,$3,$4)',[code,plan,'U_FAKE_'+n,amount]);
+    orderNumber=Number(n);
+    const receipt=await intake.handler(new Request('https://fixtureproject.supabase.co/functions/v1/website-order-api',{
+      method:'POST',headers:{'content-type':'application/json',origin:SALES_ORIGIN},body:JSON.stringify({
+        plan,update_plan:plan==='one'?'none':'free3',template_style:plan==='semi'?'rock':null,
+        hosting_offer_version:'hosting-20261113',hosting_offer_acknowledged:true
+      })
+    }));
+    assert.equal(receipt.status,201);
+    const {order:created}=await receipt.json(),code=created.order_code;
+    assert.equal(code,n);
+    assert.equal(created.amount_from,amount);
+    // The signed LINE webhook has its own tests. Use its successful synthetic
+    // pairing state here to run the receipt-to-publication HTTP handlers.
+    await sql.query("update public.website_orders set status='pending_payment',line_user_id=$1 where order_code=$2",['U_FAKE_'+n,code]);
     const quote=await send(access,{action:'admin_send_final_quote',order_code:code,...quoteInput(amount)},'admin');assert.equal(quote.status,200,JSON.stringify(quote.body));
     const accepted=await send(access,{action:'admin_record_contract_acceptance',order_code:code,quote_fingerprint:quote.body.quote_fingerprint,acceptance_reference:'架空LINE同意返信・日時確認済み'},'admin');assert.equal(accepted.status,200);
     const r=await send(access,{action:'admin_activate_order',order_code:code},'admin');assert.equal(r.status,200);assert.equal(r.body.site_id,n);
+    const intakeUrl=new URL(access.messages.at(-1).text.split('\n').at(-1));
+    assert.equal(intakeUrl.origin,SALES_ORIGIN);
+    assert.equal(intakeUrl.pathname,'/website-intake.html');
+    assert.equal(intakeUrl.searchParams.get('id'),n);
+    assert.equal(intakeUrl.searchParams.get('prod'),'1');
+    assert.equal((await send(access,{action:'admin_resend_intake',order_code:code},'admin')).status,200);
+    const sentAgain=new URL(access.messages.at(-2).text.split('\n').at(-1));
+    assert.equal(sentAgain.origin,SALES_ORIGIN);
+    assert.equal(sentAgain.pathname,'/website-intake.html');
+    assert.notEqual(sentAgain.searchParams.get('key'),intakeUrl.searchParams.get('key'));
+    const materials={fields:{site_name:'架空の制作受付'},checks:{rights:['確認'],privacy:['確認']},
+      files:{top_photos:[{path:n+'/secure-intake/top_photos/fixture.png',name:'fixture.png'}]}};
+    const submit={action:'submit_intake',site_id:n,key:sentAgain.searchParams.get('key'),payload:materials};
+    assert.equal((await send(access,{...submit,key:intakeUrl.searchParams.get('key')})).status,403);
+    const intakeResponse=await send(access,submit);
+    assert.equal(intakeResponse.status,200,JSON.stringify(intakeResponse.body));
+    assert.equal((await send(access,submit)).status,409);
+    const {rows:[draft]}=await sql.query('select payload from public.website_intakes where site_id=$1',[n]);
+    assert.equal(draft.payload.fields.build_plan,plan);
+    assert.equal(draft.payload.files.top_photos[0].size,68);
     await sql.query('insert into public.website_site_users(site_id,user_id,role) values($1,$2,$3)',[n,CUSTOMER,'owner']);
     return n;
   }
   async function stage(n,title){
-    const id=crypto.randomUUID().replace(/-/g,''),job=(await sql.query("insert into public.website_jobs(site_id,status) values($1,'running') returning id",[n])).rows[0].id;
+    const id=crypto.randomUUID().replace(/-/g,'');
+    const {rows:[job]}=await sql.query("update public.website_jobs set status='running' where site_id=$1 and kind='initial_create' and status='queued' returning id",[n]);
     await stageRelease({bucket:raw,siteId:n,releaseId:id,files:[{path:'index.html',content:page(title)}]});
     const m=await raw.get(`sites/${n}/release-manifests/${id}.json`);
     await sql.query("update public.website_sites set status='sho_review',repo_full_name=$1 where site_id=$2",['sho-support/site-'+n,n]);
-    await rpc('register_release',{p_site:n,p_job:job,p_release:id,p_commit:'b'.repeat(40),p_manifest:await hash(await m.text()),p_quality:{ok:true}});
-    await sql.query("update public.website_jobs set status='sho_review' where id=$1",[job]);return id;
+    await rpc('register_release',{p_site:n,p_job:job.id,p_release:id,p_commit:'b'.repeat(40),p_manifest:await hash(await m.text()),p_quality:{ok:true}});
+    await sql.query("update public.website_jobs set status='sho_review' where id=$1",[job.id]);return id;
   }
   const view=(id,key,path='index.html')=>preview.handler(new Request(`https://fixtureproject.supabase.co/functions/v1/website-preview?id=${id}&key=${key}&path=${encodeURIComponent(path)}`));
   for(const[i,plan]of['one','semi','full'].entries())await t.test(`${plan}: atomic activation, admin review, both approval routes, publish, update link and private state`,async()=>{
@@ -72,6 +119,8 @@ test('actual Supabase HTTP handlers use the shared Cloudflare protocol',async t=
     assert.equal((await send(api,{action:'admin_publish_site',site_id:n,approved:true},'customer')).status,403);
     assert.equal((await send(access,{action:'admin_publish_site',site_id:n},'admin')).status,409);
     const review=await send(api,{action:'admin_transition',status:'customer_review',site_id:n},'admin');assert.equal(review.status,200);
+    assert.equal(new URL(review.body.review_url).origin,SALES_ORIGIN);
+    assert.equal(new URL(review.body.review_url).searchParams.get('prod'),'1');
     const key=new URL(review.body.review_url).searchParams.get('key');
     const first=await view(n,key);assert.equal(first.status,200);assert.match((await first.json()).html,/frozen A/);
     const publicBefore=await runtime.dispatchFetch('https://s'+n+'.'+DOMAIN+'/');assert.equal(publicBefore.status,404);
@@ -84,6 +133,7 @@ test('actual Supabase HTTP handlers use the shared Cloudflare protocol',async t=
     assert.match(await(await runtime.dispatchFetch('https://s'+n+'.'+DOMAIN+'/')).text(),/frozen A/);
     assert.equal((await view(n,key)).status,403,'The private preview ends after publication');
     const loaded=await send(access,{action:'review_load',site_id:n,key});assert.equal(loaded.status,200);
+    assert.equal(new URL(loaded.body.update_url).origin,SALES_ORIGIN);
     assert.equal(new URL(loaded.body.update_url).searchParams.get('key'),key);
     assert.equal((await sql.query('select customer_access_token_hash from public.website_orders where site_id=$1',[n])).rows[0].customer_access_token_hash,await hash(key));
     const updated=await send(access,{action:'update_status',site_id:n,key});assert.equal(updated.status,200);assert.equal(updated.body.analytics_available,false);
@@ -144,7 +194,7 @@ test('actual Supabase HTTP handlers use the shared Cloudflare protocol',async t=
     assert.equal((await sql.query("select actor_user_id from public.website_activity where site_id=$1 and action='publication_reconciled'",[n])).rows[0].actor_user_id,null);
     await sql.query('insert into public.website_admins(user_id) values($1)',[ADMIN]);
   });
-  assert.equal(access.requests.length+api.requests.length+preview.requests.length,0,'No HTTP request may leave the local fixture');
+  assert.equal(access.requests.length+api.requests.length+preview.requests.length+intake.requests.length,0,'No HTTP request may leave the local fixture');
 });
 
 test('all live-helper snapshots block Pages, domain and merge mutations when Cloudflare is enabled',async()=>{

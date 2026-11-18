@@ -10,7 +10,7 @@
   "r2_buckets": [
     {
       "binding": "SITES",
-      "bucket_name": "sho-customer-sites-prod",
+      "bucket_name": "sho-customer-sites-production",
       "preview_bucket_name": "sho-customer-sites-preview"
     }
   ],

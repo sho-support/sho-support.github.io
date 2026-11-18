@@ -1,4 +1,5 @@
-import { SALES_ORIGINS, salesUrl } from '../_shared/sales-origin.ts';
+import { CLOUDFLARE_SALES_ORIGIN, SALES_ORIGINS, salesUrl } from '../_shared/sales-origin.ts';
+import {hostedCustomerLink} from '../_shared/hosting-sales-links.mjs';
 import {blocksLineReceiptMutation,LINE_RECEIPT_TEST_ERROR} from '../_shared/line-receipt-test.mjs';
 import {intakeAssetProblem} from '../_shared/intake-assets.ts';
 import {issueIntakeUpload,UploadGateError} from '../_shared/upload-gate.ts';
@@ -71,6 +72,9 @@ Deno.serve(async(req)=>{
   let body:any={};
   try{body=await req.json()}catch{return json({error:'Invalid request'},400)}
   const action=String(body?.action||'');
+  if(origin===CLOUDFLARE_SALES_ORIGIN&&!cloudflareHostingEnabled()&&!['admin_list_orders','admin_bank_settings','admin_resolve_free_url','review_load','load','update_status'].includes(action)){
+    return json({error:'本番公開の準備完了後に利用できます。',code:'sales_release_pending'},409);
+  }
   const siteId=String(body?.site_id||'');
   const key=String(body?.key||'');
   const admin=adminClient();
@@ -263,7 +267,10 @@ Deno.serve(async(req)=>{
       const {data:resendSite,error:resendSiteError}=await admin.from('website_sites').select('status').eq('site_id',target.site_id).single();
       if(resendSiteError)throw resendSiteError;
       if(resendSite.status!=='request_waiting')return json({error:'初回ヒアリングはすでに受付終了です。公開後の更新フォームをご利用ください。'},409);
-      const newKey=randomAccessKey(),url=salesUrl(req, '/website-intake.html?id=')+encodeURIComponent(target.site_id)+'&prod=1&key='+encodeURIComponent(newKey);
+      const newKey=randomAccessKey();
+      const url=cloudflareHostingEnabled()
+        ?hostedCustomerLink('website-intake.html',target.site_id,newKey,true)
+        :salesUrl(req,'/website-intake.html?id=')+encodeURIComponent(target.site_id)+'&prod=1&key='+encodeURIComponent(newKey);
       const {error:tokenErr}=await admin.from('website_orders').update({customer_access_token_hash:await sha256Hex(newKey),access_token_created_at:new Date().toISOString()}).eq('order_code',resendCode);
       if(tokenErr)throw tokenErr;
       const sent=await linePush(target.line_user_id,'制作内容・写真の入力URLを再送します。最新のURLから入力してください。\n\n'+url);

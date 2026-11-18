@@ -1,5 +1,14 @@
 import {CLOUDFLARE_SALES_ORIGIN,LEGACY_SALES_ORIGIN} from './sales-origin.ts';
 
+export function hostedCustomerLink(page,siteId,key,production=false){
+ const url=new URL(CLOUDFLARE_SALES_ORIGIN);
+ url.pathname='/'+page;
+ url.searchParams.set('id',siteId);
+ url.searchParams.set('key',key);
+ if(production)url.searchParams.set('prod','1');
+ return url.href;
+}
+
 // Server jobs have no browser Origin header. Pick their management links from
 // the selected hosting mode, preserving the older route until the cutover.
 export function workerSalesLinks(cloudflare,siteId,style=''){

@@ -1,5 +1,5 @@
 import { CONFIRMED_RECOVERY_ORIGIN } from '../_shared/auth-redirect-confirmation.ts';
-import { salesUrl, authRedirectReady } from '../_shared/sales-origin.ts';
+import { CLOUDFLARE_SALES_ORIGIN, salesUrl, authRedirectReady } from '../_shared/sales-origin.ts';
 import {intakeAssetProblem} from '../_shared/intake-assets.ts';
 import {issueIntakeUpload,UploadGateError} from '../_shared/upload-gate.ts';
 import {handleHostingAction} from '../_shared/hosting-routes.ts';
@@ -76,6 +76,9 @@ Deno.serve(async (req) => {
 
     const body = (await req.json().catch(() => ({}))) as Body;
     const action = body.action || '';
+    if(req.headers.get('origin')===CLOUDFLARE_SALES_ORIGIN&&!cloudflareHostingEnabled()&&!['list_sites','load_site','site_view_stats','admin_invite_customer'].includes(action)){
+      return json({error:'本番公開の準備完了後に利用できます。',code:'sales_release_pending'},409);
+    }
     const hostingResponse=await handleHostingAction({req,body,admin,user,dependencies:{getUser,json,linePush,notifyOwner,triggerWebsiteWorker}});
     if(hostingResponse)return hostingResponse;
 

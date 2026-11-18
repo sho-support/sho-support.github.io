@@ -3,10 +3,9 @@ import {hostingHash,hostingMapping,hostingPublisher,hostingRpc,reserveHostingUrl
 import {PublicationUncertainError,supabaseHostingDatabase} from './hosting-publication.mjs';
 import {handleCommercialAction} from './commercial-routes.ts';
 import {blocksLineReceiptMutation,LINE_RECEIPT_TEST_ERROR} from './line-receipt-test.mjs';
+import {hostedCustomerLink} from './hosting-sales-links.mjs';
 
-const root='https://sho-web-support.netlify.app/';
 const randomKey=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
-const link=(page:string,id:string,key:string)=>root+page+'?id='+encodeURIComponent(id)+'&key='+encodeURIComponent(key);
 const one=async(admin:any,table:string,field:string,value:string)=>{
   const {data,error}=await admin.from(table).select('*').eq(field,value).maybeSingle();if(error)throw error;return data;
 };
@@ -76,7 +75,8 @@ export async function handleHostingAction({req,body,admin,user,dependencies:d}:a
       const key=randomKey(),r=await hostingRpc(admin,'activate_order',{p_actor:user.id,p_order:code,p_key_hash:await hostingHash(key)});
       if(r.already_active)return d.json({ok:true,site_id:r.site_id,already_active:true,warning:'入金確認は保存済みです。制作案内が必要なら「ヒアリングURL再送」を使ってください。'});
       const order=await one(admin,'website_orders','order_code',code);
-      const sent=await d.linePush(order?.line_user_id,'お振込みによるご入金を確認いたしました。\nこのたびはご注文いただき、ありがとうございます。\n\nSITE ID：'+r.site_id+'\n制作内容・写真は、下の専用URLからご入力ください。\n'+link('website-intake.html',r.site_id,key)+'&prod=1');
+      const intake=hostedCustomerLink('website-intake.html',r.site_id,key,true);
+      const sent=await d.linePush(order?.line_user_id,'お振込みによるご入金を確認いたしました。\nこのたびはご注文いただき、ありがとうございます。\n\nSITE ID：'+r.site_id+'\n制作内容・写真は、下の専用URLからご入力ください。\n'+intake);
       return d.json({ok:true,site_id:r.site_id,...(sent.skipped||sent.ok!==true?{warning:'入金確認は保存済みです。ヒアリングURLのLINE再送が必要です。'}:{})});
     }
     if(!/^[A-Za-z0-9_-]{3,32}$/.test(siteId))return d.json({error:'SITE IDが不正です。'},400);
@@ -91,9 +91,9 @@ export async function handleHostingAction({req,body,admin,user,dependencies:d}:a
         const order=await one(admin,'website_orders','site_id',siteId);
         const published=s.published_at&&keyHash===order?.customer_access_token_hash;
         if(!published&&(s.status!=='customer_review'||keyHash!==s.review_access_token_hash))return d.json({error:'確認URLが無効です。LINEで届いた最新のURLをご利用ください。'},403);
-        const update=published?link('website-update.html',siteId,key):null;
+        const update=published?hostedCustomerLink('website-update.html',siteId,key):null;
         return d.json({ok:true,site:{site_id:siteId,site_name:s.site_name,status:s.status,updated_at:s.updated_at,
-          customer_approved:!!s.customer_approved,public_url:h.public_url,preview_url:published?h.public_url:link('website-preview.html',siteId,key)},
+          customer_approved:!!s.customer_approved,public_url:h.public_url,preview_url:published?h.public_url:hostedCustomerLink('website-preview.html',siteId,key)},
           release_id:published?h.active_release:h.pending_release,update_url:update});
       }
       const reviewAction=portal?body.review_action:action==='review_approve'?'approve':'revision';
@@ -114,7 +114,7 @@ export async function handleHostingAction({req,body,admin,user,dependencies:d}:a
     }
     if(action==='admin_secure_preview'){
       if(!h.pending_release)return d.json({error:'検査済みの制作案がまだありません。'},409);
-      const key=randomKey(),url=link('website-preview.html',siteId,key);
+      const key=randomKey(),url=hostedCustomerLink('website-preview.html',siteId,key);
       const {error}=await admin.from('website_sites').update({preview_url:url,preview_access_token_hash:await hostingHash(key),preview_token_issued_at:new Date().toISOString()}).eq('site_id',siteId);
       if(error)throw error;return d.json({ok:true,preview_url:url,status:'secure_preview'});
     }
@@ -123,7 +123,8 @@ export async function handleHostingAction({req,body,admin,user,dependencies:d}:a
       if(!site||!(action==='admin_send_review'?site.status==='customer_review':site.status==='sho_review'))return d.json({error:'先に運営が制作案を確認してください。'},409);
       const key=randomKey();
       await hostingRpc(admin,'open_review',{p_actor:user.id,p_site:siteId,p_release:h.pending_release,p_key_hash:await hostingHash(key)});
-      const review=link('website-customer-review.html',siteId,key)+'&prod=1',preview=link('website-preview.html',siteId,key);
+      const review=hostedCustomerLink('website-customer-review.html',siteId,key,true);
+      const preview=hostedCustomerLink('website-preview.html',siteId,key);
       const customer=await one(admin,'website_line_links','site_id',siteId);
       const sent=await d.linePush(customer?.line_user_id,'ホームページの制作案ができました。\n\n【サイトを見る】\n'+preview+'\n\n【確認・修正依頼・内容承認】\n'+review+'\n\n内容をご確認ください。承認後の公開操作はSHO WEB SUPPORTが行います。');
       return d.json({ok:true,status:'customer_review',review_url:review,...(sent.skipped||sent.ok!==true?{warning:'確認URLは保存済みです。LINE送信の確認・再送が必要です。'}:{})});

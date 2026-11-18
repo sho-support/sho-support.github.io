@@ -11,10 +11,15 @@ export function postgrestFixture(sql){
       return {data:r.rows[0].r,error:null};
     }catch(error){return {data:null,error};}},
     from(table){
-      word(table);let filters=[],updates=null,inserts=null,upserts=null,conflict=null,limit=null,ordering=[];
+      word(table);let filters=[],updates=null,inserts=null,upserts=null,conflict=null,ignoreDuplicates=false,limit=null,ordering=[];
       const run=async single=>{try{
         const values=[];let query;
-        if(upserts){const rows=Array.isArray(upserts)?upserts:[upserts],columns=Object.keys(rows[0]);query='insert into public.'+table+'('+columns.map(word).join(',')+') values '+rows.map(row=>'('+columns.map(k=>{const v=row[k];values.push(v&&typeof v==='object'?JSON.stringify(v):v);return '$'+values.length;}).join(',')+')').join(',')+' on conflict('+word(conflict)+') do update set '+columns.filter(k=>k!==conflict).map(k=>word(k)+'=excluded.'+word(k)).join(',');}
+        if(upserts){
+          const rows=Array.isArray(upserts)?upserts:[upserts],columns=Object.keys(rows[0]);
+          const valuesSql=rows.map(row=>'('+columns.map(k=>{const v=row[k];values.push(v&&typeof v==='object'?JSON.stringify(v):v);return '$'+values.length;}).join(',')+')').join(',');
+          const onConflict=ignoreDuplicates?'do nothing':'do update set '+columns.filter(k=>k!==conflict).map(k=>word(k)+'=excluded.'+word(k)).join(',');
+          query='insert into public.'+table+'('+columns.map(word).join(',')+') values '+valuesSql+' on conflict('+word(conflict)+') '+onConflict;
+        }
         else if(inserts){const entries=Object.entries(inserts);query='insert into public.'+table+'('+entries.map(([k])=>word(k)).join(',')+') values('+entries.map(([,v])=>{values.push(v&&typeof v==='object'?JSON.stringify(v):v);return '$'+values.length;}).join(',')+')';}
         else if(updates){query='update public.'+table+' set '+Object.entries(updates).map(([k,v])=>{values.push(v&&typeof v==='object'?JSON.stringify(v):v);return word(k)+'=$'+values.length;}).join(',');}
         else query='select * from public.'+table;
@@ -26,7 +31,8 @@ export function postgrestFixture(sql){
       }catch(error){return {data:null,error};}};
       const b={select(){return b;},eq(k,v){filters.push([k,v]);return b;},limit(n){if(!Number.isInteger(n)||n<1)throw Error('Invalid fixture limit');limit=n;return b;},
         order(k,{ascending=true}={}){ordering.push(word(k)+(ascending?' asc':' desc'));return b;},insert(v){inserts=v;return b;},
-        upsert(v,{onConflict}={}){upserts=v;conflict=onConflict;return b;},update(v){updates=v;return b;},maybeSingle(){return run(true);},single(){return run(true);},then(ok,no){return run(false).then(ok,no);}};
+        upsert(v,options={}){upserts=v;conflict=options.onConflict;ignoreDuplicates=options.ignoreDuplicates===true;return b;},
+        update(v){updates=v;return b;},maybeSingle(){return run(true);},single(){return run(true);},then(ok,no){return run(false).then(ok,no);}};
       return b;
     }
   };
