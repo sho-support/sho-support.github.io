@@ -29,11 +29,11 @@ const metadataSql={
  sequences:"select coalesce(jsonb_agg(to_jsonb(s) order by s.schemaname collate \"C\",s.sequencename collate \"C\"),'[]'::jsonb)::text as value from pg_sequences s",
  grants:`select coalesce(jsonb_agg(to_jsonb(m) order by m.schema collate "C",m.name collate "C"),'[]'::jsonb)::text as value from (
   select n.nspname as schema,c.relname as name,c.relkind,c.relrowsecurity,c.relforcerowsecurity,pg_get_userbyid(c.relowner) as owner,
-   (select array_agg(a::text order by a::text collate "C") from unnest(c.relacl) a) as acl
+   (select array_agg(a::text order by a::text collate "C") from unnest(coalesce(c.relacl,acldefault(case when c.relkind='S' then 'S'::"char" else 'r'::"char" end,c.relowner))) a) as acl
   from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname not like 'pg_%' and n.nspname<>'information_schema' and c.relkind in ('r','p','v','m','S','f')) m`,
  routines:`select coalesce(jsonb_agg(to_jsonb(m) order by m.schema collate "C",m.name collate "C",m.arguments collate "C"),'[]'::jsonb)::text as value from (
   select n.nspname as schema,p.proname as name,pg_get_function_identity_arguments(p.oid) as arguments,pg_get_userbyid(p.proowner) as owner,p.prosecdef,
-   (select array_agg(a::text order by a::text collate "C") from unnest(p.proacl) a) as acl,pg_get_functiondef(p.oid) as definition
+   (select array_agg(a::text order by a::text collate "C") from unnest(coalesce(p.proacl,acldefault('f'::"char",p.proowner))) a) as acl,pg_get_functiondef(p.oid) as definition
   from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','band_private','website_internal') and p.prokind in ('f','p','w')
    and not exists(select 1 from pg_depend d where d.classid='pg_proc'::regclass and d.objid=p.oid and d.deptype='e')) m`,
  triggers:`select coalesce(jsonb_agg(to_jsonb(m) order by m.schema collate "C",m.table_name collate "C",m.name collate "C"),'[]'::jsonb)::text as value from (
