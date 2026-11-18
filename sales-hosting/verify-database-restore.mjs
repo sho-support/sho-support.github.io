@@ -125,6 +125,7 @@ try{
  const login=JSON.parse(text);
  if(login?.role!=='cli_login_postgres'||typeof login.password!=='string'||!login.password.length||login.password.length>4096||/[\r\n\0]/.test(login.password)
   ||!Number.isSafeInteger(login.ttl_seconds)||login.ttl_seconds<60||login.ttl_seconds>3600)throw fail('INVALID_LOGIN_RESPONSE');
+ proof.temporary_login_ttl_seconds=login.ttl_seconds;
  const config={...base,user:login.role+'.'+PROJECT,password:login.password,query_timeout:90000,
   options:'-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'};
  stage='source-connect';
@@ -234,33 +235,52 @@ try{
  }
  proof.table_owners_and_rls_match=true;
  if(process.env.HP_SQL_BACKUP_RETAIN==='true'){
-  stage='private-owner-delivery';
+  stage='private-delivery-recipient';
   const recipient=await readFile(new URL('./backup/recovery-recipient.pem',import.meta.url),'utf8');
   const fingerprint=recipientFingerprint(recipient);
   if(fingerprint!=='88a0dc3d153b25ad499b646014d28aea55348c9fb575017097e0bbdb8f3910e3')throw fail('RECOVERY_RECIPIENT_NOT_VERIFIED');
   const ownerPayload=Buffer.from(JSON.stringify({schema:1,kind:'database-snapshot',project_ref:PROJECT,created_at:new Date().toISOString(),source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID,
    archive:archive.toString('base64'),roles:roles.toString('base64'),archive_sha256:hash(archive),roles_sha256:hash(roles),managed_sequences:supplementalSequences,extension_relation_security:extensionSecurity,extension_relation_security_sql:extensionSecuritySqlRestore,
    source_table_fingerprints:sourceRows,source_security_metadata:sourceMetadata,verification:{...proof}}));
+  stage='private-delivery-seal';
   const sealed=sealPrivateDelivery(ownerPayload,recipient,{project_ref:PROJECT,source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID});
   if(sealed.length>70*1024*1024)throw fail('PRIVATE_DELIVERY_LIMIT');
   const writer=new Client({...config,options:'-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'});writer.on('error',()=>{});let writing=false;
   try{
+   stage='private-delivery-connect';
    await writer.connect();await writer.query('SET SESSION ROLE postgres');await writer.query('BEGIN READ WRITE');writing=true;
    // Only a new opaque encrypted database object is written. No application
    // table, schema, service configuration or pre-existing object is modified.
+   stage='private-delivery-create-object';
    const oid=Number((await writer.query('select pg_catalog.lo_from_bytea(0,$1) as oid',[sealed])).rows[0]?.oid);
    if(!Number.isInteger(oid)||oid<16384||oid>4294967295)throw fail('INVALID_DELIVERY_OBJECT');
+   stage='private-delivery-restrict-object';
    await writer.query(`REVOKE ALL ON LARGE OBJECT ${oid} FROM PUBLIC,anon,authenticated,authenticator,service_role,supabase_read_only_user`);
-   const access=(await writer.query(`select pg_catalog.has_largeobject_privilege('anon',${oid},'SELECT') as anon,pg_catalog.has_largeobject_privilege('authenticated',${oid},'SELECT') as customer,pg_catalog.has_largeobject_privilege('service_role',${oid},'SELECT') as service_role,pg_catalog.has_largeobject_privilege('supabase_read_only_user',${oid},'SELECT') as readonly`)).rows[0];
-   if(Object.values(access).some(x=>x!==false))throw fail('PRIVATE_DELIVERY_ACCESS_NOT_VERIFIED');
-   proof.private_delivery={oid,encrypted_bytes:sealed.length,sha256:hash(sealed),recipient_fingerprint:fingerprint,nonowner_read_denied:true,committed:false};
+   stage='private-delivery-verify-access';
+   if((await writer.query("select current_setting('lo_compat_privileges') as setting")).rows[0]?.setting!=='off')throw fail('PRIVATE_DELIVERY_ACCESS_NOT_VERIFIED');
+   const acl=(await writer.query(`select pg_get_userbyid(m.lomowner)='postgres' as owner_matches,
+    not exists(select 1 from aclexplode(m.lomacl) a where a.grantee<>m.lomowner) as owner_only_acl,
+    not exists(select 1 from pg_roles r where r.rolname in ('anon','authenticated','service_role','supabase_read_only_user') and (r.rolsuper or pg_has_role(r.oid,m.lomowner,'USAGE'))) as no_owner_inheritance
+    from pg_largeobject_metadata m where m.oid=${oid}`)).rows[0];
+   if(!acl||Object.values(acl).some(x=>x!==true))throw fail('PRIVATE_DELIVERY_ACCESS_NOT_VERIFIED');
+   for(const role of ['anon','authenticated','service_role']){
+    await writer.query('SAVEPOINT hp_delivery_access');
+    await writer.query('SET LOCAL ROLE '+quote(role));
+    let denied=false;
+    try{await writer.query(`select pg_catalog.lo_get(${oid},0,1)`);}catch(error){if(error?.code==='42501')denied=true;else throw error;}
+    await writer.query('ROLLBACK TO SAVEPOINT hp_delivery_access');await writer.query('RELEASE SAVEPOINT hp_delivery_access');
+    if(!denied)throw fail('PRIVATE_DELIVERY_ACCESS_NOT_VERIFIED');
+   }
+   proof.private_delivery={oid,encrypted_bytes:sealed.length,sha256:hash(sealed),recipient_fingerprint:fingerprint,owner_only_acl_verified:true,read_denial_roles_tested:3,nonowner_read_denied:true,committed:false};
+   stage='private-delivery-commit';
    await writer.query('COMMIT');writing=false;proof.private_delivery.committed=true;proof.source_database_changed=true;proof.source_application_tables_changed=false;
   }finally{if(writing)await writer.query('ROLLBACK').catch(()=>{});await writer.end();}
  }
  proof.ok=true;
 }catch(error){
  proof.failed_stage=stage;
- if(['28P01','28000','42501','ECONNRESET','ECONNREFUSED','ETIMEDOUT','ENOTFOUND','EHOSTUNREACH','CERT_HAS_EXPIRED','SELF_SIGNED_CERT_IN_CHAIN','ERR_TLS_CERT_ALTNAME_INVALID'].includes(error?.code))proof.source_error_code=error.code;
+ if(/^[0-9A-Z]{5}$/.test(error?.code||'')||['ECONNRESET','ECONNREFUSED','ETIMEDOUT','ENOTFOUND','EHOSTUNREACH','CERT_HAS_EXPIRED','SELF_SIGNED_CERT_IN_CHAIN','ERR_TLS_CERT_ALTNAME_INVALID'].includes(error?.code))proof.source_error_code=error.code;
+ if(['RECOVERY_RECIPIENT_NOT_VERIFIED','PRIVATE_DELIVERY_LIMIT','INVALID_DELIVERY_OBJECT','PRIVATE_DELIVERY_ACCESS_NOT_VERIFIED'].includes(error?.safeCode))proof.private_delivery_issue=error.safeCode;
  proof.reason=['FIXED_CI_CONTEXT_REQUIRED','SCOPED_TOKEN_REQUIRED','EMPTY_TARGET_NOT_READY','TARGET_NOT_EMPTY','TEMPORARY_SOURCE_LOGIN_NOT_ISSUED','SOURCE_CONNECTION_NOT_VERIFIED','INVALID_LOGIN_RESPONSE','SOURCE_IDENTITY_NOT_VERIFIED','INVALID_SOURCE_SNAPSHOT','TABLE_SNAPSHOT_LIMIT','SQL_EXPORT_LIMIT','UNEXPECTED_RESPONSE_CACHE_OWNERSHIP','UNEXPECTED_RESTORED_RESPONSE_CACHE','ENCRYPTION_ROUND_TRIP_NOT_VERIFIED','RESTORED_TABLE_DATA_MISMATCH','RESTORED_OWNERS_OR_RLS_MISMATCH','RESTORED_SECURITY_METADATA_MISMATCH'].includes(error?.safeCode)?error.safeCode:'SQL_RESTORE_REHEARSAL_NOT_VERIFIED';
 }finally{
  let cleaned=true;
