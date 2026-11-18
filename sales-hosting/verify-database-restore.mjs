@@ -9,7 +9,6 @@ import {join,resolve} from 'node:path';
 import {createRequire} from 'node:module';
 import {createHash,randomBytes,createCipheriv,createDecipheriv} from 'node:crypto';
 import {PROJECT,backupConnectionOptions} from './backup/connection-preflight.mjs';
-import {checkBackupTemporaryAccess} from './backup/temporary-access.mjs';
 import {withoutEphemeralCliRoles} from './backup/restore-roles.mjs';
 
 // Official Supabase Docker Hub release 17.12.0.000, immutable manifest digest.
@@ -86,15 +85,22 @@ try{
  if(empty.trim()!=='0')throw fail('TARGET_NOT_EMPTY');
  proof.empty_target_verified=true;proof.target_network_isolated=true;
  stage='temporary-source-login';
- let config;
- const checked=await checkBackupTemporaryAccess({value,accessToken:token,createClient:c=>{config=c;return new Client(c);}});
- proof.temporary_login_issued=checked.temporary_login_issued;
- if(!checked.ok){proof.source_connection_failure=checked.reason;throw fail('SOURCE_CONNECTION_NOT_VERIFIED');}
- if(!config||/[\r\n\0]/.test(config.password))throw fail('INVALID_LOGIN_RESPONSE');
+ // Match Supabase CLI's temporary login for pg_dump, while forcing every
+ // source session/transaction read-only. Never change the postgres password.
+ const response=await fetch(`https://api.supabase.com/v1/projects/${PROJECT}/cli/login-role`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(15000),
+  headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({read_only:false})});
+ if(response.status!==201){await response.body?.cancel();throw fail('TEMPORARY_SOURCE_LOGIN_NOT_ISSUED');}
+ proof.temporary_login_issued=true;proof.temporary_login_access='cli-postgres-with-read-only-source-sessions';
+ const text=await response.text();if(text.length>16384)throw fail('INVALID_LOGIN_RESPONSE');
+ const login=JSON.parse(text);
+ if(login?.role!=='cli_login_postgres'||typeof login.password!=='string'||!login.password.length||login.password.length>4096||/[\r\n\0]/.test(login.password)
+  ||!Number.isSafeInteger(login.ttl_seconds)||login.ttl_seconds<60||login.ttl_seconds>3600)throw fail('INVALID_LOGIN_RESPONSE');
+ const config={...base,user:login.role+'.'+PROJECT,password:login.password,query_timeout:90000,
+  options:'-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'};
  stage='source-connect';
  client=new Client(config);client.on('error',()=>{});await client.connect();proof.tls_certificate_verified=true;
  stage='source-role';
- await client.query('SET SESSION ROLE supabase_read_only_user');
+ await client.query('SET SESSION ROLE postgres');
  stage='source-transaction';
  await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');transaction=true;
  const identity=(await client.query("select current_database() as db, current_setting('server_version_num') as version, current_setting('transaction_read_only') as readonly")).rows[0];
@@ -113,9 +119,9 @@ try{
   'PGCONNECT_TIMEOUT=10','PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'].join('\n')+'\n',{mode:0o600,flag:'wx'});
  const sourceArgs=['run','--rm','--network','host','--env-file',envFile,'-v',ca+':/hp-root.crt:ro'];
  stage='export-db-snapshot';
- const archive=(await command('docker',[...sourceArgs,'--entrypoint','pg_dump',image,'--format=custom','--quote-all-identifiers','--role=supabase_read_only_user','--snapshot='+snapshot],{timeout:180000})).stdout;
+ const archive=(await command('docker',[...sourceArgs,'--entrypoint','pg_dump',image,'--format=custom','--quote-all-identifiers','--role=postgres','--snapshot='+snapshot],{timeout:180000})).stdout;
  stage='export-roles';
- const rawRoles=(await command('docker',[...sourceArgs,'--entrypoint','pg_dumpall',image,'--roles-only','--no-role-passwords','--role=supabase_read_only_user'],{timeout:60000})).stdout;
+ const rawRoles=(await command('docker',[...sourceArgs,'--entrypoint','pg_dumpall',image,'--roles-only','--no-role-passwords','--role=postgres'],{timeout:60000})).stdout;
  const roleExport=withoutEphemeralCliRoles(rawRoles.toString()),roles=Buffer.from(roleExport.text);proof.ephemeral_cli_role_statements_excluded=roleExport.excluded;
  if(archive.length<100||archive.length>35*1024*1024||roles.length<100||roles.length>1024*1024)throw fail('SQL_EXPORT_LIMIT');
  proof.sql_snapshot_exported=true;proof.archive_bytes=archive.length;proof.roles_bytes=roles.length;
