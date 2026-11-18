@@ -2,7 +2,7 @@
 
 本書は実行準備であり、切替完了の記録ではない。対象は `tyhymvgjkoebetyypspj` のHP販売だけ。バンド、他の販売サービス、TrendBlog、現在のDNSを一括で変更しない。
 
-実環境の最新照合、Authの隔離復旧、復元DBでの3migration、修正後の候補は[2026-11-19の記録](SALES_RECOVERY_AND_CUTOVER_20261119.md)を参照。以下のバージョン番号は当時の記録。
+実環境の最新照合、Authの隔離復旧、復元DBでの3migrationは[2026-11-19の記録](SALES_RECOVERY_AND_CUTOVER_20261119.md)を参照。商用配備と切替直前の照合は[後継候補manifest](../sales-hosting/release-candidate-20261119.json)を基準にする。以下のバージョン番号は当時の記録。
 
 ## 固定した候補
 
@@ -35,6 +35,7 @@
 - 現状の `sales-hosting/runtime/` が、Cloudflareからの未対応書込みを409で止める接続用コード。API52/顧客54/注文17/プレビュー14の動作へ戻すときは、それぞれ固有の`_shared`を取り違えない。設定関数3は配備記録と照合する。
 - Worker46の全4ファイルは [runtime-baseline/website-worker.json](../sales-hosting/runtime-baseline/website-worker.json) に保存。これはソースだけの復旧用で、DB/Auth/Storage/R2バックアップではない。復旧配備では新しいversion番号になる。
 - 関数復旧後も、新設テーブルや契約記録を自動DROPしない。書込みが発生した後は、確定したURL・見積り・同意・入金情報を守り、実バックアップと照合して別途復旧を判断する。
+- 後継候補の `before.rollback_files` には切替前の6関数を復元するファイル位置とSHA-256がある。各関数の内部パス・依存を個別に再構成し、JWT設定と一緒に確認してから復旧する。
 - `WEBSITE_CUSTOMER_HOSTING`を空に戻すとレガシー経路が再度選ばれる可能性があるため、フラグだけを消して運用再開しない。
 
 ## 一次資料・実行証拠
