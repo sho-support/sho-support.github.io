@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
-import {sealPrivateDelivery,openPrivateDelivery,recipientFingerprint} from '../backup/private-delivery.mjs';
+import {sealPrivateDelivery,sealPrivateDeliveryWebCrypto,openPrivateDelivery,recipientFingerprint} from '../backup/private-delivery.mjs';
 const keys=generateKeyPairSync('rsa',{modulusLength:3072,publicKeyEncoding:{type:'spki',format:'pem'},privateKeyEncoding:{type:'pkcs8',format:'pem'}});
 const source={project_ref:'tyhymvgjkoebetyypspj',source_commit:'a'.repeat(40),run_id:'12345678900'};
 const payload=Buffer.from('synthetic database fixture only; not customer data');
@@ -40,4 +40,12 @@ test('assets and SQL envelopes have distinct authenticated purposes',()=>{
  assert.deepEqual(openPrivateDelivery(envelope,keys.privateKey,source,'assets'),payload);
  assert.throws(()=>openPrivateDelivery(envelope,keys.privateKey,source));
  assert.throws(()=>sealPrivateDelivery(payload,keys.publicKey,source,'other'));
+});
+test('explicit WebCrypto OAEP/SHA256 and AES/GCM interoperate with the strict Node reader',async()=>{
+ const body=Buffer.alloc(512*1024,0x5a),sealed=await sealPrivateDeliveryWebCrypto(body,keys.publicKey,source);
+ assert.deepEqual(openPrivateDelivery(sealed,keys.privateKey,source,'assets'),body);
+ const x=JSON.parse(sealed);const tag=Buffer.from(x.tag,'base64');tag[0]^=1;x.tag=tag.toString('base64');
+ assert.throws(()=>openPrivateDelivery(Buffer.from(JSON.stringify(x)),keys.privateKey,source,'assets'));
+ await assert.rejects(sealPrivateDeliveryWebCrypto(Buffer.alloc(0),keys.publicKey,source));
+ await assert.rejects(sealPrivateDeliveryWebCrypto(body,keys.publicKey,{...source,project_ref:'wrong'}));
 });

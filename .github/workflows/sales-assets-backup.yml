@@ -4,6 +4,8 @@ on:
     branches: [architecture/sales-cloudflare]
     paths:
       - 'sales-hosting/private-assets-backup/**'
+      - 'sales-hosting/backup-crypto-check/**'
+      - 'sales-hosting/verify-backup-crypto.mjs'
       - 'sales-hosting/backup/assets-export.mjs'
       - 'sales-hosting/backup/private-delivery.mjs'
       - 'sales-hosting/verify-assets-backup.mjs'
@@ -31,7 +33,7 @@ jobs:
         run: |
           ln -s customer-hosting-v2/node_modules node_modules
           cd customer-hosting-v2
-          npx --yes deno@2.9.6 check --config deno.qa.json --no-remote --no-lock ../supabase/functions/_shared/edge-runtime.d.ts ../sales-hosting/private-assets-backup/index.ts
+          npx --yes deno@2.9.6 check --config deno.qa.json --no-remote --no-lock ../supabase/functions/_shared/edge-runtime.d.ts ../sales-hosting/private-assets-backup/index.ts ../sales-hosting/backup-crypto-check/index.ts
   live:
     needs: contract
     if: ${{ contains(github.event.head_commit.message, '[verify-hp-assets-backup]') }}
@@ -67,3 +69,19 @@ jobs:
           node-version: '22'
       - name: Verify all temporary backup and QA endpoints deny unauthenticated requests
         run: node sales-hosting/verify-assets-closed.mjs
+
+  crypto:
+    needs: contract
+    if: ${{ contains(github.event.head_commit.message, '[verify-hp-backup-crypto]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify actual Edge WebCrypto output with strict Node decryption using synthetic keys only
+        run: node sales-hosting/verify-backup-crypto.mjs

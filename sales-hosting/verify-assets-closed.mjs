@@ -1,5 +1,5 @@
 const base='https://tyhymvgjkoebetyypspj.supabase.co/functions/v1/';
-const targets=['website-private-assets-backup','website-production-r2-check','website-resource-qa'];
+const targets=['website-backup-crypto-check','website-private-assets-backup','website-production-r2-check','website-resource-qa'];
 const results=[];
 for(const target of targets){
  const statuses=[];

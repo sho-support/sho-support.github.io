@@ -3,7 +3,7 @@ import {createClient} from 'npm:@supabase/supabase-js@2.57.4';
 import {AwsClient} from 'npm:aws4fetch@1.0.20';
 import {createRemoteJWKSet,jwtVerify} from 'npm:jose@6.1.0';
 import {exportStorageAssets,exportR2Assets,allowedAssetBackupClaims} from '../backup/assets-export.mjs';
-import {sealPrivateDelivery,recipientFingerprint} from '../backup/private-delivery.mjs';
+import {sealPrivateDeliveryWebCrypto,recipientFingerprint} from '../backup/private-delivery.mjs';
 import {recipient} from './recipient.mjs';
 // Committed code is closed. A temporary deployment pins one CI run and deadline.
 const run='__ALLOWED_RUN_ID__',sha='__ALLOWED_SHA__',until=Number('__ALLOWED_UNTIL__');
@@ -37,7 +37,7 @@ Deno.serve(async req=>{
   if(recipientFingerprint(recipient)!=='88a0dc3d153b25ad499b646014d28aea55348c9fb575017097e0bbdb8f3910e3')return json({error:'Recovery recipient unavailable'},503);
   const proof={ok:true,...storage.proof,...r2.proof,project_ref:project,source_commit:sha,run_id:run,source_files_deleted:false,source_public_access_changed:false,customer_notifications_sent:false,production_cutover:false};
   stage='owner-encryption';
-  const sealed=sealPrivateDelivery(Buffer.from(JSON.stringify({schema:1,kind:'storage-and-r2-assets',project_ref:project,source_commit:sha,run_id:run,created_at:new Date().toISOString(),storage,r2,verification:proof})),recipient,{project_ref:project,source_commit:sha,run_id:run},'assets');
+  const sealed=await sealPrivateDeliveryWebCrypto(Buffer.from(JSON.stringify({schema:1,kind:'storage-and-r2-assets',project_ref:project,source_commit:sha,run_id:run,created_at:new Date().toISOString(),storage,r2,verification:proof})),recipient,{project_ref:project,source_commit:sha,run_id:run},'assets');
   return json({proof,envelope:sealed.toString('base64')});
  }catch{return json({error:'Private assets verification unavailable',stage},503);}
 });

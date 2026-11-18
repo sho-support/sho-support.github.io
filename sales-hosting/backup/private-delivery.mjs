@@ -23,6 +23,21 @@ export function sealPrivateDelivery(payload,recipientPem,source,kind='sql'){
   return Buffer.from(JSON.stringify({metadata,wrapped_key:wrapped.toString('base64'),iv:iv.toString('base64'),tag:cipher.getAuthTag().toString('base64'),ciphertext:ciphertext.toString('base64')}));
  }finally{key.fill(0);}
 }
+// Use explicit WebCrypto algorithms in Edge runtimes: Node compatibility
+// implementations may not honor publicEncrypt's oaepHash option.
+export async function sealPrivateDeliveryWebCrypto(payload,recipientPem,source,kind='assets'){
+ if(!(payload instanceof Uint8Array)||payload.length===0||payload.length>maxPayload)throw Error('Invalid private backup size');
+ const metadata=context(source,recipientFingerprint(recipientPem),kind);
+ const key=globalThis.crypto.getRandomValues(new Uint8Array(32)),iv=globalThis.crypto.getRandomValues(new Uint8Array(12));
+ try{
+  const publicDer=createPublicKey(recipientPem).export({format:'der',type:'spki'});
+  const publicKey=await crypto.subtle.importKey('spki',publicDer,{name:'RSA-OAEP',hash:'SHA-256'},false,['encrypt']);
+  const aes=await crypto.subtle.importKey('raw',key,{name:'AES-GCM'},false,['encrypt']);
+  const encrypted=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:Buffer.from(JSON.stringify(metadata)),tagLength:128},aes,payload));
+  const wrapped=await crypto.subtle.encrypt({name:'RSA-OAEP'},publicKey,key);
+  return Buffer.from(JSON.stringify({metadata,wrapped_key:Buffer.from(wrapped).toString('base64'),iv:Buffer.from(iv).toString('base64'),tag:Buffer.from(encrypted.subarray(encrypted.length-16)).toString('base64'),ciphertext:Buffer.from(encrypted.subarray(0,-16)).toString('base64')}));
+ }finally{key.fill(0);}
+}
 function bytes(value,max){
  if(typeof value!=='string'||value.length>max||value.length%4!==0||!/^[A-Za-z0-9+/]*={0,2}$/.test(value))throw Error('Invalid private backup encoding');
  const decoded=Buffer.from(value,'base64');if(decoded.toString('base64')!==value)throw Error('Noncanonical private backup encoding');return decoded;

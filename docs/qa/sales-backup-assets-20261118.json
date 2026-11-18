@@ -1,5 +1,5 @@
 {
-  "checked_on_jst": "2026-11-18",
+  "checked_on_jst": "2026-11-19",
   "ok": true,
   "purpose": "private-storage-and-r2-assets-backup",
   "project_ref": "tyhymvgjkoebetyypspj",
@@ -10,7 +10,7 @@
   "source_files_deleted": false,
   "source_public_access_changed": false,
   "production_cutover": false,
-  "off_provider_backup_preserved": false,
+  "off_provider_backup_preserved": true,
   "assets": {
     "ok": true,
     "storage_bucket_count": 2,
@@ -42,20 +42,21 @@
     "recipient_fingerprint": "88a0dc3d153b25ad499b646014d28aea55348c9fb575017097e0bbdb8f3910e3",
     "owner_only_acl_verified": true,
     "read_denial_roles_tested": 3,
-    "temporarily_retained_on_source_provider": true
+    "temporarily_retained_on_source_provider": false,
+    "temporary_object_removed": true
   },
   "temporary_transfer_object_created": true,
   "function_closed_source_verified": true,
   "function_closed_version": 2,
   "function_closed_package": "6f4c2a4a38b3afceeb257c4946d69f55bf7d297b5f8f05651f81ea77f1ab1e3a",
-  "owner_decryption_verified": false,
+  "owner_decryption_verified": true,
   "source_file_inventory_after_test": {
     "objects": 9,
     "bytes": 4186232,
     "temporary_qa_buckets": 0
   },
   "full_platform_backup_complete": false,
-  "pending": "Transfer the sealed assets component to the owner's private off-provider files and verify decryption when an execution environment is available; do not delete the temporary encrypted object first",
+  "pending": "Verify the corrected Edge producer with a synthetic cross-runtime encryption/decryption check; full-platform recovery and Auth service login remain unverified",
   "function_closed_http_verified": true,
   "closed_endpoints_verification": {
     "purpose": "private-backup-endpoints-closed",
@@ -93,5 +94,32 @@
     ],
     "credentials_used": false,
     "source_data_changed": false
+  },
+  "all_file_hashes_verified": true,
+  "saved_component": {
+    "encrypted_bytes": 7455309,
+    "sha256": "c2126abfe3789b09d4e69d9031498a11aa2d529378233404347ff567bcd960e4",
+    "source_envelope_sha256": "ccac9521b0d7a9bb12b4e0d4a21a94d9228454f635bc88ca02e62c5e183a8320",
+    "recipient_fingerprint": "88a0dc3d153b25ad499b646014d28aea55348c9fb575017097e0bbdb8f3910e3",
+    "owner_decryption_verified": true,
+    "all_file_hashes_verified": true,
+    "key_wrap_migrated_to_oaep_sha256": true,
+    "payload_ciphertext_unchanged": true
+  },
+  "post_transfer_cleanup": {
+    "transfer_object_absent": true,
+    "remaining_large_objects": 0,
+    "storage_objects": 9,
+    "storage_bytes": "4186232",
+    "temporary_qa_buckets": 0
+  },
+  "crypto_compatibility": {
+    "original_envelope_oaep_hash_observed": "SHA-1",
+    "required_oaep_hash": "SHA-256",
+    "payload_authentication_verified": true,
+    "one_off_exact_envelope_recovery": true,
+    "normal_reader_keeps_sha256_only": true,
+    "corrected_producer_uses_explicit_webcrypto": true,
+    "actual_edge_interoperability_verified": false
   }
 }
