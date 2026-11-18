@@ -46,7 +46,7 @@ async function command(file,args,options={}){
 let queryNumber=0;
 async function queryTarget(sql){
  const name='query-'+(++queryNumber)+'.sql',path=join(dir,name);
- await writeFile(path,sql,{mode:0o600,flag:'wx'});
+ await writeFile(path,"SET TIMEZONE='UTC';\n"+sql,{mode:0o600,flag:'wx'});
  try{
   await command('docker',['cp',path,target+':/tmp/'+name]);
   await command('docker',['exec','--user','0',target,'chown','postgres:postgres','/tmp/'+name]);
@@ -58,11 +58,11 @@ async function fingerprints(query){
  const result=[];
  for(const {schemaname,tablename} of tables){
   const name=quote(schemaname)+'.'+quote(tablename);
-  const [row]=await query(`select count(*)::text as row_count, coalesce(jsonb_agg(to_jsonb(r) order by to_jsonb(r)::text),'[]'::jsonb)::text as content from ${name} r`);
+  const [row]=await query(`select count(*)::text as row_count, coalesce(jsonb_agg(to_jsonb(r) order by to_jsonb(r)::text collate "C"),'[]'::jsonb)::text as content from ${name} r`);
   if(typeof row?.content!=='string'||Buffer.byteLength(row.content)>35*1024*1024)throw fail('TABLE_SNAPSHOT_LIMIT');
   result.push({schema:schemaname,table:tablename,count:row.row_count,digest:hash(row.content)});
  }
- return result;
+ return result.sort((a,b)=>{const x=a.schema+'.'+a.table,y=b.schema+'.'+b.table;return x<y?-1:x>y?1:0;});
 }
 try{
  if(process.env.GITHUB_REPOSITORY!=='sho-support/sho-support.github.io'||process.env.GITHUB_REF!=='refs/heads/architecture/sales-cloudflare'
@@ -78,7 +78,7 @@ try{
  stage='isolated-target';target='sho-hp-restore-'+process.env.GITHUB_RUN_ID;
  // No TCP port, external network, production service key or production password.
  const startup='set -euo pipefail; initdb -D /tmp/hp-empty-pg --username=supabase_admin --auth=trust >/tmp/hp-init.log 2>&1; exec postgres -D /tmp/hp-empty-pg -c listen_addresses= -c shared_preload_libraries=pg_net,pg_stat_statements -c pg_net.database_name=template1 -c log_statement=none -c log_min_error_statement=panic';
- await command('docker',['run','-d','--network','none','--user','postgres','--name',target,'--entrypoint','/bin/bash',image,'-c',startup]);
+ await command('docker',['run','-d','--network','none','--user','postgres','--name',target,'--label','sho.hp.sql-restore-run='+process.env.GITHUB_RUN_ID,'--entrypoint','/bin/bash',image,'-c',startup]);
  let ready=false;
  for(let i=0;i<40;i++){
   try{await command('docker',['exec',target,'pg_isready','-U','supabase_admin','-d','postgres'],{timeout:3000});ready=true;break;}catch{}
@@ -109,6 +109,7 @@ try{
  client=new Client(config);client.on('error',()=>{});await client.connect();proof.tls_certificate_verified=true;
  stage='source-role';
  await client.query('SET SESSION ROLE postgres');
+ await client.query("SET TIMEZONE='UTC'");
  stage='source-transaction';
  await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');transaction=true;
  const identity=(await client.query("select current_database() as db, current_setting('server_version_num') as version, current_setting('transaction_read_only') as readonly")).rows[0];
@@ -125,7 +126,7 @@ try{
  const ca=resolve('sales-hosting/backup/supabase-root-2021.crt'),envFile=join(dir,'private','source.env');
  await writeFile(envFile,[`PGHOST=${config.host}`,'PGPORT=5432',`PGUSER=${config.user}`,`PGPASSWORD=${config.password}`,'PGDATABASE=postgres','PGSSLMODE=verify-full','PGSSLROOTCERT=/hp-root.crt',
   'PGCONNECT_TIMEOUT=10','PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'].join('\n')+'\n',{mode:0o600,flag:'wx'});
- const sourceArgs=['run','--rm','--network','host','--env-file',envFile,'-v',ca+':/hp-root.crt:ro'];
+ const sourceArgs=['run','--rm','--network','host','--label','sho.hp.sql-restore-run='+process.env.GITHUB_RUN_ID,'--env-file',envFile,'-v',ca+':/hp-root.crt:ro'];
  stage='export-db-snapshot';
  const archive=(await command('docker',[...sourceArgs,'--entrypoint','pg_dump',image,'--format=custom','--quote-all-identifiers','--role=postgres','--snapshot='+snapshot],{timeout:180000})).stdout;
  stage='export-roles';
@@ -158,7 +159,11 @@ try{
  stage='restored-fingerprints';
  const targetQuery=async sql=>JSON.parse((await queryTarget(`select coalesce(jsonb_agg(to_jsonb(hp_row)),'[]'::jsonb)::text from (${sql}) hp_row;`)).trim());
  const targetRows=await fingerprints(targetQuery);
- if(JSON.stringify(targetRows)!==JSON.stringify(sourceRows))throw fail('RESTORED_TABLE_DATA_MISMATCH');
+ if(JSON.stringify(targetRows)!==JSON.stringify(sourceRows)){
+  proof.table_data_differences=sourceRows.flatMap(s=>{const t=targetRows.find(x=>x.schema===s.schema&&x.table===s.table);return !t||t.count!==s.count||t.digest!==s.digest?[{schema:s.schema,table:s.table,source_rows:s.count,restored_rows:t?.count??null,kind:!t?'missing':t.count!==s.count?'count':'content'}]:[];});
+  proof.unexpected_restored_tables=targetRows.filter(t=>!sourceRows.some(s=>s.schema===t.schema&&s.table===t.table)).map(t=>({schema:t.schema,table:t.table}));
+  throw fail('RESTORED_TABLE_DATA_MISMATCH');
+ }
  proof.table_data_match=true;
  const layout=(await targetQuery("select coalesce(jsonb_agg(to_jsonb(t) order by t.schemaname,t.tablename),'[]'::jsonb)::text as layout from (select schemaname,tablename,tableowner,rowsecurity from pg_tables where schemaname not like 'pg_%' and schemaname <> 'information_schema') t"))[0].layout;
  const policies=(await targetQuery("select coalesce(jsonb_agg(to_jsonb(p) order by p.schemaname,p.tablename,p.policyname),'[]'::jsonb)::text as policies from pg_policies p"))[0].policies;
@@ -172,7 +177,12 @@ try{
  let cleaned=true;
  if(transaction&&client)try{await client.query('ROLLBACK');}catch{cleaned=false;}
  if(client)try{await client.end();}catch{cleaned=false;}
- if(target)try{await command('docker',['rm','-f',target]);}catch{cleaned=false;}
+ if(target)try{
+  const ids=(await command('docker',['ps','-aq','--filter','label=sho.hp.sql-restore-run='+process.env.GITHUB_RUN_ID])).stdout.toString().trim().split(/\s+/).filter(Boolean);
+  if(ids.some(id=>!/^([a-f0-9]{12}|[a-f0-9]{64})$/.test(id)))throw Error('Invalid private container identity');
+  if(ids.length)await command('docker',['rm','-f',...ids]);
+  const remaining=(await command('docker',['ps','-aq','--filter','label=sho.hp.sql-restore-run='+process.env.GITHUB_RUN_ID])).stdout.toString().trim();if(remaining)throw Error('Private container remains');
+ }catch{cleaned=false;}
  sourceKey?.fill(0);
  if(dir)try{await rm(dir,{recursive:true,force:true});}catch{cleaned=false;}
  proof.cleanup_verified=cleaned;if(!cleaned){proof.ok=false;proof.reason='PRIVATE_REHEARSAL_CLEANUP_NOT_VERIFIED';}
