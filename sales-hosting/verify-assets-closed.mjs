@@ -9,5 +9,5 @@ for(const target of targets){
  }
  results.push({target,statuses,closed:statuses.every(status=>status===403)});
 }
-const proof={purpose:'private-backup-endpoints-closed',source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID,ok:results.every(x=>x.closed),endpoints:results,credentials_used:false,source_data_changed:false};
+const proof={checked_at:new Date().toISOString(),project_ref:'tyhymvgjkoebetyypspj',purpose:'private-backup-endpoints-closed',source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID,ok:results.every(x=>x.closed),endpoints:results,credentials_used:false,source_data_changed:false};
 console.log('HP_BACKUP_ENDPOINTS_CLOSED',JSON.stringify(proof));if(!proof.ok)process.exitCode=1;

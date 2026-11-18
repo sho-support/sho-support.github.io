@@ -1,0 +1,28 @@
+{
+  "checked_on_jst": "2026-11-19",
+  "ok": true,
+  "purpose": "edge-to-node-backup-crypto-interoperability",
+  "source_commit": "4030cbdfe3e3b3de6a15c0cc5f5dc185e964bb94",
+  "run_id": "44338163905",
+  "customer_data_accessed": false,
+  "source_data_changed": false,
+  "private_keys_exposed": false,
+  "fixture_bytes": 131072,
+  "rsa_oaep_sha256_interoperability_verified": true,
+  "aes_gcm_integrity_verified": true,
+  "tampering_rejected": true,
+  "contract_tests": {
+    "passed": 11,
+    "failed": 0
+  },
+  "synthetic_function_closed_source": {
+    "version": 2,
+    "package": "8875de2a8e445b88487d760761dfdec2f8c46905cd3b4a29ab767578f3bda087",
+    "source_verified": true
+  },
+  "corrected_assets_function_closed_source": {
+    "version": 3,
+    "package": "8c32b5ff5e95727df8b5f2130b5a607f4eb1a3380af869c0b44e6c8fdf0be4f7",
+    "source_verified": true
+  }
+}
