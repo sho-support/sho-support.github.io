@@ -9,6 +9,7 @@ import {join,resolve} from 'node:path';
 import {createRequire} from 'node:module';
 import {createHash,randomBytes,createCipheriv,createDecipheriv} from 'node:crypto';
 import {PROJECT,backupConnectionOptions} from './backup/connection-preflight.mjs';
+import {withoutEphemeralCliRoles} from './backup/restore-roles.mjs';
 
 // Official Supabase Docker Hub release 17.12.0.000, immutable manifest digest.
 // Same PostgreSQL major as the hosted source; no production upgrade is made.
@@ -30,6 +31,9 @@ async function command(file,args,options={}){
  catch(error){
   const detail=String(error?.stderr||'');
   proof.command_failure_category=[[/manifest unknown|not found: manifest|no matching manifest/i,'IMAGE_NOT_AVAILABLE'],[/permission denied/i,'PERMISSION_DENIED'],[/could not access file|extension .* is not available/i,'EXTENSION_NOT_AVAILABLE'],[/already exists/i,'DUPLICATE_OBJECT'],[/could not translate host name|network is unreachable/i,'NETWORK_UNAVAILABLE'],[/No such file or directory|not found in \$PATH|executable file not found/i,'EXECUTABLE_OR_FILE_MISSING']].find(([pattern])=>pattern.test(detail))?.[1]||'PRIVATE_COMMAND_ERROR';
+  const specific=[[/permission denied to grant role/i,'ROLE_GRANT_NOT_ALLOWED'],[/permission denied to set role/i,'ROLE_SWITCH_NOT_ALLOWED'],[/permission denied for schema/i,'SCHEMA_PERMISSION_DENIED'],[/permission denied for table/i,'TABLE_PERMISSION_DENIED'],[/permission denied to create extension/i,'EXTENSION_CREATE_NOT_ALLOWED'],[/must be owner/i,'OBJECT_OWNERSHIP_NOT_ALLOWED'],[/must be superuser/i,'SUPERUSER_REQUIRED']].find(([pattern])=>pattern.test(detail));
+  if(specific)proof.private_command_diagnostic=specific[1];
+  const role=detail.match(/role "(postgres|supabase_admin|supabase_read_only_user|supabase_auth_admin|supabase_storage_admin|cli_login_postgres|cli_login_supabase_read_only_user)"/);if(role)proof.failed_managed_role=role[1];
   throw fail('COMMAND_NOT_VERIFIED');
  }
 }
@@ -81,17 +85,17 @@ try{
  proof.empty_target_verified=true;proof.target_network_isolated=true;
  stage='temporary-source-login';
  const response=await fetch(`https://api.supabase.com/v1/projects/${PROJECT}/cli/login-role`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(15000),
-  headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({read_only:false})});
+  headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({read_only:true})});
  if(response.status!==201){await response.body?.cancel();throw fail('TEMPORARY_SOURCE_LOGIN_NOT_ISSUED');}
  proof.temporary_login_issued=true;
  const text=await response.text();if(text.length>16384)throw fail('INVALID_LOGIN_RESPONSE');
  const login=JSON.parse(text);
- if(login?.role!=='cli_login_postgres'||typeof login.password!=='string'||!login.password.length||login.password.length>4096||/[\r\n\0]/.test(login.password)
+ if(login?.role!=='cli_login_supabase_read_only_user'||typeof login.password!=='string'||!login.password.length||login.password.length>4096||/[\r\n\0]/.test(login.password)
   ||!Number.isSafeInteger(login.ttl_seconds)||login.ttl_seconds<60||login.ttl_seconds>3600)throw fail('INVALID_LOGIN_RESPONSE');
  const config={...base,user:login.role+'.'+PROJECT,password:login.password,query_timeout:90000,
   options:'-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'};
  client=new Client(config);client.on('error',()=>{});await client.connect();proof.tls_certificate_verified=true;
- await client.query('SET SESSION ROLE postgres');
+ await client.query('SET SESSION ROLE supabase_read_only_user');
  await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');transaction=true;
  const identity=(await client.query("select current_database() as db, current_setting('server_version_num') as version, current_setting('transaction_read_only') as readonly")).rows[0];
  if(identity?.db!=='postgres'||identity.readonly!=='on'||!/^17[0-9]{4}$/.test(String(identity.version)))throw fail('SOURCE_IDENTITY_NOT_VERIFIED');
@@ -109,9 +113,10 @@ try{
   'PGCONNECT_TIMEOUT=10','PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=3000'].join('\n')+'\n',{mode:0o600,flag:'wx'});
  const sourceArgs=['run','--rm','--network','host','--env-file',envFile,'-v',ca+':/hp-root.crt:ro'];
  stage='export-db-snapshot';
- const archive=(await command('docker',[...sourceArgs,'--entrypoint','pg_dump',image,'--format=custom','--quote-all-identifiers','--role=postgres','--snapshot='+snapshot],{timeout:180000})).stdout;
+ const archive=(await command('docker',[...sourceArgs,'--entrypoint','pg_dump',image,'--format=custom','--quote-all-identifiers','--role=supabase_read_only_user','--snapshot='+snapshot],{timeout:180000})).stdout;
  stage='export-roles';
- const roles=(await command('docker',[...sourceArgs,'--entrypoint','pg_dumpall',image,'--roles-only','--no-role-passwords','--role=postgres'],{timeout:60000})).stdout;
+ const rawRoles=(await command('docker',[...sourceArgs,'--entrypoint','pg_dumpall',image,'--roles-only','--no-role-passwords','--role=supabase_read_only_user'],{timeout:60000})).stdout;
+ const roleExport=withoutEphemeralCliRoles(rawRoles.toString()),roles=Buffer.from(roleExport.text);proof.ephemeral_cli_role_statements_excluded=roleExport.excluded;
  if(archive.length<100||archive.length>35*1024*1024||roles.length<100||roles.length>1024*1024)throw fail('SQL_EXPORT_LIMIT');
  proof.sql_snapshot_exported=true;proof.archive_bytes=archive.length;proof.roles_bytes=roles.length;
  await rm(envFile,{force:true});
@@ -130,8 +135,9 @@ try{
  await writeFile(archivePath,restoredArchive,{mode:0o600,flag:'wx'});await writeFile(rolesPath,restoredRoles,{mode:0o600,flag:'wx'});
  await command('docker',['cp',archivePath,target+':/tmp/restore.dump']);await command('docker',['cp',rolesPath,target+':/tmp/roles.sql']);
  await command('docker',['exec','--user','0',target,'chown','postgres:postgres','/tmp/restore.dump','/tmp/roles.sql']);
- stage='empty-sql-restore';
+ stage='restore-roles';
  await command('docker',['exec',target,'psql','-X','-q','-v','ON_ERROR_STOP=1','-U','hp_restore_admin','-d','postgres','-f','/tmp/roles.sql']);
+ stage='restore-archive';
  await command('docker',['exec',target,'pg_restore','--exit-on-error','--single-transaction','--no-tablespaces','-U','hp_restore_admin','-d','postgres','/tmp/restore.dump'],{timeout:180000});
  proof.sql_empty_restore_verified=true;
  stage='restored-fingerprints';

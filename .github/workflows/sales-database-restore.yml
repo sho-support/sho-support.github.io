@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test sales-hosting/tests/backup-preflight.test.mjs
+      - run: node --test sales-hosting/tests/backup-preflight.test.mjs sales-hosting/tests/restore-roles.test.mjs
       - run: node --check sales-hosting/verify-database-restore.mjs
   rehearsal:
     needs: contract
