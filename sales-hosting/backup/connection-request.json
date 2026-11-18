@@ -1,7 +1,9 @@
 {
-  "purpose": "Verify already saved HP backup connection settings",
+  "purpose": "Verify saved project-scoped temporary HP backup access after owner registration",
   "requested_on_jst": "2026-11-18",
   "project_ref": "tyhymvgjkoebetyypspj",
+  "credential_route": "temporary-read-only",
+  "request_number": 2,
   "reset_database_password": false,
   "export_database": false,
   "restore_database": false
