@@ -1,0 +1,22 @@
+{
+  "checked_on_jst": "2026-11-18",
+  "project_ref": "tyhymvgjkoebetyypspj",
+  "source_commit": "6a6143f6adbae19d21d9f615e9c66182665187a6",
+  "workflow_run": 44304835649,
+  "contract_tests": {
+    "passed": 8,
+    "failed": 0
+  },
+  "live_connection": {
+    "ok": false,
+    "reason": "DATABASE_PASSWORD_REQUIRED",
+    "fixed_session_pooler_uri_validation_passed": true,
+    "connection_attempted": false,
+    "connection_verified": false,
+    "temporary_login_issued": false,
+    "database_exported": false,
+    "restore_verified": false,
+    "configuration_changed": false
+  },
+  "next_required": "Register project-scoped SUPABASE_BACKUP_ACCESS_TOKEN in GitHub Actions Secrets; live temporary login route remains unverified"
+}

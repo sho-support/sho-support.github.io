@@ -39,6 +39,13 @@ Supabaseアカウントのログイン用パスワードと、プロジェクト
 
 この接続検査が通っても、バックアップ作成済み・復元試験済みとは扱わない。実バックアップは[保全と復元の手順](../customer-hosting-v2/BACKUP_OPERATIONS.md)に従い、暗号化して本人管理の非公開保管先へ保存する。公開Git・公開Actions artifactに実データを置かない。既存のバンド用データ・公開環境・他サービスの設定は変更しない。
 
+## 2026-11-18 の確認結果
+
+- 変更後の8項目のオフラインテストはローカルおよびGitHub CIで成功。
+- [保存済み設定による実接続検査](https://github.com/sho-support/sho-support.github.io/actions/runs/44304835649) は `DATABASE_PASSWORD_REQUIRED` で接続前に停止。固定の対象URI検査は通過したが、利用できるDBパスワードは得られなかった。URIの再登録は要求しない。
+- 同実行では限定トークン経路は未使用。一時ログイン情報の発行・DB接続・データ出力・復元・既存パスワード変更は行われていない。
+- 次の本人操作は `SUPABASE_BACKUP_ACCESS_TOKEN` の登録。その後に実接続を検査する。
+
 ## 公式資料
 
 - [Supabaseの限定APIトークン](https://supabase.com/docs/guides/platform/personal-access-tokens)
