@@ -77,7 +77,7 @@ try{
  if(!/^sha256:[a-f0-9]{64}$/.test(proof.restore_image_id))throw fail('IMAGE_ID_NOT_VERIFIED');
  stage='isolated-target';target='sho-hp-restore-'+process.env.GITHUB_RUN_ID;
  // No TCP port, external network, production service key or production password.
- const startup='set -euo pipefail; initdb -D /tmp/hp-empty-pg --username=supabase_admin --auth=trust >/tmp/hp-init.log 2>&1; exec postgres -D /tmp/hp-empty-pg -c listen_addresses= -c shared_preload_libraries= -c log_statement=none -c log_min_error_statement=panic';
+ const startup='set -euo pipefail; initdb -D /tmp/hp-empty-pg --username=supabase_admin --auth=trust >/tmp/hp-init.log 2>&1; exec postgres -D /tmp/hp-empty-pg -c listen_addresses= -c shared_preload_libraries=pg_net,pg_stat_statements -c pg_net.database_name=template1 -c log_statement=none -c log_min_error_statement=panic';
  await command('docker',['run','-d','--network','none','--user','postgres','--name',target,'--entrypoint','/bin/bash',image,'-c',startup]);
  let ready=false;
  for(let i=0;i<40;i++){
