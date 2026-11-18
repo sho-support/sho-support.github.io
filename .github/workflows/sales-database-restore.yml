@@ -35,6 +35,8 @@ jobs:
           cache: npm
           cache-dependency-path: customer-hosting-v2/package-lock.json
       - run: npm ci --prefix customer-hosting-v2 --ignore-scripts --no-audit --no-fund
+      - name: Fetch the pinned official restore image without project credentials
+        run: docker pull supabase/postgres@sha256:8630950b489ecc70563300180287a98c192a4a48f5ae00b4febdaeea1abe85de
       - name: Restore a real SQL snapshot only inside a disposable isolated database
         env:
           SUPABASE_BACKUP_DB_URL: ${{ secrets.SUPABASE_BACKUP_DB_URL }}

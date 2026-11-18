@@ -10,7 +10,9 @@ import {createRequire} from 'node:module';
 import {createHash,randomBytes,createCipheriv,createDecipheriv} from 'node:crypto';
 import {PROJECT,backupConnectionOptions} from './backup/connection-preflight.mjs';
 
-const run=promisify(execFile),image='public.ecr.aws/supabase/postgres:17.11.0.003';
+// Official Supabase Docker Hub release 17.12.0.000, immutable manifest digest.
+// Same PostgreSQL major as the hosted source; no production upgrade is made.
+const run=promisify(execFile),image='supabase/postgres@sha256:8630950b489ecc70563300180287a98c192a4a48f5ae00b4febdaeea1abe85de';
 const require=createRequire(new URL('../customer-hosting-v2/package.json',import.meta.url)),{Client}=require('pg');
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const quote=x=>'"'+String(x).replaceAll('"','""')+'"';
