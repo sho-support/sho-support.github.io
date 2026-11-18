@@ -18,6 +18,21 @@ const require=createRequire(new URL('../customer-hosting-v2/package.json',import
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const quote=x=>'"'+String(x).replaceAll('"','""')+'"';
 const fail=code=>Object.assign(new Error(code),{safeCode:code});
+const metadataSql={
+ sequences:"select coalesce(jsonb_agg(to_jsonb(s) order by s.schemaname collate \"C\",s.sequencename collate \"C\"),'[]'::jsonb)::text as value from pg_sequences s",
+ grants:`select coalesce(jsonb_agg(to_jsonb(m) order by m.schema collate "C",m.name collate "C"),'[]'::jsonb)::text as value from (
+  select n.nspname as schema,c.relname as name,c.relkind,c.relrowsecurity,c.relforcerowsecurity,pg_get_userbyid(c.relowner) as owner,
+   (select array_agg(a::text order by a::text collate "C") from unnest(c.relacl) a) as acl
+  from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname not like 'pg_%' and n.nspname<>'information_schema' and c.relkind in ('r','p','v','m','S','f')) m`,
+ routines:`select coalesce(jsonb_agg(to_jsonb(m) order by m.schema collate "C",m.name collate "C",m.arguments collate "C"),'[]'::jsonb)::text as value from (
+  select n.nspname as schema,p.proname as name,pg_get_function_identity_arguments(p.oid) as arguments,pg_get_userbyid(p.proowner) as owner,p.prosecdef,
+   (select array_agg(a::text order by a::text collate "C") from unnest(p.proacl) a) as acl,pg_get_functiondef(p.oid) as definition
+  from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','band_private','website_internal') and p.prokind in ('f','p','w')
+   and not exists(select 1 from pg_depend d where d.classid='pg_proc'::regclass and d.objid=p.oid and d.deptype='e')) m`,
+ triggers:`select coalesce(jsonb_agg(to_jsonb(m) order by m.schema collate "C",m.table_name collate "C",m.name collate "C"),'[]'::jsonb)::text as value from (
+  select n.nspname as schema,c.relname as table_name,t.tgname as name,t.tgenabled,pg_get_triggerdef(t.oid) as definition from pg_trigger t
+  join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where not t.tgisinternal and n.nspname not like 'pg_%') m`
+};
 const proof={ok:false,purpose:'actual-sql-snapshot-empty-restore-only',project_ref:PROJECT,
  source_commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID,
  temporary_login_issued:false,tls_certificate_verified:false,source_read_only_verified:false,
@@ -46,7 +61,7 @@ async function command(file,args,options={}){
 let queryNumber=0;
 async function queryTarget(sql){
  const name='query-'+(++queryNumber)+'.sql',path=join(dir,name);
- await writeFile(path,"SET TIMEZONE='UTC';\n"+sql,{mode:0o600,flag:'wx'});
+ await writeFile(path,"SET TIMEZONE='UTC';\nSET search_path=pg_catalog;\n"+sql,{mode:0o600,flag:'wx'});
  try{
   await command('docker',['cp',path,target+':/tmp/'+name]);
   await command('docker',['exec','--user','0',target,'chown','postgres:postgres','/tmp/'+name]);
@@ -110,6 +125,7 @@ try{
  stage='source-role';
  await client.query('SET SESSION ROLE postgres');
  await client.query("SET TIMEZONE='UTC'");
+ await client.query('SET search_path=pg_catalog');
  stage='source-transaction';
  await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');transaction=true;
  const identity=(await client.query("select current_database() as db, current_setting('server_version_num') as version, current_setting('transaction_read_only') as readonly")).rows[0];
@@ -122,6 +138,9 @@ try{
  proof.source_table_count=sourceRows.length;
  const sourceLayout=(await client.query("select coalesce(jsonb_agg(to_jsonb(t) order by t.schemaname,t.tablename),'[]'::jsonb)::text as layout from (select schemaname,tablename,tableowner,rowsecurity from pg_tables where schemaname not like 'pg_%' and schemaname <> 'information_schema') t")).rows[0].layout;
  const sourcePolicies=(await client.query("select coalesce(jsonb_agg(to_jsonb(p) order by p.schemaname,p.tablename,p.policyname),'[]'::jsonb)::text as policies from pg_policies p")).rows[0].policies;
+ const sourceMetadata={};for(const [kind,sql] of Object.entries(metadataSql))sourceMetadata[kind]=(await client.query(sql)).rows[0].value;
+ const responseCacheOwned=(await client.query("select exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace join pg_depend d on d.classid='pg_class'::regclass and d.objid=c.oid and d.deptype='e' join pg_extension e on e.oid=d.refobjid and d.refclassid='pg_extension'::regclass where n.nspname='net' and c.relname='_http_response' and e.extname='pg_net') as expected")).rows[0].expected;
+ if(responseCacheOwned!==true)throw fail('UNEXPECTED_RESPONSE_CACHE_OWNERSHIP');
  stage='sql-snapshot';
  const ca=resolve('sales-hosting/backup/supabase-root-2021.crt'),envFile=join(dir,'private','source.env');
  await writeFile(envFile,[`PGHOST=${config.host}`,'PGPORT=5432',`PGUSER=${config.user}`,`PGPASSWORD=${config.password}`,'PGDATABASE=postgres','PGSSLMODE=verify-full','PGSSLROOTCERT=/hp-root.crt',
@@ -159,8 +178,16 @@ try{
  stage='restored-fingerprints';
  const targetQuery=async sql=>JSON.parse((await queryTarget(`select coalesce(jsonb_agg(to_jsonb(hp_row)),'[]'::jsonb)::text from (${sql}) hp_row;`)).trim());
  const targetRows=await fingerprints(targetQuery);
- if(JSON.stringify(targetRows)!==JSON.stringify(sourceRows)){
-  proof.table_data_differences=sourceRows.flatMap(s=>{const t=targetRows.find(x=>x.schema===s.schema&&x.table===s.table);return !t||t.count!==s.count||t.digest!==s.digest?[{schema:s.schema,table:s.table,source_rows:s.count,restored_rows:t?.count??null,kind:!t?'missing':t.count!==s.count?'count':'content'}]:[];});
+ // pg_dump does not copy non-configuration extension tables. pg_net's HTTP
+ // response cache has a documented TTL and is recreated empty; do not replay it.
+ const cache=targetRows.find(t=>t.schema==='net'&&t.table==='_http_response');
+ if(cache?.count!=='0')throw fail('UNEXPECTED_RESTORED_RESPONSE_CACHE');
+ const durable=rows=>rows.filter(t=>t.schema!=='net'||t.table!=='_http_response');
+ const sourceDurable=durable(sourceRows),targetDurable=durable(targetRows);
+ proof.comparison_scope='durable_sql_tables_except_pg_net_http_response_cache';proof.durable_source_table_count=sourceDurable.length;
+ proof.non_durable_cache_exclusions=[{schema:'net',table:'_http_response',source_rows:sourceRows.find(t=>t.schema==='net'&&t.table==='_http_response')?.count,restored_rows:cache.count,reason:'pg_net_ttl_response_cache'}];
+ if(JSON.stringify(targetDurable)!==JSON.stringify(sourceDurable)){
+  proof.table_data_differences=sourceDurable.flatMap(s=>{const t=targetDurable.find(x=>x.schema===s.schema&&x.table===s.table);return !t||t.count!==s.count||t.digest!==s.digest?[{schema:s.schema,table:s.table,source_rows:s.count,restored_rows:t?.count??null,kind:!t?'missing':t.count!==s.count?'count':'content'}]:[];});
   proof.unexpected_restored_tables=targetRows.filter(t=>!sourceRows.some(s=>s.schema===t.schema&&s.table===t.table)).map(t=>({schema:t.schema,table:t.table}));
   throw fail('RESTORED_TABLE_DATA_MISMATCH');
  }
@@ -168,11 +195,16 @@ try{
  const layout=(await targetQuery("select coalesce(jsonb_agg(to_jsonb(t) order by t.schemaname,t.tablename),'[]'::jsonb)::text as layout from (select schemaname,tablename,tableowner,rowsecurity from pg_tables where schemaname not like 'pg_%' and schemaname <> 'information_schema') t"))[0].layout;
  const policies=(await targetQuery("select coalesce(jsonb_agg(to_jsonb(p) order by p.schemaname,p.tablename,p.policyname),'[]'::jsonb)::text as policies from pg_policies p"))[0].policies;
  if(layout!==sourceLayout||policies!==sourcePolicies)throw fail('RESTORED_OWNERS_OR_RLS_MISMATCH');
+ for(const [kind,sql] of Object.entries(metadataSql)){
+  const restored=(await targetQuery(sql))[0].value;
+  if(restored!==sourceMetadata[kind]){proof.metadata_mismatch=kind;throw fail('RESTORED_SECURITY_METADATA_MISMATCH');}
+  proof[kind+'_match']=true;
+ }
  proof.table_owners_and_rls_match=true;proof.ok=true;
 }catch(error){
  proof.failed_stage=stage;
  if(['28P01','28000','42501','ECONNRESET','ECONNREFUSED','ETIMEDOUT','ENOTFOUND','EHOSTUNREACH','CERT_HAS_EXPIRED','SELF_SIGNED_CERT_IN_CHAIN','ERR_TLS_CERT_ALTNAME_INVALID'].includes(error?.code))proof.source_error_code=error.code;
- proof.reason=['FIXED_CI_CONTEXT_REQUIRED','SCOPED_TOKEN_REQUIRED','EMPTY_TARGET_NOT_READY','TARGET_NOT_EMPTY','TEMPORARY_SOURCE_LOGIN_NOT_ISSUED','SOURCE_CONNECTION_NOT_VERIFIED','INVALID_LOGIN_RESPONSE','SOURCE_IDENTITY_NOT_VERIFIED','INVALID_SOURCE_SNAPSHOT','TABLE_SNAPSHOT_LIMIT','SQL_EXPORT_LIMIT','ENCRYPTION_ROUND_TRIP_NOT_VERIFIED','RESTORED_TABLE_DATA_MISMATCH','RESTORED_OWNERS_OR_RLS_MISMATCH'].includes(error?.safeCode)?error.safeCode:'SQL_RESTORE_REHEARSAL_NOT_VERIFIED';
+ proof.reason=['FIXED_CI_CONTEXT_REQUIRED','SCOPED_TOKEN_REQUIRED','EMPTY_TARGET_NOT_READY','TARGET_NOT_EMPTY','TEMPORARY_SOURCE_LOGIN_NOT_ISSUED','SOURCE_CONNECTION_NOT_VERIFIED','INVALID_LOGIN_RESPONSE','SOURCE_IDENTITY_NOT_VERIFIED','INVALID_SOURCE_SNAPSHOT','TABLE_SNAPSHOT_LIMIT','SQL_EXPORT_LIMIT','UNEXPECTED_RESPONSE_CACHE_OWNERSHIP','UNEXPECTED_RESTORED_RESPONSE_CACHE','ENCRYPTION_ROUND_TRIP_NOT_VERIFIED','RESTORED_TABLE_DATA_MISMATCH','RESTORED_OWNERS_OR_RLS_MISMATCH','RESTORED_SECURITY_METADATA_MISMATCH'].includes(error?.safeCode)?error.safeCode:'SQL_RESTORE_REHEARSAL_NOT_VERIFIED';
 }finally{
  let cleaned=true;
  if(transaction&&client)try{await client.query('ROLLBACK');}catch{cleaned=false;}
