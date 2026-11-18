@@ -1,0 +1,8 @@
+{
+  "purpose": "Verify already saved HP backup connection settings",
+  "requested_on_jst": "2026-11-18",
+  "project_ref": "tyhymvgjkoebetyypspj",
+  "reset_database_password": false,
+  "export_database": false,
+  "restore_database": false
+}
