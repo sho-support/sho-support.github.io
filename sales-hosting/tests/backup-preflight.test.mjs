@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {X509Certificate} from 'node:crypto';
 import {backupConnectionOptions,checkBackupConnection,PROJECT} from '../backup/connection-preflight.mjs';
 import {checkBackupTemporaryAccess} from '../backup/temporary-access.mjs';
 const password='synthetic-secret:@/?#%',host='aws-1-ap-northeast-1.pooler.supabase.com';
@@ -13,6 +14,8 @@ test('only the fixed Tokyo session pooler and project are accepted; TLS and sess
  const c=backupConnectionOptions(uri+'?sslmode=disable&options=-c%20default_transaction_read_only%3Doff');
  assert.equal(c.password,password);assert.equal(c.host,host);assert.equal(c.port,5432);assert.equal(c.user,'postgres.'+PROJECT);
  assert.equal(c.ssl.rejectUnauthorized,true);assert.match(c.options,/default_transaction_read_only=on/);
+ const root=new X509Certificate(c.ssl.ca);assert.equal(root.ca,true);assert.equal(root.fingerprint256,'80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA');
+ assert.equal(c.ssl.checkServerIdentity,undefined);assert.equal(c.ssl.servername,undefined);
  assert.throws(()=>backupConnectionOptions('postgresql://postgres:'+encodeURIComponent(password)+'@db.'+PROJECT+'.supabase.co:5432/postgres'));
  const separate=backupConnectionOptions(uri.replace(encodeURIComponent(password),'[YOUR-PASSWORD]'),password);assert.equal(separate.password,password);assert.equal(separate.ssl.rejectUnauthorized,true);
 });

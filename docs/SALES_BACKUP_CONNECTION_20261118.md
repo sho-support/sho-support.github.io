@@ -46,6 +46,14 @@ Supabaseアカウントのログイン用パスワードと、プロジェクト
 - 同実行では限定トークン経路は未使用。一時ログイン情報の発行・DB接続・データ出力・復元・既存パスワード変更は行われていない。
 - 次の本人操作は `SUPABASE_BACKUP_ACCESS_TOKEN` の登録。その後に実接続を検査する。
 
+## 限定トークン登録後の確認
+
+- 本人が `SUPABASE_BACKUP_ACCESS_TOKEN` を登録したと報告。
+- [実行44306371357](https://github.com/sho-support/sho-support.github.io/actions/runs/44306371357)：限定トークンの認証および一時ログイン情報の発行は成功。DB接続前のTLS証明書検証で停止した。既存パスワードの変更・データ取得・復元は行っていない。
+- 検査クライアントにSupabaseの専用CAが設定されていなかったため、公式Studioが使用する公開CAを追加。証明書のCA属性・自己署名・有効期間・SHA256フィンガープリントを検査する。TLS証明書とホスト名の検証は無効化しない。
+- CAの取得元は公式Studioソース `supabase/supabase@b58913895ceadfe7d14fada7e0b8436c0357b4fb:apps/studio/hooks/custom-content/custom-content.json` の `ssl:certificate_url`。公式ダッシュボードのDownload certificateと同じURLから取得した公開証明書であり、秘密鍵は含まない。
+- PEMファイルSHA256：`700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7`。証明書フィンガープリント：`80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA`。有効期限2031-04-26。
+
 ## 公式資料
 
 - [Supabaseの限定APIトークン](https://supabase.com/docs/guides/platform/personal-access-tokens)

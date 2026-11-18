@@ -1,3 +1,12 @@
+import {readFileSync} from 'node:fs';
+import {X509Certificate} from 'node:crypto';
+// Public trust anchor downloaded via the URL published in Supabase Studio's
+// apps/studio/hooks/custom-content/custom-content.json (ssl:certificate_url).
+// Source: https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt
+const supabaseCA=readFileSync(new URL('./supabase-root-2021.crt',import.meta.url),'utf8');
+const root=new X509Certificate(supabaseCA);
+if(!root.ca||!root.verify(root.publicKey)||root.fingerprint256!=='80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA'
+ ||Date.now()<Date.parse(root.validFrom)||Date.now()>=Date.parse(root.validTo))throw Error('Pinned Supabase trust anchor not valid');
 export const PROJECT='tyhymvgjkoebetyypspj';
 const fail=code=>Object.assign(new Error(code),{safeCode:code});
 const safeCodes=new Set(['BACKUP_CONNECTION_NOT_CONFIGURED','INVALID_BACKUP_CONNECTION','FIXED_SESSION_POOLER_REQUIRED','DATABASE_PASSWORD_REQUIRED','INVALID_TEMPORARY_LOGIN','DATABASE_IDENTITY_NOT_VERIFIED','INVALID_COUNT_RESPONSE']);
@@ -17,7 +26,7 @@ export function backupConnectionOptions(value,passwordValue,temporaryLogin){
  }
  if(!password||/\[(?:YOUR[-_](?:DATABASE[-_])?PASSWORD|password)\]/i.test(password))throw fail('DATABASE_PASSWORD_REQUIRED');
  return {host:u.hostname,port:5432,database:'postgres',user,password,
-  ssl:{rejectUnauthorized:true},application_name:'hp-backup-connection-preflight',
+  ssl:{ca:supabaseCA,rejectUnauthorized:true},application_name:'hp-backup-connection-preflight',
   connectionTimeoutMillis:10000,query_timeout:15000,
   options:'-c default_transaction_read_only=on -c statement_timeout=10000 -c lock_timeout=2000'};
 }
