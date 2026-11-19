@@ -70,6 +70,12 @@ Secretの値は各サービスの管理画面・非公開の保存元で取り�
 
 販売者情報を請求時の開示方式にする場合は、契約判断前に提供できる対応を整える。正式見積りへの同意前に、総額、支払時期・方法、提供時期、解約条件を確認できるようにする。消費者契約の解約料は法令上の平均的な損害額を超える部分が無効となるため、返金条件は提供作業と費用で確認する。[通信販売ガイド](https://www.no-trouble.caa.go.jp/what/mailorder/)・[最終確認画面の資料](https://www.caa.go.jp/notice/assets/consumer_transaction_cms203_240315_02.pdf)・[消費者契約法の資料](https://www.caa.go.jp/policies/policy/consumer_system/meeting_materials/assets/consumer_system_cms101_210325_02.pdf)
 
+### 保存済みAPIでのドメイン登録権限の確認
+
+11月19日 JST。共有ブラウザのCloudflareサインインは403。GitHub Actionsに保存済みのトークンで別途確認したところ、対象アカウントのWorkers APIは200、`sho-websites.com` のRegistrar登録可否を照会するAPIは403（Cloudflareエラー10000）だった。トークンはWorkers配備に使える。発行時に確認した権限はWorkers Scripts編集、Workers R2 Storage読み取り、Account Settings読み取り。[最初の接続記録](../customer-hosting-v2/INTEGRATION_STATUS_20261112.md)・[今回のAPI確認](https://github.com/sho-support/sho-support.github.io/actions/runs/44547923210)
+
+ドメインは未購入。APIで登録するには対象アカウントの Registrar Write 権限と、Cloudflareに保存した既定の支払い方法、既定の登録者情報、登録規約への同意が必要。支払い・登録者情報・同意の設定状況と決済総額は未確認。登録条件は `sho-websites.com` を1年、税・手数料込み3,000円以内。アカウント所有者が登録画面を使う場合は、名義と総額を確認し、1年分で進める。登録後に送られる登録者メールの確認も所有者が行う。[Cloudflare Registrar API](https://developers.cloudflare.com/registrar/registrar-api/)・[ドメイン登録手順](https://developers.cloudflare.com/registrar/get-started/register-domain/)
+
 ## 切替の判断
 
 外部連携を含めた全基盤復旧、正式顧客ドメイン、正式口座、契約承認、架空注文での実サービス通し試験が残る。商用migration、正式関数の配備、ホスティング有効化は切替手順の順番で行い、販売開始前に通し試験を判定する。受付専用の架空注文は制作や公開へ進めない。
