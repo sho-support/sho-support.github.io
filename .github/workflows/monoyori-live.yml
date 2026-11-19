@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 293818f656e8418ee75224c2cbaab628790fae5e
+          ref: 281876a02cebfcac1a7d33e164fbc52ff34d7f46
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -161,7 +161,7 @@ jobs:
           await page.locator('#b-price').fill('');await expect('入力が揃う');
           await page.locator('#b-price').fill('0');await page.locator('#b-ship').fill('0');await expect('候補B');
           for(const width of [320,390,1440]){await page.setViewportSize({width,height:900});if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Calculator overflow '+width);}
-          await page.goto('http://127.0.0.1:8766/products/tools/gift-quantity.html');await page.locator('#people').fill('25');if(!(await page.locator('#gift-result').innerText()).includes('必要 2箱')||!(await page.locator('#gift-result').innerText()).includes('余り 30個'))throw Error('Wrong gift quantities');await page.locator('#people').fill('0');if(!(await page.locator('#gift-result').innerText()).includes('入力を確認'))throw Error('Invalid gift count accepted');console.log('PASS unit cost: shipping, coupon, equality, zero price, zero count, excessive discount, empty value and 3 viewport widths');
+          await page.goto('http://127.0.0.1:8766/products/tools/gift-quantity.html');await page.locator('#people').fill('25');if(!(await page.locator('#gift-result').innerText()).includes('必要 2箱')||!(await page.locator('#gift-result').innerText()).includes('余り 30個'))throw Error('Wrong gift quantities');await page.locator('#people').fill('0');if(!(await page.locator('#gift-result').innerText()).includes('入力を確認'))throw Error('Invalid gift count accepted');await page.goto('http://127.0.0.1:8766/products/stories/yokumoku-delices-gift.html');for(const width of [390,1440]){await page.setViewportSize({width,height:1000});if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Gift article overflow');}if(await page.locator('.product-story tbody tr').count()!==2)throw Error('Missing quantity table');if(!(await page.locator('.product-story').innerText()).includes('5,400円'))throw Error('Wrong gift calculation');console.log('PASS unit cost: shipping, coupon, equality, zero price, zero count, excessive discount, empty value and 3 viewport widths');
           }finally{if(browser)await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1)});
           JS
       - name: Deploy static assets to the isolated review Worker
@@ -174,7 +174,7 @@ jobs:
           const {chromium}=require('playwright');const fs=require('fs');
           (async()=>{const browser=await chromium.launch();const results=[];
           try{const page=await browser.newPage();
-            for(const path of ['/products/','/deals/','/events/','/products/tents','/products/stories/','/products/stories/adjustable-dumbbells-how-to-choose','/products/stories/tent-first-buying-guide','/products/stories/sparkling-water-case-cost','/products/tools/unit-price','/products/tools/gift-quantity']){
+            for(const path of ['/products/','/deals/','/events/','/products/tents','/products/stories/','/products/stories/adjustable-dumbbells-how-to-choose','/products/stories/tent-first-buying-guide','/products/stories/sparkling-water-case-cost','/products/stories/yokumoku-delices-gift','/products/tools/unit-price','/products/tools/gift-quantity']){
               const response=await page.goto('https://sho-monoyori-review.zodiac-suu.workers.dev'+path+'?qa=1');await page.waitForLoadState('networkidle');
               const result=await page.evaluate(()=>({canonical:document.querySelector('link[rel="canonical"]')?.href,blocked:!!document.querySelector('script[src*="review-mode"]'),noindex:!!document.querySelector('meta[name="robots"][content*="noindex"]'),analytics:!!document.querySelector('script[src*="G-J5ZDLF30CS"]'),overflow:document.documentElement.scrollWidth>innerWidth}));
               if(path==='/products/stories/sparkling-water-case-cost'){
@@ -183,6 +183,14 @@ jobs:
                   const proof=await page.evaluate(()=>({text:document.querySelector('.product-story')?.innerText||'',photos:[...document.querySelectorAll('.story-cover img')].filter(x=>x.complete&&x.naturalWidth>0).length,buy:document.querySelectorAll('[data-buy]').length,overflow:document.documentElement.scrollWidth>innerWidth}));
                   if(!proof.text.includes('60日以上')||!proof.text.includes('96日')||!proof.text.includes('11月17日付')||!proof.photos||!proof.buy||proof.overflow)throw Error('Water guide verification failed '+JSON.stringify(proof));
                   results.push({water_guide:true,width,photos:proof.photos,buy:proof.buy,overflow:proof.overflow});
+                }
+              }
+              if(path==='/products/stories/yokumoku-delices-gift'){
+                for(const width of [390,1440]){
+                  await page.setViewportSize({width,height:1000});
+                  const gift=await page.evaluate(()=>({text:document.querySelector('.product-story')?.innerText||'',rows:document.querySelectorAll('.product-story tbody tr').length,photo:[...document.querySelectorAll('.story-cover img')].some(x=>x.complete&&x.naturalWidth>0),buy:document.querySelectorAll('[data-buy]').length,tool:!!document.querySelector('a[href*="tools/gift-quantity"]'),overflow:document.documentElement.scrollWidth>innerWidth}));
+                  if(gift.rows!==2||!gift.text.includes('91.80円')||!gift.text.includes('11月17日付')||!gift.tool||!gift.photo||!gift.buy||gift.overflow)throw Error('Gift guide public check failed '+JSON.stringify(gift));
+                  results.push({gift_guide:true,width,rows:gift.rows,photo:gift.photo,buy:gift.buy,tool:gift.tool,overflow:gift.overflow});
                 }
               }
               if(path==='/products/tents'){
