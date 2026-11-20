@@ -131,6 +131,7 @@ const client=ready=>`
    const cardStatus = page.locator('#card-status');
    const cardTerms = await page.locator('#card-terms').innerText();
    check(cardTerms.includes('0円') && cardTerms.includes('6,000円（税込）') && cardTerms.includes('2027/11/20'), 'The charge date, annual amount and zero due now precede authorization');
+   check(cardTerms.includes('確認に3日程度かかる場合があります'), 'The confirmation estimate appears before consent');
    check(!(await consent.isChecked()) && await register.isDisabled(), 'Card renewal requires an express opt-in');
    await consent.check();
    await register.click();
@@ -145,6 +146,9 @@ const client=ready=>`
    await register.click();
    await scenario.selectOption('card-processing');
    check((await access.innerText()).includes('確認中は公開を続けます'), 'A scheduled card charge gets a confirmation hold at the due time');
+   check((await cardStatus.innerText()).includes('確認に3日程度かかる場合があります'), 'Pending card charges show their confirmation estimate');
+   await scenario.selectOption('card-review');
+   check((await cardStatus.innerText()).includes('運営側で決済状況を確認') && await retention.isHidden() && await page.locator('#restoration-price').isHidden(), 'An unresolved charge reaches operator review without offering a second payment for restoration');
    await scenario.selectOption('card-failed');
    check((await cardStatus.innerText()).includes('カード決済に失敗') && !(await page.locator('#choice').innerText()).includes('継続が確定'), 'A card failure does not extend the contract');
    await scenario.selectOption('card-paid');

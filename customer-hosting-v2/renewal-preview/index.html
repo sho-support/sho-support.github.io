@@ -100,6 +100,7 @@
       <option value="expiry">満了時刻（入金確認なし）</option>
       <option value="paid">次の契約分の入金確認済み</option>
       <option value="card-processing">請求予定時刻（決済確認中）</option>
+      <option value="card-review">請求予定から3日経過（確認中）</option>
       <option value="card-failed">カード決済の失敗を確認</option>
       <option value="card-paid">カード決済の成功を確認</option>
       <option value="retained">満了から30日経過</option>
@@ -110,7 +111,7 @@
 <script type="module">
 import { HOSTING_OFFER, HOSTING_RESTORATION, restorationPrice } from '../../supabase/functions/_shared/hosting-offer.mjs';
 import { renewalWindow, selectRenewal } from './policy.mjs';
-import { applyCardReceipt, cardRenewalTerms, cardRenewalWindow, enrollCardRenewal, recordCardFailure, stopCardRenewal } from './card-renewal.mjs';
+import { applyCardReceipt, cardConfirmationDays, cardRenewalTerms, cardRenewalWindow, enrollCardRenewal, recordCardFailure, stopCardRenewal } from './card-renewal.mjs';
 
 const expiresAt = Date.parse('2027-11-20T18:00:00+09:00');
 const expectedRenewalEnd = Date.parse('2028-11-20T18:00:00+09:00');
@@ -124,6 +125,7 @@ const scenarios = {
   expiry: { now: expiresAt },
   paid: { now: expiresAt, confirmedUntil: expectedRenewalEnd },
   'card-processing': { now: expiresAt },
+  'card-review': { now: expiresAt + cardConfirmationDays * day },
   'card-failed': { now: expiresAt + 60 * 60 * 1000, cardResult: 'failed' },
   'card-paid': { now: expiresAt + 60 * 60 * 1000, cardResult: 'paid' },
   retained: { now: expiresAt + HOSTING_RESTORATION.handover_days * day },
@@ -159,11 +161,14 @@ function render() {
   else if (view.choice === 'decline') text('payment', '満了時刻に公開が終了します。締切まではこの画面で変更できます。');
   else if (view.choice === 'continue') text('payment', '見積りをご確認ください。入金確認後に継続が確定します。');
   else text('payment', '継続の希望を選んでください。');
-  const access = card.holdForConfirmation ? 'カード決済を確認中です。確認中は公開を続けます。' :
-    view.termAllowsPublication ? '公開期間中です。' : '満了のためサイトは非公開です。管理画面で引き渡しや復元の受付を確認できます。';
-  text('access', access);
+  if (card.holdForConfirmation) text('access', card.status === 'failed' ? '現在は公開を続けています。' : '確認中は公開を続けます。');
+  else if (card.needsConfirmationReview) text('access', '決済の確認結果に応じて公開状況を更新します。');
+  else if (card.awaitingCardPayment) text('access', 'お支払いの確認が済むまで、サイトを一時非公開にしています。');
+  else if (view.termAllowsPublication) text('access', '公開期間中です。');
+  else text('access', '満了のためサイトは非公開です。管理画面で引き渡しや復元の受付を確認できます。');
   const retention = document.getElementById('retention');
-  retention.hidden = view.termAllowsPublication || card.holdForConfirmation;
+  retention.hidden = view.termAllowsPublication || card.awaitingCardPayment;
+  document.getElementById('restoration-price').hidden = card.awaitingCardPayment;
   if (view.canDownloadHandover) {
     retention.textContent = date(view.handoverUntil) + 'まで完成ファイルの引き渡しを受けられます。有料復元のお申込みは' + date(view.restoreUntil) + 'まで受け付けます。';
   } else if (view.canRequestRestore) retention.textContent = '有料復元のお申込みは' + date(view.restoreUntil) + 'まで受け付けます。';
@@ -171,7 +176,8 @@ function render() {
 
   const fee = cardRenewalTerms.feeJpy.toLocaleString('ja-JP');
   const annual = `${cardRenewalTerms.months}か月ごとに${fee}円（税込）で自動更新します。`;
-  if (card.canEnroll) text('card-terms', `登録時のお支払いは0円です。初回の請求予定は${date(card.chargeAt)}です。${annual}次回請求の予定時刻までは、この画面から停止できます。`);
+  const confirmationNotice = `決済の処理状況により、確認に${cardConfirmationDays}日程度かかる場合があります。`;
+  if (card.canEnroll) text('card-terms', `登録時のお支払いは0円です。初回の請求予定は${date(card.chargeAt)}です。${annual}次回請求の予定時刻までは、この画面から停止できます。${confirmationNotice}`);
   else if (card.canStop) text('card-terms', `次回の請求予定は${date(card.chargeAt)}です。${annual}`);
   else text('card-terms', '');
   document.getElementById('card-registration').hidden = !card.canEnroll;
@@ -179,8 +185,9 @@ function render() {
   cardStop.hidden = !card.canStop;
   if (card.status === 'stopped') text('card-status', '次回の自動請求を停止しました。今の契約期間は満了まで有効です。');
   else if (card.status === 'failed') text('card-status', 'カード決済に失敗しました。支払い方法の更新をご案内します。');
+  else if (card.needsConfirmationReview) text('card-status', '確認に時間がかかっているため、運営側で決済状況を確認しています。');
+  else if (card.holdForConfirmation) text('card-status', `カード決済の結果を確認しています。${confirmationNotice}`);
   else if (card.status === 'scheduled' && view.paymentConfirmed) text('card-status', 'カード決済を確認して、公開維持を延長しました。');
-  else if (card.holdForConfirmation) text('card-status', 'カード決済の結果を確認しています。');
   else if (card.canStop) text('card-status', 'カードの自動更新を登録しました。');
   else if (card.status === 'scheduled') text('card-status', 'カード決済を確認できていません。');
   else if (card.canEnroll) text('card-status', 'カードの自動更新は希望制です。銀行振込も選べます。');

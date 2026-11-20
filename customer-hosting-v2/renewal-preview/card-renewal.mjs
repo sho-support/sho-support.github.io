@@ -7,20 +7,25 @@ export const cardRenewalTerms = Object.freeze({
   months: HOSTING_OFFER.renewal_months,
 });
 
-const confirmationHoldMs = 24 * 60 * 60 * 1000;
+export const cardConfirmationDays = 3;
+const day = 24 * 60 * 60 * 1000;
 
 export function cardRenewalWindow(term, now) {
   const current = renewalWindow(term, now);
   const status = term.card?.status ?? 'unregistered';
   const collectingByCard = status === 'scheduled' || status === 'failed';
-  const holdForConfirmation = collectingByCard && now >= current.paidUntil && now < current.paidUntil + confirmationHoldMs;
+  const awaitingCardPayment = collectingByCard && now >= current.paidUntil;
+  const holdDays = status === 'failed' ? 1 : cardConfirmationDays;
+  const holdForConfirmation = awaitingCardPayment && now < current.paidUntil + holdDays * day;
   return {
     status,
     chargeAt: current.paidUntil,
     canEnroll: current.canChoose && !collectingByCard,
     canStop: status === 'scheduled' && now < current.paidUntil,
     canChooseBank: current.canChoose && !collectingByCard,
+    awaitingCardPayment,
     holdForConfirmation,
+    needsConfirmationReview: status === 'scheduled' && awaitingCardPayment && !holdForConfirmation,
   };
 }
 
