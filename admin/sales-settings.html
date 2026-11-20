@@ -1,11 +1,11 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>販売準備設定 | SHO WEB SUPPORT</title><link rel="stylesheet" href="../website-theme.css">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#080808;color:#f1ece5;font:16px/1.8 system-ui,sans-serif}.setup{width:min(calc(100% - 24px),850px);margin:auto;padding:20px 0 48px}nav{display:flex;gap:14px;flex-wrap:wrap}a{color:#edbf76}h1{font-size:clamp(1.5rem,5vw,2rem)}.card{margin:18px 0;padding:20px;border:1px solid #544630;border-radius:14px;background:#12110e}.card h2{font-size:1.1rem;margin:0 0 12px}label{display:block;margin:14px 0}input,textarea{display:block;width:100%;margin-top:6px;border:1px solid #776340;background:#080808;color:#fff;border-radius:8px;padding:12px;font:16px/1.6 system-ui;min-width:0}textarea{min-height:110px}.tick{display:flex;gap:10px;align-items:flex-start}.tick input{width:20px;flex:0 0 20px;margin-top:6px}.actions{display:flex;flex-wrap:wrap;gap:10px}button{padding:13px 18px;border:1px solid #a87d3e;border-radius:9px;background:#e5b365;color:#17120a;font:700 16px system-ui;cursor:pointer}button.secondary{background:#18140e;color:#f3d7a7}button:disabled{opacity:.45;cursor:wait}.note{font-size:.85rem;color:#c9bba4}.status{padding:12px;border:1px solid #715735;border-radius:9px;white-space:pre-wrap;overflow-wrap:anywhere}.status.error{border-color:#d7876b;color:#ffd5c3}details{border-top:1px solid #51422c;margin-top:15px;padding-top:10px}summary{cursor:pointer;font-weight:700}@media(max-width:430px){.card{padding:16px}.actions button{width:100%}}
-</style></head><body><main class="setup"><nav><a href="orders.html">← 注文管理</a><a href="index.html">運営管理</a><a href="readiness.html">接続・受入テスト</a></nav><h1>販売準備設定</h1>
+</style><script src="../website-hosting-offer.js"></script></head><body><main class="setup"><nav><a href="orders.html">← 注文管理</a><a href="index.html">運営管理</a><a href="readiness.html">接続・受入テスト</a></nav><h1>販売準備設定</h1>
 <p>事業者情報と振込先は、管理者だけが閲覧・保存できます。事業者情報はお客様への正式見積りにも記載します。</p>
 <p id="status" class="status" role="status">ログイン状態を確認しています。</p>
 <form id="salesForm" hidden>
-<section class="card"><h2>公開維持費</h2><p><strong>初年度は制作料金込み。2年目以降6,000円／年（税込・年払い）。</strong><br>満了30日前までに案内し、継続申込みと入金で更新。自動更新・自動課金なし。内容更新・お客様名義のドメイン実費は別料金です。</p><p class="note">制作基本料金15,000円〜／22,000円〜／30,000円〜、30日無料調整、セミ・フルの3か月無料更新は維持します。</p></section>
+<section class="card"><h2>公開維持費</h2><p><strong>初年度は制作料金込み。2年目以降6,000円／年（税込・年払い）。</strong><br>満了30日前までに案内し、継続申込みと入金で更新。自動更新・自動課金なし。内容更新・お客様名義のドメイン実費は別料金です。</p><p class="note" id="restorationTerms" hidden></p><p class="note">制作基本料金15,000円〜／22,000円〜／30,000円〜、30日無料調整、セミ・フルの3か月無料更新は維持します。</p></section>
 <section class="card"><h2>販売者情報</h2><p class="note">このHP制作サービスを販売する方の情報です。個人事業ならあなた本人、法人なら会社の正式な情報を入力します。屋号やサービス名だけでなく、販売の責任を負う氏名・名称が必要です。</p>
 <label>販売事業者の正式な氏名・名称<input id="legal_name" maxlength="100" autocomplete="organization" placeholder="個人事業の場合は事業者本人の氏名"></label>
 <label>所在地<input id="address" maxlength="240" autocomplete="street-address" placeholder="郵便番号・都道府県・市区町村・番地・建物名"></label>
@@ -27,6 +27,13 @@ const form=document.getElementById('salesForm'),status=document.getElementById('
 let bankIsTest=false;
 const labels={hosting:'公開維持・URL',cancellation:'キャンセル・返金',handover:'解約・引き渡し',rights:'素材・制作物の権利',data:'データの保管・削除',backup:'バックアップ・復旧',support:'サポート範囲',update_billing:'内容更新料の扱い'};
 const cancellationDraft='振込前は、見積りに同意した後でも、公式LINEへのご連絡で無料でキャンセルできます。最終確認で承認いただいた内容を公開または納品した後は、好みの変更などお客様都合による制作料金の返金は原則お受けしません。公開・納品前に解約する場合は、見積りで合意した完了済み工程の対価（着手前は0円）と事前に同意を得た取消不能な外部実費を、法令で認められる範囲で差し引き、残額を返金します。控除の内訳をご案内し、返金の振込手数料は当方が負担します。有料の公開維持・更新の未提供分は別途精算します。合意した仕様との不一致や当方の事情で提供できない場合は、状況に応じて修正・返金等で対応します。法令上の権利は妨げません。';
+const previousStandardDataTerms='制作・運営に必要な範囲で指定事業者へ処理を委託します。満了後30日の確認期間後、法令上必要な取引記録を除き順次削除します。バックアップは保持世代の期限で削除します。';
+const restoration=window.SHO_HOSTING_RESTORATION;
+if(restoration){
+ const description=document.getElementById('restorationTerms');
+ description.textContent=`標準復元は満了後${restoration.request_days}日以内。${restoration.price_label}。公開維持は再公開日から${restoration.hosting_months}か月です。`;
+ description.hidden=false;
+}
 const note=(text,error=false)=>{status.textContent=text;status.classList.toggle('error',error);};
 async function api(action,values={}){const{data,error}=await websiteSupabase.functions.invoke('website-sales-setup',{body:{action,...values}});if(error||data?.error)throw Error(data?.error||'設定を取得・保存できませんでした。ログイン状態を確認してください。');return data;}
 async function load(){
@@ -41,6 +48,7 @@ async function load(){
  const savedTerms=d.policy?.terms;
  const savedCancellation=savedTerms?.cancellation;
  const useCancellationDraft=d.policy?.enabled!==true&&(!savedCancellation||savedCancellation===d.default_terms?.cancellation);
+ const useUpdatedDataDraft=d.policy?.enabled!==true&&savedTerms?.data===previousStandardDataTerms;
  const terms=document.getElementById('terms');
  terms.replaceChildren();
  for(const[k,label]of Object.entries(labels)){
@@ -49,6 +57,7 @@ async function load(){
   input.id='term_'+k;
   input.maxLength=450;
   input.value=k==='cancellation'&&useCancellationDraft?cancellationDraft:savedTerms?.[k]||d.default_terms?.[k]||'';
+  if(k==='data'&&useUpdatedDataDraft&&d.default_terms?.data)input.value=d.default_terms.data;
   detail.append(summary,input);
   terms.append(detail);
  }

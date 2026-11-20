@@ -9,18 +9,22 @@ function priceRows(selector, label, amount) {
 
 function drawPriceImage() {
   const offer = window.SHO_HOSTING_OFFER;
-  const annualFee = new Intl.NumberFormat('ja-JP').format(offer.renewal_fee_jpy);
+  const restoration = window.SHO_HOSTING_RESTORATION;
+  const yen = new Intl.NumberFormat('ja-JP');
+  const annualFee = yen.format(offer.renewal_fee_jpy);
   const groups = [
     ['制作プラン', priceRows('.plan-drop > summary', '.plan-head strong', '.plan-price')],
     ['SHO管理での公開維持', [
       ['公開から最初の' + offer.initial_months + 'か月', '制作料金に含む'],
       ['2年目以降・継続を希望する場合', annualFee + '円 / 年'],
+      ...(restoration ? [['満了後の標準復元（希望時）', yen.format(restoration.total_jpy) + '円']] : []),
     ]],
     ['公開後の内容更新', priceRows('.update-prices summary', 'b', 'strong')],
   ];
   const notes = [
     '公開後30日間は、プラン内の調整が無料。',
     '公開維持は継続申込み制。自動更新・自動課金なし。',
+    ...(restoration ? [`満了後${restoration.request_days}日以内の申込み。${restoration.price_label}。`] : []),
     '振込手数料は別途。合計は正式見積りでご確認ください。',
   ];
   const campaign = document.querySelector('.campaign strong');

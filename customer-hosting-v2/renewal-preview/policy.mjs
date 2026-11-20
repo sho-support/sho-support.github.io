@@ -1,4 +1,4 @@
-import { HOSTING_OFFER } from '../../supabase/functions/_shared/hosting-offer.mjs';
+import { HOSTING_OFFER, HOSTING_RESTORATION } from '../../supabase/functions/_shared/hosting-offer.mjs';
 
 const day = 24 * 60 * 60 * 1000;
 const choices = ['continue', 'decline'];
@@ -14,6 +14,8 @@ export function renewalWindow({ expiresAt, choice = null, confirmedUntil = null 
   const locksAt = expiresAt - day;
   const paidUntil = confirmedUntil ?? expiresAt;
   const termAllowsPublication = now < paidUntil;
+  const handoverUntil = paidUntil + HOSTING_RESTORATION.handover_days * day;
+  const restoreUntil = paidUntil + HOSTING_RESTORATION.request_days * day;
   return {
     expiresAt,
     opensAt,
@@ -23,10 +25,10 @@ export function renewalWindow({ expiresAt, choice = null, confirmedUntil = null 
     paymentConfirmed: confirmedUntil !== null,
     canChoose: confirmedUntil === null && now >= opensAt && now < locksAt,
     termAllowsPublication,
-    handoverUntil: paidUntil + 30 * day,
-    restoreUntil: paidUntil + 90 * day,
-    canDownloadHandover: !termAllowsPublication && now < paidUntil + 30 * day,
-    canRequestRestore: !termAllowsPublication && now < paidUntil + 90 * day,
+    handoverUntil,
+    restoreUntil,
+    canDownloadHandover: !termAllowsPublication && now < handoverUntil,
+    canRequestRestore: !termAllowsPublication && now < restoreUntil,
   };
 }
 

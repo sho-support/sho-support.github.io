@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateCommercialPolicy,quoteRequest,makeCommercialQuote,sameQuoteRequest} from '../../supabase/functions/_shared/commercial-policy.mjs';
+import {HOSTING_RESTORATION} from '../../supabase/functions/_shared/hosting-offer.mjs';
 import {commercialPolicy,quoteInput} from './helpers/commercial-fixture.mjs';
 const make=(overrides={})=>makeCommercialQuote({policy:commercialPolicy(),order:{order_code:'P8100',plan:'one',amount_from:15000,update_plan:'none'},request:quoteRequest(quoteInput()),
  publicUrl:'https://s8100.customer-sites.example/',bankMessage:'銀行名・支店名・口座番号・名義の架空試験データ',quoteId:crypto.randomUUID(),...overrides});
@@ -24,6 +25,17 @@ test('hosting and selected content updates are itemized and cannot silently disa
 });
 test('published annual hosting fees cannot drift from the approved public offer',()=>{
  for(const h of [{initial_fee_jpy:500},{renewal_fee_jpy:12000},{initial_months:1},{renewal_months:1}])assert.throws(()=>make({policy:{...commercialPolicy(),hosting:{...commercialPolicy().hosting,...h}}}),/公開ページ/);
+});
+test('fixed restoration prices are disclosed and frozen, without charging the initial order or rewriting legacy terms',()=>{
+ const policy={...commercialPolicy(),restoration:{...HOSTING_RESTORATION}};
+ const quote=make({policy});
+ assert.equal(quote.total,15000);
+ assert.match(quote.message,/満了後90日以内に申込み/);
+ assert.match(quote.message,/公開維持費 6,000円（12か月）＋復元作業料 3,000円＝合計 9,000円（税込）/);
+ assert.match(quote.message,/公開維持は再公開日から12か月/);
+ assert.deepEqual(quote.snapshot.policy.restoration,HOSTING_RESTORATION);
+ assert.throws(()=>make({policy:{...policy,restoration:{...policy.restoration,total_jpy:6000}}}),/復元料金/);
+ assert.doesNotMatch(make().message,/満了後の標準復元/);
 });
 test('draft/body flags, changed requests and vendor/auth-parent URLs never create an approved formal URL',()=>{
  assert.throws(()=>make({policy:{...commercialPolicy(),enabled:false,approved:true}}));

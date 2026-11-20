@@ -43,6 +43,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 <h2>サイト公開維持費</h2><p>公開日から最初の12か月は<strong>制作料金に含みます。</strong></p>
 <p class="hosting-fee-price">2年目以降 <strong>6,000円／年（税込・年払い）</strong><small>月換算500円。月払いではありません。</small></p>
 <p>SHO管理で公開を継続する場合の料金です。満了30日前までにご案内し、継続のお申込みと入金で12か月更新します。<strong>自動更新・自動課金はありません。</strong></p>
+<p><strong>満了後の標準復元（希望時）</strong> 満了後90日以内のお申込みで、最終公開版を同じSHO管理URLに再公開します。公開維持費 6,000円（12か月）＋復元作業料 3,000円＝合計 9,000円（税込）。公開維持は再公開日から12か月です。<a href="website-terms.html#hosting-restoration">標準復元の条件</a></p>
 <p>公開環境・HTTPS・公開版の保管・障害時の復旧対応が対象です。写真や文章などの内容更新、大幅な変更、お客様名義ドメインの取得・更新実費は別料金です。終了・引き渡し条件は<a href="website-terms.html">利用条件</a>をご確認ください。</p>
 </section>
 <!-- HOSTING_OFFER_END -->
@@ -58,7 +59,7 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 ・フォームで受け付ける画像素材は合計50点・30MBまで、1点7MB以内です。多い場合はお申込み前にLINEでご相談ください。</div>
 <label style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0e0e0e;color:#d7d7d7;font-size:.69rem">
 <input id="termsCheck" type="checkbox" style="margin-top:4px">
-<span><a href="website-legal.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">特定商取引法に基づく表記</a>・<a href="website-terms.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">利用条件</a>・<a href="website-privacy.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">プライバシーポリシー</a>と、初年度の公開維持費は制作料金込み、2年目から年6,000円（税込・年払い）、内容更新は別料金、自動更新・自動課金なしの条件を確認しました。</span></label>
+<span><a href="website-legal.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">特定商取引法に基づく表記</a>・<a href="website-terms.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">利用条件</a>・<a href="website-privacy.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">プライバシーポリシー</a>と、初年度の公開維持費は制作料金込み、2年目から年6,000円（税込・年払い）、内容更新は別料金、自動更新・自動課金なし、希望時の満了後の標準復元の条件を確認しました。</span></label>
 <div class="notice"><strong>お申込み後の流れ</strong><br>注文IDを発行すると、受付内容は運営側に届きます。その後、公式LINEから入力済みのメッセージを送信してください。</div>
 <button class="primary" id="orderBtn" type="button" disabled>この内容で見積りを依頼する（支払いは発生しません）</button>
 <a class="edit" href="website-order.html?resume=1">← 選択内容を変更する</a>
@@ -78,6 +79,8 @@ footer{padding:26px 0;color:#666;font-size:.64rem;border-top:1px solid var(--lin
 (()=>{
 const STORE='sho_web_order_v3', RECEIPT='sho_web_order_receipt_v2', PENDING='sho_web_order_pending_v1';
 const offer=window.SHO_HOSTING_OFFER;
+const restoration=window.SHO_HOSTING_RESTORATION;
+const restorationNote=restoration?`満了後${restoration.request_days}日以内の標準復元（希望時） ${restoration.price_label}`:null;
 const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',minimal:'T04 Minimal Grid',premium:'T05 Premium Noir',pop:'T06 Pop Studio',vintage:'T07 Vintage Poster',cyber:'T08 Neon Circuit',organic:'T09 Earth Atelier',editorial:'T10 Editorial Mono'};
 const planLabels={one:'1ページ完結サイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'},prices={one:15000,semi:22000,full:30000};
 const updateLabels={none:'都度払い（LIVE更新 ¥1,000/回・通常更新 ¥2,500/回。依頼がない月は0円）',live:'LIVE更新 ¥1,000 / 回',standard:'通常更新 ¥2,500 / 回',unlimited:'通常更新 月8回まで ¥7,000 / 月',free3:'通常更新 月8回まで / 公開後3か月無料（通常 ¥7,000 / 月）'};
@@ -91,6 +94,7 @@ const summaryText=()=>[
  state.plan==='semi'?'デザイン: '+names[state.template]:null,
  '更新: '+updateLabels[state.update],
  '公開維持: 初年度は制作料金込み。2年目以降6,000円／年（税込・年払い）。自動更新・自動課金なし。',
+ restorationNote,
  '公開URLの希望: '+(state.domain?'お客様の独自ドメインを相談（設定代行 ¥5,000〜＋実費）':'SHO標準URLを相談（正式URLは振込前に確認）'),
  state.extraRequest?.trim()?'追加ページ・機能の相談: '+state.extraRequest.trim():null
 ].filter(Boolean).join('\n');
@@ -117,6 +121,7 @@ document.getElementById('downloadBtn').onclick=()=>{
   '更新：'+updateLabels[state.update],
   '公開維持：初年度は制作料金込み。2年目以降6,000円／年（税込・年払い）',
   '継続申込みと入金で更新。自動更新・自動課金なし。',
+  restorationNote,
   '公開URL：'+(state.domain?'お客様の独自ドメインを相談':'SHO標準URLを相談（正式URLは振込前に確認）'),
   state.extraRequest?.trim()?'追加相談：'+state.extraRequest.trim():null,
   '',

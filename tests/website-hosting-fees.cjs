@@ -27,7 +27,8 @@ async function checkShareImages(page, check, outputDir) {
   });
   const prices = await downloadedImage(page, '料金表を画像で保存', 'sho-website-prices.png');
   const labels = await page.evaluate(() => window.drawnPriceLabels);
-  check(['¥15,000〜', '¥22,000〜', '¥30,000〜', '6,000円 / 年', '¥7,000 / 月'].every(label => labels.includes(label)), 'The price image uses the current prices');
+  check(['¥15,000〜', '¥22,000〜', '¥30,000〜', '6,000円 / 年', '9,000円', '¥7,000 / 月'].every(label => labels.includes(label)), 'The price image includes the fixed standard restoration amount');
+  check(labels.join('').includes('復元作業料 3,000円'), 'The price image itemizes the restoration work');
   check(prices.subarray(1, 4).toString() === 'PNG' && prices.readUInt32BE(16) === 900, 'The price sheet downloads as a readable PNG');
 
   await page.goto(base+'website-template-preview.html?style=cafe');
@@ -87,7 +88,8 @@ async function checkShareImages(page, check, outputDir) {
   const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});
   const previousApproval=width===1366;
   const customDraft=width===768;
-  const savedTerms={...DEFAULT_TERMS,cancellation:customDraft?'販売者が編集したキャンセル条件の画面試験です。':DEFAULT_TERMS.cancellation};
+  const oldDataTerms='制作・運営に必要な範囲で指定事業者へ処理を委託します。満了後30日の確認期間後、法令上必要な取引記録を除き順次削除します。バックアップは保持世代の期限で削除します。';
+  const savedTerms={...DEFAULT_TERMS,cancellation:customDraft?'販売者が編集したキャンセル条件の画面試験です。':DEFAULT_TERMS.cancellation,data:customDraft?'販売者が編集したデータ保管条件の画面試験です。':oldDataTerms};
   await context.addInitScript(({terms,savedTerms,previousApproval})=>{
    if(location.origin!=='http://127.0.0.1:8765')return;
    localStorage.setItem('sho_web_order_v3',JSON.stringify({plan:'one',update:'none',template:'',domain:false}));
@@ -115,6 +117,7 @@ async function checkShareImages(page, check, outputDir) {
    const fee=page.locator('.hosting-fee');check(await fee.isVisible(),'Hosting fee visible '+name+' '+width);
    const text=await fee.innerText();check(text.includes('6,000円／年（税込・年払い）')&&text.includes('月払いではありません'),'Annual billing unambiguous');
    check(text.includes('自動更新・自動課金はありません'),'Renewal requires opt-in');
+   check(text.includes('満了後90日以内')&&text.includes('復元作業料 3,000円＝合計 9,000円（税込）'),'Fixed restoration is disclosed before applying');
    check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),'No horizontal overflow '+name+' '+width);
   }
   await page.goto(base+'website-order-confirm.html',{waitUntil:'domcontentloaded'});
@@ -128,11 +131,15 @@ async function checkShareImages(page, check, outputDir) {
   check(disclosure.includes('残額を返金')&&disclosure.includes('法令上の権利'),'The disclosure includes early termination and legal remedies');
   if(width===320||width===1366)await checkShareImages(page,check,width===320?process.env.QA_SCREENSHOTS_DIR:undefined);
   await page.goto(base+'admin/sales-settings.html',{waitUntil:'domcontentloaded'});await page.locator('#salesForm').waitFor();
+  check((await page.locator('#restorationTerms').innerText()).includes('合計 9,000円（税込）'),'The owner can review the restoration price');
+  const expectedData=previousApproval||customDraft?savedTerms.data:DEFAULT_TERMS.data;
+  check(await page.locator('#term_data').inputValue()===expectedData,'Only the unapproved standard data draft changes');
   const expectedCancellation=previousApproval||customDraft?savedTerms.cancellation:disclosure;
   check(await page.locator('#term_cancellation').inputValue()===expectedCancellation,'Only an unapproved standard draft is updated to match the disclosure');
   await page.locator('#saveDraft').click();await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('下書きを保存'));
   const savedDraft=await page.evaluate(()=>window.__settingsCalls.find(x=>x.action==='admin_save_sales_settings'));
   check(savedDraft.enable===false&&savedDraft.terms.cancellation===expectedCancellation,'Saving the draft keeps the reviewed cancellation text without activating sales');
+  check(savedDraft.terms.data===expectedData,'Saving preserves the reviewed retention terms');
   await page.locator('#enablePolicy').click();check((await page.locator('#status').innerText()).includes('3つの確認'),'Explicit attestations required');
   for(const [id,value]of Object.entries({legal_name:'画面試験事業者',address:'検証県検証市検証区1-2-3',phone:'000-1234-5678',contact:'qa@example.test',bank_message:'画面試験銀行・支店・普通1234567・試験名義',backup_reference:'画面試験のみの確認記録20261113'}))await page.locator('#'+id).fill(value);
   for(const id of ['confirm_terms','confirm_disclosure','confirm_backup'])await page.locator('#'+id).check();

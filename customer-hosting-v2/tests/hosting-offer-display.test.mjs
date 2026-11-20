@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {HOSTING_OFFER,matchesHostingOffer} from '../../supabase/functions/_shared/hosting-offer.mjs';
+import {HOSTING_OFFER,HOSTING_RESTORATION,matchesHostingOffer,restorationPrice} from '../../supabase/functions/_shared/hosting-offer.mjs';
 import {makeSalesSettings} from '../../supabase/functions/_shared/commercial-setup.mjs';
 test('nine prospective sales pages disclose annual hosting separately without JavaScript',async()=>{
  for(const name of ['website-support','website-create','band-homepage','website-order','website-order-confirm','website-faq','website-legal','website-terms','website-payment']){
@@ -9,12 +9,15 @@ test('nine prospective sales pages disclose annual hosting separately without Ja
   assert.ok(html.includes('data-hosting-offer="'+HOSTING_OFFER.version+'"'),name);
   assert.ok(html.includes('6,000円／年（税込・年払い）'),name);
   assert.ok(html.includes('自動更新・自動課金はありません'),name);
+  assert.ok(html.includes('満了後90日以内のお申込み'),name);
+  assert.ok(html.includes(restorationPrice()),name);
  }
 });
 test('draft seller settings cannot claim approval or accept browser price overrides',()=>{
- const r=makeSalesSettings({enable:false,seller:{legal_name:'下書き'},hosting:{renewal_fee_jpy:1},approved:true},'owner');
+ const r=makeSalesSettings({enable:false,seller:{legal_name:'下書き'},hosting:{renewal_fee_jpy:1},restoration:{total_jpy:1},approved:true},'owner');
  assert.equal(r.policy.enabled,false);assert.equal(r.policy.approved_by,null);assert.ok(matchesHostingOffer(r.policy.hosting));
  assert.equal(r.backup.attested,false);assert.equal(r.policy.terms.provider,'__UNSET__');
+ assert.deepEqual(r.policy.restoration,HOSTING_RESTORATION);
 });
 test('formal policy activation needs actual fields and explicit operator attestations',()=>{
  const body={enable:true,seller:{legal_name:'単体試験事業者',address:'検証県検証市検証区1-2-3',phone:'000-1234-5678',contact:'qa@example.test'},bank_message:'単体試験銀行／支店／普通1234567／試験名義',backup_reference:'単体試験のみの復元記録20261113',confirm_terms:true,confirm_disclosure:true,confirm_backup:true};

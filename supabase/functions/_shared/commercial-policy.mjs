@@ -1,4 +1,4 @@
-import {matchesHostingOffer} from './hosting-offer.mjs';
+import {HOSTING_RESTORATION,matchesHostingOffer,restorationPrice} from './hosting-offer.mjs';
 import {isTestBankMessage} from './bank-transfer.mjs';
 // The owner-approved policy is loaded from server-side website_settings.
 // No draft price or browser-supplied approved flag can authorize a quotation.
@@ -16,6 +16,9 @@ export function validateCommercialPolicy(value,now=new Date()){
     throw Error('公開維持の期間・更新方法を確定してください。');
   money(h.initial_fee_jpy,'初回公開維持費');money(h.renewal_fee_jpy,'次回公開維持費');
   if(!matchesHostingOffer(h))throw Error('公開ページの維持費と販売条件が一致しません。初年度込み・2年目以降年6,000円の条件を確認してください。');
+  if(value.restoration!==undefined&&!Object.entries(HOSTING_RESTORATION).every(([key,amount])=>value.restoration?.[key]===amount)){
+    throw Error('公開ページの復元料金・受付期間と販売条件が一致しません。');
+  }
   for(const key of ['provider','hosting','cancellation','handover','rights','data','backup','support','update_billing'])text(value.terms?.[key],12,key==='provider'?600:450,key);
   return structuredClone(value);
 }
@@ -49,6 +52,7 @@ export function makeCommercialQuote({policy,order,request,publicUrl,bankMessage,
     '正式公開URL：'+url.href,
     '公開維持：公開日から'+p.hosting.initial_months+'か月／初回 '+yen(p.hosting.initial_fee_jpy)+'（税込）',
     '次回公開維持：'+p.hosting.renewal_months+'か月 '+yen(p.hosting.renewal_fee_jpy)+'（税込）。満了30日前までに案内し、継続の申込みと入金で更新。自動更新・自動課金なし。',
+    p.restoration?`満了後の標準復元（希望時）：満了後${p.restoration.request_days}日以内に申込み。最終公開版を同じSHO管理URLに再公開。${restorationPrice(p.restoration)}。公開維持は再公開日から${p.restoration.hosting_months}か月。`:null,
     order.plan==='one'?(update?'初回内容更新料：'+yen(update)+'（税込・月8回まで）。'+p.terms.update_billing:'内容更新は別途依頼制：LIVE 1,000円／回、通常2,500円／回、月8回7,000円／月。依頼・契約がなければ請求しません。'):
       '内容更新キャンペーン：公開日から3か月、通常更新を月8回まで無料。回数は毎月1日・日本時間にリセット、繰越なし。終了後の自動有料化なし。',
     '全プラン：公開後30日間、当初の制作範囲内の無料調整。範囲外の追加は事前見積り。',

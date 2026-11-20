@@ -77,6 +77,7 @@
     <h2 id="publication">契約期間と引き渡し</h2>
     <p id="access"></p>
     <p id="retention" hidden></p>
+    <p id="restoration-price"></p>
   </section>
   <section>
     <label for="scenario">見本の日時・入金状態</label>
@@ -92,7 +93,7 @@
   </section>
 </main>
 <script type="module">
-import { HOSTING_OFFER } from '../../supabase/functions/_shared/hosting-offer.mjs';
+import { HOSTING_OFFER, HOSTING_RESTORATION, restorationPrice } from '../../supabase/functions/_shared/hosting-offer.mjs';
 import { renewalWindow, selectRenewal } from './policy.mjs';
 
 const expiresAt = Date.parse('2027-11-20T18:00:00+09:00');
@@ -105,8 +106,8 @@ const scenarios = {
   locked: { now: expiresAt - day },
   expiry: { now: expiresAt },
   paid: { now: expiresAt, confirmedUntil: Date.parse('2028-11-20T18:00:00+09:00') },
-  retained: { now: expiresAt + 30 * day },
-  purged: { now: expiresAt + 90 * day },
+  retained: { now: expiresAt + HOSTING_RESTORATION.handover_days * day },
+  purged: { now: expiresAt + HOSTING_RESTORATION.request_days * day },
 };
 const formatter = new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', dateStyle: 'medium', timeStyle: 'short' });
 const date = (ms) => formatter.format(ms) + '（日本時間）';
@@ -136,8 +137,8 @@ function render() {
   const retention = document.getElementById('retention');
   retention.hidden = view.termAllowsPublication;
   if (view.canDownloadHandover) {
-    retention.textContent = date(view.handoverUntil) + 'まで完成ファイルの引き渡しを受けられます。有料復元の見積りは' + date(view.restoreUntil) + 'まで受け付けます。';
-  } else if (view.canRequestRestore) retention.textContent = '有料復元の見積りは' + date(view.restoreUntil) + 'まで受け付けます。';
+    retention.textContent = date(view.handoverUntil) + 'まで完成ファイルの引き渡しを受けられます。有料復元のお申込みは' + date(view.restoreUntil) + 'まで受け付けます。';
+  } else if (view.canRequestRestore) retention.textContent = '有料復元のお申込みは' + date(view.restoreUntil) + 'まで受け付けます。';
   else retention.textContent = '復元の受付は終了しました。';
 }
 
@@ -147,6 +148,7 @@ for (const button of buttons) button.addEventListener('click', () => {
   render();
 });
 scenario.addEventListener('change', render);
+text('restoration-price', `満了後${HOSTING_RESTORATION.request_days}日以内の標準復元（希望時） ${restorationPrice()}。公開維持は再公開日から${HOSTING_RESTORATION.hosting_months}か月です。`);
 render();
 </script>
 </body>
