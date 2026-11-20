@@ -13,7 +13,7 @@
 
 11月20日 JST。本人の「専用ドメインの配信設定OK」を受け、`sho-customer-sites` をCloudflareに新規配備した。稼働版 `849b6abe-0491-41a1-af2b-986bb72614fc` が100%、`workers.dev` とプレビュー用URLはいずれも無効。`CUSTOMER_BASE_DOMAIN=sho-websites.com`、本番R2バインディング、バケットの非公開設定、`sites/` 配下が空であることをCloudflare APIで照合した。[初回配備と実機照合](https://github.com/sho-support/sho-support.github.io/actions/runs/44658591143)
 
-専用ゾーンは対象アカウント内で `active`。同じトークンでDNSレコード、Worker Route、Universal SSL、Always Use HTTPSの事前照会はいずれも403だった。既存設定との競合を確認できないため、接続処理は書き込み前に停止した。現在のDNS・配信ルート・公開HTTPSは、次の管理画面操作の後に検証する。[接続処理の実行記録](https://github.com/sho-support/sho-support.github.io/actions/runs/44659094557)
+専用ゾーンは対象アカウント内で `active`。同じトークンでDNSレコード、Worker Route、Universal SSL、Always Use HTTPSの事前照会はいずれも403だった。接続処理は書き込み前に停止し、本人による管理画面での設定に切り替えた。[APIからの接続処理](https://github.com/sho-support/sho-support.github.io/actions/runs/44659094557)
 
 ## 承認済みの専用ゾーン設定
 
@@ -27,18 +27,21 @@
 
 `100::` はWorkerへ誘導するためのプレースホルダー。Workerは `s` に続く4〜10桁のサイトIDを検査し、非公開R2の公開済みリリースだけを返す。Universal SSLの標準証明書が対象にする1階層のホスト名を使う。[ワイルドカードDNS](https://developers.cloudflare.com/dns/manage-dns-records/reference/wildcard-dns-records/)・[Workers Routes](https://developers.cloudflare.com/workers/configuration/routing/routes/)・[Universal SSL](https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/enable-universal-ssl/)・[Always Use HTTPS](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/)
 
-## Cloudflareの管理画面で残っている操作
+## Cloudflareの管理画面で使った手順
 
 1. `sho-websites.com` の **DNS → Records → Add record** で表のAAAAレコードを保存する。同じ名前のレコードが存在する場合は先に内容を照合する。[DNSレコードの追加](https://developers.cloudflare.com/dns/manage-dns-records/how-to/create-dns-records/)
 2. **Workers & Pages → sho-customer-sites → Settings → Domains & Routes → Add → Route** でゾーン `sho-websites.com` を選び、表のパターンを追加する。[Worker Routeの追加](https://developers.cloudflare.com/workers/configuration/routing/routes/#set-up-a-route-in-the-dashboard)
 3. `sho-websites.com` の **SSL/TLS → Edge Certificates** でUniversal SSLの状態を確認し、Always Use HTTPSをオンにする。[HTTPS転送の設定](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/)
 
-## 接続後の検査
+## 実ドメインの接続確認
 
-1. 配信ホストの名前解決、公開証明書、`http` から `https` への転送を確認する。未割当サイトIDの `/healthz` は200、同じホストの `/` と `www` は404を期待する。
-2. 架空サイトを使い、HTML/CSS/画像、相対リンク、キャッシュ、承認前公開拒否、公開・更新・巻戻し、同時更新、他サイト横断拒否を実HTTPSで試験する。320/360/390/430/768/1366幅を確認する。
-3. 正式URLが検証できた後だけ Supabase の `CUSTOMER_BASE_DOMAIN` と `CUSTOMER_HOSTING_DOMAIN_READY` を同じ値に設定する。R2設定と公開モードは承認された本番反映の順序に従う。
-4. 異常時は新規顧客の受注・公開操作を止め、既知の正常版へ戻す。DNSの変更前後・元に戻す値・TTLを非公開の運用記録へ残す。
+11月20日 JST。本人の設定後、画面で Always Use HTTPS がオンになっていることを確認した。`s1000.sho-websites.com` は公開DNSでA・AAAAともに応答し、HTTPは同じパスのHTTPSへ301転送された。外部のランナーでは証明書チェーンとホスト名の検証を有効にして接続し、TLS 1.3と `*.sho-websites.com` を含む公開証明書を確認した。`s1000` と `s1001` の `/healthz` は200、未割当サイトの `/` と `www` の `/healthz` は配信Workerが404で返した。[公開HTTPSの検査結果](https://github.com/sho-support/sho-support.github.io/actions/runs/44662782026)
+
+## 接続確認後の作業
+
+1. 架空サイトを使い、HTML/CSS/画像、相対リンク、キャッシュ、承認前公開拒否、公開・更新・巻戻し、同時更新、他サイト横断拒否を実HTTPSで試験する。320/360/390/430/768/1366幅を確認する。
+2. 正式切替の手順に沿って、検証した `sho-websites.com` を Supabase の `CUSTOMER_BASE_DOMAIN` と `CUSTOMER_HOSTING_DOMAIN_READY` に設定する。R2設定と公開モードも本番反映の順序に従う。[正式切替の手順](../docs/SALES_CUTOVER_RUNBOOK_20261116.md)
+3. 異常時は新規顧客の受注・公開操作を止め、既知の正常版へ戻す。DNSの変更前後・元に戻す値・TTLを非公開の運用記録へ残す。
 
 ## 販売開始前
 
