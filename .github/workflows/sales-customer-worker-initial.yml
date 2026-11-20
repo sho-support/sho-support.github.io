@@ -1,0 +1,29 @@
+name: HP customer delivery Worker first deployment
+on:
+  push:
+    branches: [architecture/sales-cloudflare]
+    paths: ['.github/workflows/sales-customer-worker-initial.yml', 'sales-hosting/deploy-customer-delivery-worker.mjs']
+permissions:
+  contents: read
+jobs:
+  prepare-worker:
+    if: ${{ github.repository == 'sho-support/sho-support.github.io' && contains(github.event.head_commit.message, '[deploy-sho-customer-delivery]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: sho-customer-delivery-initial
+      cancel-in-progress: false
+    environment: customer-hosting-preview
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix customer-hosting-v2 --ignore-scripts --no-audit --no-fund
+      - name: Deploy the new Worker without routes and inspect exact-zone access
+        run: node sales-hosting/deploy-customer-delivery-worker.mjs
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
