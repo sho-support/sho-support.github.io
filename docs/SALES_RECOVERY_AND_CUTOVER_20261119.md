@@ -98,3 +98,5 @@ Secretの値は各サービスの管理画面・非公開の保存元で取り�
 ### 11月20日の販売準備設定の修正
 
 設定関数 `website-sales-setup` の下書き保存処理を修正し、v8を実環境に配備した。配備前の16ファイルを照合し、保存処理1ファイルだけを変更。模擬DBで、テスト振込先とLINE受付許可の保持、未ログイン・非管理者の拒否、テスト振込先での販売承認拒否を確認した。配備後は16ファイルと認証設定を読み戻し、保存済み販売者情報・テスト振込先・LINE受付許可・契約と保全の設定を配備前と照合した。実注文・顧客サイト・制作ジョブは0件で、正式口座・販売承認は未登録。[配備元の保存処理](../sales-hosting/runtime-baseline/website-sales-setup-test-bank-save.ts)
+
+既存の販売プレビューへ、最新の管理画面、無料試作、料金表の画像保存、合意済みの返金条件を反映した。管理画面と46ファイルの内容照合を含めて静的60項目、5 APIの事前通信、未ログイン時の拒否、未署名LINE webhookの401を確認した。反映後にテスト口座・LINE受付用の許可設定と販売承認の状態を再照合した。実サービスの公開・納品までの通し試験は引き続き未実施。[管理画面](https://sho-web-support-preview.zodiac-suu.workers.dev/admin/sales-settings.html)・[配備と検査結果](https://github.com/sho-support/sho-support.github.io/actions/runs/44677238024)

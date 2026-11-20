@@ -9,7 +9,7 @@
 - 11月20日候補は、7関数・依存38ファイル・3migrationと、切替前へ戻す37ファイルを固定した。追加の `website-line-webhook` は、取り消し後に同じ注文IDのLINE受付で注文を再開させないために含める。切替前の7関数の版・JWT設定・配備bundleのハッシュを実環境と照合した。[隔離DB・画面の検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871412)・[隔離LINEの検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871499)
 - [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `c3c3af8114773a22b3f4d442dc0888908d02ee1e` の6関数・依存を含む37ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。接続テストの分離修正後、現行のcustomer-accessはv55となったため、その配備SHAも候補manifestの切替前照合へ更新。過去のプレビュー配備を本番切替済みと扱わない。
 - JWT設定は `website-api` と `website-worker` がtrue、`website-customer-access`、`website-order-api`、`website-preview`、`website-sales-setup` がfalse。falseの関数も内部の本人・管理者確認を維持する。
-- 公開フロントは `7e9ff205-321a-4fc9-946b-10a5e17245e1`、配備元は `c7bf35fb5c2305aaec3e8bc135e417d6033e15d3`。テスト注文を実注文と分離し、43ファイルの配備後に57静的検査・5 API preflight・署名なしWebhookの401拒否を確認。[実機テストの範囲と残る本人設定](SALES_TEST_ISOLATION_20261116.md)を参照。商用機能の本番切替ではない。
+- 販売画面の確認先は [販売プレビュー](https://sho-web-support-preview.zodiac-suu.workers.dev)。11月20日の管理画面・無料試作・合意済みの契約文面の配備元と版は、[販売プレビューの配備記録](../sales-hosting/preview-deployment.json)を参照。静的60項目、5 APIの事前通信と認証・入力拒否、署名なしWebhookの401を確認した。[実環境の配備検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44677238024)
 
 ## 実行前に必要なこと
 
