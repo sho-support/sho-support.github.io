@@ -27,12 +27,49 @@ header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 8
 footer{padding:28px 0;color:var(--soft);font-size:.7rem}
 body[data-theme="rock"] h1,body[data-theme="rock"] h2{letter-spacing:.02em;text-transform:uppercase}body[data-theme="cute"] .photo,body[data-theme="cute"] .event,body[data-theme="cute"] .shot,body[data-theme="cute"] .member{border-radius:28px}body[data-theme="minimal"] .photo,body[data-theme="minimal"] .event,body[data-theme="minimal"] .shot,body[data-theme="minimal"] .member,body[data-theme="minimal"] .contact{border-radius:2px}body[data-theme="premium"] .hero h1{font-family:Georgia,"Times New Roman",serif;font-weight:500}body[data-theme="cafe"] .hero h1{font-family:Georgia,"Times New Roman",serif;font-weight:500}body[data-theme="pop"] h1,body[data-theme="pop"] h2{font-weight:1000}body[data-theme="vintage"] h1,body[data-theme="vintage"] h2{font-family:Georgia,"Times New Roman",serif}body[data-theme="cyber"] h1,body[data-theme="cyber"] h2{letter-spacing:.04em;text-transform:uppercase}body[data-theme="organic"] .photo,body[data-theme="organic"] .event,body[data-theme="organic"] .shot,body[data-theme="organic"] .member{border-radius:32px}body[data-theme="editorial"] .photo,body[data-theme="editorial"] .event,body[data-theme="editorial"] .shot,body[data-theme="editorial"] .member,body[data-theme="editorial"] .contact{border-radius:0}
 @media(max-width:760px){.nav{display:none}.hero-grid,.section-head{grid-template-columns:1fr}.photo{min-height:310px}.event{grid-template-columns:minmax(0,1fr);gap:8px;align-items:start}.date{display:block}.event b{overflow-wrap:anywhere}.gallery{grid-template-columns:1fr 1fr;grid-template-rows:190px 130px;grid-auto-rows:130px}.shot:first-child{grid-column:1/3;grid-row:auto}.profile{grid-template-columns:1fr}.contact{grid-template-columns:1fr}.contact-links .btn{flex:1}.hero{padding-top:42px}}
+.trial-controls{margin-top:28px;padding:clamp(14px,4vw,28px);border:1px solid color-mix(in srgb,var(--text) 22%,transparent);border-radius:18px;background:var(--panel)}
+.trial-controls h1{margin:0;font-size:clamp(1.35rem,4vw,2rem);text-transform:none}
+.trial-controls p{margin:.5rem 0;color:var(--soft);font-size:.9rem}
+.trial-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+.trial-fields label{display:grid;gap:5px;align-content:start;min-width:0;font-size:.88rem;font-weight:700}
+.trial-fields :is(input,select,textarea){width:100%;min-width:0;min-height:44px;padding:8px;color:var(--text);background:var(--bg);border:1px solid color-mix(in srgb,var(--text) 35%,transparent);border-radius:8px;font:400 1rem/1.5 system-ui,sans-serif}
+.trial-fields textarea{min-height:70px;resize:vertical}
+.trial-actions{display:flex;flex-wrap:wrap;gap:8px}
+.trial-actions button{border:1px solid transparent;cursor:pointer}
+.trial-actions button:disabled{opacity:.55;cursor:wait}
+.trial-actions button[hidden]{display:none}
+.trial-controls a:not(.btn){text-decoration:underline;text-underline-offset:3px}
+#trial-photo-help{font-size:.8rem;font-weight:400}
+body[data-trial] .hero :is(h1,h2){text-transform:none;overflow-wrap:anywhere}
+body[data-trial] .hero p{overflow-wrap:anywhere}
+body[data-trial] #heroTitle{font-size:clamp(2.15rem,6.5vw,4.2rem);line-height:1.15}
+.photo img{position:absolute;inset:0;z-index:3;width:100%;height:100%;object-fit:contain}
+.photo:has(img)>div{visibility:hidden}
+.hero{scroll-margin-top:70px}
+@media(max-width:640px){.trial-fields{grid-template-columns:1fr}}
 </style>
 </head>
 <body data-theme="rock">
 <header><div class="wrap head"><a class="brand" href="website-templates.html">SHO WEB SUPPORT / TEMPLATE</a><nav class="nav"><a href="#schedule">SCHEDULE</a><a href="#gallery">GALLERY</a><a href="#profile">PROFILE</a><a class="pill" href="#contact">CONTACT</a></nav></div></header>
 <main>
-<section class="hero"><div class="wrap hero-grid"><div><div class="kicker" id="themeLabel">ROCK / DARK</div><h1 id="heroTitle">YOUR STORY,<br>YOUR STAGE.</h1><p id="heroText">写真と情報を入れ替えるだけで、完成度の高い複数ページ相当のサイト構成を短期間で作れるセミオーダー用テンプレートです。</p><div class="hero-actions"><a class="btn" href="#schedule">予定を見る</a><a class="btn sub" href="#contact">問い合わせ</a></div></div><div class="photo"><div><strong>MAIN PHOTO AREA</strong><small>この位置にお客様のTOP写真を表示</small></div></div></div></section>
+<section class="wrap trial-controls" id="trialControls" aria-labelledby="trial-heading" hidden>
+  <h1 id="trial-heading">ホームページを無料で試作</h1>
+  <p>テンプレートにバンド名や写真を入れて、トップページのイメージを確認できます。入力と画像の作成はこの端末で完結します。</p>
+  <div class="trial-fields">
+    <label>デザイン<select id="trialStyle"></select></label>
+    <label>バンド名・サイト名<input id="trialName" type="text" maxlength="48" autocomplete="off" placeholder="例　MIDNIGHT PARADE"></label>
+    <label>紹介文<textarea id="trialIntro" maxlength="140" placeholder="例　仙台を拠点に活動するロックバンドです。"></textarea></label>
+    <label>トップ写真（任意）<input id="trialPhoto" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="trial-photo-help"><span id="trial-photo-help">共有の許可を得たJPEG・PNG・WebP。12 MBまで。</span></label>
+  </div>
+  <div class="trial-actions">
+    <a class="btn sub" href="#trial-site">試作を見る</a>
+    <button class="btn" id="saveTrialImage" type="button">トップの試作画像を保存</button>
+    <button class="btn sub" id="removeTrialPhoto" type="button" hidden>写真を外す</button>
+  </div>
+  <p id="trialStatus" role="status"></p>
+  <p>PNG画像はLINEなどでメンバーに共有できます。<a href="website-support.html#pricing">料金表を見る・保存する</a></p>
+</section>
+<section class="hero" id="trial-site"><div class="wrap hero-grid"><div><div class="kicker" id="themeLabel">ROCK / DARK</div><h1 id="heroTitle">YOUR STORY,<br>YOUR STAGE.</h1><p id="heroText">写真と情報を入れ替えるだけで、完成度の高い複数ページ相当のサイト構成を短期間で作れるセミオーダー用テンプレートです。</p><div class="hero-actions"><a class="btn" href="#schedule">予定を見る</a><a class="btn sub" href="#contact">問い合わせ</a></div></div><div class="photo" id="heroPhoto"><div><strong>MAIN PHOTO AREA</strong><small>この位置にお客様のTOP写真を表示</small></div></div></div></section>
 <section class="section"><div class="wrap fixed-note"><strong>固定情報</strong><p>TOP写真の位置 / メインボタン / 紹介文 / LIVE・イベント日程 / ギャラリー / メンバー・スタッフ / 動画 / SNS・問い合わせの位置。写真・文章・ロゴ・リンクはお客様用に差し替えます。配色は選択したテンプレートのままです。</p></div></section>
 <section class="section" id="schedule"><div class="wrap section-head"><div class="section-no">01 / SCHEDULE</div><div><h2>LIVE / EVENT</h2><p class="lead">次回予定を見やすい位置に固定。バンドならLIVE、店舗ならイベント・営業案内などに置き換えられます。</p><div class="schedule"><div class="event"><div class="date">11.09</div><div><b>EVENT TITLE</b><span>Venue / Open 18:00 / Start 18:30</span></div><div class="go">→</div></div><div class="event"><div class="date">12.06</div><div><b>NEXT SCHEDULE</b><span>Details will be here</span></div><div class="go">→</div></div></div></div></div></section>
 <section class="section" id="gallery"><div class="wrap section-head"><div class="section-no">02 / GALLERY</div><div><h2>PHOTO GALLERY</h2><p class="lead">写真の見せ方もテンプレごとに固定。画像だけ差し替えるので制作時間を抑えられます。</p><div class="gallery"><div class="shot">MAIN PHOTO</div><div class="shot">PHOTO 02</div><div class="shot">PHOTO 03</div><div class="shot">PHOTO 04</div><div class="shot">PHOTO 05</div></div></div></div></section>
@@ -41,7 +78,8 @@ body[data-theme="rock"] h1,body[data-theme="rock"] h2{letter-spacing:.02em;text-
 <section class="section" id="contact"><div class="wrap contact"><div><div class="section-no">05 / CONTACT</div><h2 style="margin:4px 0 5px">SNS / CONTACT</h2><p class="lead" style="margin:0">SNSと問い合わせボタンの位置も固定。リンクを差し替えるだけで使えます。</p></div><div class="contact-links"><span class="btn" aria-label="LINEの表示見本">LINE</span><span class="btn sub" aria-label="Instagramの表示見本">Instagram</span><span class="btn sub" aria-label="YouTubeの表示見本">YouTube</span></div></div></section>
 </main>
 <footer><div class="wrap">TEMPLATE PREVIEW / SHO WEB SUPPORT</div></footer>
-<script>
+<script type="module">
+import { initializeTrial } from './website-trial.js';
 const data={
  rock:{label:'ROCK / DARK',title:'YOUR STORY,<br>YOUR STAGE.',text:'黒・深い赤・金属感。バンド、ライブハウス、ストリート系など、力強い写真を大きく見せたい方向け。'},
  cafe:{label:'CAFE / NATURAL',title:'SLOW DOWN,<br>STAY A WHILE.',text:'生成り・深緑・木の温度感。カフェ、飲食店、雑貨、ナチュラル系ブランド向け。'},
@@ -54,6 +92,23 @@ const data={
  organic:{label:'ORGANIC / EARTH',title:'ROOTED IN<br>YOUR STORY.',text:'セージ・生成り・自然色。美容、ヨガ、フード、クラフトなど自然体のブランド向け。'},
  editorial:{label:'EDITORIAL / MONO',title:'IMAGE FIRST.<br>WORDS SECOND.',text:'白・墨黒・グレー。写真家、デザイナー、アパレルなど誌面のような余白と写真重視の方向け。'}
 };
-const p=new URLSearchParams(location.search),theme=data[p.get('style')]?p.get('style'):'rock',d=data[theme];document.body.dataset.theme=theme;document.getElementById('themeLabel').textContent=d.label;document.getElementById('heroTitle').innerHTML=d.title;document.getElementById('heroText').textContent=d.text;document.title=d.label+' Template | SHO WEB SUPPORT';
+const params = new URLSearchParams(location.search);
+const selected = params.get('style');
+const theme = Object.hasOwn(data, selected) ? selected : 'rock';
+const trial = params.get('trial') === '1';
+const heroTitle = document.getElementById('heroTitle');
+const heroText = document.getElementById('heroText');
+const themeLabel = document.getElementById('themeLabel');
+
+function showTheme(style) {
+  document.body.dataset.theme = style;
+  themeLabel.textContent = data[style].label;
+  heroTitle.innerHTML = data[style].title;
+  heroText.textContent = data[style].text;
+}
+
+showTheme(theme);
+document.title = trial ? 'ホームページを無料で試作 | SHO WEB SUPPORT' : data[theme].label + ' Template | SHO WEB SUPPORT';
+if (trial) initializeTrial({ data, theme, showTheme, heroTitle, heroText, themeLabel });
 </script>
 </body></html>

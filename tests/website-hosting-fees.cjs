@@ -1,9 +1,84 @@
 // Isolated screen tests. All identities, banking data and submissions are synthetic.
 const assert=require('node:assert/strict');
 const {chromium}=require('playwright');
-const {mkdirSync}=require('node:fs');
+const {mkdirSync,readFileSync,writeFileSync}=require('node:fs');
 const {join}=require('node:path');
 const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
+
+async function downloadedImage(page, button, filename) {
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', {name: button}).click();
+  const download = await pending;
+  assert.equal(download.suggestedFilename(), filename);
+  return readFileSync(await download.path());
+}
+
+async function checkShareImages(page, check, outputDir) {
+  await page.goto(base+'website-support.html');
+  const entry = page.getByRole('link', {name: 'ホームページを無料で試作 →'});
+  check(await entry.isVisible(), 'The sales page links to the free trial');
+  await page.evaluate(() => {
+    window.drawnPriceLabels = [];
+    const draw = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (text, ...args) {
+      window.drawnPriceLabels.push(text);
+      draw.call(this, text, ...args);
+    };
+  });
+  const prices = await downloadedImage(page, '料金表を画像で保存', 'sho-website-prices.png');
+  const labels = await page.evaluate(() => window.drawnPriceLabels);
+  check(['¥15,000〜', '¥22,000〜', '¥30,000〜', '6,000円 / 年', '¥7,000 / 月'].every(label => labels.includes(label)), 'The price image uses the current prices');
+  check(prices.subarray(1, 4).toString() === 'PNG' && prices.readUInt32BE(16) === 900, 'The price sheet downloads as a readable PNG');
+
+  await page.goto(base+'website-template-preview.html?style=cafe');
+  check(await page.locator('#trialControls').isHidden() && (await page.title()).startsWith('CAFE'), 'Existing template samples keep their selected design');
+  const requests = [];
+  page.on('request', request => requests.push(request));
+  await page.goto(base+'website-template-preview.html?trial=1');
+  check(await page.locator('#trialStyle option').count() === 10, 'The trial offers ten existing designs');
+  await page.getByLabel('デザイン').selectOption('cyber');
+  check(await page.locator('body').getAttribute('data-theme') === 'cyber', 'The selected design is applied');
+  const name = '<img src=x>';
+  await page.getByLabel('バンド名・サイト名').fill(name);
+  await page.getByLabel('紹介文').fill('仙台から届けるロック。'.repeat(10));
+  check(await page.locator('#heroTitle').textContent() === name && await page.locator('#heroTitle img').count() === 0, 'User text is displayed literally');
+  check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+3), 'The trial fits the viewport with long input');
+
+  const photo = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.fillStyle = '#d14f79';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL().split(',')[1];
+  });
+  await page.locator('#trialPhoto').setInputFiles({name: 'sample.png', mimeType: 'image/png', buffer: Buffer.from(photo, 'base64')});
+  await page.locator('#heroPhoto img').waitFor();
+  const image = await downloadedImage(page, 'トップの試作画像を保存', 'sho-website-trial.png');
+  check(image.subarray(1, 4).toString() === 'PNG' && image.readUInt32BE(16) === 900, 'The editable trial downloads as a PNG');
+  const photoPixel = await page.evaluate(async (data) => {
+    const image = new Image();
+    image.src = 'data:image/png;base64,' + data;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.drawImage(image, -image.width / 2, -(image.height - 220));
+    return Array.from(context.getImageData(0, 0, 1, 1).data);
+  }, image.toString('base64'));
+  check(photoPixel.join(',') === '209,79,121,255', 'The downloaded image contains the selected local photograph');
+  await page.getByRole('button', {name: '写真を外す'}).click();
+  check(await page.locator('#heroPhoto img').count() === 0, 'The local photograph can be removed');
+  if (outputDir) {
+    await page.getByLabel('デザイン').selectOption('rock');
+    await page.getByLabel('バンド名・サイト名').fill('MIDNIGHT PARADE');
+    await page.getByLabel('紹介文').fill('仙台を拠点に活動する架空のロックバンドです。');
+    const sample = await downloadedImage(page, 'トップの試作画像を保存', 'sho-website-trial.png');
+    mkdirSync(outputDir, {recursive: true});
+    writeFileSync(join(outputDir, 'sho-website-trial-example.png'), sample);
+    writeFileSync(join(outputDir, 'sho-website-prices-example.png'), prices);
+  }
+  check(requests.every(request => /^(?:data:|blob:)/.test(request.url()) || (request.url().startsWith(base) && request.method() === 'GET')), 'The trial makes no uploads or third-party requests');
+}
+
 (async()=>{
  const {DEFAULT_TERMS}=await import('../supabase/functions/_shared/commercial-setup.mjs');
  const browser=await chromium.launch({headless:true});let checks=0;
@@ -42,6 +117,7 @@ const base='http://127.0.0.1:8765/',widths=[320,360,390,430,768,1366];
   await page.goto(base+'website-order-confirm.html',{waitUntil:'domcontentloaded'});
   check((await page.locator('#amount').innerText()).includes('15,000'),'Renewal fee is not added to the initial amount');
   check((await page.locator('label:has(#termsCheck)').innerText()).includes('年6,000円'),'Consent includes renewal cost');
+  if(width===320||width===1366)await checkShareImages(page,check,width===320?process.env.QA_SCREENSHOTS_DIR:undefined);
   await page.goto(base+'admin/sales-settings.html',{waitUntil:'domcontentloaded'});await page.locator('#salesForm').waitFor();
   await page.locator('#saveDraft').click();await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('下書きを保存'));
   check((await page.evaluate(()=>window.__settingsCalls.filter(x=>x.action==='admin_save_sales_settings')))[0].enable===false,'Draft never activates sales');
