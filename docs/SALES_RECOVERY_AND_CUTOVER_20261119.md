@@ -2,6 +2,8 @@
 
 2026-11-19 JST。対象は **sho-web-support** と **architecture/sales-cloudflare**。作業開始時のHEADは `9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd`。
 
+11月20日に本人が `sho-websites.com` を取得した。[取得の照合と専用ゾーンの設定案](../customer-hosting-v2/DNS_CUTOVER_CHECKLIST.md)
+
 ## 実環境と固定候補の照合
 
 | Edge Function | バージョン | JWT検証 | コードの照合 |

@@ -15,7 +15,7 @@
 1. [バックアップ手順](../customer-hosting-v2/BACKUP_OPERATIONS.md)どおりに実環境の保全・別保管・空環境での復元を終える。合成DBの47テストやコードの保存を代用しない。
 2. `sho-customer-sites-production` は本人作成後にStandard・非公開を実検証済み。[検証記録](qa/sales-production-r2-connectivity-20261116.json)を切替時点の対象と照合する。過去の作成APIの403を現在のバケット不存在と扱わない。
 3. 上記バケット限定のObject Read & Write鍵は本人がSecrets保存済み。実際の書込み・メタデータ・全バイトの読戻し・削除と、プレビューバケットHEADの403拒否を検証済み。ID/バケット名の前後空白だけを除去する修正を候補へ含めた。鍵自体は加工せず、チャットや公開Gitに貼らない。
-4. 本人が承認したドメインの所有・DNS・HTTPS・配信Workerを検証し、標準URLを固定。ドメイン購入は未承認。`workers.dev`等を永久納品先にしない。
+4. `sho-websites.com` は2026年11月20日に本人が取得した。[専用ゾーン設定案と検証結果](../customer-hosting-v2/DNS_CUTOVER_CHECKLIST.md)に沿って、実DNS・HTTPS・配信Workerを検証して標準URLを確定する。
 5. 本番振込先へ差し替え、契約原案と実バックアップの確認記録を本人が承認。テスト銀行 `0000000` のまま販売条件を有効化しない。
 
 ## 切替の順序
