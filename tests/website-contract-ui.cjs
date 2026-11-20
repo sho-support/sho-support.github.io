@@ -86,6 +86,48 @@ const client=ready=>`
     await context.close();
    }
   }
+  for (const width of [320, 1366]) {
+   const context = await browser.newContext({ viewport: { width, height: 900 }, serviceWorkers: 'block' });
+   const external = [], errors = [];
+   await context.route('**/*', route => {
+    const url = route.request().url();
+    if (url.startsWith(base)) return route.continue();
+    external.push(url);
+    return route.abort();
+   });
+   const page = await context.newPage();
+   page.on('pageerror', error => errors.push(error.message));
+   await page.goto(base + 'customer-hosting-v2/renewal-preview/index.html');
+   const scenario = page.getByLabel('見本の日時・入金状態');
+   const decline = page.getByRole('button', { name: '継続しない', exact: true });
+   const renew = page.getByRole('button', { name: '継続を希望する', exact: true });
+   const access = page.locator('#access');
+   const retention = page.locator('#retention');
+
+   await scenario.selectOption('before');
+   check(await decline.isDisabled(), 'Renewal selection begins at the notice date');
+   await scenario.selectOption('open');
+   await decline.click();
+   check(await decline.getAttribute('aria-pressed') === 'true', 'The customer can decline renewal');
+   await renew.click();
+   check((await page.locator('#payment').innerText()).includes('入金確認後'), 'Renewal intent is recorded before payment confirmation');
+   await decline.click();
+   await scenario.selectOption('locked');
+   check(await renew.isDisabled() && await decline.isDisabled(), 'The choice is locked at the deadline');
+   check((await access.innerText()).includes('公開期間中'), 'The current term runs until expiry');
+   await scenario.selectOption('expiry');
+   check((await access.innerText()).includes('サイトは非公開'), 'The site becomes private at expiry');
+   check((await retention.innerText()).includes('引き渡し') && (await retention.innerText()).includes('有料復元'), 'Both grace periods are shown at expiry');
+   await scenario.selectOption('retained');
+   check(/^有料復元/.test(await retention.innerText()), 'Only paid restoration is offered after the handover period');
+   await scenario.selectOption('purged');
+   check((await retention.innerText()).includes('復元の受付は終了しました'), 'The restoration window has closed');
+   await scenario.selectOption('paid');
+   check((await page.locator('#choice').innerText()).includes('継続が確定') && (await access.innerText()).includes('公開期間中'), 'Confirmed payment extends publication');
+   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Renewal controls fit at ' + width);
+   check(errors.length === 0 && external.length === 0, 'Renewal demo runs without page errors or external requests');
+   await context.close();
+  }
  }finally{await browser.close();}
  console.log('CONTRACT_UI_QA_PASS',JSON.stringify({checks,widths,real_notifications:0,real_payments:0}));
 })().catch(e=>{console.error('CONTRACT_UI_QA_FAIL',e.stack||e);process.exitCode=1;});

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>公開維持の更新・画面見本</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #11100f;
+      color: #f8f2eb;
+      font: 16px/1.65 system-ui, sans-serif;
+    }
+    main { max-width: 760px; margin: auto; padding: 24px 16px 48px; }
+    h1 { margin: 12px 0 4px; font-size: clamp(1.45rem, 4vw, 2rem); }
+    h2 { margin: 0 0 8px; font-size: 1.12rem; }
+    p { margin: 6px 0; color: #d1c4b7; }
+    section {
+      margin-top: 24px;
+      padding: clamp(14px, 4vw, 24px);
+      border: 1px solid #4d3d30;
+      border-radius: 14px;
+      background: #1b1713;
+    }
+    .sample { color: #ffc08c; font-weight: 700; }
+    .dates {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .dates div { padding: 12px; background: #11100f; border-radius: 8px; }
+    dt { color: #d1c4b7; font-size: .84rem; }
+    dd { margin: 0; font-weight: 750; }
+    .choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    button, select {
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid #9e6c4a;
+      border-radius: 8px;
+      background: #211b16;
+      color: #f8f2eb;
+      font: inherit;
+    }
+    button[aria-pressed="true"] { background: #ffc08c; color: #24170d; font-weight: 750; }
+    button:disabled { opacity: .66; }
+    label { display: grid; gap: 6px; }
+    select { width: 100%; }
+    @media (max-width: 480px) {
+      .dates { grid-template-columns: 1fr; }
+      .choices button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <p class="sample">操作見本・架空サイト</p>
+  <h1>公開維持の更新</h1>
+  <p>サンプルバンド公式サイト</p>
+  <section aria-labelledby="period">
+    <h2 id="period">ご契約期間</h2>
+    <dl class="dates">
+      <div><dt>満了日時</dt><dd id="expires"></dd></div>
+      <div><dt>継続の選択締切</dt><dd id="deadline"></dd></div>
+    </dl>
+    <p id="fee"></p>
+    <div class="choices" role="group" aria-label="継続の選択">
+      <button type="button" data-choice="continue" aria-pressed="false" disabled>継続を希望する</button>
+      <button type="button" data-choice="decline" aria-pressed="false" disabled>継続しない</button>
+    </div>
+    <p id="choice" role="status"></p>
+    <p id="payment"></p>
+  </section>
+  <section aria-labelledby="publication">
+    <h2 id="publication">契約期間と引き渡し</h2>
+    <p id="access"></p>
+    <p id="retention" hidden></p>
+  </section>
+  <section>
+    <label for="scenario">見本の日時・入金状態</label>
+    <select id="scenario">
+      <option value="before">案内開始前</option>
+      <option value="open" selected>選択受付中</option>
+      <option value="locked">満了24時間前</option>
+      <option value="expiry">満了時刻（入金確認なし）</option>
+      <option value="paid">次の契約分の入金確認済み</option>
+      <option value="retained">満了から30日経過</option>
+      <option value="purged">復元受付期限に到達</option>
+    </select>
+  </section>
+</main>
+<script type="module">
+import { HOSTING_OFFER } from '../../supabase/functions/_shared/hosting-offer.mjs';
+import { renewalWindow, selectRenewal } from './policy.mjs';
+
+const expiresAt = Date.parse('2027-11-20T18:00:00+09:00');
+const base = { expiresAt, choice: null };
+let term = base;
+const day = 24 * 60 * 60 * 1000;
+const scenarios = {
+  before: { now: expiresAt - 31 * day },
+  open: { now: expiresAt - 14 * day },
+  locked: { now: expiresAt - day },
+  expiry: { now: expiresAt },
+  paid: { now: expiresAt, confirmedUntil: Date.parse('2028-11-20T18:00:00+09:00') },
+  retained: { now: expiresAt + 30 * day },
+  purged: { now: expiresAt + 90 * day },
+};
+const formatter = new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', dateStyle: 'medium', timeStyle: 'short' });
+const date = (ms) => formatter.format(ms) + '（日本時間）';
+const scenario = document.getElementById('scenario');
+const buttons = [...document.querySelectorAll('[data-choice]')];
+const text = (id, value) => { document.getElementById(id).textContent = value; };
+
+function render() {
+  const { now, confirmedUntil } = scenarios[scenario.value];
+  const view = renewalWindow({ ...term, confirmedUntil }, now);
+  text('expires', date(view.expiresAt));
+  text('deadline', date(view.locksAt));
+  text('fee', '継続の料金は ' + HOSTING_OFFER.renewal_fee_jpy.toLocaleString('ja-JP') + '円／年（税込）です。自動更新・自動課金はありません。');
+  for (const button of buttons) {
+    button.disabled = !view.canChoose;
+    button.setAttribute('aria-pressed', String((view.paymentConfirmed ? 'continue' : view.choice) === button.dataset.choice));
+  }
+  const labels = { continue: '継続を希望する', decline: '継続しない' };
+  text('choice', view.paymentConfirmed ? '入金を確認し、継続が確定しました。' : '選択 ' + (labels[view.choice] ?? '未選択'));
+  if (view.paymentConfirmed) text('payment', '更新後の満了日時 ' + date(view.paidUntil));
+  else if (now < view.opensAt) text('payment', date(view.opensAt) + 'から選択できます。');
+  else if (!view.canChoose) text('payment', '管理画面での変更受付は終了しました。');
+  else if (view.choice === 'decline') text('payment', '満了時刻に公開が終了します。締切まではこの画面で変更できます。');
+  else if (view.choice === 'continue') text('payment', '見積りをご確認ください。入金確認後に継続が確定します。');
+  else text('payment', '継続の希望を選んでください。');
+  text('access', view.termAllowsPublication ? '公開期間中です。' : '満了のためサイトは非公開です。管理画面で引き渡しや復元の受付を確認できます。');
+  const retention = document.getElementById('retention');
+  retention.hidden = view.termAllowsPublication;
+  if (view.canDownloadHandover) {
+    retention.textContent = date(view.handoverUntil) + 'まで完成ファイルの引き渡しを受けられます。有料復元の見積りは' + date(view.restoreUntil) + 'まで受け付けます。';
+  } else if (view.canRequestRestore) retention.textContent = '有料復元の見積りは' + date(view.restoreUntil) + 'まで受け付けます。';
+  else retention.textContent = '復元の受付は終了しました。';
+}
+
+for (const button of buttons) button.addEventListener('click', () => {
+  const { now, confirmedUntil } = scenarios[scenario.value];
+  term = selectRenewal({ ...term, confirmedUntil }, button.dataset.choice, now);
+  render();
+});
+scenario.addEventListener('change', render);
+render();
+</script>
+</body>
+</html>
