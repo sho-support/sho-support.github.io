@@ -48,7 +48,7 @@ export function stopCardRenewal(term, now) {
 export function recordCardFailure(term, { subscriptionId, periodStart }, now) {
   const { status, chargeAt } = cardRenewalWindow(term, now);
   if (status !== 'scheduled' || now < chargeAt || periodStart !== chargeAt || term.card.subscriptionId !== subscriptionId) return term;
-  return { ...term, card: { ...term.card, status: 'failed' } };
+  return { ...term, card: { ...term.card, status: 'failed', failedAt: now } };
 }
 
 // This sample accepts a normalized result. The real backend must verify it with the payment processor first.
@@ -62,6 +62,6 @@ export function applyCardReceipt(term, receipt, now) {
   return {
     ...term,
     confirmedUntil: receipt.periodEnd,
-    card: { ...term.card, status: 'scheduled', lastInvoiceId: receipt.invoiceId },
+    card: { ...term.card, status: 'scheduled', failedAt: null, lastInvoiceId: receipt.invoiceId },
   };
 }

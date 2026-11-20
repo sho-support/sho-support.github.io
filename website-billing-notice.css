@@ -1,0 +1,16 @@
+.billing-notices {
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 1px solid #826538;
+  border-inline-start: 4px solid #edbb63;
+  border-radius: 10px;
+  background: #211a11;
+  color: #fff4e3;
+  overflow-wrap: anywhere;
+}
+.billing-notices h2 { margin: 0 0 8px; font-size: 1rem; }
+.billing-notices h3 { margin: 0; color: #ffdb98; font-size: .95rem; }
+.billing-notices p { margin: 4px 0 0; color: #e9dbc7; font-size: .875rem; }
+.billing-notices a { color: #ffdb98; text-decoration: underline; text-underline-offset: .18em; }
+.billing-notices a:focus-visible { outline: 2px solid #ffdb98; outline-offset: 3px; }
+.billing-notices article + article { margin-top: 12px; padding-top: 12px; border-top: 1px solid #826538; }

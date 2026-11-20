@@ -4,6 +4,34 @@ import {readFile} from 'node:fs/promises';
 import {resourceDatabase} from './helpers/resource-db.mjs';
 import {edgeHarness,postgrestFixture} from './helpers/edge-harness.mjs';
 const actor='11111111-1111-4111-8111-111111111111';
+test('the customer site list returns active card failure notices for owned sites only',async t=>{
+ const db=await resourceDatabase();t.after(()=>db.close());
+ await db.exec(await readFile(new URL('./fixtures/hosting-base.sql',import.meta.url),'utf8'));
+ await db.exec('set role service_role');
+ const customer='22222222-2222-4222-8222-222222222222';
+ const other='33333333-3333-4333-8333-333333333333';
+ await db.exec("insert into public.website_sites(site_id) values('9100'),('9101'),('9102')");
+ await db.query("insert into public.website_site_users(site_id,user_id,role) values('9100',$1,'owner'),('9101',$1,'viewer'),('9101',$2,'owner'),('9102',$2,'owner')",[customer,other]);
+ const failedAt='2026-11-20T09:00:00Z';
+ const failed={kind:'card_renewal_failed',failed_at:failedAt,provider_detail:'private-fixture'};
+ await db.query("insert into public.website_settings(key,value) values('hosting_card_renewal_notice:9100',$1), ('hosting_card_renewal_notice:9101',$1), ('hosting_card_renewal_notice:9102',$1)",[JSON.stringify(failed)]);
+ const h=await edgeHarness({slug:'website-api/index.ts',admin:postgrestFixture(db),users:{customer:{id:customer},other:{id:other}}});
+ const list=token=>h.handler(new Request('https://fixture.supabase.co/functions/v1/website-api',{
+  method:'POST',headers:{'content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},
+  body:JSON.stringify({action:'list_sites',site_id:'9102'}),
+ }));
+ assert.equal((await list()).status,401);
+ const response=await list('customer');
+ const body=await response.json();
+ assert.equal(response.status,200,JSON.stringify(body));
+ assert.deepEqual(body.sites.map(s=>s.site_id).sort(),['9100','9101']);
+ assert.deepEqual(body.billing_notices,[{site_id:'9100',kind:failed.kind,failed_at:failedAt}]);
+ assert.deepEqual((await (await list('other')).json()).billing_notices.map(n=>n.site_id).sort(),['9101','9102']);
+ await db.query("update public.website_settings set value=$1 where key='hosting_card_renewal_notice:9100'",[JSON.stringify({kind:'settled',failed_at:failedAt})]);
+ assert.deepEqual((await (await list('customer')).json()).billing_notices,[]);
+ assert.equal(h.messages.length+h.requests.length+h.background.length,0);
+});
+
 test('actual sales setup HTTP endpoints protect private details and never send or activate orders',async t=>{
  const db=await resourceDatabase();t.after(()=>db.close());await db.exec(await readFile(new URL('./fixtures/hosting-base.sql',import.meta.url),'utf8'));await db.exec('set role service_role');
  const h=await edgeHarness({slug:'website-sales-setup/index.ts',admin:postgrestFixture(db),users:{admin:{id:actor},stranger:{id:'33333333-3333-4333-8333-333333333333'}}});

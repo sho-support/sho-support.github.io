@@ -23,13 +23,25 @@ export function postgrestFixture(sql){
         else if(inserts){const entries=Object.entries(inserts);query='insert into public.'+table+'('+entries.map(([k])=>word(k)).join(',')+') values('+entries.map(([,v])=>{values.push(v&&typeof v==='object'?JSON.stringify(v):v);return '$'+values.length;}).join(',')+')';}
         else if(updates){query='update public.'+table+' set '+Object.entries(updates).map(([k,v])=>{values.push(v&&typeof v==='object'?JSON.stringify(v):v);return word(k)+'=$'+values.length;}).join(',');}
         else query='select * from public.'+table;
-        if(filters.length)query+=' where '+filters.map(([k,v])=>{values.push(v);return word(k)+'=$'+values.length;}).join(' and ');
+        if(filters.length)query+=' where '+filters.map(([column,value,operator])=>{
+          const field=word(column);
+          if(operator==='in'){
+            if(!value.length)return 'false';
+            const parameters=value.map(item=>{
+              values.push(item);
+              return '$'+values.length;
+            });
+            return field+' in ('+parameters.join(',')+')';
+          }
+          values.push(value);
+          return field+'=$'+values.length;
+        }).join(' and ');
         if(updates||inserts||upserts)query+=' returning *';else{if(ordering.length)query+=' order by '+ordering.join(',');if(limit)query+=' limit '+limit;}
         const r=await sql.query(query,values);
         if(single&&r.rows.length>1)throw new Error('Fixture query returned multiple rows');
         return {data:single?r.rows[0]??null:r.rows,error:null};
       }catch(error){return {data:null,error};}};
-      const b={select(){return b;},eq(k,v){filters.push([k,v]);return b;},limit(n){if(!Number.isInteger(n)||n<1)throw Error('Invalid fixture limit');limit=n;return b;},
+      const b={select(){return b;},eq(k,v){filters.push([k,v]);return b;},in(k,v){filters.push([k,v,'in']);return b;},limit(n){if(!Number.isInteger(n)||n<1)throw Error('Invalid fixture limit');limit=n;return b;},
         order(k,{ascending=true}={}){ordering.push(word(k)+(ascending?' asc':' desc'));return b;},insert(v){inserts=v;return b;},
         upsert(v,options={}){upserts=v;conflict=options.onConflict;ignoreDuplicates=options.ignoreDuplicates===true;return b;},
         update(v){updates=v;return b;},maybeSingle(){return run(true);},single(){return run(true);},then(ok,no){return run(false).then(ok,no);}};

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>公開維持の更新・画面見本</title>
+  <link rel="stylesheet" href="../../website-billing-notice.css">
   <style>
     * { box-sizing: border-box; }
     body {
@@ -61,6 +62,10 @@
   <p class="sample">操作見本・架空サイト</p>
   <h1>公開維持の更新</h1>
   <p>サンプルバンド公式サイト</p>
+  <section class="billing-notices" id="billing-notices" aria-labelledby="billing-notices-title" hidden>
+    <h2 id="billing-notices-title">お支払いのお知らせ</h2>
+    <div data-billing-notice-list role="status"></div>
+  </section>
   <section aria-labelledby="period">
     <h2 id="period">ご契約期間</h2>
     <dl class="dates">
@@ -110,6 +115,7 @@
 </main>
 <script type="module">
 import { HOSTING_OFFER, HOSTING_RESTORATION, restorationPrice } from '../../supabase/functions/_shared/hosting-offer.mjs';
+import { renderBillingNotices } from '../../website-billing-notice.js';
 import { renewalWindow, selectRenewal } from './policy.mjs';
 import { applyCardReceipt, cardConfirmationDays, cardRenewalTerms, cardRenewalWindow, enrollCardRenewal, recordCardFailure, stopCardRenewal } from './card-renewal.mjs';
 
@@ -145,6 +151,9 @@ function render() {
   const effectiveTerm = confirmedUntil && !term.card ? { ...term, confirmedUntil } : term;
   const view = renewalWindow(effectiveTerm, now);
   const card = cardRenewalWindow(effectiveTerm, now);
+  renderBillingNotices(document.getElementById('billing-notices'), card.status === 'failed' ? [{
+    kind: 'card_renewal_failed', failed_at: new Date(term.card.failedAt).toISOString(), site_name: 'サンプルバンド公式サイト',
+  }] : []);
   text('expires', date(view.paidUntil));
   text('deadline', view.paymentConfirmed ? '次回の更新時に案内します' : date(view.locksAt));
   text('fee', '継続の料金は ' + HOSTING_OFFER.renewal_fee_jpy.toLocaleString('ja-JP') + '円／年（税込）です。');
@@ -184,7 +193,7 @@ function render() {
   cardEnroll.disabled = !card.canEnroll || !cardConsent.checked;
   cardStop.hidden = !card.canStop;
   if (card.status === 'stopped') text('card-status', '次回の自動請求を停止しました。今の契約期間は満了まで有効です。');
-  else if (card.status === 'failed') text('card-status', 'カード決済に失敗しました。支払い方法の更新をご案内します。');
+  else if (card.status === 'failed') text('card-status', '');
   else if (card.needsConfirmationReview) text('card-status', '確認に時間がかかっているため、運営側で決済状況を確認しています。');
   else if (card.holdForConfirmation) text('card-status', `カード決済の結果を確認しています。${confirmationNotice}`);
   else if (card.status === 'scheduled' && view.paymentConfirmed) text('card-status', 'カード決済を確認して、公開維持を延長しました。');

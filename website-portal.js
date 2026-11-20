@@ -1,4 +1,5 @@
 import { currentSession, websiteApi, websiteSupabase } from './website-client.js';
+import { renderBillingNotices } from './website-billing-notice.js';
 
 const loading=document.getElementById('loading');
 const empty=document.getElementById('empty');
@@ -22,6 +23,12 @@ try{
   else{
     const data=await websiteApi('list_sites');
     const sites=Array.isArray(data?.sites)?data.sites:[];
+    const sitesById=new Map(sites.map(site=>[site.site_id,site]));
+    const paymentNotices=Array.isArray(data?.billing_notices)?data.billing_notices:[];
+    renderBillingNotices(document.getElementById('billing-notices'),paymentNotices.flatMap(notice=>{
+      const site=sitesById.get(notice?.site_id);
+      return site?[{...notice,site_name:site.site_name}]:[];
+    }));
     loading.classList.add('hidden');
     if(!sites.length)empty.classList.remove('hidden');
     else{

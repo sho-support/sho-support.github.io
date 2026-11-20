@@ -69,12 +69,16 @@ test('a known failure keeps the one-day grace and can still recover after a veri
   assert.equal(recordCardFailure(enrolled, { ...failure, periodStart: expiresAt - day }, expiresAt), enrolled);
   const failed = recordCardFailure(enrolled, failure, expiresAt);
   assert.equal(cardRenewalWindow(failed, expiresAt).status, 'failed');
+  assert.equal(failed.card.failedAt, expiresAt);
+  assert.equal(recordCardFailure(failed, failure, expiresAt + 1), failed);
   assert.equal(cardRenewalWindow(failed, expiresAt + day - 1).holdForConfirmation, true);
   assert.equal(cardRenewalWindow(failed, expiresAt + day).holdForConfirmation, false);
   assert.equal(cardRenewalWindow(failed, expiresAt + day).needsConfirmationReview, false);
   assert.equal(cardRenewalWindow(failed, expiresAt).canChooseBank, false);
   assert.equal(renewalWindow(failed, expiresAt).paymentConfirmed, false);
-  assert.equal(applyCardReceipt(failed, receipt, expiresAt).confirmedUntil, expectedRenewalEnd);
+  const settled = applyCardReceipt(failed, receipt, expiresAt);
+  assert.equal(settled.confirmedUntil, expectedRenewalEnd);
+  assert.equal(settled.card.failedAt, null);
   assert.equal(applyCardReceipt(failed, receipt, expiresAt + day).confirmedUntil, expectedRenewalEnd);
 });
 

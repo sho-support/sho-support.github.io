@@ -89,8 +89,20 @@ const client=ready=>`
   for (const width of [320, 1366]) {
    const context = await browser.newContext({ viewport: { width, height: 900 }, serviceWorkers: 'block' });
    const external = [], errors = [];
+   let unpaid = true;
    await context.route('**/*', route => {
     const url = route.request().url();
+    if (url === base + 'website-client.js') {
+     const fixture = {
+      sites: [{ site_id: '9100', site_name: '架空のバンドサイト', status: 'private' }],
+      billing_notices: unpaid ? ['9100','9101'].map(site_id => ({ site_id, kind:'card_renewal_failed', failed_at:'2026-11-20T09:00:00Z' })) : [],
+     };
+     return route.fulfill({ contentType:'text/javascript', body:`
+      export async function currentSession(){return {}};
+      export const websiteSupabase={auth:{signOut:async()=>{}}};
+      export async function websiteApi(action){if(action==='list_sites')return ${JSON.stringify(fixture)};throw Error('Unexpected action '+action);}
+     ` });
+    }
     if (url.startsWith(base)) return route.continue();
     external.push(url);
     return route.abort();
@@ -129,6 +141,7 @@ const client=ready=>`
    const register = page.getByRole('button', { name: 'カード自動更新を登録（見本）' });
    const stop = page.getByRole('button', { name: '次回の自動請求を停止（見本）' });
    const cardStatus = page.locator('#card-status');
+   const billingNotices = page.locator('#billing-notices');
    const cardTerms = await page.locator('#card-terms').innerText();
    check(cardTerms.includes('0円') && cardTerms.includes('6,000円（税込）') && cardTerms.includes('2027/11/20'), 'The charge date, annual amount and zero due now precede authorization');
    check(cardTerms.includes('確認に3日程度かかる場合があります'), 'The confirmation estimate appears before consent');
@@ -147,13 +160,28 @@ const client=ready=>`
    await scenario.selectOption('card-processing');
    check((await access.innerText()).includes('確認中は公開を続けます'), 'A scheduled card charge gets a confirmation hold at the due time');
    check((await cardStatus.innerText()).includes('確認に3日程度かかる場合があります'), 'Pending card charges show their confirmation estimate');
+   check(await billingNotices.isHidden(), 'Payment confirmation does not present a failure warning');
    await scenario.selectOption('card-review');
    check((await cardStatus.innerText()).includes('運営側で決済状況を確認') && await retention.isHidden() && await page.locator('#restoration-price').isHidden(), 'An unresolved charge reaches operator review without offering a second payment for restoration');
    await scenario.selectOption('card-failed');
-   check((await cardStatus.innerText()).includes('カード決済に失敗') && !(await page.locator('#choice').innerText()).includes('継続が確定'), 'A card failure does not extend the contract');
+   check(await billingNotices.isVisible() && (await billingNotices.innerText()).includes('カード決済に失敗') && !(await page.locator('#choice').innerText()).includes('継続が確定'), 'A card failure is visible and does not extend the contract');
    await scenario.selectOption('card-paid');
    check((await cardStatus.innerText()).includes('公開維持を延長') && (await access.innerText()).includes('公開期間中'), 'A settled card renewal extends publication');
+   check(await billingNotices.isHidden(), 'A settled card renewal clears the failure warning');
    check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Renewal controls fit at ' + width);
+
+   await page.goto(base + 'website-portal.html');
+   await page.locator('#sites details').waitFor();
+   const notice = await billingNotices.innerText();
+   check(await billingNotices.isVisible() && await billingNotices.locator('article').count() === 1, 'The portal surfaces the notice for the matching site');
+   check(notice.includes('架空のバンドサイト') && notice.includes('18:00（日本時間）') && notice.includes('お知らせメールのリンク'), 'Failure notice includes the site, Japanese time and next action');
+   check(await billingNotices.getByRole('link',{name:'公式LINE'}).getAttribute('href') === 'https://line.me/R/ti/p/@144dlsxp', 'Missing email has a fallback on the official support channel');
+   check(await billingNotices.evaluate(el => el.getBoundingClientRect().bottom <= document.getElementById('sites').getBoundingClientRect().top), 'The notice is above the site listing');
+   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'The portal notice fits at ' + width);
+   unpaid = false;
+   await page.reload();
+   await page.locator('#sites details').waitFor();
+   check(await billingNotices.isHidden(), 'A cleared notice stays absent when the portal reloads');
    check(errors.length === 0 && external.length === 0, 'Renewal demo runs without page errors or external requests');
    await context.close();
   }

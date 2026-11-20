@@ -113,7 +113,27 @@ Deno.serve(async (req) => {
         .in('site_id', ids)
         .order('updated_at', { ascending: false });
       if (siteError) throw siteError;
-      return json({ sites: sites || [], memberships: memberships || [], admin: false });
+      const noticePrefix = 'hosting_card_renewal_notice:';
+      const ownerSites = new Map((memberships || [])
+        .filter((member) => member.role === 'owner')
+        .map((member) => [noticePrefix + member.site_id, member.site_id]));
+      const billingNotices = [];
+      if (ownerSites.size > 0) {
+        const { data: rows, error: noticeError } = await admin.from('website_settings')
+          .select('key,value').in('key', [...ownerSites.keys()]);
+        if (noticeError) {
+          console.error('Could not read hosting card renewal notices');
+        } else {
+          for (const row of rows || []) {
+            const siteId = ownerSites.get(row.key);
+            const failedAt = row.value?.failed_at;
+            if (siteId && row.value?.kind === 'card_renewal_failed' && typeof failedAt === 'string' && Number.isFinite(Date.parse(failedAt))) {
+              billingNotices.push({ site_id: siteId, kind: 'card_renewal_failed', failed_at: failedAt });
+            }
+          }
+        }
+      }
+      return json({ sites: sites || [], memberships: memberships || [], admin: false, billing_notices: billingNotices });
     }
 
     if (action === 'admin_invite_customer') {
