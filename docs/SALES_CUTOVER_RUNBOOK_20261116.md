@@ -2,10 +2,11 @@
 
 本書は実行準備であり、切替完了の記録ではない。対象は `tyhymvgjkoebetyypspj` のHP販売だけ。バンド、他の販売サービス、TrendBlog、現在のDNSを一括で変更しない。
 
-実環境の最新照合、Authの隔離復旧、復元DBでの3migrationは[2026-11-19の記録](SALES_RECOVERY_AND_CUTOVER_20261119.md)を参照。商用配備と切替直前の照合は[後継候補manifest](../sales-hosting/release-candidate-20261119.json)を基準にする。以下のバージョン番号は当時の記録。
+実環境の最新照合、Authの隔離復旧、復元DBでのmigration検査は[保全と切替の記録](SALES_RECOVERY_AND_CUTOVER_20261119.md)を参照。商用配備と切替直前の照合は、未入金の取り消しを含む[11月20日候補manifest](../sales-hosting/release-candidate-20261120.json)を基準にする。旧候補の版と復旧証跡は引き続き履歴として参照できる。
 
 ## 固定した候補
 
+- 11月20日候補は、7関数・依存38ファイル・3migrationと、切替前へ戻す37ファイルを固定した。追加の `website-line-webhook` は、取り消し後に同じ注文IDのLINE受付で注文を再開させないために含める。切替前の7関数の版・JWT設定・配備bundleのハッシュを実環境と照合した。[隔離DB・画面の検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871412)・[隔離LINEの検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871499)
 - [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `c3c3af8114773a22b3f4d442dc0888908d02ee1e` の6関数・依存を含む37ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。接続テストの分離修正後、現行のcustomer-accessはv55となったため、その配備SHAも候補manifestの切替前照合へ更新。過去のプレビュー配備を本番切替済みと扱わない。
 - JWT設定は `website-api` と `website-worker` がtrue、`website-customer-access`、`website-order-api`、`website-preview`、`website-sales-setup` がfalse。falseの関数も内部の本人・管理者確認を維持する。
 - 公開フロントは `7e9ff205-321a-4fc9-946b-10a5e17245e1`、配備元は `c7bf35fb5c2305aaec3e8bc135e417d6033e15d3`。テスト注文を実注文と分離し、43ファイルの配備後に57静的検査・5 API preflight・署名なしWebhookの401拒否を確認。[実機テストの範囲と残る本人設定](SALES_TEST_ISOLATION_20261116.md)を参照。商用機能の本番切替ではない。
@@ -22,10 +23,10 @@
 
 1. 対象プロジェクト・各関数version/SHA・migration履歴・注文/ジョブ数・取得時刻を確認する。候補manifest記録から変わっていれば差分を再レビューする。進行中の処理があれば更新を止め、整合した保全点を確保する。
 2. 未適用の3migrationをmanifest順に適用する。既存の同名オブジェクトがあれば再実行せず履歴と実体を照合。全体の成否・RLS・RPC ACL・初期停止状態を確認する。
-3. 既存のレガシー制御が止まる状態で、manifestの6関数を依存込みで配備し、JWT設定を保存する。関数ごとの配備は原子的ではないため、配備途中を利用者に開放しない。
+3. 既存のレガシー制御が止まる状態で、manifestの7関数を依存込みで配備し、JWT設定を保存する。LINE受付を含めて配備完了を照合したうえで、無料試作・返金条件・未入金取消しを含む販売画面の配信版も照合する。関数ごとの配備は原子的ではないため、配備途中を利用者に開放しない。
 4. `CUSTOMER_R2_ACCOUNT_ID`、`CUSTOMER_R2_BUCKET`、`CUSTOMER_R2_ACCESS_KEY_ID`、`CUSTOMER_R2_SECRET_ACCESS_KEY`、`CUSTOMER_BASE_DOMAIN`、`CUSTOMER_HOSTING_DOMAIN_READY` を対象・実検証と照合する。値をログに出さない。最後に `WEBSITE_CUSTOMER_HOSTING=cloudflare-r2` の切替を行う。
 5. 匿名/別顧客/非管理者を拒否すること、旧公開経路が勝手に再開しないこと、原本が非公開であること、R2公開pointerとDBが一致することを確認する。アップロード・有料AIの初期停止と費用枠を維持する。
-6. 許可した架空注文で申込み→見積り→本人のLINEへの許可された送信→同意記録→架空入金確認→素材→制作→管理者/顧客承認→HTTPS公開→更新→非公開→復旧を検証する。実メッセージ・有料AI・課金が必要な段階は対象と上限を明示してから行う。
+6. 許可した架空注文で申込み→見積り→本人のLINEへの許可された送信→同意記録→架空入金確認→素材→制作→管理者/顧客承認→HTTPS公開→更新→非公開→復旧を検証する。未入金取消しは別の架空注文で行い、見積りの再送、同意記録、案件作成が止まり、以前の見積りを閲覧できることを確認する。実メッセージ・有料AI・課金が必要な段階は対象と上限を明示してから行う。
 7. 検証結果を確認してから販売開始。APIが200だったことだけで注文から公開まで合格としない。
 
 ## 戻し方
@@ -35,7 +36,7 @@
 - 現状の `sales-hosting/runtime/` が、Cloudflareからの未対応書込みを409で止める接続用コード。API52/顧客54/注文17/プレビュー14の動作へ戻すときは、それぞれ固有の`_shared`を取り違えない。設定関数3は配備記録と照合する。
 - Worker46の全4ファイルは [runtime-baseline/website-worker.json](../sales-hosting/runtime-baseline/website-worker.json) に保存。これはソースだけの復旧用で、DB/Auth/Storage/R2バックアップではない。復旧配備では新しいversion番号になる。
 - 関数復旧後も、新設テーブルや契約記録を自動DROPしない。書込みが発生した後は、確定したURL・見積り・同意・入金情報を守り、実バックアップと照合して別途復旧を判断する。
-- 後継候補の `before.rollback_files` には切替前の6関数を復元するファイル位置とSHA-256がある。各関数の内部パス・依存を個別に再構成し、JWT設定と一緒に確認してから復旧する。
+- 11月20日候補の `before.rollback_files` には、LINE受付を含む切替前の7関数を復元するファイル位置とSHA-256がある。各関数の内部パス・依存を個別に再構成し、JWT設定と一緒に確認してから復旧する。取り消した注文と既に提示した見積りの記録はDBに残す。
 - `WEBSITE_CUSTOMER_HOSTING`を空に戻すとレガシー経路が再度選ばれる可能性があるため、フラグだけを消して運用再開しない。
 
 ## 一次資料・実行証拠

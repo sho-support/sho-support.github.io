@@ -1,0 +1,1013 @@
+{
+  "schema": 1,
+  "prepared_on_jst": "2026-11-20",
+  "project_id": "tyhymvgjkoebetyypspj",
+  "status": "prepared_only",
+  "previous_candidate": "release-candidate-20261119.json",
+  "source_commit": "981754842f7bf82372501c7792bba440f8c6e08d",
+  "source_tree": "79f74d7d96e45ca8fc9fa0aecfcd9dc94dfe9b2d",
+  "all_source_files_match_pinned_commit": true,
+  "functions": [
+    {
+      "slug": "website-api",
+      "before": {
+        "slug": "website-api",
+        "version": 56,
+        "verify_jwt": true,
+        "bundle_sha256": "f2d30d89a24a11ceccbbe3cd25096cddeb354c3eea4f6f406f6f60e74ade2795",
+        "rollback_source_commit": "9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd",
+        "rollback_files": [
+          {
+            "deployment_path": "index.ts",
+            "source_path": "sales-hosting/runtime/website-api/index.ts",
+            "sha256": "629c2046a3092fe64a1c7ffb18c6793b0ebbf9910a1ba20acc54846c430f8e27"
+          },
+          {
+            "deployment_path": "_shared/auth-redirect-confirmation.ts",
+            "source_path": "sales-hosting/runtime/website-api/_shared/auth-redirect-confirmation.ts",
+            "sha256": "81c6df7d473392531b89bea6238aa32511a7608f5cb9e55182a9ecc0ce380a5f"
+          },
+          {
+            "deployment_path": "_shared/sales-origin.ts",
+            "source_path": "sales-hosting/runtime/website-api/_shared/sales-origin.ts",
+            "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+          },
+          {
+            "deployment_path": "_shared/website.ts",
+            "source_path": "sales-hosting/runtime/website-api/_shared/website.ts",
+            "sha256": "5b82743744fbd0f7023bf414b0889ee5d84226c205fae4a87bd7c6a12d0e85c7"
+          }
+        ]
+      },
+      "entrypoint": "supabase/functions/website-api/index.ts",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/auth-redirect-confirmation.ts",
+          "bytes": 393,
+          "git_blob_sha": "2d6c36adf140eeca1fe05345721c47a15feb11aa",
+          "sha256": "81c6df7d473392531b89bea6238aa32511a7608f5cb9e55182a9ecc0ce380a5f"
+        },
+        {
+          "path": "supabase/functions/_shared/bank-transfer.mjs",
+          "bytes": 525,
+          "git_blob_sha": "3651592643e92837fe1fa521ce55a398ad944bcc",
+          "sha256": "f79ce9aee23a7b0b30cbd1426d24874918151485d39867e5fc6f286b8a0e96f7"
+        },
+        {
+          "path": "supabase/functions/_shared/commercial-policy.mjs",
+          "bytes": 7162,
+          "git_blob_sha": "110c8387e3f62550cd348e701eb7152903540b37",
+          "sha256": "a49d324302ab7af9aed861ffb12cc2ccc809bece15c7520039afc8e9ca45a290"
+        },
+        {
+          "path": "supabase/functions/_shared/commercial-routes.ts",
+          "bytes": 8709,
+          "git_blob_sha": "5dfb534b6006d25ba0cc3400cf38f0c1b208653b",
+          "sha256": "d97cd4c12bd364959f88ad51fd94fc526091d6a876023db416c287b969e56a33"
+        },
+        {
+          "path": "supabase/functions/_shared/commercial-setup.mjs",
+          "bytes": 4602,
+          "git_blob_sha": "72f03b0d508f2599c04e198bf2ea186ce4ddc0f4",
+          "sha256": "6c808b9deebc016522f43f659fa36df112c04b30dbde50292199089a1237bd52"
+        },
+        {
+          "path": "supabase/functions/_shared/customer-r2.mjs",
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
+        },
+        {
+          "path": "supabase/functions/_shared/customer-r2.ts",
+          "bytes": 1029,
+          "git_blob_sha": "ce60c39b48a011ce58df7806f1d594ac7a3e1908",
+          "sha256": "e1edd8e3ee27b48e550fe0168db29cc7bc1f1bbfaac688d99d9ef248f76ea9bf"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-content-audit.mjs",
+          "bytes": 1666,
+          "git_blob_sha": "bf7d19ca093f05d78059ef911588a870c0ef7fae",
+          "sha256": "7c6241c05c1514ff48fa20066f850c551784d8bd43df5fc2d4348f5b5971c1f1"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-github.mjs",
+          "bytes": 3950,
+          "git_blob_sha": "67b1d9339fff1301ea5f97adeb65db0824d9d81a",
+          "sha256": "56b6481a9c9979b826c50f6df04a01b41907f57d938943843e51db486e5c1954"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-mode.ts",
+          "bytes": 423,
+          "git_blob_sha": "a7c1045d9b2d2bdf30bb986ee1f6688f40152c89",
+          "sha256": "19209bc9ca1eb7cc03de6b74ec0127c0532dd2ac47faced7ec94b8f2fd55be40"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-offer.mjs",
+          "bytes": 423,
+          "git_blob_sha": "a2f0a3a55aa473dd93c0f629903b5191ac59fe52",
+          "sha256": "07c55ffa5fe6aaad4469bf6123594d5379abfb4e01456fdf96365d7c9037ae94"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-publication.mjs",
+          "bytes": 7467,
+          "git_blob_sha": "344a6715aea17f0d9da0d49794f0e53ab632535a",
+          "sha256": "43b8852a166de386d6d2d261bcb05a40b41e8dc1d201ccf5b418d0ecb4b1ebd8"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-preflight.mjs",
+          "bytes": 2911,
+          "git_blob_sha": "7519e1ad060558fa9a4d2f16280f7f0a0d50c62c",
+          "sha256": "baf8a96a981be15083efd83c10b9f9f8b9202c752aae5c1a92ebc34a716f6274"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-publisher.mjs",
+          "bytes": 11646,
+          "git_blob_sha": "aa3da4c53069c53a919519ad8089b48c8886eb69",
+          "sha256": "90225bca77bdd3051961c9be30ffd5223976b10330be8f1d16564bbbd5c030bd"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-routes.ts",
+          "bytes": 14819,
+          "git_blob_sha": "6dff49355c3112713cf89f2db53a4013bd1f64ae",
+          "sha256": "c018afef0e2c480cfa18a035a8e6edc27502d2a03bd4ab117aeffad14a829018"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-sales-links.mjs",
+          "bytes": 1038,
+          "git_blob_sha": "5ac3d5e4338304fc9543720a295b034f3c2d1902",
+          "sha256": "b40ef2e94c92409bfb317e8de4aef921a8d108a1a08d657b416f338e40c56c53"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-service.ts",
+          "bytes": 7161,
+          "git_blob_sha": "bda4282bbb1b3fea345dcb29be8736cb9ea27bd2",
+          "sha256": "9f46d78c11e45446d0c03bd7b85bbf3af35a4532a6bd4bbdf7ea77772e21b3c3"
+        },
+        {
+          "path": "supabase/functions/_shared/intake-assets.mjs",
+          "bytes": 4555,
+          "git_blob_sha": "7504d103a9d64297f25a1347602ac12295d8d1ba",
+          "sha256": "021e5e6e329bdf5180218fcfe3bf5222c310397396be3536711e0f1b05d1b588"
+        },
+        {
+          "path": "supabase/functions/_shared/intake-assets.ts",
+          "bytes": 893,
+          "git_blob_sha": "b9d2ac1adcf120899ac17f62375d4c4dcd87ebd9",
+          "sha256": "394c84ac7759a948f6a207e673bb25dbb29c3f1f8eb5be8c50e04858fb309d42"
+        },
+        {
+          "path": "supabase/functions/_shared/line-receipt-test.mjs",
+          "bytes": 1546,
+          "git_blob_sha": "5a3a4a7721fd680812c4830a0acd515dc0a0faed",
+          "sha256": "397de8657532cbb250f245ff2c9bd9cc9772b72080b9477355c22b6b8f93f637"
+        },
+        {
+          "path": "supabase/functions/_shared/sales-origin.ts",
+          "bytes": 1576,
+          "git_blob_sha": "d638f5bb2419552917fa607d4a0d85217442d4ce",
+          "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+        },
+        {
+          "path": "supabase/functions/_shared/upload-gate.ts",
+          "bytes": 1983,
+          "git_blob_sha": "70a5cc6a199bfe229afbd7b305082d8ab4d0d661",
+          "sha256": "014eae17e9160c9d25474d6c1e30bedd6d641e319ac245451d465024a4601239"
+        },
+        {
+          "path": "supabase/functions/website-api/_shared/website.ts",
+          "bytes": 17832,
+          "git_blob_sha": "4be3e4ac76859a26e29810f174566b4e4c46efae",
+          "sha256": "b6a375286bf2b8e3e88be85d658851d6b6578456b2667b92cbfa368b3fc99a35"
+        },
+        {
+          "path": "supabase/functions/website-api/index.ts",
+          "bytes": 51075,
+          "git_blob_sha": "6acd9ed6c8cee18f6ba9bfe073dcdf7caf6dcc8d",
+          "sha256": "8694d2fbf3115921a7ed85b9e1670b7f0dddb6fb50a1f440c91e0e18de5655ec"
+        }
+      ],
+      "external_imports": [
+        "https://esm.sh/@supabase/supabase-js@2.57.4",
+        "npm:aws4fetch@1.0.20"
+      ]
+    },
+    {
+      "slug": "website-worker",
+      "before": {
+        "slug": "website-worker",
+        "version": 50,
+        "verify_jwt": true,
+        "bundle_sha256": "b8f80600f0114e493c1d932400d91da3690ade75fe3e7f853d0334aa71d8d0a2",
+        "rollback_source_commit": "9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd",
+        "rollback_files": [
+          {
+            "deployment_path": "index.ts",
+            "source_snapshot": "sales-hosting/runtime-baseline/website-worker.json",
+            "snapshot_file": "index.ts",
+            "sha256": "80679c059122d5e3f33cfb7544a3c61df2eadbfb52e5996c6186a6eb50918f3d"
+          },
+          {
+            "deployment_path": "_shared/website.ts",
+            "source_snapshot": "sales-hosting/runtime-baseline/website-worker.json",
+            "snapshot_file": "_shared/website.ts",
+            "sha256": "5b82743744fbd0f7023bf414b0889ee5d84226c205fae4a87bd7c6a12d0e85c7"
+          },
+          {
+            "deployment_path": "staged-full.mjs",
+            "source_snapshot": "sales-hosting/runtime-baseline/website-worker.json",
+            "snapshot_file": "staged-full.mjs",
+            "sha256": "074fbaa6db945635ba38ba24c0192abed07d86618d2a9de22c035f58fc304388"
+          },
+          {
+            "deployment_path": "semi-template.mjs",
+            "source_snapshot": "sales-hosting/runtime-baseline/website-worker.json",
+            "snapshot_file": "semi-template.mjs",
+            "sha256": "72acb5f4beaf44ca4439abf6d941d879bd63cb815cf3cccb50d56245b07e7967"
+          }
+        ]
+      },
+      "entrypoint": "supabase/functions/website-worker/index.ts",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/customer-r2.mjs",
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
+        },
+        {
+          "path": "supabase/functions/_shared/customer-r2.ts",
+          "bytes": 1029,
+          "git_blob_sha": "ce60c39b48a011ce58df7806f1d594ac7a3e1908",
+          "sha256": "e1edd8e3ee27b48e550fe0168db29cc7bc1f1bbfaac688d99d9ef248f76ea9bf"
+        },
+        {
+          "path": "supabase/functions/_shared/guarded-ai.mjs",
+          "bytes": 5364,
+          "git_blob_sha": "8b2584ef1b2d604cb3d7e601f39a3f77c1596eea",
+          "sha256": "6a542e9c4cb3d9220c5b37fa749e9e91a17bfe34a6da74a143eb00d4d7e6b406"
+        },
+        {
+          "path": "supabase/functions/_shared/guarded-ai.ts",
+          "bytes": 819,
+          "git_blob_sha": "5412abf977cad217e20ca671b749932b8b5be3bb",
+          "sha256": "58e0899e414d193111be6a4f2f5521f8c57c979cc3d1e5683bea3c09a6b80b28"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-content-audit.mjs",
+          "bytes": 1666,
+          "git_blob_sha": "bf7d19ca093f05d78059ef911588a870c0ef7fae",
+          "sha256": "7c6241c05c1514ff48fa20066f850c551784d8bd43df5fc2d4348f5b5971c1f1"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-github.mjs",
+          "bytes": 3950,
+          "git_blob_sha": "67b1d9339fff1301ea5f97adeb65db0824d9d81a",
+          "sha256": "56b6481a9c9979b826c50f6df04a01b41907f57d938943843e51db486e5c1954"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-mode.ts",
+          "bytes": 423,
+          "git_blob_sha": "a7c1045d9b2d2bdf30bb986ee1f6688f40152c89",
+          "sha256": "19209bc9ca1eb7cc03de6b74ec0127c0532dd2ac47faced7ec94b8f2fd55be40"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-publication.mjs",
+          "bytes": 7467,
+          "git_blob_sha": "344a6715aea17f0d9da0d49794f0e53ab632535a",
+          "sha256": "43b8852a166de386d6d2d261bcb05a40b41e8dc1d201ccf5b418d0ecb4b1ebd8"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-preflight.mjs",
+          "bytes": 2911,
+          "git_blob_sha": "7519e1ad060558fa9a4d2f16280f7f0a0d50c62c",
+          "sha256": "baf8a96a981be15083efd83c10b9f9f8b9202c752aae5c1a92ebc34a716f6274"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-publisher.mjs",
+          "bytes": 11646,
+          "git_blob_sha": "aa3da4c53069c53a919519ad8089b48c8886eb69",
+          "sha256": "90225bca77bdd3051961c9be30ffd5223976b10330be8f1d16564bbbd5c030bd"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-sales-links.mjs",
+          "bytes": 1038,
+          "git_blob_sha": "5ac3d5e4338304fc9543720a295b034f3c2d1902",
+          "sha256": "b40ef2e94c92409bfb317e8de4aef921a8d108a1a08d657b416f338e40c56c53"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-service.ts",
+          "bytes": 7161,
+          "git_blob_sha": "bda4282bbb1b3fea345dcb29be8736cb9ea27bd2",
+          "sha256": "9f46d78c11e45446d0c03bd7b85bbf3af35a4532a6bd4bbdf7ea77772e21b3c3"
+        },
+        {
+          "path": "supabase/functions/_shared/intake-assets.mjs",
+          "bytes": 4555,
+          "git_blob_sha": "7504d103a9d64297f25a1347602ac12295d8d1ba",
+          "sha256": "021e5e6e329bdf5180218fcfe3bf5222c310397396be3536711e0f1b05d1b588"
+        },
+        {
+          "path": "supabase/functions/_shared/intake-assets.ts",
+          "bytes": 893,
+          "git_blob_sha": "b9d2ac1adcf120899ac17f62375d4c4dcd87ebd9",
+          "sha256": "394c84ac7759a948f6a207e673bb25dbb29c3f1f8eb5be8c50e04858fb309d42"
+        },
+        {
+          "path": "supabase/functions/_shared/sales-origin.ts",
+          "bytes": 1576,
+          "git_blob_sha": "d638f5bb2419552917fa607d4a0d85217442d4ce",
+          "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+        },
+        {
+          "path": "supabase/functions/website-worker/_shared/website.ts",
+          "bytes": 17832,
+          "git_blob_sha": "4be3e4ac76859a26e29810f174566b4e4c46efae",
+          "sha256": "b6a375286bf2b8e3e88be85d658851d6b6578456b2667b92cbfa368b3fc99a35"
+        },
+        {
+          "path": "supabase/functions/website-worker/index.ts",
+          "bytes": 36514,
+          "git_blob_sha": "ef35997ff15f0dc234a5ad1f4113826b0a617094",
+          "sha256": "5e014e2b6216e16fffa4945864e34b11958d3fca62ccc1e7effa58119a1a13a1"
+        },
+        {
+          "path": "supabase/functions/website-worker/semi-template.mjs",
+          "bytes": 13487,
+          "git_blob_sha": "7a708a700b4746f8114deb091e81f2157a5f823d",
+          "sha256": "72acb5f4beaf44ca4439abf6d941d879bd63cb815cf3cccb50d56245b07e7967"
+        },
+        {
+          "path": "supabase/functions/website-worker/staged-full.mjs",
+          "bytes": 16531,
+          "git_blob_sha": "7751205b900c243ee77b2968dd2b7177a74a423a",
+          "sha256": "0d260a8ba6e371fb000fb8869585eb95d86065c5513e19afec96083ff16a97f9"
+        }
+      ],
+      "external_imports": [
+        "https://esm.sh/@supabase/supabase-js@2.57.4",
+        "npm:aws4fetch@1.0.20"
+      ]
+    },
+    {
+      "slug": "website-order-api",
+      "before": {
+        "slug": "website-order-api",
+        "version": 21,
+        "verify_jwt": false,
+        "bundle_sha256": "ed95e63fae81529d90cca24417c43a6481a8a10a249e3d7d501af8abc85c55bd",
+        "rollback_source_commit": "9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd",
+        "rollback_files": [
+          {
+            "deployment_path": "index.ts",
+            "source_path": "sales-hosting/runtime/website-order-api/index.ts",
+            "sha256": "99799b90df8438c1c4cdb8b721c243ba122a0e98d60b7e560e668bacfeeb2339"
+          },
+          {
+            "deployment_path": "_shared/sales-origin.ts",
+            "source_path": "sales-hosting/runtime/website-order-api/_shared/sales-origin.ts",
+            "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+          },
+          {
+            "deployment_path": "_shared/website.ts",
+            "source_path": "sales-hosting/runtime/website-order-api/_shared/website.ts",
+            "sha256": "3130621b6eadd0a39d6cb578d3592d872d63477f47989af388274ed4f2f19a72"
+          }
+        ]
+      },
+      "entrypoint": "supabase/functions/website-order-api/index.ts",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/hosting-mode.ts",
+          "bytes": 423,
+          "git_blob_sha": "a7c1045d9b2d2bdf30bb986ee1f6688f40152c89",
+          "sha256": "19209bc9ca1eb7cc03de6b74ec0127c0532dd2ac47faced7ec94b8f2fd55be40"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-offer.mjs",
+          "bytes": 423,
+          "git_blob_sha": "a2f0a3a55aa473dd93c0f629903b5191ac59fe52",
+          "sha256": "07c55ffa5fe6aaad4469bf6123594d5379abfb4e01456fdf96365d7c9037ae94"
+        },
+        {
+          "path": "supabase/functions/_shared/sales-origin.ts",
+          "bytes": 1576,
+          "git_blob_sha": "d638f5bb2419552917fa607d4a0d85217442d4ce",
+          "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+        },
+        {
+          "path": "supabase/functions/_shared/website.ts",
+          "bytes": 17786,
+          "git_blob_sha": "9e4d26514f3923d5fe74a44d988def0cfb69c4ae",
+          "sha256": "3e6a40ebb45a9c7b45987c3ac7c24595e0b8778d04eaca4ad206f25d8b938d4c"
+        },
+        {
+          "path": "supabase/functions/website-order-api/index.ts",
+          "bytes": 8486,
+          "git_blob_sha": "196191ef4b7ca957cabd9ad76bf10aebfd6a29c1",
+          "sha256": "8db9cebef8161df73eed909fdbfba896bcbe28d8baaf7a0b75da73778548a5bd"
+        }
+      ],
+      "external_imports": [
+        "https://esm.sh/@supabase/supabase-js@2.57.4"
+      ]
+    },
+    {
+      "slug": "website-customer-access",
+      "before": {
+        "slug": "website-customer-access",
+        "version": 59,
+        "verify_jwt": false,
+        "bundle_sha256": "ee91aff44d32e9bafd255404d1d8917ed569713e9be5ea41cc34e0259551ac94",
+        "rollback_source_commit": "9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd",
+        "rollback_files": [
+          {
+            "deployment_path": "index.ts",
+            "source_path": "sales-hosting/runtime/website-customer-access/index.ts",
+            "sha256": "ab254374e8a7c618530f1004205c1c9809936ebb4a12bce9c127b1e217225445"
+          },
+          {
+            "deployment_path": "_shared/sales-origin.ts",
+            "source_path": "sales-hosting/runtime/website-customer-access/_shared/sales-origin.ts",
+            "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+          },
+          {
+            "deployment_path": "_shared/line-receipt-test.mjs",
+            "source_path": "sales-hosting/runtime/website-customer-access/_shared/line-receipt-test.mjs",
+            "sha256": "397de8657532cbb250f245ff2c9bd9cc9772b72080b9477355c22b6b8f93f637"
+          },
+          {
+            "deployment_path": "_shared/website.ts",
+            "source_path": "sales-hosting/runtime/website-customer-access/_shared/website.ts",
+            "sha256": "3f2e11b2a8117ca14a685a7eecd1739889e8b2f5a28aebd66ff788ed683585e2"
+          }
+        ]
+      },
+      "entrypoint": "supabase/functions/website-customer-access/index.ts",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/bank-transfer.mjs",
+          "bytes": 525,
+          "git_blob_sha": "3651592643e92837fe1fa521ce55a398ad944bcc",
+          "sha256": "f79ce9aee23a7b0b30cbd1426d24874918151485d39867e5fc6f286b8a0e96f7"
+        },
+        {
+          "path": "supabase/functions/_shared/commercial-policy.mjs",
+          "bytes": 7162,
+          "git_blob_sha": "110c8387e3f62550cd348e701eb7152903540b37",
+          "sha256": "a49d324302ab7af9aed861ffb12cc2ccc809bece15c7520039afc8e9ca45a290"
+        },
+        {
+          "path": "supabase/functions/_shared/commercial-routes.ts",
+          "bytes": 8709,
+          "git_blob_sha": "5dfb534b6006d25ba0cc3400cf38f0c1b208653b",
+          "sha256": "d97cd4c12bd364959f88ad51fd94fc526091d6a876023db416c287b969e56a33"
+        },
+        {
+          "path": "supabase/functions/_shared/commercial-setup.mjs",
+          "bytes": 4602,
+          "git_blob_sha": "72f03b0d508f2599c04e198bf2ea186ce4ddc0f4",
+          "sha256": "6c808b9deebc016522f43f659fa36df112c04b30dbde50292199089a1237bd52"
+        },
+        {
+          "path": "supabase/functions/_shared/customer-r2.mjs",
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
+        },
+        {
+          "path": "supabase/functions/_shared/customer-r2.ts",
+          "bytes": 1029,
+          "git_blob_sha": "ce60c39b48a011ce58df7806f1d594ac7a3e1908",
+          "sha256": "e1edd8e3ee27b48e550fe0168db29cc7bc1f1bbfaac688d99d9ef248f76ea9bf"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-content-audit.mjs",
+          "bytes": 1666,
+          "git_blob_sha": "bf7d19ca093f05d78059ef911588a870c0ef7fae",
+          "sha256": "7c6241c05c1514ff48fa20066f850c551784d8bd43df5fc2d4348f5b5971c1f1"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-github.mjs",
+          "bytes": 3950,
+          "git_blob_sha": "67b1d9339fff1301ea5f97adeb65db0824d9d81a",
+          "sha256": "56b6481a9c9979b826c50f6df04a01b41907f57d938943843e51db486e5c1954"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-mode.ts",
+          "bytes": 423,
+          "git_blob_sha": "a7c1045d9b2d2bdf30bb986ee1f6688f40152c89",
+          "sha256": "19209bc9ca1eb7cc03de6b74ec0127c0532dd2ac47faced7ec94b8f2fd55be40"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-offer.mjs",
+          "bytes": 423,
+          "git_blob_sha": "a2f0a3a55aa473dd93c0f629903b5191ac59fe52",
+          "sha256": "07c55ffa5fe6aaad4469bf6123594d5379abfb4e01456fdf96365d7c9037ae94"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-publication.mjs",
+          "bytes": 7467,
+          "git_blob_sha": "344a6715aea17f0d9da0d49794f0e53ab632535a",
+          "sha256": "43b8852a166de386d6d2d261bcb05a40b41e8dc1d201ccf5b418d0ecb4b1ebd8"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-preflight.mjs",
+          "bytes": 2911,
+          "git_blob_sha": "7519e1ad060558fa9a4d2f16280f7f0a0d50c62c",
+          "sha256": "baf8a96a981be15083efd83c10b9f9f8b9202c752aae5c1a92ebc34a716f6274"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-publisher.mjs",
+          "bytes": 11646,
+          "git_blob_sha": "aa3da4c53069c53a919519ad8089b48c8886eb69",
+          "sha256": "90225bca77bdd3051961c9be30ffd5223976b10330be8f1d16564bbbd5c030bd"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-routes.ts",
+          "bytes": 14819,
+          "git_blob_sha": "6dff49355c3112713cf89f2db53a4013bd1f64ae",
+          "sha256": "c018afef0e2c480cfa18a035a8e6edc27502d2a03bd4ab117aeffad14a829018"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-sales-links.mjs",
+          "bytes": 1038,
+          "git_blob_sha": "5ac3d5e4338304fc9543720a295b034f3c2d1902",
+          "sha256": "b40ef2e94c92409bfb317e8de4aef921a8d108a1a08d657b416f338e40c56c53"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-service.ts",
+          "bytes": 7161,
+          "git_blob_sha": "bda4282bbb1b3fea345dcb29be8736cb9ea27bd2",
+          "sha256": "9f46d78c11e45446d0c03bd7b85bbf3af35a4532a6bd4bbdf7ea77772e21b3c3"
+        },
+        {
+          "path": "supabase/functions/_shared/intake-assets.mjs",
+          "bytes": 4555,
+          "git_blob_sha": "7504d103a9d64297f25a1347602ac12295d8d1ba",
+          "sha256": "021e5e6e329bdf5180218fcfe3bf5222c310397396be3536711e0f1b05d1b588"
+        },
+        {
+          "path": "supabase/functions/_shared/intake-assets.ts",
+          "bytes": 893,
+          "git_blob_sha": "b9d2ac1adcf120899ac17f62375d4c4dcd87ebd9",
+          "sha256": "394c84ac7759a948f6a207e673bb25dbb29c3f1f8eb5be8c50e04858fb309d42"
+        },
+        {
+          "path": "supabase/functions/_shared/line-receipt-test.mjs",
+          "bytes": 1546,
+          "git_blob_sha": "5a3a4a7721fd680812c4830a0acd515dc0a0faed",
+          "sha256": "397de8657532cbb250f245ff2c9bd9cc9772b72080b9477355c22b6b8f93f637"
+        },
+        {
+          "path": "supabase/functions/_shared/sales-origin.ts",
+          "bytes": 1576,
+          "git_blob_sha": "d638f5bb2419552917fa607d4a0d85217442d4ce",
+          "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+        },
+        {
+          "path": "supabase/functions/_shared/upload-gate.ts",
+          "bytes": 1983,
+          "git_blob_sha": "70a5cc6a199bfe229afbd7b305082d8ab4d0d661",
+          "sha256": "014eae17e9160c9d25474d6c1e30bedd6d641e319ac245451d465024a4601239"
+        },
+        {
+          "path": "supabase/functions/website-customer-access/_shared/website.ts",
+          "bytes": 19649,
+          "git_blob_sha": "3a2ee00a83e22f8770a2294e17dedf9b65088ca9",
+          "sha256": "8b0713a4d7259a775882948e5d48db0d2509d1cebe1091105e937e75dce316d6"
+        },
+        {
+          "path": "supabase/functions/website-customer-access/index.ts",
+          "bytes": 45451,
+          "git_blob_sha": "1003a4b3e7b0195d8d71f86a20b5f12ce4717b5f",
+          "sha256": "d5b99ef89ca082be6096314aa9ae70f1db37608646e20a9e31f0921d6ff01240"
+        }
+      ],
+      "external_imports": [
+        "https://esm.sh/@supabase/supabase-js@2.57.4",
+        "npm:aws4fetch@1.0.20"
+      ]
+    },
+    {
+      "slug": "website-preview",
+      "before": {
+        "slug": "website-preview",
+        "version": 18,
+        "verify_jwt": false,
+        "bundle_sha256": "0a4a8b59b22c0a4132b2b61fa2ec46e6423b9144ca578220bf28e52481f5277f",
+        "rollback_source_commit": "9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd",
+        "rollback_files": [
+          {
+            "deployment_path": "index.ts",
+            "source_path": "sales-hosting/runtime/website-preview/index.ts",
+            "sha256": "460a4028c33bb5882bb975d9f6d905c2128291d6dfd8bfe35be691990f3b4276"
+          },
+          {
+            "deployment_path": "_shared/sales-origin.ts",
+            "source_path": "sales-hosting/runtime/website-preview/_shared/sales-origin.ts",
+            "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+          },
+          {
+            "deployment_path": "_shared/website.ts",
+            "source_path": "sales-hosting/runtime/website-preview/_shared/website.ts",
+            "sha256": "4621aee2de2b591e78eda664a7cfe528ad35b072a60f268bb65c70edd30f10d6"
+          }
+        ]
+      },
+      "entrypoint": "supabase/functions/website-preview/index.ts",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/customer-r2.mjs",
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
+        },
+        {
+          "path": "supabase/functions/_shared/customer-r2.ts",
+          "bytes": 1029,
+          "git_blob_sha": "ce60c39b48a011ce58df7806f1d594ac7a3e1908",
+          "sha256": "e1edd8e3ee27b48e550fe0168db29cc7bc1f1bbfaac688d99d9ef248f76ea9bf"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-content-audit.mjs",
+          "bytes": 1666,
+          "git_blob_sha": "bf7d19ca093f05d78059ef911588a870c0ef7fae",
+          "sha256": "7c6241c05c1514ff48fa20066f850c551784d8bd43df5fc2d4348f5b5971c1f1"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-github.mjs",
+          "bytes": 3950,
+          "git_blob_sha": "67b1d9339fff1301ea5f97adeb65db0824d9d81a",
+          "sha256": "56b6481a9c9979b826c50f6df04a01b41907f57d938943843e51db486e5c1954"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-mode.ts",
+          "bytes": 423,
+          "git_blob_sha": "a7c1045d9b2d2bdf30bb986ee1f6688f40152c89",
+          "sha256": "19209bc9ca1eb7cc03de6b74ec0127c0532dd2ac47faced7ec94b8f2fd55be40"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-publication.mjs",
+          "bytes": 7467,
+          "git_blob_sha": "344a6715aea17f0d9da0d49794f0e53ab632535a",
+          "sha256": "43b8852a166de386d6d2d261bcb05a40b41e8dc1d201ccf5b418d0ecb4b1ebd8"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-preflight.mjs",
+          "bytes": 2911,
+          "git_blob_sha": "7519e1ad060558fa9a4d2f16280f7f0a0d50c62c",
+          "sha256": "baf8a96a981be15083efd83c10b9f9f8b9202c752aae5c1a92ebc34a716f6274"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-publisher.mjs",
+          "bytes": 11646,
+          "git_blob_sha": "aa3da4c53069c53a919519ad8089b48c8886eb69",
+          "sha256": "90225bca77bdd3051961c9be30ffd5223976b10330be8f1d16564bbbd5c030bd"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-service.ts",
+          "bytes": 7161,
+          "git_blob_sha": "bda4282bbb1b3fea345dcb29be8736cb9ea27bd2",
+          "sha256": "9f46d78c11e45446d0c03bd7b85bbf3af35a4532a6bd4bbdf7ea77772e21b3c3"
+        },
+        {
+          "path": "supabase/functions/_shared/sales-origin.ts",
+          "bytes": 1576,
+          "git_blob_sha": "d638f5bb2419552917fa607d4a0d85217442d4ce",
+          "sha256": "0ffae3aed213fee514532e5848fa87443dc4b2b81e1492a37e925ed1b54bd567"
+        },
+        {
+          "path": "supabase/functions/website-preview/_shared/website.ts",
+          "bytes": 12978,
+          "git_blob_sha": "f8851a0e98c1cb1391c458d686ce46a5bda87d0f",
+          "sha256": "aff43844070ae1385b6e1e8ef7e38dc82f806a805e397ff828e6587ae1cbb7af"
+        },
+        {
+          "path": "supabase/functions/website-preview/index.ts",
+          "bytes": 8458,
+          "git_blob_sha": "f0e21b799fd883b051df7c41656f199c361823d1",
+          "sha256": "cc3541644a9bb4b99406a2a8f181cdfdaf58d23505dadbabd72a224e7228617f"
+        }
+      ],
+      "external_imports": [
+        "https://esm.sh/@supabase/supabase-js@2.57.4",
+        "npm:aws4fetch@1.0.20"
+      ]
+    },
+    {
+      "slug": "website-sales-setup",
+      "before": {
+        "slug": "website-sales-setup",
+        "version": 7,
+        "verify_jwt": false,
+        "bundle_sha256": "edfe3055fa3b92cca18d263113704190a9e0d59fe0587cd5947ca4aecc15054b",
+        "rollback_source_commit": "9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd",
+        "rollback_files": [
+          {
+            "deployment_path": "website-sales-setup/index.ts",
+            "source_path": "supabase/functions/website-sales-setup/index.ts",
+            "sha256": "7c1c761dfa3a22bc5ff06f6f29cc6cf832c411f96225c8927103d178ddfe8f9f"
+          },
+          {
+            "deployment_path": "_shared/website.ts",
+            "source_path": "supabase/functions/_shared/website.ts",
+            "sha256": "3e6a40ebb45a9c7b45987c3ac7c24595e0b8778d04eaca4ad206f25d8b938d4c"
+          },
+          {
+            "deployment_path": "_shared/hosting-mode.ts",
+            "source_path": "supabase/functions/_shared/hosting-mode.ts",
+            "sha256": "19209bc9ca1eb7cc03de6b74ec0127c0532dd2ac47faced7ec94b8f2fd55be40"
+          },
+          {
+            "deployment_path": "_shared/commercial-routes.ts",
+            "source_path": "supabase/functions/_shared/commercial-routes.ts",
+            "sha256": "a0f96f763675051fb6496b78fed6e6601b4439ac4c654be390d9f43dfb23c8a8"
+          },
+          {
+            "deployment_path": "_shared/commercial-policy.mjs",
+            "source_path": "supabase/functions/_shared/commercial-policy.mjs",
+            "sha256": "a49d324302ab7af9aed861ffb12cc2ccc809bece15c7520039afc8e9ca45a290"
+          },
+          {
+            "deployment_path": "_shared/hosting-offer.mjs",
+            "source_path": "supabase/functions/_shared/hosting-offer.mjs",
+            "sha256": "07c55ffa5fe6aaad4469bf6123594d5379abfb4e01456fdf96365d7c9037ae94"
+          },
+          {
+            "deployment_path": "_shared/bank-transfer.mjs",
+            "source_path": "supabase/functions/_shared/bank-transfer.mjs",
+            "sha256": "f79ce9aee23a7b0b30cbd1426d24874918151485d39867e5fc6f286b8a0e96f7"
+          },
+          {
+            "deployment_path": "_shared/hosting-service.ts",
+            "source_path": "supabase/functions/_shared/hosting-service.ts",
+            "sha256": "9f46d78c11e45446d0c03bd7b85bbf3af35a4532a6bd4bbdf7ea77772e21b3c3"
+          },
+          {
+            "deployment_path": "_shared/customer-r2.ts",
+            "source_path": "supabase/functions/_shared/customer-r2.ts",
+            "sha256": "e1edd8e3ee27b48e550fe0168db29cc7bc1f1bbfaac688d99d9ef248f76ea9bf"
+          },
+          {
+            "deployment_path": "_shared/customer-r2.mjs",
+            "source_snapshot": "sales-hosting/runtime-baseline/website-sales-setup.json",
+            "snapshot_file": "_shared/customer-r2.mjs",
+            "sha256": "439cfb0b8636b0a3ca0d7de7546bb81786ff317982f908dd12cff832808b4e50"
+          },
+          {
+            "deployment_path": "_shared/hosting-publication.mjs",
+            "source_path": "supabase/functions/_shared/hosting-publication.mjs",
+            "sha256": "43b8852a166de386d6d2d261bcb05a40b41e8dc1d201ccf5b418d0ecb4b1ebd8"
+          },
+          {
+            "deployment_path": "_shared/hosting-release-publisher.mjs",
+            "source_path": "supabase/functions/_shared/hosting-release-publisher.mjs",
+            "sha256": "90225bca77bdd3051961c9be30ffd5223976b10330be8f1d16564bbbd5c030bd"
+          },
+          {
+            "deployment_path": "_shared/hosting-release-preflight.mjs",
+            "source_path": "supabase/functions/_shared/hosting-release-preflight.mjs",
+            "sha256": "baf8a96a981be15083efd83c10b9f9f8b9202c752aae5c1a92ebc34a716f6274"
+          },
+          {
+            "deployment_path": "_shared/hosting-content-audit.mjs",
+            "source_path": "supabase/functions/_shared/hosting-content-audit.mjs",
+            "sha256": "7c6241c05c1514ff48fa20066f850c551784d8bd43df5fc2d4348f5b5971c1f1"
+          },
+          {
+            "deployment_path": "_shared/hosting-github.mjs",
+            "source_path": "supabase/functions/_shared/hosting-github.mjs",
+            "sha256": "56b6481a9c9979b826c50f6df04a01b41907f57d938943843e51db486e5c1954"
+          },
+          {
+            "deployment_path": "_shared/commercial-setup.mjs",
+            "source_path": "supabase/functions/_shared/commercial-setup.mjs",
+            "sha256": "6c808b9deebc016522f43f659fa36df112c04b30dbde50292199089a1237bd52"
+          }
+        ]
+      },
+      "entrypoint": "supabase/functions/website-sales-setup/index.ts",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/bank-transfer.mjs",
+          "bytes": 525,
+          "git_blob_sha": "3651592643e92837fe1fa521ce55a398ad944bcc",
+          "sha256": "f79ce9aee23a7b0b30cbd1426d24874918151485d39867e5fc6f286b8a0e96f7"
+        },
+        {
+          "path": "supabase/functions/_shared/commercial-policy.mjs",
+          "bytes": 7162,
+          "git_blob_sha": "110c8387e3f62550cd348e701eb7152903540b37",
+          "sha256": "a49d324302ab7af9aed861ffb12cc2ccc809bece15c7520039afc8e9ca45a290"
+        },
+        {
+          "path": "supabase/functions/_shared/commercial-routes.ts",
+          "bytes": 8709,
+          "git_blob_sha": "5dfb534b6006d25ba0cc3400cf38f0c1b208653b",
+          "sha256": "d97cd4c12bd364959f88ad51fd94fc526091d6a876023db416c287b969e56a33"
+        },
+        {
+          "path": "supabase/functions/_shared/commercial-setup.mjs",
+          "bytes": 4602,
+          "git_blob_sha": "72f03b0d508f2599c04e198bf2ea186ce4ddc0f4",
+          "sha256": "6c808b9deebc016522f43f659fa36df112c04b30dbde50292199089a1237bd52"
+        },
+        {
+          "path": "supabase/functions/_shared/customer-r2.mjs",
+          "bytes": 8741,
+          "git_blob_sha": "09793f764f2134967da615b285b44c9fe620f45d",
+          "sha256": "0c06f0b5c7d63f8c26296f2f8f01ac50f9a329165be4b3040919326cc3295157"
+        },
+        {
+          "path": "supabase/functions/_shared/customer-r2.ts",
+          "bytes": 1029,
+          "git_blob_sha": "ce60c39b48a011ce58df7806f1d594ac7a3e1908",
+          "sha256": "e1edd8e3ee27b48e550fe0168db29cc7bc1f1bbfaac688d99d9ef248f76ea9bf"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-content-audit.mjs",
+          "bytes": 1666,
+          "git_blob_sha": "bf7d19ca093f05d78059ef911588a870c0ef7fae",
+          "sha256": "7c6241c05c1514ff48fa20066f850c551784d8bd43df5fc2d4348f5b5971c1f1"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-github.mjs",
+          "bytes": 3950,
+          "git_blob_sha": "67b1d9339fff1301ea5f97adeb65db0824d9d81a",
+          "sha256": "56b6481a9c9979b826c50f6df04a01b41907f57d938943843e51db486e5c1954"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-mode.ts",
+          "bytes": 423,
+          "git_blob_sha": "a7c1045d9b2d2bdf30bb986ee1f6688f40152c89",
+          "sha256": "19209bc9ca1eb7cc03de6b74ec0127c0532dd2ac47faced7ec94b8f2fd55be40"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-offer.mjs",
+          "bytes": 423,
+          "git_blob_sha": "a2f0a3a55aa473dd93c0f629903b5191ac59fe52",
+          "sha256": "07c55ffa5fe6aaad4469bf6123594d5379abfb4e01456fdf96365d7c9037ae94"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-publication.mjs",
+          "bytes": 7467,
+          "git_blob_sha": "344a6715aea17f0d9da0d49794f0e53ab632535a",
+          "sha256": "43b8852a166de386d6d2d261bcb05a40b41e8dc1d201ccf5b418d0ecb4b1ebd8"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-preflight.mjs",
+          "bytes": 2911,
+          "git_blob_sha": "7519e1ad060558fa9a4d2f16280f7f0a0d50c62c",
+          "sha256": "baf8a96a981be15083efd83c10b9f9f8b9202c752aae5c1a92ebc34a716f6274"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-release-publisher.mjs",
+          "bytes": 11646,
+          "git_blob_sha": "aa3da4c53069c53a919519ad8089b48c8886eb69",
+          "sha256": "90225bca77bdd3051961c9be30ffd5223976b10330be8f1d16564bbbd5c030bd"
+        },
+        {
+          "path": "supabase/functions/_shared/hosting-service.ts",
+          "bytes": 7161,
+          "git_blob_sha": "bda4282bbb1b3fea345dcb29be8736cb9ea27bd2",
+          "sha256": "9f46d78c11e45446d0c03bd7b85bbf3af35a4532a6bd4bbdf7ea77772e21b3c3"
+        },
+        {
+          "path": "supabase/functions/_shared/line-receipt-test.mjs",
+          "bytes": 1546,
+          "git_blob_sha": "5a3a4a7721fd680812c4830a0acd515dc0a0faed",
+          "sha256": "397de8657532cbb250f245ff2c9bd9cc9772b72080b9477355c22b6b8f93f637"
+        },
+        {
+          "path": "supabase/functions/_shared/website.ts",
+          "bytes": 17786,
+          "git_blob_sha": "9e4d26514f3923d5fe74a44d988def0cfb69c4ae",
+          "sha256": "3e6a40ebb45a9c7b45987c3ac7c24595e0b8778d04eaca4ad206f25d8b938d4c"
+        },
+        {
+          "path": "supabase/functions/website-sales-setup/index.ts",
+          "bytes": 1956,
+          "git_blob_sha": "c2c311e54d6dae90a603bbb7847d8ddd829747e9",
+          "sha256": "7c1c761dfa3a22bc5ff06f6f29cc6cf832c411f96225c8927103d178ddfe8f9f"
+        }
+      ],
+      "external_imports": [
+        "https://esm.sh/@supabase/supabase-js@2.57.4",
+        "npm:aws4fetch@1.0.20"
+      ]
+    },
+    {
+      "slug": "website-line-webhook",
+      "before": {
+        "slug": "website-line-webhook",
+        "version": 25,
+        "verify_jwt": false,
+        "bundle_sha256": "d337e5a77492cfa0e654f23af1a3b53633cf4363fd8f74afff4efe256c9bcc21",
+        "rollback_source_commit": "9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd",
+        "rollback_files": [
+          {
+            "deployment_path": "_shared/line-receipt-test.mjs",
+            "source_path": "sales-hosting/runtime/website-line-webhook/_shared/line-receipt-test.mjs",
+            "sha256": "397de8657532cbb250f245ff2c9bd9cc9772b72080b9477355c22b6b8f93f637"
+          },
+          {
+            "deployment_path": "_shared/website.ts",
+            "source_path": "sales-hosting/runtime/website-line-webhook/_shared/website.ts",
+            "sha256": "8585c99a04929f3fe6a53e12f83fb48bb92dbcffcee9893f4a43e83322276476"
+          },
+          {
+            "deployment_path": "index.ts",
+            "source_path": "sales-hosting/runtime/website-line-webhook/index.ts",
+            "sha256": "c1fb652da74bf5ce9467a1a076851b7b7d2923a90edf5cced3f462b18e24e066"
+          }
+        ]
+      },
+      "entrypoint": "supabase/functions/website-line-webhook/index.ts",
+      "files": [
+        {
+          "path": "supabase/functions/_shared/hosting-mode.ts",
+          "bytes": 423,
+          "git_blob_sha": "a7c1045d9b2d2bdf30bb986ee1f6688f40152c89",
+          "sha256": "19209bc9ca1eb7cc03de6b74ec0127c0532dd2ac47faced7ec94b8f2fd55be40"
+        },
+        {
+          "path": "supabase/functions/_shared/line-receipt-test.mjs",
+          "bytes": 1546,
+          "git_blob_sha": "5a3a4a7721fd680812c4830a0acd515dc0a0faed",
+          "sha256": "397de8657532cbb250f245ff2c9bd9cc9772b72080b9477355c22b6b8f93f637"
+        },
+        {
+          "path": "supabase/functions/_shared/website.ts",
+          "bytes": 17786,
+          "git_blob_sha": "9e4d26514f3923d5fe74a44d988def0cfb69c4ae",
+          "sha256": "3e6a40ebb45a9c7b45987c3ac7c24595e0b8778d04eaca4ad206f25d8b938d4c"
+        },
+        {
+          "path": "supabase/functions/website-line-webhook/index.ts",
+          "bytes": 11933,
+          "git_blob_sha": "6f6f45cdd834f39f7eec324829ab46b477d150a8",
+          "sha256": "e1fac2514b5f27cc6c03703cd398a804d25f6e69ac2a4ae53eb47c5a41dbbfb1"
+        }
+      ],
+      "external_imports": [
+        "https://esm.sh/@supabase/supabase-js@2.57.4"
+      ]
+    }
+  ],
+  "migrations": [
+    {
+      "path": "supabase/migrations/20261112053755_website_cloudflare_publication_protocol.sql",
+      "bytes": 34732,
+      "git_blob_sha": "d45272a20f0d46be40cc4aa2cdf689118bae0965",
+      "sha256": "263b6d3b877919aa14ec11050d37c86c9a33780085841316a3c45a0094346db3"
+    },
+    {
+      "path": "supabase/migrations/20261112123022_website_resource_guardrails.sql",
+      "bytes": 13798,
+      "git_blob_sha": "97c669f9bc8cea1d44a9d8d90257482c9f038b8e",
+      "sha256": "cf7b19f8a1e1ea9f337aa8f0e2c0c2b39d7bb9e886451ff8e1000da44640b8d8"
+    },
+    {
+      "path": "supabase/migrations/20261112170006_website_commercial_quote_protocol.sql",
+      "bytes": 12134,
+      "git_blob_sha": "49ce204b07ea56484f46d271e08d0f18c4a749f1",
+      "sha256": "b774611d77a68b19563dd49833bbf23d72157016652a0820e5e97a0651a20b44"
+    }
+  ],
+  "customer_reader_example": {
+    "path": "customer-hosting-v2/wrangler.example.jsonc",
+    "bytes": 696,
+    "git_blob_sha": "19103f22dcd872712ef286c4bdfdcff607d3930d",
+    "sha256": "e6121237a241a7a86a807c4b6d1ca849306eb727953a955678c75323e4df70b5"
+  },
+  "verification": {
+    "existing_release_baseline_bundle_hashes_matched": true,
+    "line_webhook_before_all_files_matched": true,
+    "isolated_backend_and_browser_run": "https://github.com/sho-support/sho-support.github.io/actions/runs/44672871412",
+    "isolated_line_and_package_run": "https://github.com/sho-support/sho-support.github.io/actions/runs/44672871499",
+    "stable_domain_https_run": "https://github.com/sho-support/sho-support.github.io/actions/runs/44662782026",
+    "hosted_order_to_delivery_verified": false,
+    "real_line_messages_sent": 0,
+    "real_payments": 0,
+    "rollback_files_sha256_verified": 37,
+    "native_database_tests_passed": 49,
+    "contract_ui_checks_passed": 186,
+    "line_runtime_tests_passed": 25
+  },
+  "deployment": {
+    "functions_replaced": false,
+    "hosted_migrations_applied": false,
+    "hosting_mode_enabled": false,
+    "paid_ai_enabled": false,
+    "production_cutover": false
+  },
+  "gates": {
+    "production_backup_and_empty_restore": false,
+    "production_r2_private_bucket": true,
+    "production_bucket_scoped_s3_credentials": true,
+    "stable_customer_domain": true,
+    "production_bank": false,
+    "approved_commercial_policy": false,
+    "refund_policy_choice_recorded": true
+  }
+}
