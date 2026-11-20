@@ -24,7 +24,8 @@ export function postgrestFixture(sql){
         else if(updates){query='update public.'+table+' set '+Object.entries(updates).map(([k,v])=>{values.push(v&&typeof v==='object'?JSON.stringify(v):v);return word(k)+'=$'+values.length;}).join(',');}
         else query='select * from public.'+table;
         if(filters.length)query+=' where '+filters.map(([column,value,operator])=>{
-          const field=word(column);
+          const jsonField=column.match(/^([a-z_]+)->>([a-z_]+)$/);
+          const field=jsonField?`${jsonField[1]}->>'${jsonField[2]}'`:word(column);
           if(operator==='in'){
             if(!value.length)return 'false';
             const parameters=value.map(item=>{

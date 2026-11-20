@@ -92,6 +92,12 @@ Stripeの通常の自動回収では、請求書の作成通知に正常応答�
 
 カード番号・セキュリティコードは決済事業者の画面で取り扱う。SHO側は顧客・契約・請求の識別子と同意・結果を記録する。本連携では署名を検証した通知と決済事業者から読み戻した入金結果を照合し、対象サイト・契約期間・請求IDを一意に扱う。登録完了、無料の請求書、カード以外による支払いはカード決済として延長の対象にしない。見本は架空データによる操作・判定の試験。決済事業者のテスト環境で初回請求時刻、停止の競合、失敗後の再決済、振込切替、通知の再送を確認し、顧客向け条件と合わせて本番反映する。現行の販売案内は申込みによる銀行振込方式。
 
+#### Stripeテスト環境からのお知らせ連携
+
+`website-stripe-renewal-sandbox` は、署名を確認した `invoice.payment_failed` と `invoice.paid` のスナップショットイベントから請求をStripe APIで読み戻す。年額6,000円のカード自動請求と対象サイト・契約・期間が一致したとき、所有者のお知らせを記録または解除する。失敗結果が再送された場合や処理が競合した場合も、確定済みの支払い状態を保持する。この処理の対象は通知用データで、公開期限の更新・公開の停止・メール送信は別工程。
+
+実Stripeの通し試験では、HP販売専用のStripe Sandboxと架空データだけを入れたSupabase環境を使う。`website-stripe-renewal-sandbox` だけをJWT検証なしで配備し、Stripe署名で認証する。環境には `WEBSITE_STRIPE_SANDBOX_SUPABASE_URL`、`WEBSITE_STRIPE_SANDBOX_KEY`（請求を読み戻せるテストキー）、`WEBSITE_STRIPE_SANDBOX_SIGNING_SECRET`、`WEBSITE_STRIPE_SANDBOX_PRICE_ID`（年額6,000円のテスト価格）を設定する。Stripe側の架空契約に `purpose=sho_hp_renewal` と `site_id` を付ける。対応する `hosting_card_renewal_notice:<site_id>` に `mode: stripe_sandbox`、`kind: card_renewal_waiting`、`revision`（UUID）、`customer_id`、`subscription_id`、`price_id`、`next_period_start`（対象とする請求の期間開始をUnix秒で指定）を作成してから、失敗とカード変更後の再決済を確認する。金額の手動入金処理や無料請求は、カード入金として記録されない。参考 [Stripeテスト環境](https://docs.stripe.com/testing-use-cases)、[SupabaseのStripe通知受信例](https://supabase.com/docs/guides/functions/examples/stripe-webhooks)。
+
 ## 検証
 
 ソース5be610022d37aa1b3424d70b274a00f442162687。本人設定APIのみv2→v3。JWT設定falseを維持し、関数内の実ユーザー・現在の管理者照合を維持。エントリポイントとその他の依存ファイルを変えず、4モジュールだけを更新。全16ファイルの読戻し一致、SHA256 edfe3055fa3b92cca18d263113704190a9e0d59fe0587cd5947ca4aecc15054b。

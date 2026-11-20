@@ -12,6 +12,7 @@ on:
       - 'supabase/functions/_shared/commercial-*'
       - 'supabase/functions/_shared/bank-transfer.mjs'
       - 'supabase/functions/_shared/line-receipt-test.mjs'
+      - 'supabase/functions/_shared/stripe-renewal-sandbox.mjs'
       - 'supabase/functions/_shared/intake-assets.*'
       - 'supabase/functions/_shared/upload-gate.ts'
       - 'supabase/functions/_shared/guarded-ai.*'
@@ -22,6 +23,7 @@ on:
       - 'supabase/functions/website-sales-setup/**'
       - 'supabase/functions/website-sales-readiness/**'
       - 'supabase/functions/website-line-webhook/**'
+      - 'supabase/functions/website-stripe-renewal-sandbox/**'
       - 'supabase/functions/website-customer-access/**'
       - 'supabase/functions/website-worker/**'
       - 'supabase/functions/website-preview/**'
@@ -96,7 +98,7 @@ jobs:
         run: npm run test:pipeline
       - name: Verify both HTTP approval/publish routes and frozen previews without external requests
         run: npm run test:routes
-      - name: Type-check all six Edge Functions against the pinned deployed SDK
+      - name: Type-check the Edge Functions against the pinned SDK
         run: npm run check:edge
       - name: Validate preview Worker package without deploying
         run: npm run check:preview
