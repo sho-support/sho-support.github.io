@@ -1,0 +1,59 @@
+name: HP public customer HTTPS check
+on:
+  push:
+    branches: [architecture/sales-cloudflare]
+    paths: ['.github/workflows/sales-public-https-check.yml']
+permissions: {}
+jobs:
+  public-https:
+    if: ${{ github.repository == 'sho-support/sho-support.github.io' && contains(github.event.head_commit.message, '[verify-public-delivery]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Check the public certificate, redirects and Worker responses without credentials
+        run: |
+          python - <<'PY'
+          import http.client
+          import json
+          import ssl
+
+          domain = 'sho-websites.com'
+          customer = f's1000.{domain}'
+          context = ssl.create_default_context()
+
+          def get(host, path, expected_status, expected_body):
+              connection = http.client.HTTPSConnection(host, timeout=10, context=context)
+              try:
+                  connection.connect()
+                  certificate = connection.sock.getpeercert()
+                  tls = connection.sock.version()
+                  names = {value for kind, value in certificate['subjectAltName'] if kind == 'DNS'}
+                  assert f'*.{domain}' in names, f'Public certificate wildcard missing for {host}'
+                  issuer = {key: value for group in certificate['issuer'] for key, value in group}
+                  connection.request('GET', path)
+                  response = connection.getresponse()
+                  assert response.status == expected_status, f'{host}{path} returned HTTP {response.status}'
+                  assert response.read(128).strip() == expected_body, f'Unexpected response from {host}{path}'
+                  assert response.getheader('CF-Ray'), f'Cloudflare edge header missing for {host}{path}'
+                  assert response.getheader('Cache-Control') == 'no-store', f'Unexpected caching for {host}{path}'
+                  return {'host': host, 'path': path, 'status': response.status, 'tls': tls,
+                          'wildcard': f'*.{domain}', 'issuer': issuer.get('commonName'),
+                          'certificate_expiry_gmt': certificate['notAfter']}
+              finally:
+                  connection.close()
+
+          checks = [get(customer, '/healthz', 200, b'ok'),
+                    get(f's1001.{domain}', '/healthz', 200, b'ok'),
+                    get(customer, '/', 404, b'Not found'),
+                    get(f'www.{domain}', '/healthz', 404, b'Not found')]
+          connection = http.client.HTTPConnection(customer, timeout=10)
+          try:
+              connection.request('GET', '/healthz')
+              response = connection.getresponse()
+              redirect = f'https://{customer}/healthz'
+              assert response.status in (301, 308) and response.getheader('Location') == redirect
+              checks.append({'host': customer, 'path': '/healthz', 'status': response.status, 'redirect': redirect})
+          finally:
+              connection.close()
+          print('SHO_PUBLIC_HTTPS ' + json.dumps(checks))
+          PY
