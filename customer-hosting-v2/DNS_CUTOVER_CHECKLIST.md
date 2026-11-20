@@ -9,7 +9,13 @@
 - 検証用Workerと非公開R2 `sho-customer-sites-preview` は実動確認済み。本番R2 `sho-customer-sites-production` の非公開設定とバケット限定キーも実検証済み。[本番R2の接続記録](../docs/qa/sales-production-r2-connectivity-20261116.json)
 - [Worker設定案](wrangler.example.jsonc) のドライランで、`CUSTOMER_BASE_DOMAIN=sho-websites.com` と本番用R2のバインディングを確認した。ループバックのTLS証明書と架空データで実WorkerにHTTPSを14回送信し、HTML/CSS、更新・巻き戻し、草案と別サイトの素材の拒否を確認した。2階層のホスト名は証明書検証で拒否された。既存の配信単体21件と3プランを含む公開パイプライン11件も合格。
 
-## 本人確認に出す設定案
+## 配信用Workerの配備とゾーンの権限
+
+11月20日 JST。本人の「専用ドメインの配信設定OK」を受け、`sho-customer-sites` をCloudflareに新規配備した。稼働版 `849b6abe-0491-41a1-af2b-986bb72614fc` が100%、`workers.dev` とプレビュー用URLはいずれも無効。`CUSTOMER_BASE_DOMAIN=sho-websites.com`、本番R2バインディング、バケットの非公開設定、`sites/` 配下が空であることをCloudflare APIで照合した。[初回配備と実機照合](https://github.com/sho-support/sho-support.github.io/actions/runs/44658591143)
+
+専用ゾーンは対象アカウント内で `active`。同じトークンでDNSレコード、Worker Route、Universal SSL、Always Use HTTPSの事前照会はいずれも403だった。既存設定との競合を確認できないため、接続処理は書き込み前に停止した。現在のDNS・配信ルート・公開HTTPSは、次の管理画面操作の後に検証する。[接続処理の実行記録](https://github.com/sho-support/sho-support.github.io/actions/runs/44659094557)
+
+## 承認済みの専用ゾーン設定
 
 | 項目 | 設定 |
 | --- | --- |
@@ -21,15 +27,18 @@
 
 `100::` はWorkerへ誘導するためのプレースホルダー。Workerは `s` に続く4〜10桁のサイトIDを検査し、非公開R2の公開済みリリースだけを返す。Universal SSLの標準証明書が対象にする1階層のホスト名を使う。[ワイルドカードDNS](https://developers.cloudflare.com/dns/manage-dns-records/reference/wildcard-dns-records/)・[Workers Routes](https://developers.cloudflare.com/workers/configuration/routing/routes/)・[Universal SSL](https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/enable-universal-ssl/)・[Always Use HTTPS](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/)
 
-## 承認後の専用ゾーン設定と検査
+## Cloudflareの管理画面で残っている操作
 
-1. 本人が専用ゾーンのWorker配備・DNS・ルート・HTTPS設定を承認してから、Cloudflare上のゾーン名、アカウント、既存レコード・ルート・HTTPS設定の状態を控える。同名のWorkerやレコードがあれば先に用途を照合する。既存のWorker配備用トークンの記録には、DNSとWorker Routeの書込み権限が含まれていない。[DNS Write](https://developers.cloudflare.com/api/resources/dns/subresources/records/methods/create/)・[Workers Routes Write](https://developers.cloudflare.com/api/resources/workers/subresources/routes/methods/create/)
-2. `sho-customer-sites` を配備し、専用ゾーンに表のルートとプロキシ付きレコードを設定する。配備とルート設定を分ける場合は、最初の配備は `routes` を空にする。設定後の配信ホストからCloudflareへの名前解決を確認する。
-3. 顧客用ホストで公開証明書の検証とHTTPからHTTPSへの転送を確認する。未割当のサイトID、www、草案、非公開版は顧客コンテンツを返さないことを確認する。
-4. 非公開本番R2にr2.devや公開カスタムドメインがないことを確認する。ブラウザへS3キーを渡さず、書込みはサーバー側の顧客prefixへ限定する。
-5. 架空サイトを使い、HTML/CSS/画像、相対リンク、キャッシュ、承認前公開拒否、公開・更新・巻戻し、同時更新、他サイト横断拒否を実HTTPSで試験する。320/360/390/430/768/1366幅を確認する。
-6. 正式URLが検証できた後だけ `CUSTOMER_BASE_DOMAIN` と `CUSTOMER_HOSTING_DOMAIN_READY` を同じ値に設定する。R2設定と公開モードは承認された本番反映の順序に従う。
-7. 異常時は新規顧客の受注・公開操作を止め、既知の正常版へ戻す。URLや親ドメインを無断変更しない。DNSの変更前後・元に戻す値・TTLを非公開の運用記録へ残す。
+1. `sho-websites.com` の **DNS → Records → Add record** で表のAAAAレコードを保存する。同じ名前のレコードが存在する場合は先に内容を照合する。[DNSレコードの追加](https://developers.cloudflare.com/dns/manage-dns-records/how-to/create-dns-records/)
+2. **Workers & Pages → sho-customer-sites → Settings → Domains & Routes → Add → Route** でゾーン `sho-websites.com` を選び、表のパターンを追加する。[Worker Routeの追加](https://developers.cloudflare.com/workers/configuration/routing/routes/#set-up-a-route-in-the-dashboard)
+3. `sho-websites.com` の **SSL/TLS → Edge Certificates** でUniversal SSLの状態を確認し、Always Use HTTPSをオンにする。[HTTPS転送の設定](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/)
+
+## 接続後の検査
+
+1. 配信ホストの名前解決、公開証明書、`http` から `https` への転送を確認する。未割当サイトIDの `/healthz` は200、同じホストの `/` と `www` は404を期待する。
+2. 架空サイトを使い、HTML/CSS/画像、相対リンク、キャッシュ、承認前公開拒否、公開・更新・巻戻し、同時更新、他サイト横断拒否を実HTTPSで試験する。320/360/390/430/768/1366幅を確認する。
+3. 正式URLが検証できた後だけ Supabase の `CUSTOMER_BASE_DOMAIN` と `CUSTOMER_HOSTING_DOMAIN_READY` を同じ値に設定する。R2設定と公開モードは承認された本番反映の順序に従う。
+4. 異常時は新規顧客の受注・公開操作を止め、既知の正常版へ戻す。DNSの変更前後・元に戻す値・TTLを非公開の運用記録へ残す。
 
 ## 販売開始前
 
