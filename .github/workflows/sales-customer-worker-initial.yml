@@ -1,4 +1,4 @@
-name: HP customer delivery Worker first deployment
+name: HP customer delivery setup
 on:
   push:
     branches: [architecture/sales-cloudflare]
@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   prepare-worker:
-    if: ${{ github.repository == 'sho-support/sho-support.github.io' && contains(github.event.head_commit.message, '[deploy-sho-customer-delivery]') }}
+    if: ${{ github.repository == 'sho-support/sho-support.github.io' && (contains(github.event.head_commit.message, '[deploy-sho-customer-delivery]') || contains(github.event.head_commit.message, '[connect-sho-customer-domain]')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
@@ -22,8 +22,14 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --prefix customer-hosting-v2 --ignore-scripts --no-audit --no-fund
-      - name: Deploy the new Worker without routes and inspect exact-zone access
-        run: node sales-hosting/deploy-customer-delivery-worker.mjs
+      - name: Set up only the approved customer delivery target
+        run: |
+          if [ "$CONNECT_CUSTOMER_DOMAIN" = 'true' ]; then
+            node sales-hosting/deploy-customer-delivery-worker.mjs --connect-domain
+          else
+            node sales-hosting/deploy-customer-delivery-worker.mjs
+          fi
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CONNECT_CUSTOMER_DOMAIN: ${{ contains(github.event.head_commit.message, '[connect-sho-customer-domain]') && 'true' || 'false' }}
