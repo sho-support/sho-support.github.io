@@ -2,7 +2,7 @@
 
 2026-11-19 JST。対象は **sho-web-support** と **architecture/sales-cloudflare**。作業開始時のHEADは `9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd`。
 
-11月20日に本人が `sho-websites.com` を取得した。[取得の照合と専用ゾーンの設定案](../customer-hosting-v2/DNS_CUTOVER_CHECKLIST.md)
+11月20日に本人が `sho-websites.com` を取得し、配信Worker・DNS・公開HTTPSの実接続を確認した。[取得と配信基盤の照合](../customer-hosting-v2/DNS_CUTOVER_CHECKLIST.md)
 
 ## 実環境と固定候補の照合
 
@@ -58,11 +58,17 @@ Secretの値は各サービスの管理画面・非公開の保存元で取り�
 
 後継ソースは `07713e57f46206d26d14d987b4d4a62f6ceeb80a` に固定した。[後継候補manifest](../sales-hosting/release-candidate-20261119.json)に6関数・依存37ファイル・3migrationと、切替前へ戻す34ファイルの参照先・ハッシュを記録した。切替直前に実環境と照合する。
 
+## 11月20日の切替前照合
+
+- Hosted Supabase `sho-web-support` は正常稼働。商用6関数の版・JWT設定・配備bundleのSHA-256が後継候補manifestの切替前記録と一致した。固定コミットの37ソースと3migrationは現行作業ブランチの内容と一致し、復旧用34ファイルもSHA-256が一致した。[後継候補manifest](../sales-hosting/release-candidate-20261119.json)
+- 商用3migrationは履歴に未登録。追加予定の8テーブルは0件、顧客サイト・制作ジョブは0件、注文はLINE受付専用の1件だけで正式見積りなし。販売者情報4項目の保存とテスト銀行・普通0000000の許可設定を確認した。正式振込先、契約承認、バックアップ実施の承認は未登録。取得したのは件数と設定の有無だけ。[LINE受付の範囲](SALES_ACCEPTANCE_START_20261116.md)
+- 取得済みの `sho-websites.com` を隔離テストに設定し、3プランの見積り・同意・架空入金確認・承認・配信・更新・巻き戻しを検証した。PostgreSQL相当の隔離DB、ローカルR2、架空の通知を使って30件合格。独立したPostgreSQL接続を要する並行予約1項目はこの実行ではスキップ。Hosted Supabaseでの受付から納品までの試験は未実施。[公開HTTPSの実接続結果](https://github.com/sho-support/sho-support.github.io/actions/runs/44662782026)
+
 ## 本人の確認対象と原案
 
 | 項目 | 原案 | 確認すること |
 | --- | --- | --- |
-| 顧客専用ドメイン | 第一候補 `sho-websites.com` と初年度・通常更新とも税込等込み年3,000円の上限を本人が確認済み。例えば `https://s1000.sho-websites.com/`。 | 決済画面の総額、登録名義、更新通知先。購入とDNS変更はそれぞれ承認後に実施。 |
+| 顧客専用ドメイン | `sho-websites.com` を取得・接続済み。標準URLの例は `https://s1000.sho-websites.com/`。 | 登録者メールの確認状況と最終請求額は未確認。[公開HTTPSの照合](../customer-hosting-v2/DNS_CUTOVER_CHECKLIST.md) |
 | 制作と維持 | 制作15,000円／22,000円／30,000円〜。公開から12か月込み、2年目から税込6,000円／年。満了30日前までに案内し、申込みと入金で次の12か月。公開後30日は合意範囲内の無料調整。 | 見積りに合計、制作範囲、納期、支払期限、継続条件を記載。 |
 | 内容更新 | LIVE 1,000円／回、通常2,500円／回、月8回まで7,000円／月。対象のセミ・フルは3か月無料。 | 月8回の上限と無料期間の適用範囲。 |
 | 解約・引き渡し | 入金前は無料。着手前は発生済みの実費、着手後は完了作業と外部実費に応じて精算する。完成ファイルと素材の利用条件、設定説明を渡し、満了後30日を引き渡し確認期間とする。 | 返金計算、30日後の削除範囲、顧客管理型への移管時の費用。 |
@@ -76,10 +82,10 @@ Secretの値は各サービスの管理画面・非公開の保存元で取り�
 
 11月19日 JST。共有ブラウザのCloudflareサインインは403。GitHub Actionsに保存済みのトークンで別途確認したところ、対象アカウントのWorkers APIは200、`sho-websites.com` のRegistrar登録可否を照会するAPIは403（Cloudflareエラー10000）だった。トークンはWorkers配備に使える。発行時に確認した権限はWorkers Scripts編集、Workers R2 Storage読み取り、Account Settings読み取り。[最初の接続記録](../customer-hosting-v2/INTEGRATION_STATUS_20261112.md)・[今回のAPI確認](https://github.com/sho-support/sho-support.github.io/actions/runs/44547923210)
 
-ドメインは未購入。APIで登録するには対象アカウントの Registrar Write 権限と、Cloudflareに保存した既定の支払い方法、既定の登録者情報、登録規約への同意が必要。支払い・登録者情報・同意の設定状況と決済総額は未確認。登録条件は `sho-websites.com` を1年、税・手数料込み3,000円以内。アカウント所有者が登録画面を使う場合は、名義と総額を確認し、1年分で進める。登録後に送られる登録者メールの確認も所有者が行う。[Cloudflare Registrar API](https://developers.cloudflare.com/registrar/registrar-api/)・[ドメイン登録手順](https://developers.cloudflare.com/registrar/get-started/register-domain/)
+この確認時点では未購入。APIで登録するには対象アカウントの Registrar Write 権限と、Cloudflareに保存した既定の支払い方法、既定の登録者情報、登録規約への同意が必要。11月20日に本人が管理画面から1年分を取得した。[Cloudflare Registrar API](https://developers.cloudflare.com/registrar/registrar-api/)・[ドメイン登録手順](https://developers.cloudflare.com/registrar/get-started/register-domain/)
 
 ## 切替の判断
 
-外部連携を含めた全基盤復旧、正式顧客ドメイン、正式口座、契約承認、架空注文での実サービス通し試験が残る。商用migration、正式関数の配備、ホスティング有効化は切替手順の順番で行い、販売開始前に通し試験を判定する。受付専用の架空注文は制作や公開へ進めない。
+残るのは外部連携を含めた全基盤復旧、正式口座と契約承認、商用migrationと正式関数への切替、架空注文での実サービス通し試験。現行の後継候補ではホスティングモードの切替がCloudflare販売画面の一般受付にも影響するため、実環境の切替は販売条件の承認と切替手順に沿って行う。正式見積りはテスト口座を拒否し、受付専用注文は制作や公開へ進まない。契約原案の内容はチャットで先に確定できる。[切替の順序](SALES_CUTOVER_RUNBOOK_20261116.md)
 
 現行の設定保存関数は下書き保存でLINEの許可リストを初期化する。修正が配備されるまでは、販売準備設定での操作は閲覧までとする。実環境の受付専用注文の許可リストは読み取りで確認済み。
