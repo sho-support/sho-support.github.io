@@ -13,7 +13,7 @@ const forbidden = () => { throw Error('Unexpected database mutation or external 
 
 // Run the exact deployment entrypoints. The SDK, database, messages, and network
 // are replaced at their boundaries; no real accounts or external service keys.
-async function runtime(slug, { admin = { from: forbidden, rpc: forbidden }, env = {}, user = null, fetcher = forbidden, confirmedOrigin } = {}) {
+async function runtime(slug, { admin = { from: forbidden, rpc: forbidden }, env = {}, user = null, fetcher = forbidden, confirmedOrigin, canonical = false } = {}) {
   let handler;
   const messages = [], requests = [];
   const helpers = {
@@ -50,7 +50,8 @@ async function runtime(slug, { admin = { from: forbidden, rpc: forbidden }, env 
     const module = new vm.SourceTextModule(code, { context, identifier: url });
     cache.set(url, module); return module;
   }
-  const root = await load(new URL(`../runtime/${slug}/index.ts`, import.meta.url).href);
+  const source = canonical ? '../../supabase/functions/' : '../runtime/';
+  const root = await load(new URL(source + slug + '/index.ts', import.meta.url).href);
   await root.link((specifier, ref) => load(new URL(specifier, ref.identifier).href));
   await root.evaluate();
   const request = (body, origin = cloud, method = 'POST') => handler(new Request('https://fixture.supabase.co/functions/v1/' + slug, {
@@ -218,14 +219,14 @@ test('receipt-only guards still authenticate administrators before returning the
   }
 });
 
-function receiptDatabase({code='9000001001',allow=true,linked=false}={}){
-  const token='a'.repeat(40),order={id:'synthetic-order-id',order_code:code,status:linked?'pending_payment':'pending_line',plan:'one',amount_from:15000,line_user_id:linked?'U_OTHER':null,line_link_token_hash:hash(token)};
+function receiptDatabase({code='9000001001',allow=true,linked=false,status=linked?'pending_payment':'pending_line',cancelDuringLink=false}={}){
+  const token='a'.repeat(40),order={id:'synthetic-order-id',order_code:code,status,plan:'one',amount_from:15000,line_user_id:linked?'U_OTHER':null,line_link_token_hash:hash(token)};
   const reads=[],writes=[];
   return {token,order,reads,writes,from(table){
     let filters=[],values=null;
     const result=()=>{
       reads.push({table,filters});
-      if(table==='website_orders')return{data:order,error:null};
+      if(table==='website_orders')return{data:{...order},error:null};
       if(table==='website_settings'){
         const key=filters.find(([k])=>k==='key')?.[1];
         if(key==='bank_transfer_test')return{data:{value:{order_codes:allow?['9000001001']:[],message:'テスト銀行・普通0000000（架空）'}},error:null};
@@ -233,13 +234,20 @@ function receiptDatabase({code='9000001001',allow=true,linked=false}={}){
       }
       throw Error('Unexpected fixture query');
     };
-    const chain={select(){return chain;},eq(k,v){filters.push([k,v]);return chain;},maybeSingle:async()=>result(),update(v){values=v;return chain;},then(resolve,reject){if(!values)throw Error('Unexpected fixture mutation');writes.push({table,values});Object.assign(order,values);return Promise.resolve({error:null}).then(resolve,reject);}};
+    const persist=()=>{
+      if(!values)throw Error('Unexpected fixture mutation');
+      if(cancelDuringLink)order.status='cancelled';
+      if(!filters.every(([k,v])=>order[k]===v))return {data:null,error:null};
+      writes.push({table,values});Object.assign(order,values);
+      return {data:{id:order.id},error:null};
+    };
+    const chain={select(){return chain;},eq(k,v){filters.push([k,v]);return chain;},maybeSingle:async()=>values?persist():result(),update(v){values=v;return chain;},then(resolve,reject){return Promise.resolve(persist()).then(resolve,reject);}};
     return chain;
   }};
 }
-async function lineReceipt({db=receiptDatabase(),signature=true,token=db.token}={}){
+async function lineReceipt({db=receiptDatabase(),signature=true,token=db.token,canonical=false}={}){
   const replies=[],secret='synthetic-HMAC-secret-only';
-  const h=await runtime('website-line-webhook',{admin:db,env:{LINE_CHANNEL_SECRET:secret},fetcher:async(url,options)=>{
+  const h=await runtime('website-line-webhook',{admin:db,canonical,env:{LINE_CHANNEL_SECRET:secret},fetcher:async(url,options)=>{
     if(url==='https://api.line.me/v2/bot/profile/U_FIXTURE')return Response.json({displayName:'Synthetic LINE sender'});
     if(url==='https://api.line.me/v2/bot/message/reply'){replies.push(JSON.parse(options.body));return Response.json({});}
     throw Error('Unexpected provider operation');
@@ -262,6 +270,18 @@ test('ordinary numeric orders preserve the existing non-test receipt flow',async
   const {r,text,db}=await lineReceipt({db:receiptDatabase({code:'1001'})});assert.equal(r.status,200);
   assert.match(text,/正式なお見積り/);assert.ok(!text.includes('接続テスト専用'));assert.ok(!text.includes('0000000'));assert.equal(db.writes.length,1);
 });
+test('the release webhook preserves ordinary and test receipts and never restores a cancelled order',async()=>{
+  for(const code of ['1001','9000001001']){
+    const receipt=await lineReceipt({db:receiptDatabase({code}),canonical:true});
+    assert.equal(receipt.r.status,200);assert.equal(receipt.replies.length,1);assert.equal(receipt.db.order.status,'pending_payment');
+    assert.equal(receipt.text.includes('0000000'),code==='9000001001');
+  }
+  for(const state of [{status:'cancelled'},{cancelDuringLink:true}]){
+    const receipt=await lineReceipt({db:receiptDatabase({code:'1001',...state}),canonical:true});
+    assert.equal(receipt.r.status,200);assert.equal(receipt.replies.length,0);assert.equal(receipt.db.writes.length,0);
+    assert.equal(receipt.db.order.status,'cancelled');assert.equal(receipt.db.order.line_user_id,null);
+  }
+});
 test('unsigned LINE requests cannot read orders or write pairing state',async()=>{
   const {r,db,h,replies}=await lineReceipt({signature:false});assert.equal(r.status,401);assert.equal(db.reads.length,0);assert.equal(db.writes.length,0);assert.equal(h.requests.length,0);assert.equal(replies.length,0);
 });
@@ -269,12 +289,12 @@ test('the receipt fixture still requires its matching pairing code and refuses a
   const wrong=await lineReceipt({token:'b'.repeat(40)});assert.equal(wrong.r.status,200);assert.equal(wrong.db.writes.length,0);assert.match(wrong.text,/連携コードを確認できません/);
   const other=await lineReceipt({db:receiptDatabase({linked:true})});assert.equal(other.r.status,200);assert.equal(other.db.writes.length,0);assert.match(other.text,/別のLINEアカウント/);
 });
-test('LINE and customer runtime deployment retain provider helper bytes, and test logic matches canonical source',async()=>{
+test('historical LINE and customer runtime deployment bytes remain available for rollback',async()=>{
   for(const [slug,version]of [['website-line-webhook',20],['website-customer-access',54]]){
     const before=JSON.parse(await readFile(new URL(`../runtime-baseline/${slug}-${version}.json`,import.meta.url),'utf8'));
     for(const file of before.files.filter(f=>f.name!=='index.ts'))assert.equal(await readFile(new URL(`../runtime/${slug}/${file.name}`,import.meta.url),'utf8'),file.content);
     assert.equal(await readFile(new URL(`../runtime/${slug}/_shared/line-receipt-test.mjs`,import.meta.url),'utf8'),await readFile(new URL('../../supabase/functions/_shared/line-receipt-test.mjs',import.meta.url),'utf8'));
   }
-  const canonical=await readFile(new URL('../../supabase/functions/website-line-webhook/index.ts',import.meta.url),'utf8');
-  assert.equal(await readFile(new URL('../runtime/website-line-webhook/index.ts',import.meta.url),'utf8'),canonical.replaceAll("from '../_shared/","from './_shared/"));
+  assert.equal(hash(await readFile(new URL('../runtime/website-line-webhook/index.ts',import.meta.url),'utf8')),
+    'c1fb652da74bf5ce9467a1a076851b7b7d2923a90edf5cced3f462b18e24e066');
 });

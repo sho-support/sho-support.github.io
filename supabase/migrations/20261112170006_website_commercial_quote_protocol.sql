@@ -87,10 +87,36 @@ begin
  return jsonb_build_object('accepted_at',q->'accepted_at','already_recorded',false);
 end $$;
 
+create function public.website_hosting_cancel_unpaid_order(p_actor uuid,p_order text) returns jsonb
+language plpgsql security invoker set search_path='' as $$
+declare o public.website_orders%rowtype; q jsonb;
+begin
+ perform public.website_hosting_require_admin(p_actor);
+ select * into strict o from public.website_orders where order_code=p_order for update;
+ if o.order_code='9000001001' or o.selections->>'qa_purpose'='line_connection_acceptance_only' then
+  raise exception 'LINE受付専用のテスト注文は取り消せません。';
+ end if;
+ if o.status='cancelled' then return jsonb_build_object('already_cancelled',true); end if;
+ if o.status not in ('pending_line','pending_payment') or coalesce(o.site_id,'')<>'' then
+  raise exception '入金確認・案件作成済みの注文はこの操作では取り消せません。';
+ end if;
+ q=o.selections->'commercial_quote';
+ if q->>'state'='sending' and coalesce((q->>'started_at')::timestamptz,now())>now()-interval '24 hours' then
+  raise exception '見積りのLINE送信結果が未確定です。LINEの履歴を確認してください。送信結果が確定するか、送信開始から24時間が経過すると取り消せます。';
+ end if;
+ update public.website_orders set status='cancelled',updated_at=now(),
+  selections=coalesce(selections,'{}'::jsonb)||jsonb_build_object('unpaid_cancelled_at',now(),'unpaid_cancelled_by',p_actor)
+  where order_code=o.order_code;
+ return jsonb_build_object('already_cancelled',false);
+end $$;
+
 create function public.website_hosting_require_accepted_contract() returns trigger
 language plpgsql security invoker set search_path='' as $$
 declare before_quote jsonb; after_quote jsonb; mutable text[]=array['state','sent_at','accepted_at','accepted_by','acceptance_reference','acceptance_method'];
 begin
+ if old.status='cancelled' and new is distinct from old then
+  raise exception 'Cancelled orders cannot be reactivated or edited';
+ end if;
  before_quote=old.selections->'commercial_quote';after_quote=new.selections->'commercial_quote';
  if before_quote is not null then
   if after_quote is null or (after_quote-mutable) is distinct from (before_quote-mutable)
@@ -124,6 +150,8 @@ end $$;
 create trigger website_hosting_contract_before_activation before update on public.website_orders
  for each row execute function public.website_hosting_require_accepted_contract();
 revoke all on function public.website_hosting_claim_quote(uuid,text,jsonb,text,text),public.website_hosting_complete_quote(uuid,text,text),
- public.website_hosting_accept_contract(uuid,text,text,text),public.website_hosting_require_accepted_contract() from public,anon,authenticated;
+ public.website_hosting_accept_contract(uuid,text,text,text),public.website_hosting_cancel_unpaid_order(uuid,text),
+ public.website_hosting_require_accepted_contract() from public,anon,authenticated;
 grant execute on function public.website_hosting_claim_quote(uuid,text,jsonb,text,text),public.website_hosting_complete_quote(uuid,text,text),
- public.website_hosting_accept_contract(uuid,text,text,text),public.website_hosting_require_accepted_contract() to service_role;
+ public.website_hosting_accept_contract(uuid,text,text,text),public.website_hosting_cancel_unpaid_order(uuid,text),
+ public.website_hosting_require_accepted_contract() to service_role;

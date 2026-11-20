@@ -32,7 +32,11 @@ test('frozen commercial contract and acceptance on synthetic SQL and actual Edge
   assert.equal((await send({action:'admin_send_final_quote',order_code:o.code,...quoteInput()},'stranger')).status,403);
   assert.equal((await send({action:'admin_send_final_quote',order_code:o.code,...quoteInput(),policy:commercialPolicy()})).status,409);
   assert.equal(h.messages.length,0);
-  for(const role of ['anon','authenticated']){await db.exec('set role '+role);await assert.rejects(rpc('accept_contract',[ADMIN,o.code,HASH,'架空の同意返信日時']),/permission denied/);}
+  for(const role of ['anon','authenticated']){
+   await db.exec('set role '+role);
+   await assert.rejects(rpc('accept_contract',[ADMIN,o.code,HASH,'架空の同意返信日時']),/permission denied/);
+   await assert.rejects(rpc('cancel_unpaid_order',[ADMIN,o.code]),/permission denied/);
+  }
   await db.exec('set role service_role');await savePolicy(commercialPolicy());
  });
  for(const[i,plan]of ['one','semi','full'].entries())await t.test(plan+': quotation -> explicit operator-attested customer acceptance -> atomic paid activation',async()=>{
@@ -73,12 +77,43 @@ test('frozen commercial contract and acceptance on synthetic SQL and actual Edge
   await assert.rejects(claim(o,{...d,snapshot:{...d.snapshot,initial_total_jpy:1}}),/approved fees/);
   await savePolicy({...commercialPolicy(),enabled:false});await assert.rejects(claim(o,d),/approve/);await savePolicy(commercialPolicy());
  });
+ await t.test('an unpaid cancellation preserves the frozen quote and prevents later acceptance, invoicing or activation',async()=>{
+  const o=await order('9125'),d=await draft(o);
+  const cancel=code=>({action:'admin_cancel_unpaid_order',order_code:code,confirm_unpaid:true});
+  assert.equal((await send(cancel(o.code),'')).status,401);
+  assert.equal((await send(cancel(o.code),'stranger')).status,403);
+  assert.equal((await send({...cancel(o.code),confirm_unpaid:false})).status,400);
+  assert.equal((await send(cancel('9000001001'))).status,409);
+  assert.equal((await send(cancel('P9110'))).status,409,'A paid, activated order stays out of this operation');
+  await claim(o,d);
+  assert.match((await send(cancel(o.code))).body.error,/送信結果が未確定/);
+  const quote=await rpc('complete_quote',[ADMIN,o.code,d.fingerprint]);
+  const messages=h.messages.length;
+  assert.equal((await send(cancel(o.code))).body.already_cancelled,false);
+  assert.equal((await send(cancel(o.code))).body.already_cancelled,true);
+  const [cancelled]=(await q('select status,selections,site_id from public.website_orders where order_code=$1',[o.code])).rows;
+  assert.equal(cancelled.status,'cancelled');
+  assert.equal(cancelled.site_id,null);
+  assert.equal(cancelled.selections.unpaid_cancelled_by,ADMIN);
+  assert.ok(cancelled.selections.unpaid_cancelled_at);
+  assert.deepEqual(cancelled.selections.commercial_quote,quote);
+  assert.equal((await send({action:'admin_send_final_quote',order_code:o.code,...quoteInput()})).status,409);
+  assert.equal((await send({action:'admin_record_contract_acceptance',order_code:o.code,quote_fingerprint:d.fingerprint,acceptance_reference:'架空の同意返信日時'})).status,409);
+  assert.equal((await send({action:'admin_activate_order',order_code:o.code})).status,409);
+  await assert.rejects(q("update public.website_orders set status='pending_payment' where order_code=$1",[o.code]),/cannot be reactivated/);
+  assert.equal(h.messages.length,messages,'Cancelling alone makes no request to send a LINE message');
+
+  await q("insert into public.website_orders(order_code,status,plan) values ('9126','pending_line','one'),('9000001001','pending_line','one')");
+  assert.equal((await send(cancel('9126'))).body.already_cancelled,false);
+  await assert.rejects(rpc('cancel_unpaid_order',[ADMIN,'9000001001']),/テスト注文/);
+ });
  await t.test('direct paid activation and expired unknown deliveries cannot bypass review',async()=>{
   const o=await order('9123'),d=await draft(o);
   // Insert a synthetic already-expired initial ledger; real ledgers never allow timestamp rewrites.
-  await q("update public.website_orders set selections=jsonb_build_object('commercial_quote',$1::jsonb) where order_code=$2",[JSON.stringify({state:'sending',snapshot:d.snapshot,message:d.message,fingerprint:d.fingerprint,recipient:'U_FAKE_9123',retry_key:crypto.randomUUID(),started_at:new Date(Date.now()-24*3600000).toISOString(),created_by:ADMIN}),o.code]);
+  await q("update public.website_orders set selections=jsonb_build_object('commercial_quote',$1::jsonb) where order_code=$2",[JSON.stringify({state:'sending',snapshot:d.snapshot,message:d.message,fingerprint:d.fingerprint,recipient:'U_FAKE_9123',retry_key:crypto.randomUUID(),started_at:new Date(Date.now()-25*3600000).toISOString(),created_by:ADMIN}),o.code]);
   await assert.rejects(q("update public.website_orders set status='site_created' where order_code=$1",[o.code]),/acceptance|accepted|contract/i);
   await assert.rejects(claim(o,d),/retry window expired/);
+  assert.equal((await rpc('cancel_unpaid_order',[ADMIN,o.code])).already_cancelled,false);
  });
  await t.test('two independent connections cannot reserve different contracts for one order',{skip:!db.independent},async()=>{
   const o=await order('9124'),a=await draft(o),b=await draft(o),second=await db.independent();
@@ -86,6 +121,20 @@ test('frozen commercial contract and acceptance on synthetic SQL and actual Edge
    await q('begin');const first=await claim(o,a);const pending=second.query('select public.website_hosting_claim_quote($1,$2,$3,$4,$5)',[ADMIN,o.code,JSON.stringify(b.snapshot),b.message,b.fingerprint]);
    const rejected=assert.rejects(pending,/immutable/);await q('commit');await rejected;
    assert.equal((await claim(o,a)).retry_key,first.retry_key);
+  }finally{await second.end();}
+ });
+ await t.test('unpaid cancellation and paid activation cannot both complete for one order',{skip:!db.independent},async()=>{
+  const o=await order('9127'),d=await draft(o),second=await db.independent();
+  await claim(o,d);await rpc('complete_quote',[ADMIN,o.code,d.fingerprint]);
+  await rpc('accept_contract',[ADMIN,o.code,d.fingerprint,'架空の同意返信・並行試験の記録']);
+  try{
+   await q('begin');
+   await rpc('cancel_unpaid_order',[ADMIN,o.code]);
+   const activation=second.query('select public.website_hosting_activate_order($1,$2,$3)',[ADMIN,o.code,HASH]);
+   const rejected=assert.rejects(activation,/requires its sent quotation/);
+   await q('commit');await rejected;
+   const [row]=(await q('select status,site_id from public.website_orders where order_code=$1',[o.code])).rows;
+   assert.deepEqual(row,{status:'cancelled',site_id:null});
   }finally{await second.end();}
  });
  assert.equal(h.requests.length,0,'No LINE, customer, bank, GitHub or paid AI request leaves the fixture');

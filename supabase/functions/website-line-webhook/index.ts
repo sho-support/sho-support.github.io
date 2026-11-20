@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
         if (orderError) throw orderError;
 
         if (order) {
+          if (order.status==='cancelled') continue;
           if(order.status==='pending_line'){
             const match=text.match(/連携コード\s*[:：]\s*([a-f0-9]{40})/i);
             if(!match||!order.line_link_token_hash||(await sha256Hex(match[1].toLowerCase()))!==order.line_link_token_hash){
@@ -107,7 +108,7 @@ Deno.serve(async (req) => {
           }
           if(order.line_user_id&&order.line_user_id!==lineUserId){await reply(event.replyToken,'この注文IDは別のLINEアカウントに紐づいています。ご本人確認が必要な場合は管理者へご相談ください。');continue;}
           const p = await profile(lineUserId);
-          const { error: orderUpdateError } = await admin
+          const { data: linkedOrder, error: orderUpdateError } = await admin
             .from('website_orders')
             .update({
               status: order.status === 'pending_line' ? 'pending_payment' : order.status,
@@ -116,8 +117,12 @@ Deno.serve(async (req) => {
               line_linked_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
-            .eq('id', order.id);
+            .eq('id', order.id)
+            .eq('status', order.status)
+            .select('id')
+            .maybeSingle();
           if (orderUpdateError) throw orderUpdateError;
+          if (!linkedOrder) continue;
 
           if(isLineReceiptTestCode(order.order_code)){
             const {data:testBank,error:testBankError}=await admin.from('website_settings').select('value').eq('key','bank_transfer_test').maybeSingle();

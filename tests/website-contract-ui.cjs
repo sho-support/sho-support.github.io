@@ -13,7 +13,7 @@ const client=ready=>`
   window.__contractCalls.push(body);
   if(body.action==='admin_list_orders')return{data:{orders:[structuredClone(order)]}};
   if(body.action==='admin_bank_settings')return{data:{message:'架空の銀行・支店・口座番号・名義です'}};
-  if(body.action==='admin_commercial_policy_status')return{data:{ready:${ready},version:'試験用・未公開',hosting:{initial_fee_jpy:0},reason:'販売条件が未承認です。送信できません。'}};
+  if(body.action==='admin_commercial_policy_status')return{data:{ready:${ready},unpaid_cancellation_ready:${ready},version:'試験用・未公開',hosting:{initial_fee_jpy:0},reason:'販売条件が未承認です。送信できません。'}};
   if(body.action==='admin_resolve_free_url')return{data:{free_url:'https://s9100.contract.example/'}};
   if(body.action==='admin_send_final_quote'){
    order.final_quote_sent_at='2026-11-13T01:00:00Z';order.final_amount=22000;order.quoted_production_amount=body.final_amount;order.final_public_domain='https://s9100.contract.example/';order.contract_state='sent';order.contract_fingerprint='a'.repeat(64);order.quote_request={production_amount:body.final_amount,public_domain:body.public_domain,quote_note:body.quote_note,delivery_terms:body.delivery_terms,payment_deadline:body.payment_deadline};
@@ -21,6 +21,7 @@ const client=ready=>`
   }
   if(body.action==='admin_contract_detail')return{data:{contract:{state:order.contract_state,message:'保存済みの正式見積り・契約条件\\n初回合計22,000円\\n<script>window.__injected=true</script>'}}};
   if(body.action==='admin_record_contract_acceptance'){order.contract_state='accepted';order.contract_accepted_at='2026-11-13T01:02:00Z';return{data:{ok:true}};}
+  if(body.action==='admin_cancel_unpaid_order'&&body.confirm_unpaid===true){order.status='cancelled';return{data:{ok:true}};}
   throw Error('Unexpected contract mock action '+body.action);
  }}};
 `;
@@ -44,6 +45,7 @@ const client=ready=>`
     if(!ready){
      check(await page.locator('[data-quote]').isDisabled(),'Unapproved policy blocks final quotations');
      check((await page.locator('#commercialStatus').innerText()).includes('未承認'),'Blocked reason is visible');
+     check(await page.locator('[data-cancel-unpaid]').count()===0,'An older backend does not offer cancellation');
     }else{
      await page.locator('[data-quote]').click();check(dialogs.some(x=>x.includes('提供時期')),'Missing delivery date/terms is explained');
      await page.locator('[data-delivery-terms]').fill('1サイト・1ページを制作。全素材受領と入金確認から14日以内に初回案を提出します。');
@@ -72,6 +74,12 @@ const client=ready=>`
      check(calls.filter(x=>x.action==='admin_record_contract_acceptance').length===1,'One exact acceptance is recorded');
      check(calls.find(x=>x.action==='admin_record_contract_acceptance').quote_fingerprint==='a'.repeat(64),'Acknowledgement is bound to the frozen quote hash');
      check(!calls.some(x=>x.action==='admin_activate_order'),'Recording acceptance does not itself confirm bank payment');
+     await page.locator('[data-cancel-unpaid]').click();
+     await page.locator('.order-card[data-stage="cancelled"]').waitFor();
+     check(dialogs.some(x=>x.includes('着金がないことを確認')),'Cancellation asks the administrator to check that no funds arrived');
+     check(await page.locator('[data-quote],[data-activate],[data-accept-contract],[data-cancel-unpaid]').count()===0,'A cancelled order has no sales actions');
+     check(await page.locator('[data-contract]').count()===1,'The old quotation remains available to review');
+     check(await page.evaluate(()=>window.__contractCalls.filter(x=>x.action==='admin_cancel_unpaid_order'&&x.confirm_unpaid===true).length===1),'One cancellation confirmation is sent');
     }
     check(errors.length===0,'No page JavaScript errors: '+errors.join(','));check(external.length===0,'All requests stay inside the mock');
     check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Expanded contract controls fit at '+width);

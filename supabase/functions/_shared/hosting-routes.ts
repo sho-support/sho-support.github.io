@@ -47,10 +47,10 @@ export async function handleHostingAction({req,body,admin,user,dependencies:d}:a
   if(action==='review_publish')return d.json({error:'公開作業は運営者が行います。内容の承認をお願いします。'},403);
   const handled=new Set(['review_load','review_approve','review_revision','review_action','admin_send_review','admin_publish_site',
     'admin_rollback_site','admin_reconcile_publication','admin_resend_publication','admin_secure_preview','admin_domain','admin_repo_config','admin_activate_order','create_site',
-    'admin_commercial_policy_status','admin_get_sales_settings','admin_save_sales_settings','admin_send_final_quote','admin_record_contract_acceptance','admin_contract_detail']);
+    'admin_commercial_policy_status','admin_get_sales_settings','admin_save_sales_settings','admin_send_final_quote','admin_record_contract_acceptance','admin_contract_detail','admin_cancel_unpaid_order']);
   if(!handled.has(action)&&!transition)return null;
   try{
-    const commercialAction=action.startsWith('admin_')&&['admin_commercial_policy_status','admin_get_sales_settings','admin_save_sales_settings','admin_send_final_quote','admin_record_contract_acceptance','admin_contract_detail'].includes(action);
+    const commercialAction=action.startsWith('admin_')&&['admin_commercial_policy_status','admin_get_sales_settings','admin_save_sales_settings','admin_send_final_quote','admin_record_contract_acceptance','admin_contract_detail','admin_cancel_unpaid_order'].includes(action);
     const publicationMutation=['admin_activate_order','create_site','admin_publish_site','admin_rollback_site','admin_reconcile_publication'].includes(action)||transition;
     if(!cloudflareHostingEnabled()&&!commercialAction&&!publicationMutation)return null;
     const siteId=String(body.site_id||'');
