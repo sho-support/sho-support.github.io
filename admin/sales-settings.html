@@ -26,9 +26,36 @@ import {requireWebsiteSession,websiteSupabase} from '../website-client.js';
 const form=document.getElementById('salesForm'),status=document.getElementById('status'),fields=['legal_name','address','phone','contact'];
 let bankIsTest=false;
 const labels={hosting:'公開維持・URL',cancellation:'キャンセル・返金',handover:'解約・引き渡し',rights:'素材・制作物の権利',data:'データの保管・削除',backup:'バックアップ・復旧',support:'サポート範囲',update_billing:'内容更新料の扱い'};
+const cancellationDraft='振込前は、見積りに同意した後でも、公式LINEへのご連絡で無料でキャンセルできます。最終確認で承認いただいた内容を公開または納品した後は、好みの変更などお客様都合による制作料金の返金は原則お受けしません。公開・納品前に解約する場合は、見積りで合意した完了済み工程の対価（着手前は0円）と事前に同意を得た取消不能な外部実費を、法令で認められる範囲で差し引き、残額を返金します。控除の内訳をご案内し、返金の振込手数料は当方が負担します。有料の公開維持・更新の未提供分は別途精算します。合意した仕様との不一致や当方の事情で提供できない場合は、状況に応じて修正・返金等で対応します。法令上の権利は妨げません。';
 const note=(text,error=false)=>{status.textContent=text;status.classList.toggle('error',error);};
 async function api(action,values={}){const{data,error}=await websiteSupabase.functions.invoke('website-sales-setup',{body:{action,...values}});if(error||data?.error)throw Error(data?.error||'設定を取得・保存できませんでした。ログイン状態を確認してください。');return data;}
-async function load(){const d=await api('admin_get_sales_settings');for(const k of fields)document.getElementById(k).value=d.seller?.[k]||'';document.getElementById('bank_message').value=d.bank_message||'';bankIsTest=d.bank_is_test===true;document.getElementById('bank_message').readOnly=bankIsTest;document.getElementById('replaceBank').hidden=!bankIsTest;document.getElementById('bankMode').textContent=bankIsTest?'テスト用の振込先です。本番の振込案内には使えません。テスト銀行・0000000のまま下書き保存できます。':'本番の振込先です。銀行・支店・種別・番号・名義をまとめて入力してください。';document.getElementById('backup_reference').value=d.backup?.reference||'';const terms=document.getElementById('terms');terms.replaceChildren();for(const[k,label]of Object.entries(labels)){const detail=document.createElement('details'),summary=document.createElement('summary'),input=document.createElement('textarea');summary.textContent=label;input.id='term_'+k;input.maxLength=450;input.value=d.policy?.terms?.[k]||d.default_terms?.[k]||'';detail.append(summary,input);terms.append(detail);}const ready=await api('admin_commercial_policy_status');note(ready.ready?'販売条件は確認済みです。最終試験の結果も確認してから実際の受注を開始してください。':ready.reason||'販売準備が未完了です。下書き保存して不足を揃えてください。');form.hidden=false;}
+async function load(){
+ const d=await api('admin_get_sales_settings');
+ for(const k of fields)document.getElementById(k).value=d.seller?.[k]||'';
+ document.getElementById('bank_message').value=d.bank_message||'';
+ bankIsTest=d.bank_is_test===true;
+ document.getElementById('bank_message').readOnly=bankIsTest;
+ document.getElementById('replaceBank').hidden=!bankIsTest;
+ document.getElementById('bankMode').textContent=bankIsTest?'テスト用の振込先です。本番の振込案内には使えません。テスト銀行・0000000のまま下書き保存できます。':'本番の振込先です。銀行・支店・種別・番号・名義をまとめて入力してください。';
+ document.getElementById('backup_reference').value=d.backup?.reference||'';
+ const savedTerms=d.policy?.terms;
+ const savedCancellation=savedTerms?.cancellation;
+ const useCancellationDraft=d.policy?.enabled!==true&&(!savedCancellation||savedCancellation===d.default_terms?.cancellation);
+ const terms=document.getElementById('terms');
+ terms.replaceChildren();
+ for(const[k,label]of Object.entries(labels)){
+  const detail=document.createElement('details'),summary=document.createElement('summary'),input=document.createElement('textarea');
+  summary.textContent=label;
+  input.id='term_'+k;
+  input.maxLength=450;
+  input.value=k==='cancellation'&&useCancellationDraft?cancellationDraft:savedTerms?.[k]||d.default_terms?.[k]||'';
+  detail.append(summary,input);
+  terms.append(detail);
+ }
+ const ready=await api('admin_commercial_policy_status');
+ note(ready.ready?'販売条件は確認済みです。最終試験の結果も確認してから実際の受注を開始してください。':ready.reason||'販売準備が未完了です。下書き保存して不足を揃えてください。');
+ form.hidden=false;
+}
 async function save(enable){const buttons=[...form.querySelectorAll('button')];buttons.forEach(x=>x.disabled=true);try{const payload={enable,bank_is_test:bankIsTest,seller:Object.fromEntries(fields.map(k=>[k,document.getElementById(k).value])),bank_message:document.getElementById('bank_message').value,backup_reference:document.getElementById('backup_reference').value,terms:Object.fromEntries(Object.keys(labels).map(k=>[k,document.getElementById('term_'+k).value])),...Object.fromEntries(['confirm_terms','confirm_disclosure','confirm_backup'].map(k=>[k,document.getElementById(k).checked]))};if(enable&&bankIsTest)throw Error('テスト用の振込先では販売条件を確定できません。今は下書き保存を選んでください。');if(enable&&!['confirm_terms','confirm_disclosure','confirm_backup'].every(k=>payload[k]))throw Error('3つの確認項目をすべて確認するか、下書き保存を選んでください。');await api('admin_save_sales_settings',payload);await load();note((enable?'確認した販売条件':'下書き')+'を保存しました。正式URL・公開基盤と最終試験の確認は別に必要です。');}catch(e){note(e.message||'保存できませんでした。',true);}finally{buttons.forEach(x=>x.disabled=false);}}
 document.getElementById('replaceBank').onclick=()=>{bankIsTest=false;const input=document.getElementById('bank_message');input.readOnly=false;input.value='';input.focus();document.getElementById('replaceBank').hidden=true;document.getElementById('bankMode').textContent='本番の振込先を入力して下書き保存してください。';};
 form.onsubmit=e=>{e.preventDefault();save(true);};document.getElementById('saveDraft').onclick=()=>save(false);

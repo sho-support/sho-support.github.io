@@ -85,22 +85,25 @@ async function checkShareImages(page, check, outputDir) {
  const check=(v,m)=>{assert.ok(v,m);checks++;};
  try{for(const width of widths){
   const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});
-  await context.addInitScript(({terms})=>{
+  const previousApproval=width===1366;
+  const customDraft=width===768;
+  const savedTerms={...DEFAULT_TERMS,cancellation:customDraft?'販売者が編集したキャンセル条件の画面試験です。':DEFAULT_TERMS.cancellation};
+  await context.addInitScript(({terms,savedTerms,previousApproval})=>{
    if(location.origin!=='http://127.0.0.1:8765')return;
    localStorage.setItem('sho_web_order_v3',JSON.stringify({plan:'one',update:'none',template:'',domain:false}));
-   window.__settingsCalls=[];let saved=null;
+   window.__settingsCalls=[];let saved={terms:savedTerms,enable:previousApproval};
    window.__mockSales=async body=>{
     window.__settingsCalls.push(body);
     if(body.action==='admin_list_orders')return{data:{orders:[{order_code:'9000001001',status:'pending_payment',plan:'one',amount_from:15000,line_user_id:'U_SYNTHETIC_TEST',selections:{qa_purpose:'line_connection_acceptance_only'}}]}};
     if(body.action==='admin_bank_settings')return{data:{message:''}};
     if(body.action==='status')return{data:{ok:true,line_test:{order_code:'9000001001',line_linked:false,real_order:false,open_line_url:'https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent('【HP販売 接続テスト】実注文ではありません。')},configuration:{seller_saved:true,test_bank_saved:true,hosting_schema_installed:false,hosting_mode_enabled:false,production_storage_configured:false,stable_domain_configured:false,backup_attested:false,commercial_policy_approved:false,production_bank_saved:false},order_to_delivery_live_test_verified:false}};
     if(body.action==='line_check')return{data:{ok:true,line:{credential_valid:true,official_account_matches:true,webhook_configured:true,webhook_active:true,signed_empty_webhook_verified:true,real_message_receipt_verified:false,real_messages_sent:0}}};
-    if(body.action==='admin_get_sales_settings')return{data:{ok:true,seller:saved?.seller||{},bank_message:saved?.bank_message||'',backup:{reference:saved?.backup_reference||''},policy:saved?{terms:saved.terms}:null,default_terms:terms}};
+    if(body.action==='admin_get_sales_settings')return{data:{ok:true,seller:saved.seller||{},bank_message:saved.bank_message||'',backup:{reference:saved.backup_reference||''},policy:{terms:saved.terms,enabled:saved.enable},default_terms:terms}};
     if(body.action==='admin_commercial_policy_status')return{data:{ready:false,reason:'公開基盤の切り替え前です。'}};
     if(body.action==='admin_save_sales_settings'){saved=body;return{data:{ok:true,enabled:body.enable}};}
     throw Error('Unexpected setup mock request');
    };
-  },{terms:DEFAULT_TERMS});
+  },{terms:DEFAULT_TERMS,savedTerms,previousApproval});
   await context.route('**/*',route=>{
    const url=route.request().url();
    if(url===base+'website-client.js')return route.fulfill({status:200,contentType:'text/javascript',body:"export async function requireWebsiteSession(){return true;}export async function websiteApi(){throw Error('Receipt tests cannot invoke production APIs');}export const websiteSupabase={functions:{invoke:async(name,{body})=>window.__mockSales(body)}};"});
@@ -117,10 +120,19 @@ async function checkShareImages(page, check, outputDir) {
   await page.goto(base+'website-order-confirm.html',{waitUntil:'domcontentloaded'});
   check((await page.locator('#amount').innerText()).includes('15,000'),'Renewal fee is not added to the initial amount');
   check((await page.locator('label:has(#termsCheck)').innerText()).includes('年6,000円'),'Consent includes renewal cost');
+  const notice=await page.locator('.notice').first().innerText();
+  check(notice.includes('振込前のキャンセルは無料')&&notice.includes('承認した内容を公開または納品した後'),'Application shows when cancellation is free and when the no-refund rule starts');
+  check(await page.getByRole('link',{name:'キャンセル・返金条件'}).getAttribute('href')==='website-legal.html#cancellation','Refund and cancellation details are available before applying');
+  await page.goto(base+'website-legal.html#cancellation',{waitUntil:'domcontentloaded'});
+  const disclosure=await page.locator('[data-cancellation-terms]').textContent();
+  check(disclosure.includes('残額を返金')&&disclosure.includes('法令上の権利'),'The disclosure includes early termination and legal remedies');
   if(width===320||width===1366)await checkShareImages(page,check,width===320?process.env.QA_SCREENSHOTS_DIR:undefined);
   await page.goto(base+'admin/sales-settings.html',{waitUntil:'domcontentloaded'});await page.locator('#salesForm').waitFor();
+  const expectedCancellation=previousApproval||customDraft?savedTerms.cancellation:disclosure;
+  check(await page.locator('#term_cancellation').inputValue()===expectedCancellation,'Only an unapproved standard draft is updated to match the disclosure');
   await page.locator('#saveDraft').click();await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('下書きを保存'));
-  check((await page.evaluate(()=>window.__settingsCalls.filter(x=>x.action==='admin_save_sales_settings')))[0].enable===false,'Draft never activates sales');
+  const savedDraft=await page.evaluate(()=>window.__settingsCalls.find(x=>x.action==='admin_save_sales_settings'));
+  check(savedDraft.enable===false&&savedDraft.terms.cancellation===expectedCancellation,'Saving the draft keeps the reviewed cancellation text without activating sales');
   await page.locator('#enablePolicy').click();check((await page.locator('#status').innerText()).includes('3つの確認'),'Explicit attestations required');
   for(const [id,value]of Object.entries({legal_name:'画面試験事業者',address:'検証県検証市検証区1-2-3',phone:'000-1234-5678',contact:'qa@example.test',bank_message:'画面試験銀行・支店・普通1234567・試験名義',backup_reference:'画面試験のみの確認記録20261113'}))await page.locator('#'+id).fill(value);
   for(const id of ['confirm_terms','confirm_disclosure','confirm_backup'])await page.locator('#'+id).check();
