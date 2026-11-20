@@ -95,4 +95,6 @@ Secretの値は各サービスの管理画面・非公開の保存元で取り�
 - 着金前の注文の取消し、取消しと案件作成が重なった場合の処理、LINE再受信での状態維持を隔離環境で確認した。候補の7関数・38ファイルと3migrationは固定コミットに一致し、現在配備中の7関数の版・JWT設定・bundleハッシュと復旧ファイルを照合した。[11月20日候補](../sales-hosting/release-candidate-20261120.json)・[DBと操作画面の検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871412)・[LINEの検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871499)
 - 本人側に今必要なのは、Cloudflareから登録者メールの確認依頼が届いている場合の確認。実際の確認状況は未確認。正式口座と販売条件の保存は、切替前に新しい版の本人設定画面で行う。[登録者メールの確認手順](https://developers.cloudflare.com/registrar/troubleshooting/#email-verification-required)
 
-現行の設定保存関数は下書き保存でLINEの許可リストを初期化する。修正が配備されるまでは、販売準備設定での操作は閲覧までとする。実環境の受付専用注文の許可リストは読み取りで確認済み。
+### 11月20日の販売準備設定の修正
+
+設定関数 `website-sales-setup` の下書き保存処理を修正し、v8を実環境に配備した。配備前の16ファイルを照合し、保存処理1ファイルだけを変更。模擬DBで、テスト振込先とLINE受付許可の保持、未ログイン・非管理者の拒否、テスト振込先での販売承認拒否を確認した。配備後は16ファイルと認証設定を読み戻し、保存済み販売者情報・テスト振込先・LINE受付許可・契約と保全の設定を配備前と照合した。実注文・顧客サイト・制作ジョブは0件で、正式口座・販売承認は未登録。[配備元の保存処理](../sales-hosting/runtime-baseline/website-sales-setup-test-bank-save.ts)

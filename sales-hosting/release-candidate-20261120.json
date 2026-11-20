@@ -698,10 +698,10 @@
       "slug": "website-sales-setup",
       "before": {
         "slug": "website-sales-setup",
-        "version": 7,
+        "version": 8,
         "verify_jwt": false,
-        "bundle_sha256": "edfe3055fa3b92cca18d263113704190a9e0d59fe0587cd5947ca4aecc15054b",
-        "rollback_source_commit": "9140e8b2ccd056bf1b9dc03709a38c11bf6f1ccd",
+        "bundle_sha256": "73932083ecf5dc5b4b2f6581ca81d13077c2928b2ab0f4845e3c48207418644c",
+        "rollback_source_commit": "1dfa730327c7ba73f6c89635af73e5198f4e4c06",
         "rollback_files": [
           {
             "deployment_path": "website-sales-setup/index.ts",
@@ -720,8 +720,8 @@
           },
           {
             "deployment_path": "_shared/commercial-routes.ts",
-            "source_path": "supabase/functions/_shared/commercial-routes.ts",
-            "sha256": "a0f96f763675051fb6496b78fed6e6601b4439ac4c654be390d9f43dfb23c8a8"
+            "source_path": "sales-hosting/runtime-baseline/website-sales-setup-test-bank-save.ts",
+            "sha256": "358bf1c4378e2db773c19b405091e739f0a4fac363cc0c40e8e29f5f085acf87"
           },
           {
             "deployment_path": "_shared/commercial-policy.mjs",
@@ -992,7 +992,9 @@
     "rollback_files_sha256_verified": 37,
     "native_database_tests_passed": 49,
     "contract_ui_checks_passed": 186,
-    "line_runtime_tests_passed": 25
+    "line_runtime_tests_passed": 25,
+    "protected_settings_fix_deployed_and_readback_verified": true,
+    "protected_settings_test_bank_allowlist_preserved": true
   },
   "deployment": {
     "functions_replaced": false,
