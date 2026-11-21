@@ -94,9 +94,11 @@ Stripeの通常の自動回収では、請求書の作成通知に正常応答�
 
 #### Stripeテスト環境からのお知らせ連携
 
-`website-stripe-renewal-sandbox` は、署名を確認した `invoice.payment_failed` と `invoice.paid` のスナップショットイベントから請求をStripe APIで読み戻す。年額6,000円のカード自動請求と対象サイト・契約・期間が一致したとき、所有者のお知らせを記録または解除する。失敗結果が再送された場合や処理が競合した場合も、確定済みの支払い状態を保持する。この処理の対象は通知用データで、公開期限の更新・公開の停止・メール送信は別工程。
+`website-stripe-renewal-sandbox` は、署名を確認した `invoice.payment_failed` と `invoice.paid` のスナップショットイベントから、Stripe API `2026-11-18.endive` で請求書とその支払いを読み戻す。年額6,000円のカード自動請求と対象サイト・契約・期間が一致したとき、所有者のお知らせを記録または解除する。失敗結果が再送された場合や処理が競合した場合も、確定済みの支払い状態を保持する。この処理の対象は通知用データで、公開期限の更新・公開の停止・メール送信は別工程。
 
 実Stripeの通し試験では、HP販売専用のStripe Sandboxと架空データだけを入れたSupabase環境を使う。`website-stripe-renewal-sandbox` だけをJWT検証なしで配備し、Stripe署名で認証する。環境には `WEBSITE_STRIPE_SANDBOX_SUPABASE_URL`、`WEBSITE_STRIPE_SANDBOX_KEY`（請求を読み戻せるテストキー）、`WEBSITE_STRIPE_SANDBOX_SIGNING_SECRET`、`WEBSITE_STRIPE_SANDBOX_PRICE_ID`（年額6,000円のテスト価格）を設定する。Stripe側の架空契約に `purpose=sho_hp_renewal` と `site_id` を付ける。対応する `hosting_card_renewal_notice:<site_id>` に `mode: stripe_sandbox`、`kind: card_renewal_waiting`、`revision`（UUID）、`customer_id`、`subscription_id`、`price_id`、`next_period_start`（対象とする請求の期間開始をUnix秒で指定）を作成してから、失敗とカード変更後の再決済を確認する。金額の手動入金処理や無料請求は、カード入金として記録されない。参考 [Stripeテスト環境](https://docs.stripe.com/testing-use-cases)、[SupabaseのStripe通知受信例](https://supabase.com/docs/guides/functions/examples/stripe-webhooks)。
+
+2026-11-21の検証で、Stripeの接続先が `SHO WEB SUPPORT TEST` 1件（`livemode=false`）であることを確認した。年額6,000円（税込）のテスト価格は `sho_hp_renewal_annual_6000_jpy_sandbox_v1` で照会できる。2件の初回決済試験でそれぞれ6,000円のカード決済成功・カード拒否、およびStripeでの `invoice.paid`・`invoice.payment_failed` の生成を確認した。別の試験契約では無料期間終了時に6,000円の更新請求（`subscription_cycle`）が作成され、自動確定は同日12:23:45 JSTの予定だった。隔離したSupabaseへのWebhook配信と同じ更新請求の再決済は未検証。参考 [Stripeの請求書支払い一覧](https://docs.stripe.com/api/invoice-payment/list)、[Stripe Billingの試験](https://docs.stripe.com/billing/testing)。
 
 ## 検証
 

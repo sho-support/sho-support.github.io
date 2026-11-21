@@ -1,6 +1,7 @@
 import { adminClient } from '../_shared/website.ts';
 import {
-  nextSandboxRenewalRecord, sandboxRenewalInvoice, signedStripeInvoiceEvent, stripeApiVersion, stripeEventBodyLimit, stripeNoticePrefix,
+  nextSandboxRenewalRecord, sandboxRenewalInvoice, sandboxRenewalPayment, signedStripeInvoiceEvent,
+  stripeApiVersion, stripeEventBodyLimit, stripeNoticePrefix,
 } from '../_shared/stripe-renewal-sandbox.mjs';
 
 const reply = (code: string, status = 200) => Response.json({ code }, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -65,14 +66,24 @@ Deno.serve(async (request) => {
   if (!event) return reply('ignored');
 
   try {
-    const url = new URL(`/v1/invoices/${event.invoiceId}`, 'https://api.stripe.com');
-    url.searchParams.append('expand[]', 'payment_intent.latest_charge');
-    const result = await fetch(url, {
+    const stripeRequest: RequestInit = {
       headers: { Authorization: `Bearer ${config.key}`, 'Stripe-Version': stripeApiVersion },
       redirect: 'error', signal: AbortSignal.timeout(8000),
-    });
+    };
+    const url = new URL(`/v1/invoices/${event.invoiceId}`, 'https://api.stripe.com');
+    const result = await fetch(url, stripeRequest);
     if (!result.ok) return reply('stripe_check_unavailable', 503);
-    const invoice = sandboxRenewalInvoice(await result.json(), event, config.priceId);
+    const invoiceBody = await result.json();
+    const billing = sandboxRenewalInvoice(invoiceBody, event, config.priceId);
+    if (!billing) return reply('ignored');
+
+    const paymentsUrl = new URL('/v1/invoice_payments', url);
+    paymentsUrl.searchParams.set('invoice', billing.invoiceId);
+    paymentsUrl.searchParams.set('limit', '2');
+    paymentsUrl.searchParams.append('expand[]', 'data.payment.payment_intent.latest_charge');
+    const paymentsResult = await fetch(paymentsUrl, stripeRequest);
+    if (!paymentsResult.ok) return reply('stripe_check_unavailable', 503);
+    const invoice = sandboxRenewalPayment(invoiceBody, billing, event, await paymentsResult.json());
     if (!invoice) return reply('ignored');
 
     const admin = adminClient();

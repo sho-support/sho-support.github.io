@@ -1,6 +1,6 @@
 import { HOSTING_OFFER } from './hosting-offer.mjs';
 
-export const stripeApiVersion = '2025-02-24.acacia';
+export const stripeApiVersion = '2026-11-18.endive';
 export const stripeNoticePrefix = 'hosting_card_renewal_notice:';
 export const stripeEventBodyLimit = 256 * 1024;
 const scope = 'sho_hp_renewal';
@@ -44,34 +44,45 @@ export async function signedStripeInvoiceEvent(bytes, header, secret, nowSeconds
 
 // A signed event selects an invoice for retrieval. It does not determine the current payment outcome.
 export function sandboxRenewalInvoice(invoice, event, priceId) {
-  const meta = invoice?.subscription_details?.metadata;
+  const subscription = invoice?.parent?.type === 'subscription_details' ? invoice.parent.subscription_details : null;
+  const meta = subscription?.metadata;
   if (invoice?.object !== 'invoice' || invoice.id !== event.invoiceId || invoice.livemode !== false
     || invoice.billing_reason !== 'subscription_cycle' || invoice.collection_method !== 'charge_automatically'
     || invoice.currency !== 'jpy' || invoice.total !== renewalFee || invoice.amount_due !== renewalFee
-    || !stripeId(invoice.subscription, 'sub_') || !stripeId(invoice.customer, 'cus_')
+    || !stripeId(subscription?.subscription, 'sub_') || !stripeId(invoice.customer, 'cus_')
     || meta?.purpose !== scope || typeof meta.site_id !== 'string' || !/^[A-Za-z0-9_-]{3,32}$/.test(meta.site_id)) return null;
 
   const lines = invoice.lines;
   const line = lines?.data?.[0];
-  const price = line?.price;
+  const item = line?.parent?.type === 'subscription_item_details' ? line.parent.subscription_item_details : null;
   const start = line?.period?.start;
   const end = line?.period?.end;
   if (lines?.has_more !== false || !Array.isArray(lines.data) || lines.data.length !== 1
-    || line?.type !== 'subscription' || line.proration !== false || line.quantity !== 1 || line.amount !== renewalFee
-    || price?.id !== priceId || price.currency !== 'jpy' || price.unit_amount !== renewalFee
-    || price.recurring?.interval !== 'year' || price.recurring.interval_count !== 1
+    || line?.object !== 'line_item' || line.invoice !== invoice.id || item?.subscription !== subscription.subscription
+    || item.proration !== false || line.quantity !== 1 || line.amount !== renewalFee || line.currency !== 'jpy'
+    || line.pricing?.type !== 'price_details' || line.pricing.price_details?.price !== priceId
     || !epochSeconds(start) || !epochSeconds(end) || end - start < 365 * daySeconds || end - start > 366 * daySeconds) return null;
 
-  const intent = invoice.payment_intent;
-  if (intent?.object !== 'payment_intent' || intent.livemode !== false || intent.invoice !== invoice.id
+  return { siteId: meta.site_id, invoiceId: invoice.id, customerId: invoice.customer, subscriptionId: subscription.subscription, priceId, start, end };
+}
+
+export function sandboxRenewalPayment(invoice, billing, event, payments) {
+  const payment = payments?.data?.[0];
+  if (payments?.object !== 'list' || payments.has_more !== false || !Array.isArray(payments.data) || payments.data.length !== 1
+    || payment?.object !== 'invoice_payment' || payment.invoice !== invoice.id || payment.livemode !== false
+    || payment.is_default !== true || payment.amount_requested !== renewalFee || payment.currency !== 'jpy'
+    || payment.payment?.type !== 'payment_intent') return null;
+
+  const intent = payment.payment.payment_intent;
+  if (intent?.object !== 'payment_intent' || !stripeId(intent.id, 'pi_') || intent.livemode !== false
     || intent.customer !== invoice.customer || intent.currency !== 'jpy' || intent.amount !== renewalFee) return null;
   const charge = intent.latest_charge;
-  const billing = { siteId: meta.site_id, invoiceId: invoice.id, customerId: invoice.customer, subscriptionId: invoice.subscription, priceId, start, end };
 
-  if (invoice.status === 'paid' && invoice.paid === true && invoice.paid_out_of_band === false
+  if (invoice.status === 'paid' && payment.status === 'paid' && payment.amount_paid === renewalFee
     && invoice.amount_paid === renewalFee && invoice.amount_remaining === 0 && epochSeconds(invoice.status_transitions?.paid_at)
     && intent.status === 'succeeded' && intent.amount_received === renewalFee
     && charge?.object === 'charge' && charge.livemode === false && charge.paid === true && charge.captured === true
+    && charge.payment_intent === intent.id && charge.customer === invoice.customer
     && charge.amount_captured === renewalFee && charge.amount_refunded === 0 && charge.currency === 'jpy'
     && charge.payment_method_details?.type === 'card') {
     return { ...billing, status: 'paid', at: isoTime(invoice.status_transitions.paid_at) };
@@ -79,8 +90,9 @@ export function sandboxRenewalInvoice(invoice, event, priceId) {
 
   const error = intent.last_payment_error;
   const attempts = invoice.attempt_count;
-  if (event.type === 'invoice.payment_failed' && event.created >= start && invoice.status === 'open' && invoice.attempted === true
-    && invoice.paid === false && invoice.amount_paid === 0 && Number.isSafeInteger(attempts) && attempts > 0 && attempts === event.attemptCount
+  if (event.type === 'invoice.payment_failed' && event.created >= billing.start && invoice.status === 'open' && invoice.attempted === true
+    && invoice.amount_paid === 0 && invoice.amount_remaining === renewalFee && Number.isSafeInteger(attempts) && attempts > 0
+    && attempts === event.attemptCount && payment.status === 'open' && payment.amount_paid === null
     && intent.status === 'requires_payment_method' && error?.type === 'card_error' && error.code !== 'authentication_required'
     && error.decline_code !== 'authentication_required'
     && (error.payment_method?.type === 'card' || charge?.payment_method_details?.type === 'card')) {

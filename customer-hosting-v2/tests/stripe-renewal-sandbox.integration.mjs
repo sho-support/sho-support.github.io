@@ -29,31 +29,37 @@ function invoiceFixture() {
   return {
     object: 'invoice', id: 'in_fixture_annual', livemode: false, billing_reason: 'subscription_cycle',
     collection_method: 'charge_automatically', total: 6000, amount_due: 6000, currency: 'jpy',
-    subscription: initial.subscription_id, customer: initial.customer_id,
-    subscription_details: { metadata: { site_id: siteId, purpose: 'sho_hp_renewal' } },
+    customer: initial.customer_id,
+    parent: { type: 'subscription_details', subscription_details: {
+      subscription: initial.subscription_id, metadata: { site_id: siteId, purpose: 'sho_hp_renewal' },
+    } },
     lines: { has_more: false, data: [{
-      type: 'subscription', proration: false, quantity: 1, amount: 6000,
-      price: { id: initial.price_id, currency: 'jpy', unit_amount: 6000, recurring: { interval: 'year', interval_count: 1 } },
+      object: 'line_item', invoice: 'in_fixture_annual', quantity: 1, amount: 6000, currency: 'jpy',
+      parent: { type: 'subscription_item_details', subscription_item_details: { proration: false, subscription: initial.subscription_id } },
+      pricing: { type: 'price_details', price_details: { price: initial.price_id } },
       period: { start: periodStart, end: periodEnd },
     }] },
-    status: 'open', paid: false, amount_paid: 0, attempted: true, attempt_count: 1,
-    payment_intent: {
-      object: 'payment_intent', livemode: false, invoice: 'in_fixture_annual', customer: initial.customer_id,
-      currency: 'jpy', amount: 6000, status: 'requires_payment_method',
-      last_payment_error: { type: 'card_error', code: 'card_declined', payment_method: { type: 'card' } },
-    },
+    status: 'open', amount_paid: 0, amount_remaining: 6000, attempted: true, attempt_count: 1,
   };
 }
 
-function paidInvoice(invoice) {
+function paymentsFixture(paid = false) {
+  const intent = {
+    object: 'payment_intent', id: 'pi_fixture_annual', livemode: false, customer: initial.customer_id,
+    currency: 'jpy', amount: 6000,
+    ...(paid ? {
+      status: 'succeeded', amount_received: 6000,
+      latest_charge: { object: 'charge', livemode: false, payment_intent: 'pi_fixture_annual', customer: initial.customer_id,
+        paid: true, captured: true, amount_captured: 6000, amount_refunded: 0, currency: 'jpy', payment_method_details: { type: 'card' } },
+    } : {
+      status: 'requires_payment_method',
+      last_payment_error: { type: 'card_error', code: 'card_declined', payment_method: { type: 'card' } },
+    }),
+  };
   return {
-    ...invoice, status: 'paid', paid: true, paid_out_of_band: false, amount_paid: 6000, amount_remaining: 0,
-    status_transitions: { paid_at: periodStart + 3600 },
-    payment_intent: {
-      ...invoice.payment_intent, status: 'succeeded', amount_received: 6000, last_payment_error: null,
-      latest_charge: { object: 'charge', livemode: false, paid: true, captured: true,
-        amount_captured: 6000, amount_refunded: 0, currency: 'jpy', payment_method_details: { type: 'card' } },
-    },
+    object: 'list', has_more: false, data: [{ object: 'invoice_payment', invoice: 'in_fixture_annual', livemode: false,
+      is_default: true, currency: 'jpy', amount_requested: 6000, status: paid ? 'paid' : 'open', amount_paid: paid ? 6000 : null,
+      payment: { type: 'payment_intent', payment_intent: intent } }],
   };
 }
 
@@ -114,8 +120,12 @@ test('signed Stripe fixtures update only the matching contract and its owner not
     return body;
   };
   const fixture = invoiceFixture();
+  const settledInvoice = { ...fixture, status: 'paid', amount_paid: 6000, amount_remaining: 0, status_transitions: { paid_at: periodStart + 3600 } };
+  const failedPayments = paymentsFixture();
+  const paidPayments = paymentsFixture(true);
   let result = fixture;
-  let available = true;
+  let payments = failedPayments;
+  let unavailable;
   let beforeWrite;
   const webhookAdmin = postgrestFixture({ async query(sql, values) {
     if (beforeWrite && sql.startsWith('update public.website_settings ')) {
@@ -127,11 +137,17 @@ test('signed Stripe fixtures update only the matching contract and its owner not
   } });
   const endpoint = await edgeHarness({ slug, admin: webhookAdmin, env, fetcher: (path, options) => {
     const url = new URL(path);
-    assert.equal(url.origin + url.pathname, 'https://api.stripe.com/v1/invoices/in_fixture_annual');
-    assert.equal(url.searchParams.get('expand[]'), 'payment_intent.latest_charge');
-    assert.equal(options.headers['Stripe-Version'], '2025-02-24.acacia');
+    assert.equal(url.origin, 'https://api.stripe.com');
+    assert.equal(options.headers['Stripe-Version'], '2026-11-18.endive');
     assert.equal(options.headers.Authorization, `Bearer ${env.WEBSITE_STRIPE_SANDBOX_KEY}`);
-    return available ? Response.json(result) : new Response(null, { status: 503 });
+    if (url.pathname === `/v1/invoices/${fixture.id}`) {
+      return unavailable === 'invoice' ? new Response(null, { status: 503 }) : Response.json(result);
+    }
+    assert.equal(url.pathname, '/v1/invoice_payments');
+    assert.equal(url.searchParams.get('invoice'), fixture.id);
+    assert.equal(url.searchParams.get('limit'), '2');
+    assert.equal(url.searchParams.get('expand[]'), 'data.payment.payment_intent.latest_charge');
+    return unavailable === 'payments' ? new Response(null, { status: 503 }) : Response.json(payments);
   } });
 
   const fire = async (event = eventFixture()) => {
@@ -139,19 +155,27 @@ test('signed Stripe fixtures update only the matching contract and its owner not
     return { status: response.status, code: (await response.json()).code };
   };
 
-  for (const change of [{ subscription: 'sub_other_site' }, { customer: 'cus_other_customer' }, { total: 0 },
-    { billing_reason: 'subscription_create' }, { livemode: true }, { attempt_count: 2 },
-    { payment_intent: { ...fixture.payment_intent, status: 'requires_action' } },
-    { lines: { ...fixture.lines, data: [{ ...fixture.lines.data[0], price: { ...fixture.lines.data[0].price, id: 'price_other' } }] } }]) {
+  const line = fixture.lines.data[0];
+  for (const change of [{ parent: { ...fixture.parent, subscription_details: { ...fixture.parent.subscription_details, subscription: 'sub_other_site' } } },
+    { customer: 'cus_other_customer' }, { total: 0 }, { billing_reason: 'subscription_create' }, { livemode: true }, { attempt_count: 2 },
+    { lines: { ...fixture.lines, data: [{ ...line, pricing: { ...line.pricing, price_details: { price: 'price_other' } } }] } }]) {
     result = { ...fixture, ...change };
     assert.equal((await fire()).code, 'ignored');
     assert.deepEqual(await storage(), initial);
   }
-  available = false;
-  assert.equal((await fire()).status, 503);
-  assert.deepEqual(await storage(), initial);
-  available = true;
   result = fixture;
+  for (const stage of ['invoice', 'payments']) {
+    unavailable = stage;
+    assert.deepEqual(await fire(), { status: 503, code: 'stripe_check_unavailable' });
+    assert.deepEqual(await storage(), initial);
+  }
+  unavailable = undefined;
+  const failedPayment = failedPayments.data[0];
+  payments = { ...failedPayments, data: [{ ...failedPayment, payment: { ...failedPayment.payment,
+    payment_intent: { ...failedPayment.payment.payment_intent, status: 'requires_action' } } }] };
+  assert.equal((await fire()).code, 'ignored');
+  assert.deepEqual(await storage(), initial);
+  payments = failedPayments;
 
   assert.equal((await fire()).code, 'failure_recorded');
   const failed = await storage();
@@ -162,16 +186,23 @@ test('signed Stripe fixtures update only the matching contract and its owner not
   assert.deepEqual((await list('owner')).billing_notices, [{ site_id: siteId, kind: failed.kind, failed_at: new Date((periodStart + 30) * 1000).toISOString() }]);
   assert.deepEqual((await list('viewer')).billing_notices, []);
 
-  result = { ...paidInvoice(fixture), paid_out_of_band: true };
-  assert.equal((await fire(eventFixture('invoice.paid'))).code, 'ignored');
-  assert.deepEqual(await storage(), failed);
+  result = settledInvoice;
+  const paidPayment = paidPayments.data[0];
+  for (const data of [[], [{ ...paidPayment, payment: { type: 'payment_record', payment_record: 'payrec_manual' } }],
+    [{ ...paidPayment, invoice: 'in_other_invoice' }], [paidPayment, paidPayment]]) {
+    payments = { ...paidPayments, data };
+    assert.equal((await fire(eventFixture('invoice.paid'))).code, 'ignored');
+    assert.deepEqual(await storage(), failed);
+  }
 
   result = { ...fixture, attempt_count: 2 };
+  payments = failedPayments;
   const secondFailure = eventFixture('invoice.payment_failed', { created: periodStart + 120, data: {
     object: { object: 'invoice', id: fixture.id, livemode: false, attempt_count: 2 },
   } });
   beforeWrite = async () => {
-    result = paidInvoice(fixture);
+    result = settledInvoice;
+    payments = paidPayments;
     assert.equal((await fire(eventFixture('invoice.paid'))).code, 'paid_recorded');
   };
   assert.deepEqual(await fire(secondFailure), { status: 503, code: 'sandbox_storage_retry' });
@@ -182,6 +213,7 @@ test('signed Stripe fixtures update only the matching contract and its owner not
   assert.equal(paid.failed_at, null);
   assert.deepEqual((await list('owner')).billing_notices, []);
   result = fixture;
+  payments = failedPayments;
   assert.equal((await fire()).code, 'ignored');
   assert.deepEqual(await storage(), paid);
   assert.equal(endpoint.messages.length + portal.messages.length + portal.requests.length, 0);
