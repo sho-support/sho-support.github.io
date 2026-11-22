@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: d371adeda04e6a444d0eb634234b9f22c57fe699
+          ref: 0acfbcdd4806df9ae22ef165d8cad27c6c2bf685
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -189,7 +189,7 @@ jobs:
                 for(const width of [390,1440]){
                   await page.setViewportSize({width,height:1000});
                   const gift=await page.evaluate(()=>({text:document.querySelector('.product-story')?.innerText||'',rows:document.querySelectorAll('.product-story tbody tr').length,photo:[...document.querySelectorAll('.story-cover img')].some(x=>x.complete&&x.naturalWidth>0),buy:document.querySelectorAll('[data-buy]').length,tool:!!document.querySelector('a[href*="tools/gift-quantity"]'),overflow:document.documentElement.scrollWidth>innerWidth}));
-                  if(gift.rows!==2||!gift.text.includes('91.80円')||!gift.text.includes('11月17日付')||!gift.tool||!gift.photo||!gift.buy||gift.overflow)throw Error('Gift guide public check failed '+JSON.stringify(gift));
+                  if(!gift.text.includes('クリスマス限定の包装紙')||!gift.text.includes('12人に2個')||!gift.text.includes('発送締切は確認できていません')||gift.rows!==2||!gift.text.includes('91.80円')||!gift.text.includes('11月17日付')||!gift.tool||!gift.photo||!gift.buy||gift.overflow)throw Error('Gift guide public check failed '+JSON.stringify(gift));
                   results.push({gift_guide:true,width,rows:gift.rows,photo:gift.photo,buy:gift.buy,tool:gift.tool,overflow:gift.overflow});
                 }
               }
