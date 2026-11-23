@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 0acfbcdd4806df9ae22ef165d8cad27c6c2bf685
+          ref: 640c95d6bb71794a10f4e8497c3de9acd545c576
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -161,7 +161,7 @@ jobs:
           await page.locator('#b-price').fill('');await expect('入力が揃う');
           await page.locator('#b-price').fill('0');await page.locator('#b-ship').fill('0');await expect('候補B');
           for(const width of [320,390,1440]){await page.setViewportSize({width,height:900});if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Calculator overflow '+width);}
-          await page.goto('http://127.0.0.1:8766/products/tools/gift-quantity.html');await page.locator('#people').fill('25');if(!(await page.locator('#gift-result').innerText()).includes('必要 2箱')||!(await page.locator('#gift-result').innerText()).includes('余り 30個'))throw Error('Wrong gift quantities');await page.locator('#people').fill('0');if(!(await page.locator('#gift-result').innerText()).includes('入力を確認'))throw Error('Invalid gift count accepted');await page.goto('http://127.0.0.1:8766/products/stories/yokumoku-delices-gift.html');for(const width of [390,1440]){await page.setViewportSize({width,height:1000});if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Gift article overflow');}if(await page.locator('.product-story tbody tr').count()!==2)throw Error('Missing quantity table');if(!(await page.locator('.product-story').innerText()).includes('5,400円'))throw Error('Wrong gift calculation');console.log('PASS unit cost: shipping, coupon, equality, zero price, zero count, excessive discount, empty value and 3 viewport widths');
+          await page.goto('http://127.0.0.1:8766/products/tools/gift-quantity.html');await page.locator('#people').fill('25');if(!(await page.locator('#gift-result').innerText()).includes('必要 2箱')||!(await page.locator('#gift-result').innerText()).includes('余り 30個'))throw Error('Wrong gift quantities');await page.locator('#people').fill('0');if(!(await page.locator('#gift-result').innerText()).includes('入力を確認'))throw Error('Invalid gift count accepted');await page.goto('http://127.0.0.1:8766/products/stories/yokumoku-delices-gift.html');if(await page.locator('.story-purchase [data-buy]').count()!==1)throw Error('Missing pre-publication product offer');for(const width of [390,1440]){await page.setViewportSize({width,height:1000});if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Gift article overflow');}if(await page.locator('.product-story tbody tr').count()!==2)throw Error('Missing quantity table');if(!(await page.locator('.product-story').innerText()).includes('5,400円'))throw Error('Wrong gift calculation');console.log('PASS unit cost: shipping, coupon, equality, zero price, zero count, excessive discount, empty value and 3 viewport widths');
           }finally{if(browser)await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1)});
           JS
       - name: Deploy static assets to the isolated review Worker
@@ -188,8 +188,8 @@ jobs:
               if(path==='/products/stories/yokumoku-delices-gift'){
                 for(const width of [390,1440]){
                   await page.setViewportSize({width,height:1000});
-                  const gift=await page.evaluate(()=>({text:document.querySelector('.product-story')?.innerText||'',rows:document.querySelectorAll('.product-story tbody tr').length,photo:[...document.querySelectorAll('.story-cover img')].some(x=>x.complete&&x.naturalWidth>0),buy:document.querySelectorAll('[data-buy]').length,tool:!!document.querySelector('a[href*="tools/gift-quantity"]'),overflow:document.documentElement.scrollWidth>innerWidth}));
-                  if(!gift.text.includes('クリスマス限定の包装紙')||!gift.text.includes('12人に2個')||!gift.text.includes('発送締切は確認できていません')||gift.rows!==2||!gift.text.includes('91.80円')||!gift.text.includes('11月17日付')||!gift.tool||!gift.photo||!gift.buy||gift.overflow)throw Error('Gift guide public check failed '+JSON.stringify(gift));
+                  const gift=await page.evaluate(()=>({focusedCards:document.querySelectorAll('#catalog-grid .product-card').length,earlyOffer:!!document.querySelector('.story-purchase [data-buy]'),text:document.querySelector('.product-story')?.innerText||'',rows:document.querySelectorAll('.product-story tbody tr').length,photo:[...document.querySelectorAll('.story-cover img')].some(x=>x.complete&&x.naturalWidth>0),buy:document.querySelectorAll('[data-buy]').length,tool:!!document.querySelector('a[href*="tools/gift-quantity"]'),overflow:document.documentElement.scrollWidth>innerWidth}));
+                  if(gift.focusedCards!==1||!gift.earlyOffer||!gift.text.includes('クリスマス限定の包装紙')||!gift.text.includes('12人に2個')||!gift.text.includes('発送締切は確認できていません')||gift.rows!==2||!gift.text.includes('91.80円')||!gift.text.includes('11月17日付')||!gift.tool||!gift.photo||!gift.buy||gift.overflow)throw Error('Gift guide public check failed '+JSON.stringify(gift));
                   results.push({gift_guide:true,width,rows:gift.rows,photo:gift.photo,buy:gift.buy,tool:gift.tool,overflow:gift.overflow});
                 }
               }
