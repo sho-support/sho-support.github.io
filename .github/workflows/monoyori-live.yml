@@ -181,7 +181,7 @@ jobs:
                 for(const width of [390,1440]){
                   await page.setViewportSize({width,height:1000});
                   const proof=await page.evaluate(()=>({text:document.querySelector('.product-story')?.innerText||'',photos:[...document.querySelectorAll('.story-cover img')].filter(x=>x.complete&&x.naturalWidth>0).length,buy:document.querySelectorAll('[data-buy]').length,overflow:document.documentElement.scrollWidth>innerWidth}));
-                  if(!proof.text.includes('60日以上')||!proof.text.includes('96日')||!proof.text.includes('11月17日付')||!proof.photos||!proof.buy||proof.overflow)throw Error('Water guide verification failed '+JSON.stringify(proof));
+                  if(!proof.text.includes('60日以上')||!proof.text.includes('96日')||!proof.text.includes('2026年10月9日')||!proof.photos||!proof.buy||proof.overflow)throw Error('Water guide verification failed '+JSON.stringify(proof));
                   results.push({water_guide:true,width,photos:proof.photos,buy:proof.buy,overflow:proof.overflow});
                 }
               }
