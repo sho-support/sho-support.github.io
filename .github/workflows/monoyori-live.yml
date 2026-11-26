@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sho-support/ai-trend-blog
-          ref: 5412d37492c30e7e9fac34cff1883573f1cb9f69
+          ref: 4e23a3afc7ccac5b821959b5ee1d838adea5e5d6
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
