@@ -1020,7 +1020,9 @@
       "backup_attested": false,
       "other_orders": 0,
       "customer_sites": 0,
-      "creation_jobs": 0
+      "creation_jobs": 0,
+      "live_cors_preflight_status": 200,
+      "anonymous_settings_read_status": 401
     },
     "current_local_checks": {
       "edge_routes_passed": 26,
@@ -1028,7 +1030,24 @@
       "commercial_policy_and_display_passed": 11,
       "sales_static_checks_passed": 24,
       "sales_cloudflare_dry_run_passed": true,
-      "edge_type_check_passed": true
+      "edge_type_check_passed": true,
+      "browser_main_assertions_passed": 655,
+      "browser_main_viewports_px": [
+        320,
+        360,
+        390,
+        430,
+        768,
+        1366
+      ],
+      "packaged_owner_form_viewports_px": [
+        360,
+        1366
+      ],
+      "packaged_png_downloads": [
+        "trial_top",
+        "price_list"
+      ]
     },
     "stripe_test_renewal": {
       "yearly_jpy": 6000,
