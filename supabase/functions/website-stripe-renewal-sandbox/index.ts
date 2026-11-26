@@ -14,7 +14,7 @@ function sandboxSettings() {
   const signingSecret = get('SIGNING_SECRET');
   const priceId = get('PRICE_ID');
   if (!sandboxUrl || sandboxUrl !== Deno.env.get('SUPABASE_URL') || sandboxUrl.includes(salesProjectRef)
-    || !/^(sk|rk)_test_[A-Za-z0-9_]+$/.test(key) || !/^whsec_[A-Za-z0-9_]+$/.test(signingSecret)
+    || !/^(?:sk|rk|rkcs)_test_[A-Za-z0-9_]+$/.test(key) || !/^whsec_[A-Za-z0-9_]+$/.test(signingSecret)
     || !/^price_[A-Za-z0-9_]+$/.test(priceId)) return null;
   return { key, signingSecret, priceId };
 }
@@ -66,12 +66,12 @@ Deno.serve(async (request) => {
   if (!event) return reply('ignored');
 
   try {
-    const stripeRequest: RequestInit = {
+    const stripeRequest = (): RequestInit => ({
       headers: { Authorization: `Bearer ${config.key}`, 'Stripe-Version': stripeApiVersion },
       redirect: 'error', signal: AbortSignal.timeout(8000),
-    };
+    });
     const url = new URL(`/v1/invoices/${event.invoiceId}`, 'https://api.stripe.com');
-    const result = await fetch(url, stripeRequest);
+    const result = await fetch(url, stripeRequest());
     if (!result.ok) return reply('stripe_check_unavailable', 503);
     const invoiceBody = await result.json();
     const billing = sandboxRenewalInvoice(invoiceBody, event, config.priceId);
@@ -81,7 +81,7 @@ Deno.serve(async (request) => {
     paymentsUrl.searchParams.set('invoice', billing.invoiceId);
     paymentsUrl.searchParams.set('limit', '2');
     paymentsUrl.searchParams.append('expand[]', 'data.payment.payment_intent.latest_charge');
-    const paymentsResult = await fetch(paymentsUrl, stripeRequest);
+    const paymentsResult = await fetch(paymentsUrl, stripeRequest());
     if (!paymentsResult.ok) return reply('stripe_check_unavailable', 503);
     const invoice = sandboxRenewalPayment(invoiceBody, billing, event, await paymentsResult.json());
     if (!invoice) return reply('ignored');

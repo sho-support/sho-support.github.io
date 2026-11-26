@@ -1,5 +1,15 @@
 # 販売者情報・振込先・契約条件の現在地
 
+## 11月26日の確認と保存
+
+[販売準備設定](https://sho-web-support-preview.zodiac-suu.workers.dev/admin/sales-settings.html)を管理者として開く。保存済みの販売者情報を確認し、「本番の振込先に差し替える」で銀行・支店・口座種別・番号・名義を入力する。
+
+販売条件は、振込前の無料キャンセル、承認済みの内容の公開・納品後のお客様都合による制作料の返金は原則不可、2年目から年6,000円の銀行振込、満了後90日以内の標準復元は再公開から12か月分込みで税込9,000円。公開・納品までの精算条件は「キャンセル・返金」で確認する。
+
+「バックアップの実施確認」には、本人が確認した実施記録を入力する。DBと素材の保全記録には `2026-11-18〜19 JST｜DB・Storageの暗号化別保管と復元照合（SALES_BACKUP_RESTORE_20261118）` と記載できる。外部サービス接続と実メールの復旧確認は切替前の検証に残る。[保全・復元の記録](SALES_BACKUP_RESTORE_20261118.md)
+
+確認できた3項目にチェックを入れ、「確認した販売条件を保存する」を押す。正式口座と条件の保存後に、運営側が本番用の3件のDB変更、7関数の配備、接続確認を行い、架空注文で受付から配信・復元までを試す。[11月26日の切替候補](../sales-hosting/release-candidate-20261126.json)・[切替手順](SALES_CUTOVER_RUNBOOK_20261116.md)
+
 最新追記：本人が本番R2と限定キーを設定し、2026-11-16に実際の読書き・削除・非公開設定・プレビューバケットへの403拒否を確認した。ID/バケット名の前後空白は共通処理で対応済み。以下の以前の「本番R2未完了」は当時の記録。[現在の状況](SALES_TEST_ISOLATION_20261116.md)を優先する。
 
 > 追記：以下のフロント配備情報は本人設定保存時点の履歴です。最新の配備・試験結果は [リリース準備記録](SALES_RELEASE_PREP_20261116.md) を参照してください。販売者情報が保存済みである点と、商用条件が未承認である点は変わりません。
@@ -99,6 +109,8 @@ Stripeの通常の自動回収では、請求書の作成通知に正常応答�
 実Stripeの通し試験では、HP販売専用のStripe Sandboxと架空データだけを入れたSupabase環境を使う。`website-stripe-renewal-sandbox` だけをJWT検証なしで配備し、Stripe署名で認証する。環境には `WEBSITE_STRIPE_SANDBOX_SUPABASE_URL`、`WEBSITE_STRIPE_SANDBOX_KEY`（請求を読み戻せるテストキー）、`WEBSITE_STRIPE_SANDBOX_SIGNING_SECRET`、`WEBSITE_STRIPE_SANDBOX_PRICE_ID`（年額6,000円のテスト価格）を設定する。Stripe側の架空契約に `purpose=sho_hp_renewal` と `site_id` を付ける。対応する `hosting_card_renewal_notice:<site_id>` に `mode: stripe_sandbox`、`kind: card_renewal_waiting`、`revision`（UUID）、`customer_id`、`subscription_id`、`price_id`、`next_period_start`（対象とする請求の期間開始をUnix秒で指定）を作成してから、失敗とカード変更後の再決済を確認する。金額の手動入金処理や無料請求は、カード入金として記録されない。参考 [Stripeテスト環境](https://docs.stripe.com/testing-use-cases)、[SupabaseのStripe通知受信例](https://supabase.com/docs/guides/functions/examples/stripe-webhooks)。
 
 2026-11-21の検証で、Stripeの接続先が `SHO WEB SUPPORT TEST` 1件（`livemode=false`）であることを確認した。年額6,000円（税込）のテスト価格は `sho_hp_renewal_annual_6000_jpy_sandbox_v1` で照会できる。2件の初回決済試験でそれぞれ6,000円のカード決済成功・カード拒否、およびStripeでの `invoice.paid`・`invoice.payment_failed` の生成を確認した。別の試験契約では無料期間終了時に6,000円の更新請求（`subscription_cycle`）が作成され、自動確定は同日12:23:45 JSTの予定だった。隔離したSupabaseへのWebhook配信と同じ更新請求の再決済は未検証。参考 [Stripeの請求書支払い一覧](https://docs.stripe.com/api/invoice-payment/list)、[Stripe Billingの試験](https://docs.stripe.com/billing/testing)。
+
+2026-11-26、使い捨てのStripeテスト環境で年額6,000円の更新請求を作成した。同じ請求のカード拒否と再決済から生じた署名付き通知を使い、隔離したDeno・PostgREST・PostgreSQLで失敗のお知らせの記録と入金後の解除を確認した。専用のホスト型Supabaseへの配信と通知メールの着信は未検証。[Stripeのサブスクリプション通知](https://docs.stripe.com/billing/subscriptions/webhooks)
 
 ## 検証
 

@@ -84,6 +84,7 @@ test('only valid signed sandbox events can start an invoice lookup', async () =>
   const noDb = { from() { assert.fail('Unexpected access to billing data'); } };
   const liveUrl = 'https://tyhymvgjkoebetyypspj.supabase.co';
   for (const disabled of [{}, { ...env, WEBSITE_STRIPE_SANDBOX_KEY: 'sk_live_fixture' },
+    { ...env, WEBSITE_STRIPE_SANDBOX_KEY: 'rkcs_live_fixture' },
     { ...env, SUPABASE_URL: liveUrl, WEBSITE_STRIPE_SANDBOX_SUPABASE_URL: liveUrl }]) {
     const endpoint = await edgeHarness({ slug, admin: noDb, env: disabled });
     assert.equal((await endpoint.handler(signedRequest(eventFixture()))).status, 404);
@@ -98,6 +99,12 @@ test('only valid signed sandbox events can start an invoice lookup', async () =>
     assert.equal((await (await endpoint.handler(signedRequest(event))).json()).code, 'ignored');
   }
   assert.equal(endpoint.requests.length + endpoint.messages.length, 0);
+
+  const temporarySandbox = await edgeHarness({ slug, admin: noDb,
+    env: { ...env, WEBSITE_STRIPE_SANDBOX_KEY: 'rkcs_test_fixture' },
+    fetcher: async () => new Response(null, { status: 503 }),
+  });
+  assert.equal((await (await temporarySandbox.handler(signedRequest(eventFixture()))).json()).code, 'stripe_check_unavailable');
 });
 
 test('signed Stripe fixtures update only the matching contract and its owner notice', async (t) => {

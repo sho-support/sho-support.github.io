@@ -2,11 +2,11 @@
 
 本書は実行準備であり、切替完了の記録ではない。対象は `tyhymvgjkoebetyypspj` のHP販売だけ。バンド、他の販売サービス、TrendBlog、現在のDNSを一括で変更しない。
 
-実環境の最新照合、Authの隔離復旧、復元DBでのmigration検査は[保全と切替の記録](SALES_RECOVERY_AND_CUTOVER_20261119.md)を参照。商用配備と切替直前の照合は、未入金の取り消しを含む[11月20日候補manifest](../sales-hosting/release-candidate-20261120.json)を基準にする。旧候補の版と復旧証跡は引き続き履歴として参照できる。
+実環境の最新照合、Authの隔離復旧、復元DBでのmigration検査は[保全と切替の記録](SALES_RECOVERY_AND_CUTOVER_20261119.md)を参照。商用配備と切替直前の照合は、復元条件とカード更新のお知らせを含む[11月26日候補](../sales-hosting/release-candidate-20261126.json)を基準にする。[11月20日候補](../sales-hosting/release-candidate-20261120.json)に前回の検証と復旧証跡を記録している。
 
 ## 固定した候補
 
-- 11月20日候補は、7関数・依存38ファイル・3migrationと、切替前へ戻す37ファイルを固定した。追加の `website-line-webhook` は、取り消し後に同じ注文IDのLINE受付で注文を再開させないために含める。切替前の7関数の版・JWT設定・配備bundleのハッシュを実環境と照合した。[隔離DB・画面の検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871412)・[隔離LINEの検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871499)
+- 11月26日候補は、7関数・依存38ファイル・3migrationと、切替前へ戻す37ファイルを固定した。11月20日候補から復元の販売条件と所有者向けのお知らせに関わる4ファイルを更新した。追加の `website-line-webhook` は、取り消し後に同じ注文IDのLINE受付で注文を再開させないために含める。切替前の7関数の版・JWT設定・配備bundleのハッシュを実環境と照合した。[隔離DB・画面の検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871412)・[隔離LINEの検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44672871499)
 - [release-candidate.json](../sales-hosting/release-candidate.json) に、コミット `c3c3af8114773a22b3f4d442dc0888908d02ee1e` の6関数・依存を含む37ファイル・3migrationのSHAを記録。候補はローカルの全該当ファイルをGitHubの同一コミットと照合したもの。接続テストの分離修正後、現行のcustomer-accessはv55となったため、その配備SHAも候補manifestの切替前照合へ更新。過去のプレビュー配備を本番切替済みと扱わない。
 - JWT設定は `website-api` と `website-worker` がtrue、`website-customer-access`、`website-order-api`、`website-preview`、`website-sales-setup` がfalse。falseの関数も内部の本人・管理者確認を維持する。
 - 販売画面の確認先は [販売プレビュー](https://sho-web-support-preview.zodiac-suu.workers.dev)。11月20日の管理画面・無料試作・合意済みの契約文面の配備元と版は、[販売プレビューの配備記録](../sales-hosting/preview-deployment.json)を参照。静的60項目、5 APIの事前通信と認証・入力拒否、署名なしWebhookの401を確認した。[実環境の配備検証](https://github.com/sho-support/sho-support.github.io/actions/runs/44677238024)
@@ -36,7 +36,7 @@
 - 現状の `sales-hosting/runtime/` が、Cloudflareからの未対応書込みを409で止める接続用コード。API52/顧客54/注文17/プレビュー14の動作へ戻すときは、それぞれ固有の`_shared`を取り違えない。設定関数3は配備記録と照合する。
 - Worker46の全4ファイルは [runtime-baseline/website-worker.json](../sales-hosting/runtime-baseline/website-worker.json) に保存。これはソースだけの復旧用で、DB/Auth/Storage/R2バックアップではない。復旧配備では新しいversion番号になる。
 - 関数復旧後も、新設テーブルや契約記録を自動DROPしない。書込みが発生した後は、確定したURL・見積り・同意・入金情報を守り、実バックアップと照合して別途復旧を判断する。
-- 11月20日候補の `before.rollback_files` には、LINE受付を含む切替前の7関数を復元するファイル位置とSHA-256がある。各関数の内部パス・依存を個別に再構成し、JWT設定と一緒に確認してから復旧する。取り消した注文と既に提示した見積りの記録はDBに残す。
+- 11月26日候補の `before.rollback_files` には、LINE受付を含む切替前の7関数を復元するファイル位置とSHA-256がある。各関数の内部パス・依存を個別に再構成し、JWT設定と一緒に確認してから復旧する。取り消した注文と既に提示した見積りの記録はDBに残す。
 - `WEBSITE_CUSTOMER_HOSTING`を空に戻すとレガシー経路が再度選ばれる可能性があるため、フラグだけを消して運用再開しない。
 
 ## 一次資料・実行証拠
