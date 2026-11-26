@@ -174,7 +174,7 @@ jobs:
           const {chromium}=require('playwright');const fs=require('fs');
           (async()=>{const browser=await chromium.launch();const results=[];
           try{const page=await browser.newPage();
-            for(const path of ['/products/','/deals/','/events/','/products/tents','/products/stories/','/products/stories/adjustable-dumbbells-how-to-choose','/products/stories/tent-first-buying-guide','/products/stories/sparkling-water-case-cost','/products/stories/yokumoku-delices-gift','/products/tools/unit-price','/products/tools/gift-quantity']){
+            for(const path of ['/products/','/deals/','/events/','/products/tents','/products/items/rakuten-friend-gift-10011115','/products/stories/','/products/stories/adjustable-dumbbells-how-to-choose','/products/stories/tent-first-buying-guide','/products/stories/sparkling-water-case-cost','/products/stories/yokumoku-delices-gift','/products/tools/unit-price','/products/tools/gift-quantity']){
               const response=await page.goto('https://sho-monoyori-review.zodiac-suu.workers.dev'+path+'?qa=1');await page.waitForLoadState('networkidle');
               const result=await page.evaluate(()=>({canonical:document.querySelector('link[rel="canonical"]')?.href,blocked:!!document.querySelector('script[src*="review-mode"]'),noindex:!!document.querySelector('meta[name="robots"][content*="noindex"]'),analytics:!!document.querySelector('script[src*="G-J5ZDLF30CS"]'),overflow:document.documentElement.scrollWidth>innerWidth}));
               if(path==='/products/stories/sparkling-water-case-cost'){
@@ -191,6 +191,15 @@ jobs:
                   const gift=await page.evaluate(()=>({focusedCards:document.querySelectorAll('#catalog-grid .product-card').length,earlyOffer:!!document.querySelector('.story-purchase [data-buy]'),text:document.querySelector('.product-story')?.innerText||'',rows:document.querySelectorAll('.product-story tbody tr').length,photo:[...document.querySelectorAll('.story-cover img')].some(x=>x.complete&&x.naturalWidth>0),buy:document.querySelectorAll('[data-buy]').length,tool:!!document.querySelector('a[href*="tools/gift-quantity"]'),overflow:document.documentElement.scrollWidth>innerWidth}));
                   if(gift.focusedCards!==1||!gift.earlyOffer||!gift.text.includes('クリスマス限定の包装紙')||!gift.text.includes('12人に2個')||!gift.text.includes('発送締切は確認できていません')||gift.rows!==2||!gift.text.includes('91.80円')||!gift.text.includes('11月17日付')||!gift.tool||!gift.photo||!gift.buy||gift.overflow)throw Error('Gift guide public check failed '+JSON.stringify(gift));
                   results.push({gift_guide:true,width,rows:gift.rows,photo:gift.photo,buy:gift.buy,tool:gift.tool,overflow:gift.overflow});
+                }
+              }
+              if(path==='/products/items/rakuten-friend-gift-10011115'){
+                for(const width of [320,390,1440]){
+                  await page.setViewportSize({width,height:1000});
+                  const offer=await page.evaluate(()=>({rows:document.querySelectorAll('.buying-guide tbody tr').length,guideBuy:document.querySelectorAll('.buying-guide [data-buy]').length,photo:[...document.querySelectorAll('#product-detail img')].some(x=>x.complete&&x.naturalWidth>0),text:document.querySelector('.buying-guide')?.innerText||'',overflow:document.documentElement.scrollWidth>innerWidth}));
+                  if(offer.rows!==4||offer.guideBuy!==2||!offer.photo||!offer.text.includes('ケーキ5個')||!offer.text.includes('2026年11月26日')||offer.overflow)throw Error('Hitotoe box choice failed '+JSON.stringify(offer));
+                  await page.screenshot({path:'review-proof/hitotoe-'+width+'.png',fullPage:true});
+                  results.push({hitotoe_box_choice:true,width,rows:offer.rows,guideBuy:offer.guideBuy,photo:offer.photo,overflow:offer.overflow});
                 }
               }
               if(path==='/products/tents'){
