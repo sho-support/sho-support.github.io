@@ -64,7 +64,10 @@ jobs:
           sys.path.insert(0,'portal-tools')
           from prepare_live import merge_feed
           p=Path('portal-assets/rakuten-feed.json')
-          p.write_text(json.dumps(merge_feed(json.loads(Path('/tmp/monoyori-current-feed.json').read_text()),json.loads(p.read_text())),ensure_ascii=False,indent=2))
+          editorial=json.loads(p.read_text())
+          # Specific merchant rechecked Nov27; this snapshot expires and is never auto-renewed.
+          editorial['items'].append(json.loads("{\"id\":\"rakuten-friend-gift-10011115\",\"category\":\"食品・お菓子\",\"kind\":\"snacks\",\"department\":\"food\",\"source\":\"rakuten\",\"shop\":\"楽天市場\",\"icon\":\"🍴\",\"title\":\"ひととえ Hitotoe キュートセレクション【中島大祥堂 可愛い お菓子 Danke 洋菓子 ケーキ クッキー スイーツ かわいい おしゃれ 個包装 個別包装 職場 詰め合わせ ギフト 出産内祝 結婚内祝 菓子折り 差し入れ ご挨拶 人気 おすすめ】\",\"display_title\":\"ひととえ Hitotoe キュートセレクション\",\"price_yen\":1650,\"seller\":\"暮らしのギフト 「Lumiere」\",\"point_rate\":1,\"point_start\":\"\",\"point_end\":\"\",\"review_average\":4.59,\"review_count\":1870,\"description\":\"11月27日に販売店の商品説明を再確認。参考価格は11月26日API取得値。現在価格・箱の種類・送料は購入先で確認。\",\"url\":\"https://hb.afl.rakuten.co.jp/hgc/g00r41jo.oqwh901b.g00r41jo.oqwhaaef/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Ffriend-gift%2F10011115%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Ffriend-gift%2Fi%2F10011115%2F&rafcid=wsc_i_is_36342106-423e-44e7-9ef2-ac44a5136901\",\"approved\":true,\"verified\":\"2026-11-27\",\"expires_at\":\"2026-11-29T20:00:00+09:00\",\"affiliate\":true,\"image\":\"https://thumbnail.image.rakuten.co.jp/@0_mall/friend-gift/cabinet/renewal/re2024/cute_main.jpg?_ex=128x128\",\"label\":\"PR｜販売店情報を確認\",\"verification_method\":\"merchant_page\"}"))
+          p.write_text(json.dumps(merge_feed(json.loads(Path('/tmp/monoyori-current-feed.json').read_text()),editorial),ensure_ascii=False,indent=2))
           # This origin has not been registered for the separate A8 programme.
           Path('portal-assets/a8-approved.json').write_text('{"items":[]}')
           PY
