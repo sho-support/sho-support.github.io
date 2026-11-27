@@ -1,3 +1,4 @@
+import {blockLegacyPages} from './hosting-mode.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
 export const corsHeaders = {
@@ -263,6 +264,7 @@ export async function verifyWebsiteBeforeDelivery(repoFullName: string, branch =
 }
 
 export async function publishApprovedStagedBranch(repoFullName:string,liveBranch:string,stagedBranch:string|null|undefined) {
+  blockLegacyPages();
   if(!stagedBranch)return;
   if(!/^sho-review-[a-f0-9-]{8,50}$/.test(stagedBranch)||stagedBranch===liveBranch)throw new Error('Invalid staged branch.');
   const {owner,repo}=parseRepo(repoFullName);
@@ -275,6 +277,7 @@ export async function publishApprovedStagedBranch(repoFullName:string,liveBranch
 }
 
 export async function setGithubPagesSource(repoFullName: string, branch = 'main', path: '/' | '/docs' = '/') {
+  blockLegacyPages();
   const { owner, repo } = parseRepo(repoFullName);
   const base = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pages`;
   const headers = githubHeaders();
@@ -316,6 +319,7 @@ export async function setGithubPagesSource(repoFullName: string, branch = 'main'
 }
 
 export async function setGithubPagesDomain(repoFullName: string, cname: string | null) {
+  blockLegacyPages();
   const { owner, repo } = parseRepo(repoFullName);
   const response = await fetch(
     `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pages`,

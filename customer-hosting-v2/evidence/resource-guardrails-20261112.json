@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "verified_on": "2026-11-12",
+  "branch": "architecture/customer-hosting-v2",
+  "implementation_commit": "d73429c5920594e94f64efa12866878f7a1223b3",
+  "ci": {
+    "run_id": 43224425247,
+    "url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43224425247",
+    "conclusion": "success",
+    "unit": 107,
+    "local_workerd_r2": 14,
+    "supabase_secret_wrapper": 3,
+    "pglite": {
+      "tests": 27,
+      "pass": 26,
+      "skipped": 1,
+      "skip_reason": "Native pg_dump/pg_restore requires the disposable PostgreSQL container and passed in the native job"
+    },
+    "sql_r2_pipeline": 11,
+    "http_handlers": 19,
+    "postgres_17_11": {
+      "tests": 29,
+      "pass": 29,
+      "skipped": 0
+    },
+    "edge_typecheck": "passed for four production functions and isolated Storage probe",
+    "browser_assertions": {
+      "sales": 636,
+      "order_mock": 71,
+      "hosting_and_resource_controls": 86,
+      "intake_materials": 68
+    },
+    "browser_widths": [
+      320,
+      360,
+      390,
+      430,
+      768,
+      1366
+    ],
+    "admin_screenshots_visually_inspected": [
+      320,
+      390,
+      1366
+    ]
+  },
+  "encrypted_database_restore": {
+    "dataset": "synthetic disposable application DB",
+    "postgres": "17.11",
+    "dump_bytes": 50870,
+    "encrypted_bytes": 50960,
+    "records_identical": true,
+    "anonymous_denied_after_restore": true,
+    "storage_rls_restored": true,
+    "production_data": false,
+    "production_project_restore_verified": false
+  },
+  "live_supabase_storage": {
+    "project": "tyhymvgjkoebetyypspj",
+    "plan_verified": "free",
+    "function": "website-resource-qa",
+    "trial_version": 1,
+    "trial_bundle_sha256": "e837040a4f959673c9bd9d9753486e26ee609f038bb31f73d092284806ea663e",
+    "bucket": "sho-resource-qa",
+    "bucket_public": false,
+    "bucket_file_limit": 4096,
+    "objects": 3,
+    "total_bytes": 204,
+    "fixture_bytes": 68,
+    "locally_recomputed_fixture_sha256": "c054eec0ca71070d8406b12c9e0b1745c861d337f4818c5fe8334e1b4c0dc425",
+    "checks": [
+      "private_isolated_4KB_bucket",
+      "one_shot_run_claim",
+      "anonymous_signed_upload",
+      "actual_size_and_mime_via_pinned_SDK_info",
+      "signed_token_cannot_change_path",
+      "default_signed_upload_cannot_overwrite",
+      "anonymous_private_download_denied",
+      "bucket_rejects_non_image_mime",
+      "download_and_restore_identical_bytes"
+    ],
+    "checks_passed": 9,
+    "real_orders": 0,
+    "real_ai_calls": 0,
+    "real_customer_notifications": 0,
+    "closed_function_version": 2,
+    "closed_bundle_sha256": "6a80e2512b7ece9abdca2c8f743f40c91701896f3e789f3273311391d92acad0",
+    "closure_http_post_status": 403,
+    "closure_observed_body": "Isolated verification endpoint is closed"
+  },
+  "production": {
+    "resource_migration_applied": false,
+    "guardrails_active": false,
+    "existing_functions_replaced": false,
+    "versions_after": {
+      "website-api": 46,
+      "website-customer-access": 49,
+      "website-worker": 42,
+      "website-preview": 9
+    },
+    "existing_intake_bucket": {
+      "public": false,
+      "objects": 6,
+      "bytes_before": 4186028,
+      "bytes_after": 4186028,
+      "file_limit": 7000000
+    },
+    "orders_at_read": 0,
+    "sites_at_read": 0,
+    "dns_changed": false,
+    "paid_plan_changes": 0,
+    "main_sha": "b24971dc4e7956a9bbfa68d5607189c3beaebb4b",
+    "band_files_changed": false
+  },
+  "limits_are_not_provider_billing_guarantees": true,
+  "unresolved_before_sale": [
+    "Real Supabase to R2 S3 integration; secret values and registration state were not retrieved",
+    "Dedicated customer domain, ownership/renewal and DNS/HTTPS approval",
+    "Production backup key, private independent destination, retention and full restore/delivery drill",
+    "Maintenance contract, merchant disclosures and support/cancellation scope",
+    "Approved final checks of actual AI generation, notifications and bank payment"
+  ]
+}

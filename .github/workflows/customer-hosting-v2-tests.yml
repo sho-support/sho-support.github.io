@@ -1,0 +1,333 @@
+name: Customer hosting v2 architecture tests
+on:
+  push:
+    branches:
+      - architecture/customer-hosting-v2
+    paths:
+      - 'customer-hosting-v2/**'
+      - 'supabase/functions/_shared/customer-r2.*'
+      - 'supabase/functions/_shared/hosting-*'
+      - 'supabase/functions/_shared/commercial-*'
+      - 'supabase/functions/_shared/intake-assets.*'
+      - 'supabase/functions/_shared/upload-gate.ts'
+      - 'supabase/functions/_shared/guarded-ai.*'
+      - 'supabase/functions/_shared/website.ts'
+      - 'supabase/functions/_shared/edge-runtime.d.ts'
+      - 'supabase/functions/website-api/**'
+      - 'supabase/functions/website-order-api/**'
+      - 'supabase/functions/website-sales-setup/**'
+      - 'supabase/functions/website-customer-access/**'
+      - 'supabase/functions/website-worker/**'
+      - 'supabase/functions/website-preview/**'
+      - 'supabase/migrations/20261112053755_website_cloudflare_publication_protocol.sql'
+      - 'supabase/migrations/20261112123022_website_resource_guardrails.sql'
+      - 'supabase/migrations/20261112170006_website_commercial_quote_protocol.sql'
+      - '.github/workflows/customer-hosting-v2-tests.yml'
+      - 'scripts/ignore-customer-hosting-build.mjs'
+      - 'scripts/install-qa-japanese-font.mjs'
+      - 'netlify.toml'
+      - 'tests/website-smoke.cjs'
+      - 'tests/customer-preview-live.cjs'
+      - 'tests/website-order-lifecycle.cjs'
+      - 'tests/website-hosting-ui.cjs'
+      - 'tests/website-intake-materials.cjs'
+      - 'tests/website-contract-ui.cjs'
+      - 'admin/index.html'
+      - 'admin/orders.html'
+      - 'admin/sales-settings.html'
+      - 'tests/website-hosting-fees.cjs'
+      - 'scripts/sync-hosting-offer.mjs'
+      - 'website-hosting-offer.js'
+      - 'website-*.html'
+      - 'website-theme.css'
+      - 'website-portal.js'
+      - 'website-materials.js'
+      - 'website-client.js'
+  workflow_dispatch:
+    inputs:
+      inspect_preview:
+        description: Inspect existing Workers and private preview R2 without making changes
+        type: boolean
+        default: false
+      deploy_preview:
+        description: Deploy the verified isolated preview Worker
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: customer-hosting-v2
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify public price copies stay synchronized
+        run: node ../scripts/sync-hosting-offer.mjs --check
+      - name: Verify customer URL and release routing
+        run: npm test
+      - name: Verify local workerd and R2 release lifecycle
+        run: npm run test:runtime
+      - name: Verify actual Supabase secret wrapper without external requests
+        run: npm run test:supabase
+      - name: Verify the additive publication protocol on a synthetic local database
+        run: npm run test:db
+      - name: Verify all three plans and lost-response recovery using SQL and local R2
+        run: npm run test:pipeline
+      - name: Verify both HTTP approval/publish routes and frozen previews without external requests
+        run: npm run test:routes
+      - name: Type-check all six Edge Functions against the pinned deployed SDK
+        run: npm run check:edge
+      - name: Validate preview Worker package without deploying
+        run: npm run check:preview
+  publication-database:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: hosting_qa
+          POSTGRES_PASSWORD: synthetic-ci-password-only
+          POSTGRES_DB: sho_hosting_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hosting_qa -d sho_hosting_qa"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: customer-hosting-v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify RPCs and privileges on disposable PostgreSQL 17
+        env:
+          HOSTING_QA_DATABASE_URL: postgres://hosting_qa:synthetic-ci-password-only@127.0.0.1:5432/sho_hosting_qa
+          HOSTING_QA_PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: npm run test:db
+  sales-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test tools
+        run: npm install --prefix /tmp/sho-browser-qa --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+      - name: Install Chromium
+        # ubuntu-24.04 already supplies the browser runtime libraries. Avoid apt font-mirror failures.
+        run: /tmp/sho-browser-qa/node_modules/.bin/playwright install chromium
+      - name: Verify Japanese glyphs are available before capturing layouts
+        run: node scripts/install-qa-japanese-font.mjs
+      - name: Check sales pages at the six required viewport widths
+        env:
+          NODE_PATH: /tmp/sho-browser-qa/node_modules
+          QA_SCREENSHOTS_DIR: /tmp/sho-browser-screenshots
+          QA_INLINE_SCREENSHOTS: 'true'
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/sho-sales-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          node tests/website-smoke.cjs
+          node tests/website-order-lifecycle.cjs
+          node tests/website-hosting-ui.cjs
+          node tests/website-intake-materials.cjs
+          node tests/website-contract-ui.cjs
+          node tests/website-hosting-fees.cjs
+      - name: Keep rendered screenshots for visual inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-hosting-sales-regression
+          path: /tmp/sho-browser-screenshots
+          retention-days: 3
+  supabase-storage-preview:
+    if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-supabase-storage-preview]') }}
+    needs: [contract, publication-database, sales-regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: customer-hosting-v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify private test-bucket signing, actual metadata, isolation and byte restore
+        run: node verify-supabase-storage.mjs
+      - name: Preserve sanitized Storage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-storage-preview-proof
+          path: customer-hosting-v2/.wrangler/proof/supabase-storage.json
+          retention-days: 3
+  supabase-readiness:
+    if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[inspect-supabase-readiness]') }}
+    needs: [contract, publication-database, sales-regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect only boolean configuration flags through exact-run OIDC
+        run: node customer-hosting-v2/verify-supabase-readiness.mjs
+      - name: Preserve sanitized configuration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-readiness-proof
+          path: customer-hosting-v2/.wrangler/proof/supabase-readiness.json
+          retention-days: 3
+  supabase-r2-preview:
+    if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-supabase-r2-preview]') }}
+    needs: [contract, publication-database, sales-regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: supabase-r2-preview
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Supabase S3 signing and the existing fictional fixture lifecycle
+        run: node customer-hosting-v2/verify-supabase-r2-preview.mjs
+      - name: Preserve only sanitized R2 connection evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-r2-preview-proof
+          path: customer-hosting-v2/.wrangler/proof/supabase-r2-preview.json
+          retention-days: 3
+  inventory:
+    if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.inspect_preview) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[inspect-customer-preview]'))) }}
+    needs: [contract]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: customer-hosting-preview
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_PREVIEW_BUCKET: ${{ vars.CF_PREVIEW_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read existing resource metadata without uploading or changing anything
+        run: node customer-hosting-v2/inspect-cloudflare.mjs --require-token
+  preview:
+    # The committed preview-target.json records the successfully inspected test resources.
+    # Its enabled flag is checked by both inspection and configuration scripts.
+    # The Run workflow UI requires this workflow on the default branch.
+    # An explicit deployment commit also permits using this isolated branch without touching main.
+    if: ${{ github.ref == 'refs/heads/architecture/customer-hosting-v2' && ((github.event_name == 'workflow_dispatch' && inputs.deploy_preview) || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[deploy-customer-preview]') || contains(github.event.head_commit.message, '[verify-customer-preview]')))) }}
+    needs: [contract, publication-database, sales-regression]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: customer-hosting-preview
+      cancel-in-progress: false
+    environment: customer-hosting-preview
+    defaults:
+      run:
+        working-directory: customer-hosting-v2
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CF_PREVIEW_HOST: ${{ vars.CF_PREVIEW_HOST }}
+      CF_PREVIEW_BUCKET: ${{ vars.CF_PREVIEW_BUCKET }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: customer-hosting-v2/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Confirm required secret configuration
+        run: |
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_API_TOKEN"
+      - name: Configure only the verified private preview bucket
+        # A public/unknown bucket or incorrect account subdomain must stop before deployment.
+        run: node inspect-cloudflare.mjs --require-private-preview
+      - name: Require the existing Worker to match our verified deployment
+        if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy-customer-preview]') }}
+        run: node inspect-cloudflare.mjs --require-safe-worker-target
+      - name: Generate the isolated preview configuration
+        run: node configure-preview.mjs
+      - name: Deploy only the isolated test Worker
+        if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy-customer-preview]') }}
+        run: npx --no-install wrangler deploy --config wrangler.preview.local.json
+      - name: Verify remote R2 staging, approval guards, concurrent update and rollback over HTTPS
+        env:
+          WRANGLER_LOG: error
+        run: node verify-preview-live.mjs
+      - name: Keep sanitized live verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-hosting-live-preview-proof
+          path: customer-hosting-v2/.wrangler/proof
+          retention-days: 7
+  live-visual:
+    needs: [contract, sales-regression, preview]
+    # A rendering-only retry must not redeploy or repeat writes to R2.
+    if: ${{ always() && github.ref == 'refs/heads/architecture/customer-hosting-v2' && needs.contract.result == 'success' && needs.sales-regression.result == 'success' && (needs.preview.result == 'success' || (needs.preview.result == 'skipped' && github.event_name == 'push' && contains(github.event.head_commit.message, '[render-customer-preview]'))) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser tools
+        run: npm install --prefix /tmp/sho-preview-browser --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+      - run: /tmp/sho-preview-browser/node_modules/.bin/playwright install chromium
+      - name: Verify Japanese glyphs are available before capturing layouts
+        run: node scripts/install-qa-japanese-font.mjs
+      - name: Render the actual test URL at six widths
+        env:
+          NODE_PATH: /tmp/sho-preview-browser/node_modules
+          QA_SCREENSHOTS_DIR: /tmp/sho-live-preview-screenshots
+        run: node tests/customer-preview-live.cjs
+      - name: Keep actual HTTPS screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-hosting-live-preview-screenshots
+          path: /tmp/sho-live-preview-screenshots
+          retention-days: 7

@@ -16,23 +16,23 @@ header{position:sticky;top:0;z-index:30;background:rgba(8,8,8,.95);border-bottom
 .flow{margin:18px 0 0;border:1px solid var(--line);border-radius:14px;background:#0d0d0d;overflow:hidden}.flow summary,.business summary,.domain-details summary,.update-details summary{cursor:pointer;list-style:none}.flow summary::-webkit-details-marker,.business summary::-webkit-details-marker,.domain-details summary::-webkit-details-marker,.update-details summary::-webkit-details-marker{display:none}.flow summary{padding:13px 15px;font-size:.75rem;font-weight:900}.flow summary:after,.business summary:after,.domain-details summary:after,.update-details summary:after{content:"＋";float:right;color:var(--gold)}.flow[open] summary:after,.business[open] summary:after,.domain-details[open] summary:after,.update-details[open] summary:after{content:"−"}.flow-body{padding:0 15px 14px;color:var(--soft);font-size:.72rem}.steps{display:grid;gap:7px}.step{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start}.step b{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#191919;color:var(--gold);font-size:.62rem}
 .section{padding:29px 0;border-top:1px solid rgba(255,255,255,.06)}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}.section-head h2{margin:0;font-size:1.18rem}.section-check{opacity:0;display:inline-flex;align-items:center;gap:5px;color:var(--ok);font-size:.7rem;font-weight:900;transition:.2s}.section-check.show{opacity:1}.helper{margin:-5px 0 12px;color:var(--muted);font-size:.7rem}
 .business{margin-bottom:11px;border:1px solid var(--line);border-radius:13px;background:#0d0d0d;overflow:hidden}.business summary{padding:13px 14px;font-size:.76rem;font-weight:900}.business-body{padding:0 14px 14px;color:var(--soft);font-size:.72rem}
-.plan-list{display:grid;gap:8px}.plan{position:relative;border:1px solid var(--line);border-radius:14px;background:#0d0d0d;overflow:hidden}.plan.selected{border-color:rgba(100,217,144,.72);box-shadow:inset 0 0 0 1px rgba(100,217,144,.24)}.plan-select{width:100%;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:14px;border:0;background:transparent;color:#fff;text-align:left;cursor:pointer}.plan-kicker{display:block;color:#d84a60;font-size:.62rem;font-weight:950;letter-spacing:.1em}.plan-title{display:block;margin-top:2px;font-size:1rem;font-weight:900}.plan-price{color:var(--gold);font-size:1.05rem;font-weight:950}.check-dot{position:absolute;right:12px;top:11px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1px solid #555;background:#111;color:transparent;font-size:.72rem;font-weight:950}.plan.selected .check-dot{border-color:var(--ok);background:var(--ok);color:#09130d}.plan-price{padding-right:28px}.plan-more{border-top:1px solid var(--line)}.plan-more summary{cursor:pointer;list-style:none;padding:9px 14px;color:#aaa;font-size:.67rem;font-weight:850}.plan-more summary::-webkit-details-marker{display:none}.plan-more summary:after{content:"＋";float:right;color:var(--gold)}.plan-more[open] summary:after{content:"−"}.plan-copy{padding:0 14px 13px;color:var(--soft);font-size:.7rem}
+.plan-list{display:grid;gap:8px}.plan{position:relative;border:1px solid var(--line);border-radius:14px;background:#0d0d0d;overflow:hidden}.plan.selected{border-color:rgba(100,217,144,.72);box-shadow:inset 0 0 0 1px rgba(100,217,144,.24)}.plan-select{width:100%;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:14px;border:0;background:transparent;color:#fff;text-align:left;cursor:pointer}.plan-kicker{display:block;color:#d84a60;font-size:.62rem;font-weight:950;letter-spacing:.1em}.plan-title{display:block;margin-top:2px;font-size:clamp(.82rem,4vw,1rem);font-weight:900}.plan-price{color:var(--gold);font-size:1.05rem;font-weight:950}.check-dot{position:absolute;right:12px;top:11px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1px solid #555;background:#111;color:transparent;font-size:.72rem;font-weight:950}.plan.selected .check-dot{border-color:var(--ok);background:var(--ok);color:#09130d}.plan-price{padding-right:28px}.plan-more{border-top:1px solid var(--line)}.plan-more summary{cursor:pointer;list-style:none;padding:9px 14px;color:#aaa;font-size:.67rem;font-weight:850}.plan-more summary::-webkit-details-marker{display:none}.plan-more summary:after{content:"＋";float:right;color:var(--gold)}.plan-more[open] summary:after{content:"−"}.plan-copy{padding:0 14px 13px;color:var(--soft);font-size:.7rem}
 .templates{display:none;margin-top:12px;padding:12px;border:1px solid rgba(224,182,107,.23);border-radius:14px;background:#0b0b0b}.templates.show{display:block}.templates-head{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:10px}.templates-head strong{font-size:.8rem}.templates-head span{color:var(--muted);font-size:.63rem}.template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.template{position:relative;border:1px solid rgba(255,255,255,.16);border-radius:12px;overflow:hidden;background:#111;cursor:pointer}.template.selected{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok)}.swatch{min-height:94px;padding:12px;display:flex;flex-direction:column;justify-content:flex-end;gap:1px}.swatch small{font-size:.56rem;font-weight:950;opacity:.85}.swatch b{font-size:.76rem;line-height:1.15}.swatch em{font-style:normal;font-size:.62rem;font-weight:950;line-height:1.15}.template-check{position:absolute;right:7px;top:7px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.5);color:transparent;font-size:.7rem;font-weight:950}.template.selected .template-check{background:var(--ok);border-color:var(--ok);color:#08120b}.template-foot{padding:7px 9px;background:#0c0c0c}.preview-link{display:inline-flex;color:#aaa;font-size:.6rem;font-weight:850;text-decoration:underline;text-underline-offset:3px}
 .rock{background:linear-gradient(135deg,#202020,#050505);color:#fff}.cafe{background:linear-gradient(135deg,#e6deca,#fff9ed);color:#324432}.cute{background:linear-gradient(135deg,#ffdbe9,#eee0ff);color:#65465a}.minimal{background:linear-gradient(135deg,#fff,#d9d9d3);color:#111}.premium{background:linear-gradient(135deg,#0d2535,#061019);color:#ecd49e}.pop{background:linear-gradient(135deg,#ffd55b,#ff8168);color:#222}.vintage{background:linear-gradient(135deg,#5b3021,#d3ac75);color:#fff2d4}.cyber{background:linear-gradient(135deg,#07121f,#5220a8);color:#62efff}.organic{background:linear-gradient(135deg,#d9dfcb,#819777);color:#253527}.editorial{background:linear-gradient(135deg,#f4f0e9,#bcb5ac);color:#171717}
-.update-card{border:1px solid var(--line);border-radius:14px;background:#0d0d0d;overflow:hidden}.update-selected{padding:14px}.update-selected strong{display:block;font-size:.84rem}.update-selected b{display:block;margin-top:4px;color:var(--gold);font-size:1rem}.update-selected p{margin:5px 0 0;color:var(--soft);font-size:.69rem}.update-details{border-top:1px solid var(--line)}.update-details summary{padding:10px 14px;font-size:.68rem;font-weight:900;color:#bbb}.update-copy{padding:0 14px 13px;color:var(--soft);font-size:.69rem}.update-copy ul{padding-left:1.2em;margin:5px 0}.update-options{display:grid;gap:7px;margin-top:9px}.update-option{position:relative;width:100%;padding:11px 38px 11px 12px;border:1px solid var(--line);border-radius:11px;background:#111;color:#fff;text-align:left}.update-option.selected{border-color:var(--ok)}.update-option .dot{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;display:grid;place-items:center;border:1px solid #555;color:transparent}.update-option.selected .dot{background:var(--ok);border-color:var(--ok);color:#08120b}.update-option small{display:block;color:#aaa;font-size:.62rem}.update-option b{display:block;margin-top:1px;font-size:.75rem}
+.update-card{border:1px solid var(--line);border-radius:14px;background:#0d0d0d;overflow:hidden}.update-selected{padding:14px}.update-selected strong{display:block;font-size:.84rem}.update-selected b{display:block;margin-top:4px;color:var(--gold);font-size:1rem}.update-selected p{margin:5px 0 0;color:var(--soft);font-size:.69rem}.update-details{border-top:1px solid var(--line)}.update-details summary{padding:10px 14px;font-size:.68rem;font-weight:900;color:#bbb}.update-copy{padding:0 14px 13px;color:var(--soft);font-size:.69rem}.update-copy ul{padding-left:1.2em;margin:5px 0}.update-options{display:grid;gap:7px;margin-top:9px}.update-option{position:relative;width:100%;padding:11px 38px 11px 12px;border:1px solid var(--line);border-radius:11px;background:#111;color:#fff;text-align:left}.update-option.selected{border-color:var(--ok)}.update-option .dot{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;display:grid;place-items:center;border:1px solid #555;color:transparent}.update-option.selected .dot{background:var(--ok);border-color:var(--ok);color:#08120b}.update-option small{display:block;color:#aaa;font-size:.62rem}.update-option b{display:block;margin-top:1px;font-size:.82rem}.update-option .update-option-price{margin-top:5px;font-size:.76rem;line-height:1.65;color:#f0d09b}.update-option .update-option-note{margin-top:2px;font-size:.68rem;line-height:1.6;color:#aaa}
 .domain{border:1px solid var(--line);border-radius:14px;background:#0d0d0d;overflow:hidden}.domain-select{position:relative;width:100%;padding:13px 42px 13px 14px;border:0;background:transparent;color:#fff;text-align:left;font-weight:900}.domain-select .dot{position:absolute;right:13px;top:50%;transform:translateY(-50%);width:21px;height:21px;border-radius:50%;display:grid;place-items:center;border:1px solid #555;color:transparent}.domain.on .domain-select .dot{background:var(--ok);border-color:var(--ok);color:#08120b}.domain-price{display:block;margin-top:3px;color:var(--gold);font-size:.72rem}.domain-details{border-top:1px solid var(--line)}.domain-details summary{padding:10px 14px;font-size:.68rem;color:#bbb;font-weight:900}.domain-copy{padding:0 14px 13px;color:var(--soft);font-size:.68rem}.domain-copy ul{padding-left:1.2em}.close-detail{width:100%;margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#111;color:#ccc;font-size:.65rem;font-weight:900}
 .summary-box{margin-top:7px;border:1px solid rgba(224,182,107,.5);border-radius:16px;background:#f2eee7;color:#171717;overflow:hidden;box-shadow:0 14px 38px rgba(0,0,0,.22)}.summary-head{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.12);display:flex;align-items:center;justify-content:space-between}.summary-head span{font-size:.62rem;font-weight:950;letter-spacing:.14em;color:#7b6441}.summary-head strong{font-size:.9rem}.summary-body{padding:7px 16px 14px}.sum-row{display:grid;grid-template-columns:105px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.09);font-size:.7rem}.sum-row:last-child{border-bottom:0}.sum-row span{color:#716d66}.sum-row b{text-align:right}.summary-total{margin-top:9px;padding-top:10px;border-top:2px solid #191919;display:flex;justify-content:space-between;align-items:end}.summary-total span{font-size:.7rem}.summary-total strong{font-size:1.35rem}.final-btn{display:flex;width:100%;min-height:52px;margin-top:12px;border:0;border-radius:12px;background:#fff;color:#111;align-items:center;justify-content:center;font-weight:950}.final-btn:disabled{opacity:.38}.bottom-note{text-align:center;color:#777;font-size:.62rem;margin-top:8px}
 footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--line)}
 @media(max-width:480px){.wrap{width:min(calc(100% - 24px),860px)}.hero{padding-top:28px}.top-actions{grid-template-columns:1fr}.section{padding:25px 0}.template-grid{gap:8px}.swatch{min-height:85px;padding:10px}.sum-row{grid-template-columns:92px 1fr}}
 @media(max-width:360px){.head{gap:7px}.brand{font-size:.72rem;letter-spacing:.025em;white-space:nowrap}.back{font-size:.65rem;white-space:nowrap}}
-.brand[href]{color:inherit;text-decoration:none;cursor:pointer;min-height:44px;display:inline-flex;align-items:center}.brand[href]:hover{opacity:.82}.brand[href]:focus-visible{outline:2px solid #e0b66b;outline-offset:3px;border-radius:3px}</style>
+.brand[href]{color:inherit;text-decoration:none;cursor:pointer;min-height:44px;display:inline-flex;align-items:center}.brand[href]:hover{opacity:.82}.brand[href]:focus-visible{outline:2px solid #e0b66b;outline-offset:3px;border-radius:3px}.sum-row[hidden]{display:none}</style>
 </head>
 <body>
 <header><div class="wrap head"><a class="brand" href="website-support.html" aria-label="SHO WEB SUPPORTのホームページへ戻る">SHO WEB SUPPORT / ORDER</a><a class="back" href="website-support.html">← サービスページ</a></div></header>
 <main class="wrap">
 <section class="hero">
 <div class="eyebrow">WEBSITE ORDER</div>
-<h1>ホームページ制作のお申込み</h1>
+<h1>ホームページ制作の<wbr><span style="white-space:nowrap">お申込み</span></h1>
 <p>プランを選ぶだけで注文内容を整理できます。すべての制作プランに、公開後30日間の無料調整が付きます。</p>
 <div class="top-actions">
 <a id="consultTop" href="#">LINEで相談する</a>
@@ -46,11 +46,19 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 <div class="step"><b>1</b><span>このページでプラン・更新・ドメインを選択</span></div>
 <div class="step"><b>2</b><span>注文内容を確認して申込み受付・注文ID発行</span></div>
 <div class="step"><b>3</b><span>制作案内を受け取るため、公式LINEへ連絡先登録メッセージを1回送信</span></div>
-<div class="step"><b>4</b><span>振込先の案内後、お振込み</span></div>
+<div class="step"><b>4</b><span>正式URL・合計金額・提供時期・維持条件を確認し、LINEで同意してからお振込み</span></div>
 <div class="step"><b>5</b><span>入金確認後、正式なSITE IDと制作ヒアリングURLを送付</span></div>
 </div></div></details>
 </section>
 
+<!-- HOSTING_OFFER_START -->
+<section class="hosting-fee" data-hosting-offer="hosting-20261113" aria-label="サイト公開維持費">
+<h2>サイト公開維持費</h2><p>公開日から最初の12か月は<strong>制作料金に含みます。</strong></p>
+<p class="hosting-fee-price">2年目以降 <strong>6,000円／年（税込・年払い）</strong><small>月換算500円。月払いではありません。</small></p>
+<p>SHO管理で公開を継続する場合の料金です。満了30日前までにご案内し、継続のお申込みと入金で12か月更新します。<strong>自動更新・自動課金はありません。</strong></p>
+<p>公開環境・HTTPS・公開版の保管・障害時の復旧対応が対象です。写真や文章などの内容更新、大幅な変更、お客様名義ドメインの取得・更新実費は別料金です。終了・引き渡し条件は<a href="website-terms.html">利用条件</a>をご確認ください。</p>
+</section>
+<!-- HOSTING_OFFER_END -->
 <section class="section">
 <div class="section-head"><h2>制作プランを選択</h2><span class="section-check" id="planCheck">✓ 選択済み</span></div>
 <details class="business"><summary>店舗・飲食店・企業の方へ ＋詳細</summary><div class="business-body">店舗・企業も、通常の紹介サイトであれば下記3プランから選べます。EC、会員機能、大規模予約システム、多数ページなど特殊な構成は個別見積りです。迷う場合は上の「LINEで相談する」から先にご相談ください。</div></details>
@@ -86,7 +94,7 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 <div class="section-head"><h2>公開URLのご希望</h2><span class="section-check show" id="domainCheck">要相談</span></div>
 <div class="domain" id="domainBox">
 <button class="domain-select" id="domainSelect" type="button">お客様の独自ドメインの取得・接続を相談する<span class="domain-price">設定代行 ¥5,000〜 ＋ ドメイン取得・更新の実費</span><span class="dot">✓</span></button>
-<details class="domain-details"><summary>＋ 無料URL・独自ドメインの詳細</summary><div class="domain-copy"><p><strong>無料URL：</strong>アドレスの利用料はかかりません。サービスの仕様・公開先の変更や移行でURLが変わることがあります。無料サービスは商用利用を制限している場合があるため、用途に合う公開先を確認し、正式なURLをお支払い前にお知らせします。</p><p><strong>独自ドメイン：</strong>「abcband.com」のように自分で取得する専用URL。名刺・チラシ・看板などで長く使いたい方におすすめです。ドメインの更新と接続設定を続ければ、ホスティング先を移してもURLを保ちやすくなります。</p><p><strong>費用：</strong>接続設定の代行 ¥5,000〜 ＋ ドメイン会社に支払う取得・年間更新の実費。原則お客様名義で取得し、ご自身で取得することも可能です。希望名（例：abcband.com）をお知らせください。取得先・料金・接続手順はご案内します。</p><button class="close-detail" type="button">− 閉じる</button></div></details><p style="padding:0 13px 12px;margin:10px 0 0;color:#e6cd9f;font-size:.72rem;line-height:1.8">無料URLでの公開もご相談いただけます。用途に合う公開先・正式URLをお支払い前にご案内します。印刷物に載せる場合は、お客様名義の独自ドメインをおすすめします。</p>
+<details class="domain-details"><summary>＋ SHO標準URL・独自ドメインの詳細</summary><div class="domain-copy"><p><strong>SHO標準URL：</strong>SHOが管理するドメインの専用アドレスです。利用料は公開維持費に含みます。契約期間中はサーバー変更を理由にURLを変えない運用です。正式URLは振込前に提示します。SHOのドメイン所有権や永久利用権の譲渡は含みません。</p><p><strong>独自ドメイン：</strong>「abcband.com」のように自分で取得する専用URL。名刺・チラシ・看板などで長く使いたい方におすすめです。ドメインの更新と接続設定を続ければ、ホスティング先を移してもURLを保ちやすくなります。</p><p><strong>費用：</strong>接続設定の代行 ¥5,000〜 ＋ ドメイン会社に支払う取得・年間更新の実費。原則お客様名義で取得し、ご自身で取得することも可能です。希望名（例：abcband.com）をお知らせください。取得先・料金・接続手順はご案内します。</p><button class="close-detail" type="button">− 閉じる</button></div></details><p style="padding:0 13px 12px;margin:10px 0 0;color:#e6cd9f;font-size:.72rem;line-height:1.8">SHO標準URLでの公開をご相談いただけます。初年度込み、2年目から年6,000円の公開維持費が適用されます。正式URLはお支払い前にご案内します。印刷物に載せる場合は、お客様名義の独自ドメインをおすすめします。</p>
 </div>
 </section>
 
@@ -108,12 +116,12 @@ footer{padding:25px 0;color:#666;font-size:.65rem;border-top:1px solid var(--lin
 <div class="sum-row"><span>制作プラン</span><b id="sumPlan">未選択</b></div>
 <div class="sum-row" id="sumTemplateRow" hidden><span>デザイン</span><b id="sumTemplate">未選択</b></div>
 <div class="sum-row"><span>更新</span><b id="sumUpdate">未選択</b></div>
-<div class="sum-row"><span>公開URLのご希望</span><b id="sumDomain">無料URLを相談（公開先は事前確認）</b></div><div class="sum-row" id="sumExtraRow" hidden><span>追加のご相談</span><b id="sumExtra" style="overflow-wrap:anywhere;white-space:pre-wrap">—</b></div>
+<div class="sum-row"><span>公開URLのご希望</span><b id="sumDomain">SHO標準URLを相談（正式URLは振込前に確認）</b></div><div class="sum-row" id="sumExtraRow" hidden><span>追加のご相談</span><b id="sumExtra" style="overflow-wrap:anywhere;white-space:pre-wrap">—</b></div>
 <div class="summary-total"><span id="sumTotalLabel">制作基本料金</span><strong id="sumTotal">—</strong></div><p id="sumTotalNote" style="margin:7px 0 0;color:#c6b08b;font-size:.71rem;line-height:1.8"></p>
 </div>
 </div>
-<button class="final-btn" id="finalBtn" type="button" disabled>注文最終確認へ →</button>
-<div class="bottom-note">次の画面で内容を確認してから注文を確定します。まだ振込は発生しません。</div>
+<button class="final-btn" id="finalBtn" type="button" disabled>見積り依頼の内容確認へ →</button>
+<div class="bottom-note">次の画面で内容を確認して見積りを依頼します。この操作では支払い・契約確定は発生しません。</div>
 </section>
 </main>
 <footer><div class="wrap">© 2026 SHO WEB SUPPORT</div></footer>
@@ -125,10 +133,30 @@ const names={rock:'T01 Rock Stage',cafe:'T02 Cafe Linen',cute:'T03 Sweet Bloom',
 const labels={one:'1ページ完結サイト',semi:'セミオーダーサイト',full:'フルオーダーサイト'};
 const prices={one:15000,semi:22000,full:30000};
 let state={plan:'',template:'',update:'',domain:false,extraRequest:''};
-try{state={...state,...JSON.parse(localStorage.getItem(STORE)||'{}')}}catch{}
+if(new URLSearchParams(location.search).get('resume')==='1'){
+ try{state={...state,...JSON.parse(localStorage.getItem(STORE)||'{}')}}catch{}
+}
+ // Keep unfinished drafts, but start fresh when this exact draft has been submitted.
+ try{
+   const receipt=JSON.parse(localStorage.getItem('sho_web_order_receipt_v2')||'null');
+   if(receipt?.order?.order_code&&receipt.state_key===JSON.stringify(state)){
+     localStorage.removeItem(STORE);
+     state={plan:'',template:'',update:'',domain:false,extraRequest:''};
+   }
+ }catch{}
+ // Historical per-request selections are now consolidated into pay-as-you-go.
+ if(state.plan==='one'&&!['none','unlimited',''].includes(state.update))state.update='';
+if(state.plan==='semi'||state.plan==='full')state.update='free3';
+if(!['one','semi','full'].includes(state.plan)){state.plan='';state.template='';state.update='';}
 const params=new URLSearchParams(location.search);
-if(['one','semi','full'].includes(params.get('plan')))state.plan=params.get('plan');
-if(names[params.get('template')]){state.template=params.get('template');state.plan='semi'}
+const deepPlan=params.get('plan');
+if(['one','semi','full'].includes(deepPlan)){
+  state.plan=deepPlan;
+  if(deepPlan!=='semi')state.template='';
+  if(deepPlan==='semi'||deepPlan==='full')state.update='free3';
+  else if(!['none','unlimited'].includes(state.update))state.update='';
+}
+if(names[params.get('template')]){state.template=params.get('template');state.plan='semi';state.update='free3'}
 
 const consult='ホームページ制作について注文前に相談したいです。';
 document.getElementById('consultTop').href='https://line.me/R/oaMessage/%40144dlsxp/?'+encodeURIComponent(consult);
@@ -139,7 +167,7 @@ function selectPlan(plan){
  state.plan=plan;
  if(plan!=='semi')state.template='';
  if(plan==='semi'||plan==='full')state.update='free3';
- else if(state.update==='free3')state.update='';
+ else if(state.update==='free3')state.update='none';
  persist();render();
 }
 plans.forEach(el=>el.querySelector('.plan-select').addEventListener('click',()=>selectPlan(el.dataset.plan)));
@@ -155,8 +183,8 @@ document.querySelectorAll('.preview-link').forEach(a=>a.addEventListener('click'
 function updateArea(){
  const area=document.getElementById('updateArea');
  if(state.plan==='one'){
-  const opts=[['none','更新プランなし','必要になった時に都度相談'],['live','LIVE更新 ¥1,000 / 回','LIVE・EVENT情報のみ'],['standard','通常更新 ¥2,500 / 回','写真・文章・リンクなど'],['unlimited','通常更新 月8回まで ¥7,000 / 月','1回に複数項目をまとめて依頼可能']];
-  area.innerHTML='<div class="update-options">'+opts.map(([v,t,s])=>'<button class="update-option '+(state.update===v?'selected':'')+'" data-update="'+v+'" type="button"><small>'+s+'</small><b>'+t+'</b><span class="dot">✓</span></button>').join('')+'</div>';
+  const opts=[['none','都度払い（更新したい時だけ）','LIVE更新 ¥1,000 / 回 ／ 通常更新 ¥2,500 / 回','月額料金なし・更新依頼がなければ0円'],['unlimited','月額プラン ¥7,000 / 月','月8回まで通常更新可能','毎月料金が発生します']];
+  area.innerHTML='<div class="update-options">'+opts.map(([v,t,s,n])=>'<button class="update-option '+(state.update===v?'selected':'')+'" data-update="'+v+'" type="button"><b>'+t+'</b><small class="update-option-price">'+s+'</small><small class="update-option-note">'+n+'</small><span class="dot">✓</span></button>').join('')+'</div>';
   area.querySelectorAll('.update-option').forEach(b=>b.addEventListener('click',()=>{state.update=b.dataset.update;persist();render()}));
  }else{
   area.innerHTML='';
@@ -187,12 +215,12 @@ function render(){
  document.getElementById('sumTemplate').textContent=state.template?(names[state.template]||state.template):'未選択';
  let ul='未選択';
  if(state.update==='free3')ul='通常更新 月8回まで / 公開後3か月無料';
- if(state.update==='none')ul='更新プランなし';
+ if(state.update==='none')ul='都度払い（LIVE ¥1,000/回・通常 ¥2,500/回）';
  if(state.update==='live')ul='LIVE更新 ¥1,000 / 回';
  if(state.update==='standard')ul='通常更新 ¥2,500 / 回';
  if(state.update==='unlimited')ul='通常更新 月8回まで ¥7,000 / 月';
  document.getElementById('sumUpdate').textContent=ul;
- document.getElementById('sumDomain').textContent=state.domain?'お客様の独自ドメインを相談 / 設定代行 ¥5,000〜＋実費':'無料URLを相談（公開先は事前確認）';
+ document.getElementById('sumDomain').textContent=state.domain?'お客様の独自ドメインを相談 / 設定代行 ¥5,000〜＋実費':'SHO標準URLを相談（正式URLは振込前に確認）';
  document.getElementById('sumExtraRow').hidden=!String(state.extraRequest||'').trim();
  document.getElementById('sumExtra').textContent=String(state.extraRequest||'').trim();
  const monthly=state.plan==='one'&&state.update==='unlimited'?7000:0;

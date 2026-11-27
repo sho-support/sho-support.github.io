@@ -1,0 +1,15 @@
+// Dry-run template. Confirm the existing private test bucket and exact Worker
+// hostname, then use configure-preview.mjs. This file has no production routes.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sho-customer-sites-preview",
+  "main": "preview-worker.mjs",
+  "compatibility_date": "2026-11-07",
+  "workers_dev": true,
+  "preview_urls": false,
+  "routes": [],
+  "vars": {"TEST_WORKER_HOST": ""},
+  "r2_buckets": [
+    {"binding": "SITES", "bucket_name": "confirm-private-preview-bucket-before-deploy"}
+  ]
+}

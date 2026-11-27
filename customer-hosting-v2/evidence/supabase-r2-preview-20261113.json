@@ -1,0 +1,173 @@
+{
+  "verified_at": "2026-11-13T02:55:46.211Z",
+  "environment": "isolated-preview-only",
+  "source_commit": "c336af0d51fec7c0bc6287eb6088ca09b9abc558",
+  "workflow_run": 43354795636,
+  "workflow_url": "https://github.com/sho-support/sho-support.github.io/actions/runs/43354795636",
+  "proof": {
+    "run_id": "43354795636",
+    "source_commit": "c336af0d51fec7c0bc6287eb6088ca09b9abc558",
+    "purpose": "supabase-r2-preview",
+    "http_status": 200,
+    "ok": true,
+    "configured": {
+      "CUSTOMER_R2_ACCOUNT_ID": true,
+      "CUSTOMER_R2_BUCKET": true,
+      "CUSTOMER_R2_ACCESS_KEY_ID": true,
+      "CUSTOMER_R2_SECRET_ACCESS_KEY": true
+    },
+    "account_matches": true,
+    "bucket_is_preview": true,
+    "hosting_enabled": false,
+    "database_url_available": true,
+    "fixture_only": true,
+    "site_id": "9000001000",
+    "production_data_accessed": false,
+    "external_customer_requests": 0,
+    "real_notifications": 0,
+    "ai_requests": 0,
+    "production_functions_replaced": false,
+    "checks": [
+      "configuration_present_and_preview_only",
+      "one_shot_run_claim",
+      "supabase_signed_r2_requests",
+      "existing_fictional_fixture_verified",
+      "staged_and_unapproved_content_stays_private",
+      "approved_fixture_html_and_css_served_over_https",
+      "complete_update_switches_html_and_css",
+      "concurrent_publication_has_exactly_one_winner",
+      "rollback_restores_previous_html_and_css",
+      "verified_export_bytes_restore_as_a_new_release",
+      "interrupted_upload_cannot_replace_last_good_release",
+      "public_reader_rejects_writes_and_cross_customer_selection"
+    ],
+    "production_approval_verified": false,
+    "separate_provider_backup_verified": false,
+    "active_release": "6158a141628fcc807a2d3e9c",
+    "usage": {
+      "writes": 22,
+      "reads": 76,
+      "uploaded_bytes": 11333
+    }
+  },
+  "request_accounting_note": "Lifecycle usage counts attempted writes and budgeted payload bytes, including a rejected conditional write; the one-shot claim adds one separate write attempt. These are not billed or retained-storage totals.",
+  "earlier_failed_runs": [
+    {
+      "run_id": 43353611652,
+      "stage": "verify_reserved_baseline_pointer",
+      "all_four_settings_present": true,
+      "claim_write_completed": true
+    },
+    {
+      "run_id": 43354203368,
+      "stage": "verify_reserved_baseline_pointer",
+      "transport_code": "R2_INVALID_RESPONSE",
+      "r2_get_status": 200,
+      "content_length_present": false,
+      "valid_strong_etag": false
+    }
+  ],
+  "correction": {
+    "header": "Accept-Encoding: identity",
+    "response_validation_relaxed": false,
+    "compression_case_reproduced_before_fix": true,
+    "local_http_regression_passed_after_fix": true,
+    "provider_internal_compression_path_confirmed": false
+  },
+  "closed_probe": {
+    "name": "website-resource-qa",
+    "version": 16,
+    "bundle_hash": "713b2c32c47e0e40cb426a39053104a4287be8c7ceafbcb5cdbe3179e9e02bea",
+    "no_sdk_or_environment_access": true,
+    "http_post_status": 403
+  },
+  "post_checks": [
+    {
+      "check": "probe_closed_after_trial",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "check": "last_good_fictional_fixture_served",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "production_function_hashes": [
+    {
+      "name": "website-api",
+      "hash": "18c23eea0492eedbd709ba553573c8d96c20ecc661d3e1bf0d56c87465e6cfb4",
+      "unchanged": true,
+      "verify_jwt_unchanged": true
+    },
+    {
+      "name": "website-worker",
+      "hash": "b8f80600f0114e493c1d932400d91da3690ade75fe3e7f853d0334aa71d8d0a2",
+      "unchanged": true,
+      "verify_jwt_unchanged": true
+    },
+    {
+      "name": "website-customer-access",
+      "hash": "8c5ac3f50a11ce46a67243c8df89e91208dd25ccf9252f686d074198977cc950",
+      "unchanged": true,
+      "verify_jwt_unchanged": true
+    },
+    {
+      "name": "website-preview",
+      "hash": "34355f9ed64ca4b3dc38c033315c6b265a1e0cff695e60d9ed24c418f6bd5fa5",
+      "unchanged": true,
+      "verify_jwt_unchanged": true
+    }
+  ],
+  "main_commit": "b24971dc4e7956a9bbfa68d5607189c3beaebb4b",
+  "tests": {
+    "unit": {
+      "passed": 117,
+      "failed": 0
+    },
+    "workerd_r2": {
+      "passed": 14,
+      "failed": 0
+    },
+    "supabase_wrapper": {
+      "passed": 3,
+      "failed": 0
+    },
+    "pglite": {
+      "passed": 35,
+      "skipped": 2,
+      "failed": 0
+    },
+    "native_postgresql_17": {
+      "passed": 39,
+      "failed": 0
+    },
+    "sql_r2_pipeline": {
+      "passed": 11,
+      "failed": 0
+    },
+    "http_routes": {
+      "passed": 19,
+      "failed": 0
+    },
+    "sales_browser_job": "success",
+    "live_preview_visual_job": "not-rerun-layout-unchanged"
+  },
+  "business_readiness": {
+    "order_count": 0,
+    "site_count": 0,
+    "bank_transfer_registered": false,
+    "commercial_policy_registered": false,
+    "production_hosting_enabled": false,
+    "actual_production_full_backup_verified": false,
+    "final_customer_domain_verified": false
+  },
+  "pending_before_sales": [
+    "Final domain and DNS/HTTPS approval",
+    "Approved commercial terms, seller disclosure and bank destination",
+    "Actual production full backup with an independent private destination and restore verification",
+    "Production R2 provisioning/credentials and coordinated approved deployment",
+    "Limited real notification/payment checks with approval"
+  ],
+  "credential_values_returned_or_logged": false
+}
